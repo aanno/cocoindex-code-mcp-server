@@ -1,0 +1,29 @@
+{
+    "mcpServers": {
+        "git": {
+            "command": "uvx",
+            "args": [
+                "mcp-server-git"
+            ]
+        },
+        "filesystem": {
+            "command": "pnpm",
+            "args": [
+                "dlx",
+                "@modelcontextprotocol/server-filesystem",
+                "/workspaces/ghc"
+            ]
+        },
+        "fetch": {
+            "command": "uvx",
+            "args": ["mcp-server-fetch"]
+        },
+        "sequential-thinking": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-sequential-thinking"
+            ]
+        }
+    }
+}

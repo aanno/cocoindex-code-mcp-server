@@ -1,0 +1,48 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"python.defaultInterpreterPath": "/home/vscode/.venv/bin/python",
+		"python.testing.unittestEnabled": true,
+		"python.testing.pytestEnabled": true,
+		"python.testing.pytestArgs": [
+			"tests"
+		],
+		"python.formatting.provider": "black"
+	},
+	"tasks": {
+		"version": "2.0.0",
+		"tasks": [
+			{
+				"label": "My Task",
+				"command": "echo hello",
+				"type": "shell",
+				"args": [],
+				"problemMatcher": [
+					"$tsc"
+				],
+				"presentation": {
+					"reveal": "always"
+				},
+				"group": "build"
+			}
+		]
+	},
+	"extensions": {
+		"recommendations": [
+			"donjayamanne.python-extension-pack",
+			"ms-python.debugpy",
+			"ms-python.isort",
+			"ms-python.vscode-pylance",
+			"dustypomerleau.rust-syntax",
+			"rust-lang.rust-analyzer",
+			"fill-labs.dependi",
+			"panicbit.cargo",
+			"tamasfe.even-better-toml"
+		],
+		"unwantedRecommendations": []
+	}
+}
