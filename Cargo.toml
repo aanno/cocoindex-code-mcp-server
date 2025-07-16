@@ -1,0 +1,16 @@
+[package]
+name = "haskell-tree-sitter"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "haskell_tree_sitter"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.22", features = ["extension-module"] }
+tree-sitter = "0.25"
+tree-sitter-haskell = "0.21"
+
+[build-dependencies]
+pyo3-build-config = "0.22"

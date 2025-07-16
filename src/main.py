@@ -4,9 +4,11 @@ from pgvector.psycopg import register_vector
 from typing import Any
 import cocoindex
 import os
+import argparse
 from numpy.typing import NDArray
 import numpy as np
 from dataclasses import dataclass
+import haskell_tree_sitter
 
 
 @dataclass
@@ -45,6 +47,7 @@ TREE_SITTER_LANGUAGE_MAP = {
     ".ts": "TypeScript",
     ".xml": "XML",
     ".yaml": "YAML", ".yml": "YAML",
+    ".hs": "Haskell", ".lhs": "Haskell",
 }
 
 # Language-specific chunking parameters
@@ -85,6 +88,7 @@ CHUNKING_PARAMS = {
     # Others
     "Pascal": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200),
     "Swift": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200),
+    "Haskell": ChunkingParams(chunk_size=1200, min_chunk_size=300, chunk_overlap=200),
     
     # Default fallback
     "_DEFAULT": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200),
@@ -132,12 +136,11 @@ CUSTOM_LANGUAGES = [
         aliases=[".ini", ".cfg", ".conf"],
         separators_regex=[r"\n\n+", r"\n\[.*\]", r"\n"]  # Remove (?=...)
     ),
-    # Haskell
+    # Haskell - using our custom tree-sitter parser
     cocoindex.functions.CustomLanguageSpec(
         language_name="Haskell",
         aliases=[".hs", ".lhs"],
-        separators_regex=[r"\n\n+", r"\n\w+\s*::", r"\nimport\s+",
-        r"\nmodule\s+", r"\n"]  # Remove (?=...)
+        separators_regex=haskell_tree_sitter.get_haskell_separators()
     ),
     # Kotlin
     cocoindex.functions.CustomLanguageSpec(
@@ -208,15 +211,25 @@ def code_to_embedding(
 
 @cocoindex.flow_def(name="CodeEmbedding")
 def code_embedding_flow(
-    flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope
+    flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope, paths: list[str] = None
 ) -> None:
     """
     Define an improved flow that embeds files with syntax-aware chunking.
     """
-    data_scope["files"] = flow_builder.add_source(
-        cocoindex.sources.LocalFile(
-            # path="../..",
-            path="cocoindex",
+    # Use provided paths or default to cocoindex
+    if not paths:
+        paths = ["cocoindex"]
+    
+    # Add multiple sources - CocoIndex supports this natively!
+    all_files_sources = []
+    
+    for i, path in enumerate(paths):
+        source_name = f"files_{i}" if len(paths) > 1 else "files"
+        print(f"Adding source: {path} as '{source_name}'")
+        
+        data_scope[source_name] = flow_builder.add_source(
+            cocoindex.sources.LocalFile(
+                path=path,
             included_patterns=[
                 # Python
                 "*.py", "*.pyi", "*.pyx", "*.pxd",
@@ -273,36 +286,42 @@ def code_embedding_flow(
                 "**/target/debug", "**/target/release", "**/*.class",
                 "**/*.jar", "**/*.war", "**/*.ear", "**/*.pyc", "**/*.pyo",
             ],
+            )
         )
-    )
+        all_files_sources.append(source_name)
+    
+    # Create a single collector for all sources
     code_embeddings = data_scope.add_collector()
-
-    with data_scope["files"].row() as file:
-        file["language"] = file["filename"].transform(extract_language)
-        file["chunking_params"] = file["language"].transform(get_chunking_params)
-        
-        # Use language-specific chunking parameters with improved tree-sitter support
-        file["chunks"] = file["content"].transform(
-            cocoindex.functions.SplitRecursively(
-                custom_languages=CUSTOM_LANGUAGES
-            ),
-            language=file["language"],
-            chunk_size=file["chunking_params"]["chunk_size"],
-            min_chunk_size=file["chunking_params"]["min_chunk_size"],
-            chunk_overlap=file["chunking_params"]["chunk_overlap"],
-            )
-        
-        with file["chunks"].row() as chunk:
-            chunk["embedding"] = chunk["text"].call(code_to_embedding)
-            code_embeddings.collect(
-                filename=file["filename"],
+    
+    # Process each source with the same logic
+    for source_name in all_files_sources:
+        with data_scope[source_name].row() as file:
+            file["language"] = file["filename"].transform(extract_language)
+            file["chunking_params"] = file["language"].transform(get_chunking_params)
+            
+            # Use language-specific chunking parameters with improved tree-sitter support
+            file["chunks"] = file["content"].transform(
+                cocoindex.functions.SplitRecursively(
+                    custom_languages=CUSTOM_LANGUAGES
+                ),
                 language=file["language"],
-                location=chunk["location"],
-                code=chunk["text"],
-                embedding=chunk["embedding"],
-                start=chunk["start"],
-                end=chunk["end"],
-            )
+                chunk_size=file["chunking_params"]["chunk_size"],
+                min_chunk_size=file["chunking_params"]["min_chunk_size"],
+                chunk_overlap=file["chunking_params"]["chunk_overlap"],
+                )
+            
+            with file["chunks"].row() as chunk:
+                chunk["embedding"] = chunk["text"].call(code_to_embedding)
+                code_embeddings.collect(
+                    filename=file["filename"],
+                    language=file["language"],
+                    location=chunk["location"],
+                    code=chunk["text"],
+                    embedding=chunk["embedding"],
+                    start=chunk["start"],
+                    end=chunk["end"],
+                    source_name=source_name,  # Add source name for identification
+                )
 
     code_embeddings.export(
         "code_embeddings",
@@ -330,7 +349,7 @@ def search(pool: ConnectionPool, query: str, top_k: int = 5) -> list[dict[str, A
         with conn.cursor() as cur:
             cur.execute(
                 f"""
-                SELECT filename, language, code, embedding <=> %s AS distance, start, "end"
+                SELECT filename, language, code, embedding <=> %s AS distance, start, "end", source_name
                 FROM {table_name} ORDER BY distance LIMIT %s
             """,
                 (query_vector, top_k),
@@ -343,14 +362,15 @@ def search(pool: ConnectionPool, query: str, top_k: int = 5) -> list[dict[str, A
                     "score": 1.0 - row[3],
                     "start": row[4],
                     "end": row[5],
+                    "source": row[6] if len(row) > 6 else "unknown",
                 }
                 for row in cur.fetchall()
             ]
 
 
-def _main() -> None:
+def _main(paths: list[str] = None) -> None:
     # Make sure the flow is built and up-to-date.
-    stats = code_embedding_flow.update()
+    stats = code_embedding_flow.update(paths=paths)
     print("Updated index: ", stats)
 
     # Initialize the database connection pool.
@@ -364,15 +384,66 @@ def _main() -> None:
         results = search(pool, query)
         print("\nSearch results:")
         for result in results:
+            source_info = f" [{result['source']}]" if result.get('source') and result['source'] != 'files' else ""
             print(
-                f"[{result['score']:.3f}] {result['filename']} ({result['language']}) (L{result['start']['line']}-L{result['end']['line']})"
+                f"[{result['score']:.3f}] {result['filename']}{source_info} ({result['language']}) (L{result['start']['line']}-L{result['end']['line']})"
             )
             print(f"    {result['code']}")
             print("---")
         print()
 
 
+def parse_args():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Code embedding pipeline with Haskell tree-sitter support",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python src/main.py                           # Use default path (cocoindex)
+  python src/main.py /path/to/code             # Index single directory
+  python src/main.py /path/to/code1 /path/to/code2  # Index multiple directories
+  python src/main.py --paths /path/to/code     # Explicit paths argument
+        """
+    )
+    
+    parser.add_argument(
+        "paths", 
+        nargs="*", 
+        help="Code directory paths to index (default: cocoindex)"
+    )
+    
+    parser.add_argument(
+        "--paths",
+        dest="explicit_paths",
+        nargs="+",
+        help="Alternative way to specify paths"
+    )
+    
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
     load_dotenv()
     cocoindex.init()
-    _main()
+    
+    args = parse_args()
+    
+    # Determine paths to use
+    paths = None
+    if args.explicit_paths:
+        paths = args.explicit_paths
+    elif args.paths:
+        paths = args.paths
+    
+    if paths:
+        if len(paths) == 1:
+            print(f"Indexing path: {paths[0]}")
+        else:
+            print(f"Indexing {len(paths)} paths:")
+            for i, path in enumerate(paths, 1):
+                print(f"  {i}. {path}")
+    else:
+        print("Using default path: cocoindex")
+    
+    _main(paths)

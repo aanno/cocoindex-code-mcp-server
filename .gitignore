@@ -1,5 +1,22 @@
 __pycache__/
 /quickstart/
+/target/
 *.pyc
 .venv/
 /.claude/*.local.*
+
+# Maturin build artifacts
+*.so
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Python cache
+*.pyo
+*.pywc

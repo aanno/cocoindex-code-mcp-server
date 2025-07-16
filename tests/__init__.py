@@ -1,0 +1,1 @@
+# Test package for haskell-tree-sitter project
