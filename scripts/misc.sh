@@ -15,3 +15,5 @@ pip install pre-commit maturin psycopg "psycopg[pool]" pgvector "sentence-transf
 # ensure that this is _not_ saved in .local
 
 sudo chown -R vscode:vscode /home/vscode/.cargo/
+
+# In main.py, only main and the argument parsing should reside. We have to refactor it in multiple files and name them appropriate... 

@@ -5,6 +5,7 @@ from typing import Any
 import cocoindex
 import os
 import argparse
+import datetime
 from numpy.typing import NDArray
 import numpy as np
 from dataclasses import dataclass
@@ -209,16 +210,25 @@ def code_to_embedding(
     )
 
 
+# Global configuration for flow parameters
+_global_flow_config = {
+    'paths': ["cocoindex"],
+    'enable_polling': False,
+    'poll_interval': 30
+}
+
 @cocoindex.flow_def(name="CodeEmbedding")
 def code_embedding_flow(
-    flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope, paths: list[str] = None
+    flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope
 ) -> None:
     """
     Define an improved flow that embeds files with syntax-aware chunking.
+    Reads configuration from global _global_flow_config.
     """
-    # Use provided paths or default to cocoindex
-    if not paths:
-        paths = ["cocoindex"]
+    # Get configuration from global settings
+    paths = _global_flow_config.get('paths', ["cocoindex"])
+    enable_polling = _global_flow_config.get('enable_polling', False)
+    poll_interval = _global_flow_config.get('poll_interval', 30)
     
     # Add multiple sources - CocoIndex supports this natively!
     all_files_sources = []
@@ -227,10 +237,10 @@ def code_embedding_flow(
         source_name = f"files_{i}" if len(paths) > 1 else "files"
         print(f"Adding source: {path} as '{source_name}'")
         
-        data_scope[source_name] = flow_builder.add_source(
-            cocoindex.sources.LocalFile(
-                path=path,
-            included_patterns=[
+        # Configure LocalFile source with optional polling
+        source_config = {
+            "path": path,
+            "included_patterns": [
                 # Python
                 "*.py", "*.pyi", "*.pyx", "*.pxd",
                 # Rust
@@ -279,14 +289,23 @@ def code_embedding_flow(
                 # IDEs/Editors
                 "*.editorconfig", "*.gitignore", "*.gitattributes",
             ],
-            excluded_patterns=[
+            "excluded_patterns": [
                 "**/.*", "target", "**/node_modules", "**/build", "**/dist",
                 "**/__pycache__", "**/bin", "**/obj", "**/out", "**/venv",
                 "**/env", "**/.gradle", "**/.idea", "**/.vscode",
                 "**/target/debug", "**/target/release", "**/*.class",
                 "**/*.jar", "**/*.war", "**/*.ear", "**/*.pyc", "**/*.pyo",
-            ],
-            )
+            ]
+        }
+        
+        # Add polling configuration if enabled
+        if enable_polling:
+            source_config["recent_changes_poll_interval"] = datetime.timedelta(seconds=poll_interval)
+            source_config["refresh_interval"] = datetime.timedelta(minutes=max(1, poll_interval // 60))
+            print(f"  Polling enabled: {poll_interval}s interval")
+        
+        data_scope[source_name] = flow_builder.add_source(
+            cocoindex.sources.LocalFile(**source_config)
         )
         all_files_sources.append(source_name)
     
@@ -368,35 +387,82 @@ def search(pool: ConnectionPool, query: str, top_k: int = 5) -> list[dict[str, A
             ]
 
 
-def _main(paths: list[str] = None) -> None:
-    # Make sure the flow is built and up-to-date.
-    stats = code_embedding_flow.update(paths=paths)
-    print("Updated index: ", stats)
+def _main(paths: list[str] = None, live_update: bool = False, poll_interval: int = 30) -> None:
+    # Configure the global flow parameters
+    global _global_flow_config
+    _global_flow_config.update({
+        'paths': paths or ["cocoindex"],
+        'enable_polling': poll_interval > 0,  # Enable polling if interval is specified
+        'poll_interval': poll_interval
+    })
+    
+    if live_update:
+        print("🔄 Starting live update mode...")
+        if poll_interval > 0:
+            print(f"📊 File polling enabled: {poll_interval} seconds")
+        else:
+            print("📊 Event-based monitoring (no polling)")
+        
+        flow = code_embedding_flow
+        
+        # Setup the flow first
+        flow.setup()
+        
+        # Initial update
+        print("🚀 Initial index build...")
+        stats = flow.update()
+        print("Initial index built:", stats)
+        
+        # Start live updater
+        print("👁️  Starting live file monitoring...")
+        live_options = cocoindex.FlowLiveUpdaterOptions(
+            live_mode=True,
+            print_stats=True
+        )
+        
+        with cocoindex.FlowLiveUpdater(flow, live_options) as updater:
+            print("✅ Live update mode active. Press Ctrl+C to stop.")
+            try:
+                updater.wait()
+            except KeyboardInterrupt:
+                print("\n⏹️  Stopping live update mode...")
+                
+    else:
+        # Regular one-time update mode
+        stats = code_embedding_flow.update()
+        print("Updated index: ", stats)
 
-    # Initialize the database connection pool.
-    pool = ConnectionPool(os.getenv("COCOINDEX_DATABASE_URL"))
-    # Run queries in a loop to demonstrate the query capabilities.
-    while True:
-        query = input("Enter search query (or Enter to quit): ")
-        if query == "":
-            break
-        # Run the query function with the database connection pool and the query.
-        results = search(pool, query)
-        print("\nSearch results:")
-        for result in results:
-            source_info = f" [{result['source']}]" if result.get('source') and result['source'] != 'files' else ""
-            print(
-                f"[{result['score']:.3f}] {result['filename']}{source_info} ({result['language']}) (L{result['start']['line']}-L{result['end']['line']})"
-            )
-            print(f"    {result['code']}")
-            print("---")
-        print()
+        # Initialize the database connection pool.
+        pool = ConnectionPool(os.getenv("COCOINDEX_DATABASE_URL"))
+        print("\n🔍 Interactive search mode. Type queries to search the code index.")
+        print("Press Enter with empty query to quit.\n")
+        
+        # Run queries in a loop to demonstrate the query capabilities.
+        while True:
+            try:
+                query = input("Search query: ")
+                if query == "":
+                    break
+                # Run the query function with the database connection pool and the query.
+                results = search(pool, query)
+                print(f"\n📊 Found {len(results)} results:")
+                for result in results:
+                    source_info = f" [{result['source']}]" if result.get('source') and result['source'] != 'files' else ""
+                    print(
+                        f"[{result['score']:.3f}] {result['filename']}{source_info} ({result['language']}) (L{result['start']['line']}-L{result['end']['line']})"
+                    )
+                    print(f"    {result['code']}")
+                    print("---")
+                print()
+            except KeyboardInterrupt:
+                print("\n👋 Goodbye!")
+                break
 
 
 def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
-        description="Code embedding pipeline with Haskell tree-sitter support",
+        description="Code embedding pipeline with Haskell tree-sitter support and live updates",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -404,6 +470,11 @@ Examples:
   python src/main.py /path/to/code             # Index single directory
   python src/main.py /path/to/code1 /path/to/code2  # Index multiple directories
   python src/main.py --paths /path/to/code     # Explicit paths argument
+  
+  # Live update mode
+  python src/main.py --live                    # Live updates with event monitoring
+  python src/main.py --live --poll 10         # Live updates with 10s polling
+  python src/main.py --live --poll 60 /path/to/code  # Custom path with polling
         """
     )
     
@@ -418,6 +489,20 @@ Examples:
         dest="explicit_paths",
         nargs="+",
         help="Alternative way to specify paths"
+    )
+    
+    parser.add_argument(
+        "--live",
+        action="store_true",
+        help="Enable live update mode with continuous monitoring"
+    )
+    
+    parser.add_argument(
+        "--poll",
+        type=int,
+        default=0,
+        metavar="SECONDS",
+        help="Enable file polling with specified interval in seconds (default: event-based monitoring)"
     )
     
     return parser.parse_args()
@@ -436,14 +521,27 @@ if __name__ == "__main__":
     elif args.paths:
         paths = args.paths
     
+    # Display configuration
     if paths:
         if len(paths) == 1:
-            print(f"Indexing path: {paths[0]}")
+            print(f"📁 Indexing path: {paths[0]}")
         else:
-            print(f"Indexing {len(paths)} paths:")
+            print(f"📁 Indexing {len(paths)} paths:")
             for i, path in enumerate(paths, 1):
                 print(f"  {i}. {path}")
     else:
-        print("Using default path: cocoindex")
+        print("📁 Using default path: cocoindex")
     
-    _main(paths)
+    # Display mode
+    if args.live:
+        print("🔴 Mode: Live updates")
+        if args.poll > 0:
+            print(f"⏰ Polling: {args.poll} seconds")
+        else:
+            print("⚡ Monitoring: Event-based")
+    else:
+        print("🟢 Mode: One-time indexing")
+    
+    print()  # Empty line for readability
+    
+    _main(paths, live_update=args.live, poll_interval=args.poll)
