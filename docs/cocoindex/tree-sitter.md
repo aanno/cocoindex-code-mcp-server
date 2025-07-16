@@ -296,3 +296,88 @@ Structure your data pipeline in CocoIndex using standard operations and Tree-sit
 
 [^5_10]: https://tree-sitter.github.io/tree-sitter/using-parsers/1-getting-started.html
 
+# Can you provide me with a list of available tree-sitter (grammars) that are _not_ incooperated in cocoindex?
+
+As of July 2025, the **full and current list of available Tree-sitter grammars** is maintained on the official [Tree-sitter Wiki "List of parsers"](https://github.com/tree-sitter/tree-sitter/wiki/List-of-parsers)[^1_4]. However, your request is specifically for a list of grammars that are **not incorporated in "cocoindex"**.
+
+Since the provided search results do not contain a listing of the grammars incorporated by "cocoindex", nor do they directly offer a list of grammars that are specifically *excluded* from cocoindex, a direct and fully authoritative answer cannot be given from the results alone.
+
+However, based on the context:
+
+- **Tree-sitter grammars** are continuously being developed by the community; new ones include modern or less-popular languages which may not yet be integrated into tooling platforms or indexes like "cocoindex"[^1_4][^1_10].
+- For example, grammars like **Gleam** are explicitly mentioned as "not packaged" or supported in multiple places, such as Nixpkgs, and are described as "quite a few newer languages" that are missing from most mainline distributions[^1_10][^1_5].
+- **Fusion** (for the Neos CMS) is another example, with a dedicated Tree-sitter grammar that is not standard in leading editor integrations and, by extension, is unlikely to be present in more curated indexes like cocoindex unless recently added[^1_3].
+- There are also grammars for very niche domains or with less maintenance that might not be picked up by more centralized projects or indexes—for instance, languages currently considered experimental or forks patched for special environments[^1_4].
+
+If you want a **precise list**, you can:
+
+1. Compare the [official Tree-sitter Wiki "List of parsers"](https://github.com/tree-sitter/tree-sitter/wiki/List-of-parsers) with the "cocoindex" list of supported grammars[^1_4].
+2. Subtract the grammars present in "cocoindex" from the official Tree-sitter list.
+3. Any grammar present on the official Tree-sitter list but *not* in the "cocoindex" list would fit your criteria.
+
+### Examples of Tree-sitter grammars likely **not included in cocoindex** (based on their newness or niche status):
+
+- **Gleam**[^1_5][^1_10]
+- **Fusion**[^1_3]
+- **Lalrpop**[^1_4]
+- **Ledger**[^1_4]
+- Very new or community-driven grammars listed on the Tree-sitter Wiki but not in mainstream package collections[^1_4][^1_10].
+
+If you have access to the "cocoindex" list, performing a programmatic or manual diff against the [Tree-sitter Wiki list][^1_4] will give you an exhaustive answer.
+
+**In summary:**
+You can identify Tree-sitter grammars not incorporated in cocoindex by comparing the project’s supported grammars to the official Tree-sitter grammar list. Gleam, Fusion, and other recently registered or niche grammars are examples likely missing from established aggregators like cocoindex as of July 2025[^1_3][^1_4][^1_10].
+
+<div style="text-align: center">⁂</div>
+
+[^1_1]: https://ahelwer.ca/post/2023-01-11-tree-sitter-tlaplus/
+
+[^1_2]: https://www.masteringemacs.org/article/how-to-get-started-tree-sitter
+
+[^1_3]: https://discuss.neos.io/t/treesitter-grammar-for-fusion/5773
+
+[^1_4]: https://github.com/tree-sitter/tree-sitter/wiki/List-of-parsers
+
+[^1_5]: https://www.reddit.com/r/emacs/comments/1ge58cp/treesitter_cant_find_grammar/
+
+[^1_6]: https://www.reddit.com/r/Nix/comments/rgcynr/nonnixos_homemanager_treesitternvim_and_tsinstall/
+
+[^1_7]: https://discourse.nixos.org/t/tree-sitter-grammars-collide-with-each-other/41805
+
+[^1_8]: https://github.com/nvim-treesitter/nvim-treesitter
+
+[^1_9]: https://pulsar-edit.dev/blog/20231110-savetheclocktower-modern-tree-sitter-part-5.html
+
+[^1_10]: https://bhankas.org/blog/down_the_nixpkgs_rabbit_hole_in_search_of_tree_sitter_grammars/
+
+
+---
+
+# Can you provide the link to cocoindex list of supported grammars?
+
+Based on the provided search results, there is **no direct link to a dedicated CocoIndex list of supported grammars** included in the context. The only information referencing CocoIndex details a changelog and some infrastructure updates, but it does not provide or point to a page or resource where you can view their supported grammars list[^2_3].
+
+If you need this information, you should visit the official CocoIndex website or documentation and look for a section about supported languages or grammars. If such a list exists, it would typically be found in a section labeled "supported languages," "grammars," or similar within their main site or documentation.
+
+<div style="text-align: center">⁂</div>
+
+[^2_1]: https://wilson008.github.io/papers/2025-llm4se.pdf
+
+[^2_2]: https://en.wikipedia.org/wiki/Context-free_grammar
+
+[^2_3]: https://cocoindex.io/blogs/cocoindex-changelog-2025-04-30/
+
+[^2_4]: https://papercopilot.com/paper-list/coling-paper-list/coling-2025-paper-list/
+
+[^2_5]: https://github.com/lark-parser/lark/issues/684
+
+[^2_6]: https://www.sciencedirect.com/science/article/abs/pii/S0890540120301012
+
+[^2_7]: https://www.index.dev/blog/most-popular-programming-languages-
+
+[^2_8]: https://www.nature.com/articles/s41599-025-04543-2
+
+[^2_9]: https://www.itransition.com/developers/in-demand-programming-languages
+
+---
+

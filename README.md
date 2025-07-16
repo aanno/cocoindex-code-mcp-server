@@ -16,6 +16,13 @@ There is a MCP server example at `/workspaces/rust/code-index-mcp`.
 - Code chunking and embedding pipeline already implemented
 - **NEW**: Haskell tree-sitter support via custom maturin extension
 
+### tree-sitter
+
+- cocoindex uses tree-sitter, but only the grammers build in
+- [List of grammars](https://github.com/tree-sitter/tree-sitter/wiki/List-of-parsers)
+- If you want support for other languages, additonal parser should be included
+- This has so far be done for: Haskell.
+
 ### Existing MCP Server
 
 - Basic file indexing and search functionality
