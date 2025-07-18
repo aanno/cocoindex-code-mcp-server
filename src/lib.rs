@@ -13,7 +13,7 @@ impl HaskellParser {
     #[new]
     fn new() -> PyResult<Self> {
         let mut parser = Parser::new();
-        let language = tree_sitter_haskell::language();
+        let language = tree_sitter_haskell::LANGUAGE.into();
         parser.set_language(&language)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
                 format!("Failed to set Haskell language: {}", e)
@@ -375,7 +375,7 @@ fn extract_import_name(node: &Node, source: &str) -> Option<String> {
 #[pyfunction]
 fn get_haskell_ast_chunks(source: &str) -> PyResult<Vec<HaskellChunk>> {
     let mut parser = Parser::new();
-    let language = tree_sitter_haskell::language();
+    let language = tree_sitter_haskell::LANGUAGE.into();
     parser.set_language(&language)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
             format!("Failed to set Haskell language: {}", e)
@@ -395,7 +395,7 @@ fn get_haskell_ast_chunks(source: &str) -> PyResult<Vec<HaskellChunk>> {
 #[pyfunction]
 fn debug_haskell_ast_nodes(source: &str) -> PyResult<Vec<String>> {
     let mut parser = Parser::new();
-    let language = tree_sitter_haskell::language();
+    let language = tree_sitter_haskell::LANGUAGE.into();
     parser.set_language(&language)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
             format!("Failed to set Haskell language: {}", e)
