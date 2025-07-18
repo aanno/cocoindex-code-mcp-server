@@ -13,6 +13,7 @@ dependencies = [
     "psycopg[pool]",
     "pgvector",
     "numpy",
+    "pytest"
 ]
 
 [project.optional-dependencies]
