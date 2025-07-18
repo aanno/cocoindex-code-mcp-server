@@ -12,6 +12,7 @@ from numpy.typing import NDArray
 import numpy as np
 import cocoindex
 from haskell_support import get_haskell_language_spec
+# Import moved to avoid circular dependency
 
 
 @dataclass
@@ -317,12 +318,12 @@ def code_embedding_flow(
             file["language"] = file["filename"].transform(extract_language)
             file["chunking_params"] = file["language"].transform(get_chunking_params)
             
-            # Use language-specific chunking with AST-based chunking for Haskell
+            # Use language-specific chunking with AST-based chunking for supported languages
+            from ast_chunking import create_hybrid_chunking_operation
             file["chunks"] = file["content"].transform(
-                cocoindex.functions.SplitRecursively(
-                    custom_languages=CUSTOM_LANGUAGES
-                ),
+                create_hybrid_chunking_operation(),
                 language=file["language"],
+                filename=file["filename"],
                 chunk_size=file["chunking_params"]["chunk_size"],
                 min_chunk_size=file["chunking_params"]["min_chunk_size"],
                 chunk_overlap=file["chunking_params"]["chunk_overlap"],
@@ -352,6 +353,7 @@ def code_embedding_flow(
             )
         ],
     )
+
 
 
 def update_flow_config(paths: List[str] = None, enable_polling: bool = False, poll_interval: int = 30):

@@ -35,3 +35,5 @@ sudo chown -R vscode:vscode /home/vscode/.cargo/
 # * dart
 # * Markdown
 # * asciidoc
+
+# Is there a way to add ASTChunk as dependency (instead of using the check-out submodule)?
