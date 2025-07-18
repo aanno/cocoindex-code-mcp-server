@@ -6,9 +6,9 @@
 
 pnpm install -g @anthropic-ai/claude-code
 
-pnpm list --global --json --long claude-code
+sudo chown -R vscode:vscode /home/vscode/.cargo/
 # /home/vscode/.local/share/pnpm/global/5
-ln -s /home/vscode/.local/share/pnpm/global/5/node_modules/\@anthropic-ai/claude-code/cli.js .volta/bin/claude
+ln -s /home/vscode/.local/share/pnpm/global/5/node_modules/\@anthropic-ai/claude-code/cli.js ~/.volta/bin/claude
 
 pip install --upgrade pip
 pip install pre-commit maturin psycopg "psycopg[pool]" pgvector "sentence-transformers" 
@@ -17,3 +17,14 @@ pip install pre-commit maturin psycopg "psycopg[pool]" pgvector "sentence-transf
 sudo chown -R vscode:vscode /home/vscode/.cargo/
 
 # In main.py, only main and the argument parsing should reside. We have to refactor it in multiple files and name them appropriate... 
+
+# Why we use tree-sitter-haskell in version 0.21 instead of 0.23.1 ?
+
+# Add least the need the following extra support:
+#
+# * SQL
+# * shell/bash
+# * Kotlin
+# * dart
+# * Markdown
+# * asciidoc

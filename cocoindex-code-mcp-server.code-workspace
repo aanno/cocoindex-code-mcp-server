@@ -41,7 +41,11 @@
 			"rust-lang.rust-analyzer",
 			"fill-labs.dependi",
 			"panicbit.cargo",
-			"tamasfe.even-better-toml"
+			"tamasfe.even-better-toml",
+			"Anthropic.claude-code",
+			"JuehangQin.vscode-mcp-server",
+			"dbankier.vscode-instant-markdown",
+			"DavidAnson.vscode-markdownlint"
 		],
 		"unwantedRecommendations": []
 	}
