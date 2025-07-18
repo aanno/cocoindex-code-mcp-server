@@ -8,7 +8,7 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-from main import extract_language, get_chunking_params, CUSTOM_LANGUAGES
+from cocoindex_config import extract_language, get_chunking_params, CUSTOM_LANGUAGES
 import cocoindex
 
 class TestCocoIndexIntegration(unittest.TestCase):
@@ -42,7 +42,7 @@ class TestCocoIndexIntegration(unittest.TestCase):
                 break
         
         self.assertIsNotNone(haskell_spec, "Haskell custom language spec not found")
-        self.assertEqual(len(haskell_spec.separators_regex), 11)
+        self.assertEqual(len(haskell_spec.separators_regex), 24)
         self.assertIn(".hs", haskell_spec.aliases)
         self.assertIn(".lhs", haskell_spec.aliases)
         

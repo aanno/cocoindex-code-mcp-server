@@ -13,7 +13,7 @@ class TestLiveUpdates(unittest.TestCase):
     
     def test_live_argument_parsing(self):
         """Test that --live and --poll arguments are parsed correctly."""
-        from main import parse_args
+        from arg_parser import parse_args
         
         # Test --live flag
         with patch('sys.argv', ['main.py', '--live']):
@@ -35,7 +35,7 @@ class TestLiveUpdates(unittest.TestCase):
     
     def test_live_arguments_with_paths(self):
         """Test live update arguments combined with paths."""
-        from main import parse_args
+        from arg_parser import parse_args
         
         with patch('sys.argv', ['main.py', '--live', '--poll', '15', '/path/to/code']):
             args = parse_args()
@@ -45,14 +45,16 @@ class TestLiveUpdates(unittest.TestCase):
     
     def test_global_config_updates(self):
         """Test that global flow configuration is updated correctly."""
-        from main import _global_flow_config, _main
+        from main import main
+        from cocoindex_config import _global_flow_config
         
         # Mock the flow to prevent actual execution
-        with patch('main.code_embedding_flow') as mock_flow:
-            with patch('main.ConnectionPool'):
+        with patch('cocoindex_config.code_embedding_flow') as mock_flow:
+            with patch('query_interactive.ConnectionPool'):
                 with patch('builtins.input', side_effect=['']):  # Exit immediately
-                    # Test configuration update
-                    _main(paths=['/test/path'], live_update=False, poll_interval=45)
+                    with patch('sys.argv', ['main.py', '--poll', '45', '/test/path']):
+                        # Test configuration update
+                        main()
                     
                     # Check that global config was updated
                     self.assertEqual(_global_flow_config['paths'], ['/test/path'])
@@ -61,22 +63,25 @@ class TestLiveUpdates(unittest.TestCase):
     
     def test_polling_enable_logic(self):
         """Test the logic for enabling polling based on interval."""
-        from main import _global_flow_config, _main
+        from main import main
+        from cocoindex_config import _global_flow_config
         
-        with patch('main.code_embedding_flow') as mock_flow:
-            with patch('main.ConnectionPool'):
+        with patch('cocoindex_config.code_embedding_flow') as mock_flow:
+            with patch('query_interactive.ConnectionPool'):
                 with patch('builtins.input', side_effect=['', '', '', '']):  # Multiple empty inputs
                     # Test with poll_interval = 0 (should disable polling)
-                    _main(paths=['/test'], live_update=False, poll_interval=0)
+                    with patch('sys.argv', ['main.py', '--poll', '0', '/test']):
+                        main()
                     self.assertFalse(_global_flow_config['enable_polling'])
                     
                     # Test with poll_interval > 0 (should enable polling)
-                    _main(paths=['/test'], live_update=False, poll_interval=30)
+                    with patch('sys.argv', ['main.py', '--poll', '30', '/test']):
+                        main()
                     self.assertTrue(_global_flow_config['enable_polling'])
     
     def test_live_update_flow_configuration(self):
         """Test that live update mode configures the flow correctly."""
-        from main import _global_flow_config
+        from cocoindex_config import _global_flow_config
         
         # Test the flow configuration function
         original_config = _global_flow_config.copy()

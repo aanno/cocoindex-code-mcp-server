@@ -35,7 +35,7 @@ class TestMultiplePaths(unittest.TestCase):
     
     def test_argument_parsing_logic(self):
         """Test the argument parsing logic for multiple paths."""
-        from main import parse_args
+        from arg_parser import parse_args
         
         # Test default behavior
         with patch('sys.argv', ['main.py']):
@@ -62,19 +62,20 @@ class TestMultiplePaths(unittest.TestCase):
     
     def test_main_function_output(self):
         """Test that the main function properly handles multiple paths."""
-        from main import _main
+        from main import main
         
         # Test that the main function doesn't crash with multiple paths
         # We can't easily test the full flow without a database, but we can test the interface
-        with patch('main.code_embedding_flow') as mock_flow:
-            with patch('main.ConnectionPool') as mock_pool:
+        with patch('cocoindex_config.code_embedding_flow') as mock_flow:
+            with patch('query_interactive.ConnectionPool') as mock_pool:
                 with patch('builtins.input', side_effect=['', '']):  # Empty input to exit
                     # Mock the flow update
                     mock_flow.update.return_value = {"processed": 0}
                     
                     # This should not raise an exception
                     try:
-                        _main([str(self.dir1), str(self.dir2)])
+                        with patch('sys.argv', ['main.py', str(self.dir1), str(self.dir2)]):
+                            main()
                     except (KeyboardInterrupt, SystemExit):
                         pass  # Expected when input() is mocked
     
