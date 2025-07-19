@@ -223,10 +223,25 @@ class EnhancedHaskellChunker:
             
             # Higher score for lines matching separators
             for j, separator in enumerate(separators):
-                if re.match(separator.lstrip('\\n'), line):
-                    # Earlier separators have higher priority
-                    score = len(separators) - j
-                    break
+                # Remove leading \n but handle special cases like \\n\\n+
+                pattern = separator
+                if pattern.startswith('\\n'):
+                    pattern = pattern[2:]  # Remove \n
+                    # Handle double newlines and other special cases
+                    if pattern.startswith('\\n'):
+                        if pattern == '\\n+':
+                            pattern = '^$'  # Match empty lines
+                        else:
+                            pattern = pattern[2:] + '$'  # Make it end-of-line match for empty lines
+                
+                try:
+                    if re.match(pattern, line):
+                        # Earlier separators have higher priority
+                        score = len(separators) - j
+                        break
+                except re.error:
+                    # Skip invalid regex patterns
+                    continue
             
             # Prefer splits closer to target
             distance_penalty = abs(i - target_idx) * 0.1
@@ -451,11 +466,25 @@ def create_enhanced_regex_fallback_chunks(content: str, file_path: str, config: 
         
         # Check for separator patterns with priority
         for priority, separator in enumerate(separators):
-            pattern = separator.lstrip('\\n')
-            if re.match(pattern, line):
-                is_separator = True
-                separator_priority = len(separators) - priority
-                break
+            # Remove leading \n but handle special cases like \\n\\n+
+            pattern = separator
+            if pattern.startswith('\\n'):
+                pattern = pattern[2:]  # Remove \n
+                # Handle double newlines and other special cases
+                if pattern.startswith('\\n'):
+                    if pattern == '\\n+':
+                        pattern = '^$'  # Match empty lines
+                    else:
+                        pattern = pattern[2:] + '$'  # Make it end-of-line match for empty lines
+            
+            try:
+                if re.match(pattern, line):
+                    is_separator = True
+                    separator_priority = len(separators) - priority
+                    break
+            except re.error:
+                # Skip invalid regex patterns
+                continue
         
         # Force split if chunk gets too large
         force_split = current_size + line_size > config.max_chunk_size
