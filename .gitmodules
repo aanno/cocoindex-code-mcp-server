@@ -4,6 +4,3 @@
 [submodule "code-index-mcp"]
 	path = code-index-mcp
 	url = git@github.com:johnhuang316/code-index-mcp.git
-[submodule "astchunk"]
-	path = astchunk
-	url = git@github.com:yilinjz/astchunk.git

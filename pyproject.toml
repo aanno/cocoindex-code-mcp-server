@@ -13,7 +13,8 @@ dependencies = [
     "psycopg[pool]>=3.2.9",
     "pgvector>=0.4.1",
     "numpy>=2.3.1",
-    "pytest>=8.4.1"
+    "pytest>=8.4.1",
+    "astchunk @ git+https://github.com/yilinjz/astchunk.git"
 ]
 
 [project.optional-dependencies]

@@ -12,11 +12,6 @@ from typing import List, Dict, Any, Optional
 from pathlib import Path
 import logging
 
-# Add astchunk to path if needed
-astchunk_path = Path(__file__).parent.parent / "astchunk" / "src"
-if astchunk_path.exists():
-    sys.path.insert(0, str(astchunk_path))
-
 try:
     from astchunk import ASTChunkBuilder
 except ImportError as e:
