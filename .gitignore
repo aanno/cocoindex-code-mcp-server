@@ -2,6 +2,16 @@ __pycache__/
 /quickstart/
 /target/
 *.pyc
+*.log
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+*.whl
+*.dist-info/
+*.coverage
+*.cache
+*.pytest_cache/
 .venv/
 /.claude/*.local.*
 

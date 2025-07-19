@@ -11,6 +11,8 @@ import cocoindex
 import logging
 import re
 
+from src import LOGGER
+
 logger = logging.getLogger(__name__)
 
 
@@ -719,26 +721,26 @@ main = do
     ]
     
     for i, config in enumerate(configs):
-        print(f"\n--- Configuration {i+1} ---")
-        print(f"Max size: {config.max_chunk_size}, Overlap: {config.chunk_overlap}")
-        print(f"Expansion: {config.chunk_expansion}, Template: {config.metadata_template}")
+        LOGGER.info(f"\n--- Configuration {i+1} ---")
+        LOGGER.info(f"Max size: {config.max_chunk_size}, Overlap: {config.chunk_overlap}")
+        LOGGER.info(f"Expansion: {config.chunk_expansion}, Template: {config.metadata_template}")
         
         chunker = EnhancedHaskellChunker(config)
         chunks = chunker.chunk_code(haskell_code, "test.hs")
         
-        print(f"Created {len(chunks)} chunks:")
+        LOGGER.info(f"Created {len(chunks)} chunks:")
         for j, chunk in enumerate(chunks):
             metadata = chunk['metadata']
-            print(f"  Chunk {j+1}: {metadata['chunk_method']} method")
-            print(f"    Size: {metadata['chunk_size']} chars, Lines: {metadata['line_count']}")
-            print(f"    Has types: {metadata.get('has_data_types', False)}")
-            print(f"    Has functions: {metadata.get('has_type_signatures', False)}")
+            LOGGER.info(f"  Chunk {j+1}: {metadata['chunk_method']} method")
+            LOGGER.info(f"    Size: {metadata['chunk_size']} chars, Lines: {metadata['line_count']}")
+            LOGGER.info(f"    Has types: {metadata.get('has_data_types', False)}")
+            LOGGER.info(f"    Has functions: {metadata.get('has_type_signatures', False)}")
             if config.metadata_template == "repoeval":
-                print(f"    Functions: {metadata.get('functions', [])}")
-                print(f"    Types: {metadata.get('types', [])}")
+                LOGGER.info(f"    Functions: {metadata.get('functions', [])}")
+                LOGGER.info(f"    Types: {metadata.get('types', [])}")
             elif config.metadata_template == "swebench":
-                print(f"    Complexity: {metadata.get('complexity_score', 0)}")
-                print(f"    Dependencies: {metadata.get('dependencies', [])}")
+                LOGGER.info(f"    Complexity: {metadata.get('complexity_score', 0)}")
+                LOGGER.info(f"    Dependencies: {metadata.get('dependencies', [])}")
 
 
 if __name__ == "__main__":

@@ -9,6 +9,9 @@ import os
 import sys
 import pytest
 import re
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 # Add the src directory to the path to import the main module
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
@@ -109,7 +112,7 @@ def test_safe_regex_matching():
     
     if problems_found:
         for problem in problems_found:
-            print(problem)
+            LOGGER.debug(problem)
     
     assert len(problems_found) == 0, f"Found {len(problems_found)} regex problems"
 

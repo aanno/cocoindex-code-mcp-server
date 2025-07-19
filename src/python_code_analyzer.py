@@ -10,6 +10,8 @@ import re
 from typing import List, Dict, Any, Optional, Set
 import logging
 
+from src import LOGGER
+
 logger = logging.getLogger(__name__)
 
 
@@ -388,14 +390,14 @@ if __name__ == "__main__":
     analyzer = PythonCodeAnalyzer()
     metadata = analyzer.analyze_code(sample_code, "test.py")
     
-    print("📊 Python Code Analysis Results:")
-    print(f"Functions: {metadata['functions']}")
-    print(f"Classes: {metadata['classes']}")
-    print(f"Imports: {metadata['imports']}")
-    print(f"Complexity Score: {metadata['complexity_score']}")
-    print(f"Has Async: {metadata['has_async']}")
-    print(f"Has Type Hints: {metadata['has_type_hints']}")
-    print(f"Private Methods: {metadata['private_methods']}")
+    LOGGER.info("📊 Python Code Analysis Results:")
+    LOGGER.info(f"Functions: {metadata['functions']}")
+    LOGGER.info(f"Classes: {metadata['classes']}")
+    LOGGER.info(f"Imports: {metadata['imports']}")
+    LOGGER.info(f"Complexity Score: {metadata['complexity_score']}")
+    LOGGER.info(f"Has Async: {metadata['has_async']}")
+    LOGGER.info(f"Has Type Hints: {metadata['has_type_hints']}")
+    LOGGER.info(f"Private Methods: {metadata['private_methods']}")
     
     return metadata
 

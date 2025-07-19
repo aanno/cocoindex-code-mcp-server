@@ -13,6 +13,7 @@ import numpy as np
 import cocoindex
 from haskell_support import get_haskell_language_spec
 from python_code_analyzer import analyze_python_code
+from src import LOGGER
 # Import moved to avoid circular dependency
 
 
@@ -272,7 +273,7 @@ def code_embedding_flow(
     
     for i, path in enumerate(paths):
         source_name = f"files_{i}" if len(paths) > 1 else "files"
-        print(f"Adding source: {path} as '{source_name}'")
+        LOGGER.info(f"Adding source: {path} as '{source_name}'")
         
         # Configure LocalFile source with optional polling
         source_config = {
@@ -337,7 +338,7 @@ def code_embedding_flow(
         
         # Note: Polling configuration is handled by CocoIndex live updater, not LocalFile
         if enable_polling:
-            print(f"  Polling enabled: {poll_interval}s interval (handled by live updater)")
+            LOGGER.info(f"  Polling enabled: {poll_interval}s interval (handled by live updater)")
         
         data_scope[source_name] = flow_builder.add_source(
             cocoindex.sources.LocalFile(**source_config)
@@ -402,11 +403,11 @@ def update_flow_config(paths: List[str] = None, enable_polling: bool = False, po
 def run_flow_update(live_update: bool = False, poll_interval: int = 30):
     """Run the flow update (one-time or live)."""
     if live_update:
-        print("🔄 Starting live update mode...")
+        LOGGER.info("🔄 Starting live update mode...")
         if poll_interval > 0:
-            print(f"📊 File polling enabled: {poll_interval} seconds")
+            LOGGER.info(f"📊 File polling enabled: {poll_interval} seconds")
         else:
-            print("📊 Event-based monitoring (no polling)")
+            LOGGER.info("📊 Event-based monitoring (no polling)")
         
         flow = code_embedding_flow
         
@@ -414,25 +415,25 @@ def run_flow_update(live_update: bool = False, poll_interval: int = 30):
         flow.setup()
         
         # Initial update
-        print("🚀 Initial index build...")
+        LOGGER.info("🚀 Initial index build...")
         stats = flow.update()
-        print("Initial index built:", stats)
+        LOGGER.info("Initial index built:", stats)
         
         # Start live updater
-        print("👁️  Starting live file monitoring...")
+        LOGGER.info("👁️  Starting live file monitoring...")
         live_options = cocoindex.FlowLiveUpdaterOptions(
             live_mode=True,
             print_stats=True
         )
         
         with cocoindex.FlowLiveUpdater(flow, live_options) as updater:
-            print("✅ Live update mode active. Press Ctrl+C to stop.")
+            LOGGER.info("✅ Live update mode active. Press Ctrl+C to stop.")
             try:
                 updater.wait()
             except KeyboardInterrupt:
-                print("\n⏹️  Stopping live update mode...")
+                LOGGER.info("\n⏹️  Stopping live update mode...")
                 
     else:
         # Regular one-time update mode
         stats = code_embedding_flow.update()
-        print("Updated index: ", stats)
+        LOGGER.info("Updated index: ", stats)

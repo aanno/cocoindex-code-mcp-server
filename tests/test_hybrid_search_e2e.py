@@ -8,6 +8,7 @@ Tests both vector similarity and keyword search capabilities with real database.
 import os
 import sys
 import pytest
+import logging
 from dotenv import load_dotenv
 import cocoindex
 from psycopg_pool import ConnectionPool
@@ -19,6 +20,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 from hybrid_search import HybridSearchEngine
 from cocoindex_config import code_embedding_flow
 
+LOGGER = logging.getLogger(__name__)
+
 @pytest.fixture(scope="module")
 def setup_cocoindex():
     """Setup CocoIndex for testing."""
@@ -28,7 +31,7 @@ def setup_cocoindex():
     # Ensure index is up-to-date
     try:
         stats = code_embedding_flow.update()
-        print(f"✅ Index updated: {stats}")
+        LOGGER.info(f"✅ Index updated: {stats}")
     except Exception as e:
         pytest.skip(f"Could not update CocoIndex: {e}")
     

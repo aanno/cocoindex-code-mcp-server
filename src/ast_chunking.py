@@ -12,6 +12,8 @@ from typing import List, Dict, Any, Optional
 from pathlib import Path
 import logging
 
+from src import LOGGER
+
 try:
     from astchunk import ASTChunkBuilder
 except ImportError as e:
@@ -382,14 +384,14 @@ if __name__ == "__main__":
     chunker = CocoIndexASTChunker(max_chunk_size=300)
     chunks = chunker.chunk_code(python_code, "Python", "test.py")
     
-    print(f"Created {len(chunks)} chunks:")
+    LOGGER.info(f"Created {len(chunks)} chunks:")
     for i, chunk in enumerate(chunks):
-        print(f"\nChunk {i + 1}:")
-        print(f"Method: {chunk['metadata']['chunk_method']}")
-        print(f"Size: {chunk['metadata']['chunk_size']} chars")
-        print(f"Lines: {chunk['metadata']['line_count']}")
-        print("Content:")
-        print(chunk['content'][:200] + "..." if len(chunk['content']) > 200 else chunk['content'])
+        LOGGER.info(f"\nChunk {i + 1}:")
+        LOGGER.info(f"Method: {chunk['metadata']['chunk_method']}")
+        LOGGER.info(f"Size: {chunk['metadata']['chunk_size']} chars")
+        LOGGER.info(f"Lines: {chunk['metadata']['line_count']}")
+        LOGGER.info("Content:")
+        LOGGER.info(chunk['content'][:200] + "..." if len(chunk['content']) > 200 else chunk['content'])
 
 
 def create_hybrid_chunking_operation():

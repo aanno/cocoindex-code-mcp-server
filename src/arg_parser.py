@@ -6,6 +6,8 @@ Command-line argument parsing for the code embedding pipeline.
 
 import argparse
 
+from src import LOGGER
+
 
 def parse_args():
     """Parse command line arguments."""
@@ -71,22 +73,22 @@ def display_configuration(args, paths):
     """Display the configuration based on parsed arguments."""
     if paths:
         if len(paths) == 1:
-            print(f"📁 Indexing path: {paths[0]}")
+            LOGGER.info(f"📁 Indexing path: {paths[0]}")
         else:
-            print(f"📁 Indexing {len(paths)} paths:")
+            LOGGER.info(f"📁 Indexing {len(paths)} paths:")
             for i, path in enumerate(paths, 1):
-                print(f"  {i}. {path}")
+                LOGGER.info(f"  {i}. {path}")
     else:
-        print("📁 Using default path: cocoindex")
+        LOGGER.info("📁 Using default path: cocoindex")
     
     # Display mode
     if args.live:
-        print("🔴 Mode: Live updates")
+        LOGGER.info("🔴 Mode: Live updates")
         if args.poll > 0:
-            print(f"⏰ Polling: {args.poll} seconds")
+            LOGGER.info(f"⏰ Polling: {args.poll} seconds")
         else:
-            print("⚡ Monitoring: Event-based")
+            LOGGER.info("⚡ Monitoring: Event-based")
     else:
-        print("🟢 Mode: One-time indexing")
+        LOGGER.info("🟢 Mode: One-time indexing")
     
-    print()  # Empty line for readability
+    LOGGER.info()  # Empty line for readability
