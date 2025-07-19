@@ -426,7 +426,7 @@ class EnhancedHaskellChunker:
 
 
 @cocoindex.op.function()
-def extract_haskell_ast_chunks(content: str, config: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+def extract_haskell_ast_chunks(content: str, config: Optional[Dict[str, Any]] = None):
     """
     Enhanced AST-based Haskell chunking with configurable options.
     
@@ -612,16 +612,7 @@ def get_haskell_language_spec(config: Optional[HaskellChunkConfig] = None) -> co
     return cocoindex.functions.CustomLanguageSpec(
         language_name="Haskell",
         aliases=[".hs", ".lhs"],
-        separators_regex=get_enhanced_haskell_separators(),
-        # Add enhanced configuration
-        chunk_config={
-            "max_chunk_size": config.max_chunk_size,
-            "chunk_overlap": config.chunk_overlap,
-            "chunk_expansion": config.chunk_expansion,
-            "metadata_template": config.metadata_template,
-            "preserve_imports": config.preserve_imports,
-            "preserve_exports": config.preserve_exports,
-        }
+        separators_regex=get_enhanced_haskell_separators()
     )
 
 
@@ -630,14 +621,14 @@ def create_enhanced_haskell_chunking_operation():
     Create a CocoIndex operation for enhanced Haskell chunking.
     Provides a high-level interface similar to ASTChunk operations.
     """
-    @cocoindex.operation
+    @cocoindex.op.function()
     def EnhancedHaskellChunk(source_field: str,
                             max_chunk_size: int = 1800,
                             chunk_overlap: int = 0,
                             chunk_expansion: bool = False,
                             metadata_template: str = "default",
                             preserve_imports: bool = True,
-                            preserve_exports: bool = True) -> List[Dict[str, Any]]:
+                            preserve_exports: bool = True):
         """
         Enhanced Haskell chunking with ASTChunk-inspired features.
         

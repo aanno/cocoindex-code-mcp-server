@@ -298,11 +298,9 @@ def code_embedding_flow(
             ]
         }
         
-        # Add polling configuration if enabled
+        # Note: Polling configuration is handled by CocoIndex live updater, not LocalFile
         if enable_polling:
-            source_config["recent_changes_poll_interval"] = datetime.timedelta(seconds=poll_interval)
-            source_config["refresh_interval"] = datetime.timedelta(minutes=max(1, poll_interval // 60))
-            print(f"  Polling enabled: {poll_interval}s interval")
+            print(f"  Polling enabled: {poll_interval}s interval (handled by live updater)")
         
         data_scope[source_name] = flow_builder.add_source(
             cocoindex.sources.LocalFile(**source_config)
@@ -318,12 +316,10 @@ def code_embedding_flow(
             file["language"] = file["filename"].transform(extract_language)
             file["chunking_params"] = file["language"].transform(get_chunking_params)
             
-            # Use language-specific chunking with AST-based chunking for supported languages
-            from ast_chunking import create_hybrid_chunking_operation
+            # Use CocoIndex's built-in recursive splitting with language-specific chunking
             file["chunks"] = file["content"].transform(
-                create_hybrid_chunking_operation(),
+                cocoindex.functions.SplitRecursively(),
                 language=file["language"],
-                filename=file["filename"],
                 chunk_size=file["chunking_params"]["chunk_size"],
                 min_chunk_size=file["chunking_params"]["min_chunk_size"],
                 chunk_overlap=file["chunking_params"]["chunk_overlap"],

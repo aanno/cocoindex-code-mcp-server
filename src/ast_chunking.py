@@ -287,13 +287,13 @@ def create_ast_chunking_operation():
     if cocoindex is None:
         raise ImportError("CocoIndex not available")
     
-    @cocoindex.operation
+    @cocoindex.op.function()
     def ASTChunk(source_field: str, 
                  language: str = "auto",
                  max_chunk_size: int = 1800,
                  chunk_overlap: int = 0,
                  chunk_expansion: bool = False,
-                 metadata_template: str = "default") -> List[Dict[str, Any]]:
+                 metadata_template: str = "default"):
         """
         Structure-aware code chunking using AST analysis.
         
@@ -400,13 +400,13 @@ def create_hybrid_chunking_operation():
     if cocoindex is None:
         raise ImportError("CocoIndex not available")
     
-    @cocoindex.operation
+    @cocoindex.op.function()
     def HybridChunk(source_field: str, 
                     language: str,
                     filename: str = "",
                     chunk_size: int = 1200,
                     min_chunk_size: int = 300,
-                    chunk_overlap: int = 200) -> List[Dict[str, Any]]:
+                    chunk_overlap: int = 200):
         """
         Hybrid chunking that uses AST-based chunking for supported languages
         and falls back to regex-based chunking for others.
