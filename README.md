@@ -1,8 +1,5 @@
 # RAG experiments
 
-`/workspaces/rust/main.py` is simply a copy of             
-`/workspaces/rust/cocoindex/examples/code_embedding`
-
 The target of this project is to have an RAG for code development as MCP server.
 There is a MCP server example at `/workspaces/rust/code-index-mcp`.
 
@@ -11,10 +8,21 @@ There is a MCP server example at `/workspaces/rust/code-index-mcp`.
 ### CocoIndex Framework
 
 - Hybrid Rust/Python architecture with powerful data transformation capabilities
-- Built-in vector embedding support (SentenceTransformer + Voyage AI)
 - Incremental processing with PostgreSQL + pgvector backend
 - Code chunking and embedding pipeline already implemented
-- **NEW**: Haskell tree-sitter support via custom maturin extension
+- **NEW**: [Hybrid search](docs/claude/Hybrid-Search.md) with vector similarity and exact matches
+  + [Enhanced metadata](docs/cocoindex/metadata.md) for python
+- **NEW**: Haskell support
+  + Haskell tree-sitter support via custom maturin extension
+  + Haskell-specific code chunking inspired by ASTChunk
+    * see [Haskell-ASTChunking](docs/claude/Haskell-ASTChunking.md)
+- **NEW**: Multiple path support for indexing and searching across multiple directories
+- **NEW**: Enhanced code chunking by integration with ASTChunk
+  + see [ASTChunk_integration](docs/claude/ASTChunk_integration.md)
+  + see [ASTChunk](docs/claude/ASTChunk.md)
+- **NEW**: automatic language-aware code embeddings selection
+  + see [Embedding-Selection](docs/claude/Embedding-Selection.md)
+  + see [Language-Aware-Embeddings](docs/cocoindex/language-aware-embeddings.md)
 
 ### tree-sitter
 
@@ -43,14 +51,6 @@ This project now includes full Haskell support for CocoIndex through:
    - Haskell language detection (`.hs`, `.lhs` files)
    - Custom chunking parameters optimized for Haskell code
    - Tree-sitter-aware code splitting using our custom extension
-
-3. **Syntax-Aware Chunking**: Haskell-specific separators for:
-   - Function type signatures (`\n\w+\s*::\s*`)
-   - Function definitions (`\n\w+.*=\s*`)
-   - Module declarations (`\nmodule\s+`)
-   - Import statements (`\nimport\s+`)
-   - Type definitions (`\ndata\s+`, `\nnewtype\s+`, `\ntype\s+`)
-   - Class and instance definitions (`\nclass\s+`, `\ninstance\s+`)
 
 ## Plan
 

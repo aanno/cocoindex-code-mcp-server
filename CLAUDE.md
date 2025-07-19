@@ -4,7 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This repository contains CocoIndex, a high-performance data transformation framework for AI workloads. It consists of:
+This repository contains an RAG retrieval and query application specialized on code based on CocoIndex,
+a high-performance data transformation framework for AI workloads.
+
+See [Code-Structure](docs/claude/Code-Structure.md) how the application code is structured.
+
+Additonal files here (but only for reference how things work, i.e. not as application code dependencies):
 
 1. **cocoindex/**: The main CocoIndex project - a hybrid Rust/Python framework for building data transformation pipelines
 2. **code-index-mcp/**: An MCP (Model Context Protocol) server for code indexing and analysis
