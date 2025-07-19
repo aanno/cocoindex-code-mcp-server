@@ -12,6 +12,7 @@ from numpy.typing import NDArray
 import numpy as np
 import cocoindex
 from haskell_support import get_haskell_language_spec
+from python_code_analyzer import analyze_python_code
 # Import moved to avoid circular dependency
 
 
@@ -186,6 +187,42 @@ def extract_language(filename: str) -> str:
 def get_chunking_params(language: str) -> ChunkingParams:
     """Get language-specific chunking parameters."""
     return CHUNKING_PARAMS.get(language, CHUNKING_PARAMS["_DEFAULT"])
+
+
+@cocoindex.op.function()
+def extract_code_metadata(code: str, language: str, filename: str = ""):
+    """Extract rich metadata from code chunks based on language."""
+    def process_record(record):
+        code_text = record.get("code", record.get(code, ""))
+        lang = record.get("language", record.get(language, ""))
+        file_path = record.get("filename", record.get(filename, ""))
+        
+        if lang == "Python":
+            metadata = analyze_python_code(code_text, file_path)
+            return {
+                "metadata_json": str(metadata),  # Convert to string for storage
+                "functions": metadata.get("functions", []),
+                "classes": metadata.get("classes", []),
+                "imports": metadata.get("imports", []),
+                "complexity_score": metadata.get("complexity_score", 0),
+                "has_type_hints": metadata.get("has_type_hints", False),
+                "has_async": metadata.get("has_async", False),
+                "has_classes": metadata.get("has_classes", False),
+            }
+        else:
+            # For non-Python languages, return basic metadata
+            return {
+                "metadata_json": f'{{"language": "{lang}", "analysis_method": "basic"}}',
+                "functions": [],
+                "classes": [],
+                "imports": [],
+                "complexity_score": 0,
+                "has_type_hints": False,
+                "has_async": False,
+                "has_classes": False,
+            }
+    
+    return process_record
 
 
 @cocoindex.transform_flow()

@@ -12,6 +12,7 @@ from pgvector.psycopg import register_vector
 import cocoindex
 from cocoindex_config import code_embedding_flow, code_to_embedding
 from keyword_search_parser import KeywordSearchParser, build_sql_where_clause
+from python_code_analyzer import analyze_python_code
 
 
 class HybridSearchEngine:
@@ -149,16 +150,49 @@ class HybridSearchEngine:
             filename, language, code, distance, start, end, source_name = row
             score = 1.0 - float(distance) if score_type == "vector" else 1.0
         
-        return {
+        # Build base result
+        result = {
             "filename": filename,
             "language": language,
             "code": code,
             "score": score,
             "start": start,
             "end": end,
-            "source": source_name if source_name != 'files' else "unknown",
+            "source": source_name or "default",
             "score_type": score_type
         }
+        
+        # Add rich metadata for Python code
+        if language == "Python":
+            try:
+                metadata = analyze_python_code(code, filename)
+                result.update({
+                    "functions": metadata.get("functions", []),
+                    "classes": metadata.get("classes", []),
+                    "imports": metadata.get("imports", []),
+                    "complexity_score": metadata.get("complexity_score", 0),
+                    "has_type_hints": metadata.get("has_type_hints", False),
+                    "has_async": metadata.get("has_async", False),
+                    "has_classes": metadata.get("has_classes", False),
+                    "private_methods": metadata.get("private_methods", []),
+                    "dunder_methods": metadata.get("dunder_methods", []),
+                    "decorators": metadata.get("decorators", []),
+                    "metadata_json": json.dumps(metadata, default=str)
+                })
+            except Exception as e:
+                # Fallback: add basic metadata fields even if analysis fails
+                result.update({
+                    "functions": [],
+                    "classes": [],
+                    "imports": [],
+                    "complexity_score": 0,
+                    "has_type_hints": False,
+                    "has_async": False,
+                    "has_classes": False,
+                    "analysis_error": str(e)
+                })
+        
+        return result
 
 
 def format_results_as_json(results: List[Dict[str, Any]], indent: int = 2) -> str:
@@ -177,10 +211,39 @@ def format_results_readable(results: List[Dict[str, Any]]) -> str:
         source_info = f" [{result['source']}]" if result.get('source') and result['source'] != 'files' else ""
         score_info = f" ({result['score_type']})" if result.get('score_type') else ""
         
+        # Basic result info
         output.append(
             f"{i}. [{result['score']:.3f}]{score_info} {result['filename']}{source_info} "
             f"({result['language']}) (L{result['start']['line']}-L{result['end']['line']})"
         )
+        
+        # Add Python metadata if available
+        if result['language'] == 'Python' and any(key in result for key in ['functions', 'classes', 'imports']):
+            metadata_parts = []
+            
+            if result.get('functions'):
+                metadata_parts.append(f"Functions: {', '.join(result['functions'])}")
+            if result.get('classes'):
+                metadata_parts.append(f"Classes: {', '.join(result['classes'])}")
+            if result.get('imports'):
+                metadata_parts.append(f"Imports: {', '.join(result['imports'][:3])}")  # Show first 3
+            if result.get('decorators'):
+                metadata_parts.append(f"Decorators: {', '.join(result['decorators'])}")
+            
+            # Add type hints and async info
+            info_parts = []
+            if result.get('has_type_hints'):
+                info_parts.append("typed")
+            if result.get('has_async'):
+                info_parts.append("async")
+            if result.get('complexity_score', 0) > 10:
+                info_parts.append(f"complex({result['complexity_score']})")
+            
+            if metadata_parts:
+                output.append(f"   📝 {' | '.join(metadata_parts)}")
+            if info_parts:
+                output.append(f"   🏷️  {', '.join(info_parts)}")
+        
         output.append(f"   {result['code']}")
         output.append("   ---")
     
