@@ -28,6 +28,7 @@ def temp_directory():
 @pytest.mark.integration
 @pytest.mark.hybrid_search
 @pytest.mark.external
+@pytest.mark.db_integration
 class TestMainHybridSearchIntegration:
     """Integration tests for the main hybrid search entry point."""
     
@@ -124,6 +125,7 @@ class TestMainHybridSearchIntegration:
 
 @pytest.mark.integration
 @pytest.mark.hybrid_search
+@pytest.mark.db_integration
 class TestWorkflowIntegration:
     """Test the complete workflow integration."""
     
@@ -271,6 +273,7 @@ class TestWorkflowIntegration:
 @pytest.mark.integration
 @pytest.mark.hybrid_search
 @pytest.mark.external
+@pytest.mark.db_integration
 class TestConfigurationIntegration:
     """Test configuration and setup integration."""
     
@@ -316,6 +319,7 @@ class TestConfigurationIntegration:
 
 @pytest.mark.unit
 @pytest.mark.hybrid_search
+@pytest.mark.db_integration
 class TestErrorHandling:
     """Test error handling in the integration workflow."""
     
@@ -392,6 +396,7 @@ class TestErrorHandling:
 
 @pytest.mark.slow
 @pytest.mark.hybrid_search
+@pytest.mark.db_integration
 class TestPerformanceCharacteristics:
     """Test performance characteristics of the search system."""
     

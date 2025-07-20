@@ -183,12 +183,12 @@ data Tree a = Leaf a | Node (Tree a) (Tree a)
                 found_functions = True
                 # Should find factorial and fibonacci
                 functions = metadata["functions"]
-                assert any("factorial" in str(functions) or "fibonacci" in str(functions))
+                assert any("factorial" in str(func) for func in functions) or any("fibonacci" in str(func) for func in functions)
             if "types" in metadata and metadata["types"]:
                 found_types = True
                 # Should find Tree
                 types = metadata["types"]
-                assert any("Tree" in str(types))
+                assert any("Tree" in str(type_name) for type_name in types)
         
         # At least one chunk should have functions or types
         assert found_functions or found_types
@@ -229,7 +229,7 @@ processData input = do
                 found_dependencies = True
                 # Should find Data.Map import
                 deps = metadata["dependencies"]
-                assert any("Data.Map" in str(deps))
+                assert any("Data.Map" in str(dep) for dep in deps)
         
         assert found_complexity or found_dependencies
 

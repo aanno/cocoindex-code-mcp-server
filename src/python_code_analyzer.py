@@ -2,14 +2,23 @@
 
 """
 Python code analyzer for extracting rich metadata from code chunks.
-Extracts function names, parameters, return types, class names, and imports.
+Enhanced with tree-sitter AST analysis and multi-level fallback strategies.
 """
 
 import ast
 import re
+import json
 from typing import List, Dict, Any, Optional, Set
 import logging
 from __init__ import LOGGER
+
+# Import the new tree-sitter based analyzer
+try:
+    from tree_sitter_python_analyzer import TreeSitterPythonAnalyzer, create_python_analyzer
+    TREE_SITTER_ANALYZER_AVAILABLE = True
+except ImportError as e:
+    LOGGER.warning(f"Tree-sitter Python analyzer not available: {e}")
+    TREE_SITTER_ANALYZER_AVAILABLE = False
 
 class PythonCodeAnalyzer:
     """Analyzer for extracting metadata from Python code chunks."""
@@ -331,73 +340,37 @@ class PythonCodeAnalyzer:
 
 def analyze_python_code(code: str, filename: str = "") -> Dict[str, Any]:
     """
-    Convenience function to analyze Python code.
+    Enhanced Python code analysis with tree-sitter support and fallback strategies.
+    
+    This function now uses the TreeSitterPythonAnalyzer which provides:
+    - Tree-sitter AST analysis for better structure understanding
+    - Python AST analysis for detailed semantic information  
+    - Multi-level fallback strategies for robustness
+    - Enhanced metadata extraction with position information
     
     Args:
         code: Python source code
         filename: Optional filename for context
         
     Returns:
-        Dictionary containing extracted metadata
+        Dictionary containing extracted metadata with enhanced information
     """
-    analyzer = PythonCodeAnalyzer()
-    return analyzer.analyze_code(code, filename)
-
-
-def test_python_analyzer():
-    """Test the Python code analyzer with sample code."""
-    sample_code = '''
-import os
-from typing import List, Dict, Any
-import numpy as np
-
-class DataProcessor:
-    """A class for processing data."""
-    
-    def __init__(self, config: Dict[str, Any]):
-        self.config = config
-        self._cache = {}
-    
-    @property
-    def cache_size(self) -> int:
-        """Get the cache size."""
-        return len(self._cache)
-    
-    async def process_data(self, data: List[str], batch_size: int = 10) -> List[Dict[str, Any]]:
-        """Process data asynchronously."""
-        results = []
-        for item in data:
-            result = await self._process_item(item)
-            results.append(result)
-        return results
-    
-    def _process_item(self, item: str) -> Dict[str, Any]:
-        """Process a single item."""
-        return {"item": item, "processed": True}
-
-def standalone_function(x: int, y: int = 5) -> int:
-    """A standalone function."""
-    return x + y
-
-if __name__ == "__main__":
-    processor = DataProcessor({"batch_size": 10})
-    print("Processing complete")
-    '''
-    
-    analyzer = PythonCodeAnalyzer()
-    metadata = analyzer.analyze_code(sample_code, "test.py")
-    
-    LOGGER.info("📊 Python Code Analysis Results:")
-    LOGGER.info(f"Functions: {metadata['functions']}")
-    LOGGER.info(f"Classes: {metadata['classes']}")
-    LOGGER.info(f"Imports: {metadata['imports']}")
-    LOGGER.info(f"Complexity Score: {metadata['complexity_score']}")
-    LOGGER.info(f"Has Async: {metadata['has_async']}")
-    LOGGER.info(f"Has Type Hints: {metadata['has_type_hints']}")
-    LOGGER.info(f"Private Methods: {metadata['private_methods']}")
-    
-    return metadata
+    if TREE_SITTER_ANALYZER_AVAILABLE:
+        # Use the enhanced tree-sitter based analyzer
+        analyzer = create_python_analyzer(prefer_tree_sitter=True)
+        metadata = analyzer.analyze_code(code, filename)
+        
+        # Ensure metadata_json field for compatibility with existing code
+        if 'metadata_json' not in metadata:
+            metadata['metadata_json'] = json.dumps(metadata, default=str)
+        
+        return metadata
+    else:
+        # Fallback to the legacy analyzer
+        LOGGER.info("Using legacy Python analyzer (tree-sitter not available)")
+        analyzer = PythonCodeAnalyzer()
+        return analyzer.analyze_code(code, filename)
 
 
 if __name__ == "__main__":
-    test_python_analyzer()
+    print("Python code analyzer module - use tests/test_python_analyzer_integration.py for testing")

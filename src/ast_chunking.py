@@ -12,7 +12,7 @@ from typing import List, Dict, Any, Optional
 from pathlib import Path
 import logging
 
-from src import LOGGER
+from __init__ import LOGGER
 
 try:
     from astchunk import ASTChunkBuilder
@@ -355,43 +355,6 @@ if cocoindex is not None:
         LOGGER.warning(f"Failed to create ASTChunkOperation: {e}")
 
 
-def test_ast_chunking():
-    """Test the AST chunking functionality."""
-    # Test with Python code
-    python_code = '''
-def hello_world():
-    """A simple hello world function."""
-    print("Hello, World!")
-    
-class Calculator:
-    """A simple calculator class."""
-    
-    def add(self, a, b):
-        return a + b
-    
-    def multiply(self, a, b):
-        return a * b
-
-if __name__ == "__main__":
-    calc = Calculator()
-    result = calc.add(5, 3)
-    print(f"5 + 3 = {result}")
-    hello_world()
-    '''
-    
-    chunker = CocoIndexASTChunker(max_chunk_size=300)
-    chunks = chunker.chunk_code(python_code, "Python", "test.py")
-    
-    LOGGER.info(f"Created {len(chunks)} chunks:")
-    for i, chunk in enumerate(chunks):
-        LOGGER.info(f"\nChunk {i + 1}:")
-        LOGGER.info(f"Method: {chunk['metadata']['chunk_method']}")
-        LOGGER.info(f"Size: {chunk['metadata']['chunk_size']} chars")
-        LOGGER.info(f"Lines: {chunk['metadata']['line_count']}")
-        LOGGER.info("Content:")
-        LOGGER.info(chunk['content'][:200] + "..." if len(chunk['content']) > 200 else chunk['content'])
-
-
 def create_hybrid_chunking_operation():
     """
     Create a hybrid chunking operation that uses AST-based chunking for supported
@@ -488,4 +451,4 @@ def create_hybrid_chunking_operation():
 
 
 if __name__ == "__main__":
-    test_ast_chunking()
+    print("AST chunking module - use tests/test_ast_chunking_integration.py for testing")

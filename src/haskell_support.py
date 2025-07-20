@@ -442,7 +442,28 @@ def extract_haskell_ast_chunks(content: str, config: Optional[Dict[str, Any]] = 
         chunk_config = HaskellChunkConfig()
     
     chunker = EnhancedHaskellChunker(chunk_config)
-    return chunker.chunk_code(content)
+    chunks = chunker.chunk_code(content)
+    
+    # Convert to legacy CocoIndex format for backward compatibility
+    legacy_chunks = []
+    for chunk in chunks:
+        legacy_chunk = {
+            "text": chunk["content"],
+            "start": {"line": chunk["metadata"]["start_line"], "column": 0},
+            "end": {"line": chunk["metadata"]["end_line"], "column": 0},
+            "location": f"{chunk['metadata']['start_line']}:{chunk['metadata']['end_line']}",
+            "start_byte": chunk["metadata"].get("start_byte", 0),
+            "end_byte": chunk["metadata"].get("end_byte", len(chunk["content"].encode('utf-8'))),
+            "node_type": chunk["metadata"].get("node_type", "haskell_chunk"),
+            "metadata": {
+                "category": chunk["metadata"].get("node_type", "haskell_ast"),
+                "method": chunk["metadata"]["chunk_method"],
+                **chunk["metadata"]
+            },
+        }
+        legacy_chunks.append(legacy_chunk)
+    
+    return legacy_chunks
 
 
 def create_enhanced_regex_fallback_chunks(content: str, file_path: str, config: HaskellChunkConfig) -> List[Dict[str, Any]]:
@@ -674,70 +695,5 @@ def create_enhanced_haskell_chunking_operation():
     return EnhancedHaskellChunk
 
 
-def test_enhanced_haskell_chunking():
-    """Test the enhanced Haskell chunking functionality."""
-    haskell_code = '''
-module Main where
-
-import Data.List
-import Control.Monad
-
--- | A simple data type for demonstration
-data Tree a = Leaf a | Node (Tree a) (Tree a)
-    deriving (Show, Eq)
-
--- | Calculate the depth of a tree
-treeDepth :: Tree a -> Int
-treeDepth (Leaf _) = 1
-treeDepth (Node left right) = 1 + max (treeDepth left) (treeDepth right)
-
--- | Map a function over a tree
-mapTree :: (a -> b) -> Tree a -> Tree b
-mapTree f (Leaf x) = Leaf (f x)
-mapTree f (Node left right) = Node (mapTree f left) (mapTree f right)
-
--- | Fold over a tree
-foldTree :: (a -> b) -> (b -> b -> b) -> Tree a -> b
-foldTree f g (Leaf x) = f x
-foldTree f g (Node left right) = g (foldTree f g left) (foldTree f g right)
-
-main :: IO ()
-main = do
-    let tree = Node (Leaf 1) (Node (Leaf 2) (Leaf 3))
-    putStrLn $ "Tree: " ++ show tree
-    putStrLn $ "Depth: " ++ show (treeDepth tree)
-    putStrLn $ "Doubled: " ++ show (mapTree (*2) tree)
-    '''
-    
-    # Test with different configurations
-    configs = [
-        HaskellChunkConfig(max_chunk_size=300, chunk_expansion=False),
-        HaskellChunkConfig(max_chunk_size=300, chunk_expansion=True, metadata_template="repoeval"),
-        HaskellChunkConfig(max_chunk_size=500, chunk_overlap=2, metadata_template="swebench"),
-    ]
-    
-    for i, config in enumerate(configs):
-        LOGGER.info(f"\n--- Configuration {i+1} ---")
-        LOGGER.info(f"Max size: {config.max_chunk_size}, Overlap: {config.chunk_overlap}")
-        LOGGER.info(f"Expansion: {config.chunk_expansion}, Template: {config.metadata_template}")
-        
-        chunker = EnhancedHaskellChunker(config)
-        chunks = chunker.chunk_code(haskell_code, "test.hs")
-        
-        LOGGER.info(f"Created {len(chunks)} chunks:")
-        for j, chunk in enumerate(chunks):
-            metadata = chunk['metadata']
-            LOGGER.info(f"  Chunk {j+1}: {metadata['chunk_method']} method")
-            LOGGER.info(f"    Size: {metadata['chunk_size']} chars, Lines: {metadata['line_count']}")
-            LOGGER.info(f"    Has types: {metadata.get('has_data_types', False)}")
-            LOGGER.info(f"    Has functions: {metadata.get('has_type_signatures', False)}")
-            if config.metadata_template == "repoeval":
-                LOGGER.info(f"    Functions: {metadata.get('functions', [])}")
-                LOGGER.info(f"    Types: {metadata.get('types', [])}")
-            elif config.metadata_template == "swebench":
-                LOGGER.info(f"    Complexity: {metadata.get('complexity_score', 0)}")
-                LOGGER.info(f"    Dependencies: {metadata.get('dependencies', [])}")
-
-
 if __name__ == "__main__":
-    test_enhanced_haskell_chunking()
+    print("Enhanced Haskell support module - use tests/test_haskell_support_integration.py for testing")

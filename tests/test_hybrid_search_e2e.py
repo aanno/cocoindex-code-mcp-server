@@ -22,6 +22,9 @@ from cocoindex_config import code_embedding_flow
 
 LOGGER = logging.getLogger(__name__)
 
+# Mark all tests in this file as requiring database integration
+pytestmark = pytest.mark.db_integration
+
 @pytest.fixture(scope="module")
 def setup_cocoindex():
     """Setup CocoIndex for testing."""

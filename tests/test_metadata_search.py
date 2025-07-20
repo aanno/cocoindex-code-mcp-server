@@ -8,16 +8,21 @@ These tests require a running database with indexed code.
 import os
 import sys
 import pytest
+import logging
 from dotenv import load_dotenv
 from psycopg_pool import ConnectionPool
+
+# Set up logger for tests
+LOGGER = logging.getLogger(__name__)
 
 # Add src to path to import modules
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 try:
     from hybrid_search import HybridSearchEngine, format_results_as_json, format_results_readable
-except ImportError:
-    print("⚠️  Warning: Could not import hybrid_search module. These are integration tests that require the full application setup.")
+except ImportError as e:
+    LOGGER.warning(f"Could not import hybrid_search module: {e}")
+    print("⚠️  Warning: These are integration tests that require the full application setup.")
 
 @pytest.mark.integration
 class TestMetadataSearch:
