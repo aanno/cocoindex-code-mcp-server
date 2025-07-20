@@ -2,13 +2,14 @@
 
 """
 Start script for the CocoIndex RAG MCP Server.
+This script forwards all arguments to the main MCP server.
 """
 
 import os
 import sys
 
 def main():
-    """Start the MCP server."""
+    """Start the MCP server with forwarded arguments."""
     print("🚀 Starting CocoIndex RAG MCP Server...", file=sys.stderr)
     
     # Check environment variables
@@ -19,8 +20,10 @@ def main():
         print(f"⚠️  Warning: Missing environment variables: {missing_env}", file=sys.stderr)
         print("Using defaults (this may cause connection errors):", file=sys.stderr)
         print("  DB_HOST=localhost, DB_NAME=cocoindex, DB_USER=postgres, DB_PASSWORD=password", file=sys.stderr)
+        print(file=sys.stderr)
     
-    # Import and run the server
+    # Forward all command line arguments to the main server
+    # This preserves the original sys.argv for argument parsing
     try:
         from mcp_server import main as server_main
         import asyncio

@@ -7,6 +7,7 @@ A Model Context Protocol (MCP) server that provides hybrid search capabilities
 combining vector similarity and keyword metadata search for code retrieval.
 """
 
+import argparse
 import asyncio
 import json
 import os
@@ -18,13 +19,14 @@ import mcp.types as types
 from mcp.server import NotificationOptions, Server
 from psycopg_pool import ConnectionPool
 from pgvector.psycopg import register_vector
+from dotenv import load_dotenv
 
 # Local imports
 from hybrid_search import HybridSearchEngine
 from keyword_search_parser_lark import KeywordSearchParser
 from lang.python.python_code_analyzer import analyze_python_code
 import cocoindex
-from cocoindex_config import code_embedding_flow, code_to_embedding
+from cocoindex_config import code_embedding_flow, code_to_embedding, update_flow_config, run_flow_update
 
 
 # Initialize the MCP server
@@ -33,6 +35,107 @@ server = Server("cocoindex-rag")
 # Global state
 hybrid_search_engine: Optional[HybridSearchEngine] = None
 connection_pool: Optional[ConnectionPool] = None
+
+
+def parse_mcp_args():
+    """Parse command line arguments for MCP server."""
+    parser = argparse.ArgumentParser(
+        description="CocoIndex RAG MCP Server - Model Context Protocol server for hybrid code search",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python mcp_server.py                         # Use default path (cocoindex) with live updates
+  python mcp_server.py /path/to/code           # Index single directory
+  python mcp_server.py /path/to/code1 /path/to/code2  # Index multiple directories
+  python mcp_server.py --paths /path/to/code   # Explicit paths argument
+  
+  # Live update configuration (enabled by default)
+  python mcp_server.py --no-live               # Disable live updates
+  python mcp_server.py --poll 30               # Custom polling interval (default: 60s)
+
+MCP Tools Available:
+  - hybrid_search: Combine vector similarity and keyword metadata filtering
+  - vector_search: Pure vector similarity search
+  - keyword_search: Pure keyword metadata search  
+  - analyze_code: Code analysis and metadata extraction
+  - get_embeddings: Generate embeddings for text
+
+MCP Resources Available:
+  - search_stats: Database and search performance statistics
+  - search_config: Current hybrid search configuration
+  - database_schema: Database table structure information
+        """
+    )
+    
+    parser.add_argument(
+        "paths", 
+        nargs="*", 
+        help="Code directory paths to index (default: cocoindex)"
+    )
+    
+    parser.add_argument(
+        "--paths",
+        dest="explicit_paths",
+        nargs="+",
+        help="Alternative way to specify paths"
+    )
+    
+    parser.add_argument(
+        "--no-live",
+        action="store_true",
+        help="Disable live update mode (live updates are enabled by default)"
+    )
+    
+    parser.add_argument(
+        "--poll",
+        type=int,
+        default=60,
+        metavar="SECONDS",
+        help="Polling interval in seconds for live updates (default: 60)"
+    )
+    
+    return parser.parse_args()
+
+
+def determine_paths(args):
+    """Determine which paths to use based on parsed arguments."""
+    paths = None
+    if args.explicit_paths:
+        paths = args.explicit_paths
+    elif args.paths:
+        paths = args.paths
+    
+    return paths
+
+
+def display_mcp_configuration(args, paths):
+    """Display the configuration for MCP server."""
+    print("🚀 CocoIndex RAG MCP Server", file=sys.stderr)
+    print("=" * 50, file=sys.stderr)
+    
+    # Display paths
+    if paths:
+        if len(paths) == 1:
+            print(f"📁 Indexing path: {paths[0]}", file=sys.stderr)
+        else:
+            print(f"📁 Indexing {len(paths)} paths:", file=sys.stderr)
+            for i, path in enumerate(paths, 1):
+                print(f"  {i}. {path}", file=sys.stderr)
+    else:
+        print("📁 Using default path: cocoindex", file=sys.stderr)
+    
+    # Display mode configuration
+    live_enabled = not args.no_live
+    if live_enabled:
+        print("🔴 Mode: Live updates ENABLED", file=sys.stderr)
+        print(f"⏰ Polling interval: {args.poll} seconds", file=sys.stderr)
+    else:
+        print("🟡 Mode: Live updates DISABLED", file=sys.stderr)
+    
+    print(file=sys.stderr)
+    print("🔧 MCP Tools: hybrid_search, vector_search, keyword_search, analyze_code, get_embeddings", file=sys.stderr)
+    print("📊 MCP Resources: search_stats, search_config, database_schema", file=sys.stderr)
+    print(file=sys.stderr)
 
 
 @server.list_resources()
@@ -478,8 +581,54 @@ async def initialize_search_engine():
 
 async def main():
     """Main entry point for the MCP server."""
+    # Load environment and initialize CocoIndex
+    load_dotenv()
+    cocoindex.init()
+    
+    # Parse command line arguments
+    args = parse_mcp_args()
+    
+    # Determine paths to use
+    paths = determine_paths(args)
+    
+    # Display configuration
+    display_mcp_configuration(args, paths)
+    
+    # Configure live updates (enabled by default)
+    live_enabled = not args.no_live
+    
+    # Update flow configuration
+    update_flow_config(
+        paths=paths,
+        enable_polling=live_enabled and args.poll > 0,
+        poll_interval=args.poll
+    )
+    
+    # Run the flow update if live updates are enabled
+    if live_enabled:
+        print("🔄 Running initial flow update...", file=sys.stderr)
+        # Run flow update in background for live mode
+        import threading
+        
+        def run_flow_background():
+            run_flow_update(
+                live_update=True,
+                poll_interval=args.poll
+            )
+        
+        # Start background flow update
+        flow_thread = threading.Thread(target=run_flow_background, daemon=True)
+        flow_thread.start()
+        print("✅ Background flow update started", file=sys.stderr)
+    else:
+        print("🔄 Running one-time flow update...", file=sys.stderr)
+        run_flow_update(live_update=False)
+        print("✅ Flow update completed", file=sys.stderr)
+    
     # Initialize the search engine
     await initialize_search_engine()
+    
+    print("🚀 MCP server starting...", file=sys.stderr)
     
     # Run the MCP server
     async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):

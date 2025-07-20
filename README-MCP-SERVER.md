@@ -66,11 +66,22 @@ python -m pytest tests/test_mcp_server.py::TestMCPServerBasics -v
 
 ### Starting the Server
 ```bash
+# Basic usage (live updates enabled by default, 60s polling)
 python start_mcp_server.py
-```
 
-Or directly:
-```bash
+# Custom path
+python start_mcp_server.py /path/to/code
+
+# Multiple paths
+python start_mcp_server.py /path/to/code1 /path/to/code2
+
+# Disable live updates
+python start_mcp_server.py --no-live
+
+# Custom polling interval
+python start_mcp_server.py --poll 30
+
+# Or run directly
 python mcp_server.py
 ```
 

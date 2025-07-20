@@ -1,5 +1,11 @@
 {
     "mcpServers": {
+        "cocoindex-rag": {
+            "command": "python",
+            "args": [
+                "/workspaces/rust/src/cocoindex-code-mcp-server/mcp_server.py"
+            ]
+        },
         "vscode-mcp-server": {
             "command": "pnpm",
             "args": [
@@ -19,7 +25,9 @@
         },
         "fetch": {
             "command": "uvx",
-            "args": ["mcp-server-fetch"]
+            "args": [
+                "mcp-server-fetch"
+            ]
         },
         "git": {
             "command": "uvx",
