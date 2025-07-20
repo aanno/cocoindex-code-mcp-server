@@ -17,8 +17,12 @@ import threading
 from typing import Any, Dict, List, Optional, Sequence
 
 import mcp.server.stdio
+import mcp.server.sse
 import mcp.types as types
 from mcp.server import NotificationOptions, Server
+from starlette.applications import Starlette
+from starlette.routing import Route
+import uvicorn
 from psycopg_pool import ConnectionPool
 from pgvector.psycopg import register_vector
 from dotenv import load_dotenv
@@ -93,14 +97,17 @@ def handle_shutdown(signum, frame):
     global background_thread
     if background_thread and background_thread.is_alive():
         print("⏳ Waiting for background thread to finish...", file=sys.stderr)
-        background_thread.join(timeout=5.0)
+        background_thread.join(timeout=3.0)  # Shorter timeout
         if background_thread.is_alive():
             print("⚠️  Background thread did not finish cleanly", file=sys.stderr)
     
     print("✅ Cleanup completed", file=sys.stderr)
     
-    # Force exit after cleanup
-    os._exit(0)
+    # Use sys.exit instead of os._exit for cleaner shutdown
+    try:
+        sys.exit(0)
+    except SystemExit:
+        os._exit(0)
 
 
 def parse_mcp_args():
@@ -160,23 +167,20 @@ MCP Resources Available:
         help="Polling interval in seconds for live updates (default: 60)"
     )
     
-    # For MCP mode, check if we're running as MCP server (no console input expected)
-    if not sys.stdin.isatty():
-        # Running as MCP server - use environment variables for configuration
-        paths = []
-        if len(sys.argv) > 1:
-            # Take paths from command line if provided
-            paths = sys.argv[1:]
-        
-        # Create a mock args object with environment-based configuration
-        class MockArgs:
-            def __init__(self):
-                self.paths = paths
-                self.explicit_paths = None
-                self.no_live = os.getenv('COCOINDEX_NO_LIVE', 'false').lower() == 'true'
-                self.poll = int(os.getenv('COCOINDEX_POLL_INTERVAL', '60'))
-        
-        return MockArgs()
+    # Transport options
+    transport_group = parser.add_mutually_exclusive_group()
+    transport_group.add_argument(
+        "--port",
+        type=int,
+        metavar="PORT",
+        help="Run as HTTP server on specified port (e.g., --port 8080)"
+    )
+    transport_group.add_argument(
+        "--url",
+        type=str,
+        metavar="URL", 
+        help="Connect to HTTP server at specified URL (e.g., --url http://localhost:8080)"
+    )
     
     return parser.parse_args()
 
@@ -726,6 +730,79 @@ async def background_initialization(live_enabled: bool, poll_interval: int):
         print(f"❌ Background initialization failed: {e}", file=sys.stderr)
 
 
+async def handle_jsonrpc_request(request_data: dict) -> dict:
+    """Handle JSON-RPC request and return response."""
+    method = request_data.get("method")
+    params = request_data.get("params", {})
+    request_id = request_data.get("id")
+    
+    try:
+        if method == "initialize":
+            # Handle initialize request
+            return {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "result": {
+                    "protocolVersion": "2024-11-05",
+                    "capabilities": {
+                        "tools": {"listChanged": True},
+                        "resources": {"listChanged": True},
+                    },
+                    "serverInfo": {
+                        "name": "cocoindex-rag",
+                        "version": "1.0.0"
+                    }
+                }
+            }
+        elif method == "tools/list":
+            # Get tools from server handlers
+            tools = await handle_list_tools()
+            return {
+                "jsonrpc": "2.0", 
+                "id": request_id,
+                "result": {"tools": [tool.model_dump() for tool in tools]}
+            }
+        elif method == "resources/list":
+            # Get resources from server handlers
+            resources = await handle_list_resources()
+            return {
+                "jsonrpc": "2.0",
+                "id": request_id, 
+                "result": {"resources": [resource.model_dump() for resource in resources]}
+            }
+        elif method == "resources/read":
+            # Read specific resource
+            uri = params.get("uri")
+            content = await handle_read_resource(uri)
+            return {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "result": {"contents": [{"uri": uri, "text": content}]}
+            }
+        elif method == "tools/call":
+            # Call specific tool
+            name = params.get("name")
+            arguments = params.get("arguments", {})
+            result = await handle_call_tool(name, arguments)
+            return {
+                "jsonrpc": "2.0", 
+                "id": request_id,
+                "result": {"content": [content.model_dump() for content in result]}
+            }
+        else:
+            return {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "error": {"code": -32601, "message": f"Method not found: {method}"}
+            }
+    except Exception as e:
+        return {
+            "jsonrpc": "2.0",
+            "id": request_id, 
+            "error": {"code": -32603, "message": f"Internal error: {str(e)}"}
+        }
+
+
 async def shutdown_monitor():
     """Monitor shutdown event and signal shutdown."""
     while not shutdown_event.is_set() and not _terminating.is_set():
@@ -733,6 +810,113 @@ async def shutdown_monitor():
     
     # Just return when shutdown is requested - let the main loop handle cleanup
     return
+
+
+async def run_http_server(port: int, live_enabled: bool, poll_interval: int):
+    """Run MCP server using modern Streamable HTTP transport."""
+    print(f"🌐 Starting HTTP MCP server on port {port}...", file=sys.stderr)
+    
+    # Initialize background components
+    await background_initialization(live_enabled, poll_interval)
+    
+    # Handle /mcp endpoint for Streamable HTTP transport
+    async def handle_mcp_endpoint(request):
+        """Handle MCP requests using Streamable HTTP transport."""
+        from starlette.responses import Response
+        
+        if request.method == "POST":
+            try:
+                # Handle JSON-RPC over HTTP POST
+                body = await request.body()
+                
+                # Parse JSON-RPC request
+                import json
+                request_data = json.loads(body.decode('utf-8'))
+                
+                # Handle the request directly instead of using server.run
+                response = await handle_jsonrpc_request(request_data)
+                
+                # Return JSON response
+                return Response(
+                    content=json.dumps(response),
+                    media_type="application/json",
+                    headers={"Access-Control-Allow-Origin": "*"}
+                )
+                
+            except Exception as e:
+                print(f"MCP request error: {e}", file=sys.stderr)
+                return Response(
+                    content=f'{{"error": "Request failed: {e}"}}',
+                    status_code=500,
+                    media_type="application/json"
+                )
+        else:
+            return Response(
+                content='{"error": "Only POST requests supported"}',
+                status_code=405,
+                media_type="application/json"
+            )
+    
+    # Create Starlette application
+    app = Starlette(
+        routes=[
+            Route("/mcp", handle_mcp_endpoint, methods=["POST", "OPTIONS"]),
+        ]
+    )
+    
+    # Configure uvicorn
+    config = uvicorn.Config(
+        app=app,
+        host="127.0.0.1",
+        port=port,
+        log_level="info"
+    )
+    
+    # Run server
+    server_instance = uvicorn.Server(config)
+    
+    # Start background tasks
+    shutdown_task = asyncio.create_task(shutdown_monitor())
+    
+    try:
+        print(f"📡 MCP endpoint: http://127.0.0.1:{port}/mcp", file=sys.stderr)
+        
+        # Run HTTP server
+        await server_instance.serve()
+        
+    except OSError as e:
+        if "Address already in use" in str(e) or e.errno == 98:
+            print(f"❌ Port {port} is already in use. Please choose a different port or stop the existing server.", file=sys.stderr)
+            sys.exit(1)
+        else:
+            print(f"❌ Network error: {e}", file=sys.stderr)
+            sys.exit(1)
+    except KeyboardInterrupt:
+        print("🛑 Server stopped by user", file=sys.stderr)
+    except Exception as e:
+        print(f"❌ HTTP server error: {e}", file=sys.stderr)
+        shutdown_event.set()
+        sys.exit(1)
+    finally:
+        print("🏁 HTTP MCP server stopped", file=sys.stderr)
+        # Ensure clean shutdown
+        shutdown_event.set()
+
+
+async def run_http_client(url: str, live_enabled: bool, poll_interval: int):
+    """Run as HTTP client connecting to existing server."""
+    print(f"🔗 Connecting to HTTP MCP server at {url}...", file=sys.stderr)
+    
+    # For now, just print info - this would typically be handled by Claude Code client
+    print(f"ℹ️  HTTP client mode not implemented - this should be handled by MCP client", file=sys.stderr)
+    print(f"ℹ️  Expected server URL: {url}", file=sys.stderr)
+    
+    # Keep process alive for testing
+    try:
+        while not shutdown_event.is_set():
+            await asyncio.sleep(1)
+    except KeyboardInterrupt:
+        pass
 
 
 async def main():
@@ -745,32 +929,53 @@ async def main():
     load_dotenv()
     cocoindex.init()
     
-    # Parse command line arguments
+    # Parse command line arguments - now safe for HTTP transport
     args = parse_mcp_args()
     
     # Determine paths to use
     paths = determine_paths(args)
     
-    # Display configuration
-    display_mcp_configuration(args, paths)
-    
     # Configure live updates (enabled by default)
     live_enabled = not args.no_live
+    poll_interval = args.poll
     
     # Update flow configuration
     update_flow_config(
         paths=paths,
-        enable_polling=live_enabled and args.poll > 0,
-        poll_interval=args.poll
+        enable_polling=live_enabled and poll_interval > 0,
+        poll_interval=poll_interval
     )
     
-    print("🚀 MCP server starting...", file=sys.stderr)
+    # Determine transport mode and run accordingly
+    if args.port:
+        # HTTP Server mode
+        display_mcp_configuration(args, paths)
+        print(f"🌐 Running as HTTP server on port {args.port}", file=sys.stderr)
+        await run_http_server(args.port, live_enabled, poll_interval)
+        return
+        
+    elif args.url:
+        # HTTP Client mode  
+        display_mcp_configuration(args, paths)
+        print(f"🔗 Running as HTTP client connecting to {args.url}", file=sys.stderr)
+        await run_http_client(args.url, live_enabled, poll_interval)
+        return
+        
+    else:
+        # Stdio mode (backward compatibility) - use temporary workaround
+        if not sys.stdin.isatty():
+            # MCP stdio mode - skip configuration display to avoid interference
+            print("🚀 MCP server starting (stdio mode)...", file=sys.stderr)
+        else:
+            # Interactive stdio mode
+            display_mcp_configuration(args, paths)
+            print("🚀 MCP server starting (stdio mode)...", file=sys.stderr)
     
     try:
         # Run the MCP server
         async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
             # Start background initialization and shutdown monitor
-            init_task = asyncio.create_task(background_initialization(live_enabled, args.poll if hasattr(args, 'poll') else 60))
+            init_task = asyncio.create_task(background_initialization(live_enabled, poll_interval))
             shutdown_task = asyncio.create_task(shutdown_monitor())
             
             # Run server with race condition to handle shutdown

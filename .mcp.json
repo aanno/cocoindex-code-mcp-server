@@ -1,10 +1,12 @@
 {
     "mcpServers": {
         "cocoindex-rag": {
-            "command": "python",
+            "command": "pnpm",
             "args": [
-                "/workspaces/rust/src/cocoindex-code-mcp-server/mcp_server.py",
-                "/workspaces/rust"
+                "dlx",
+                "supergateway",
+                "--sse",
+                "http://localhost:3033/mcp"
             ]
         },
         "vscode-mcp-server": {
