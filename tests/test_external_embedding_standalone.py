@@ -15,10 +15,21 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 # Create a mock CocoIndex module to avoid circular imports
 class MockCocoIndex:
+    @staticmethod
+    def init():
+        """Mock init method."""
+        pass
+    
     class functions:
         @staticmethod
         def SentenceTransformerEmbed(model, args=None):
             return Mock(model=model, args=args or {})
+    
+    class utils:
+        @staticmethod
+        def get_target_default_name(flow, default_name):
+            """Mock utils.get_target_default_name method."""
+            return default_name
 
 # Patch the import before importing our module
 import sys

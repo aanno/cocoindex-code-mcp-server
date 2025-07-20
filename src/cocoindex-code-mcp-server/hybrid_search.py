@@ -50,7 +50,7 @@ class HybridSearchEngine:
             List of search results with combined scoring
         """
         # Parse keyword query
-        search_group = self.parser.parse(keyword_query) if keyword_query.strip() else None
+        search_group = self.parser.parse(keyword_query)
         
         # Build the SQL query
         if vector_query.strip() and search_group and search_group.conditions:

@@ -40,8 +40,21 @@ class TestMetadataSearch:
         try:
             self.pool = ConnectionPool(db_url)
             self.search_engine = HybridSearchEngine(self.pool)
+            
+            # Check if the required table exists
+            with self.pool.connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        SELECT EXISTS (
+                            SELECT FROM information_schema.tables 
+                            WHERE table_name = 'code_embeddings'
+                        );
+                    """)
+                    table_exists = cur.fetchone()[0]
+                    if not table_exists:
+                        pytest.skip("code_embeddings table does not exist - database not initialized")
         except Exception as e:
-            pytest.skip(f"Could not connect to database: {e}")
+            pytest.skip(f"Could not connect to database or check table: {e}")
     
     def test_python_async_function_search(self):
         """Test searching for Python async functions."""
