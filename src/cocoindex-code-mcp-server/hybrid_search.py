@@ -13,6 +13,8 @@ import cocoindex
 from cocoindex_config import code_embedding_flow, code_to_embedding
 from keyword_search_parser import KeywordSearchParser, build_sql_where_clause
 from lang.python.python_code_analyzer import analyze_python_code
+from prompt_toolkit import PromptSession
+from prompt_toolkit.key_binding import KeyBindings
 
 
 class HybridSearchEngine:
@@ -289,6 +291,24 @@ def format_results_readable(results: List[Dict[str, Any]]) -> str:
     return "\n".join(output)
 
 
+def get_multiline_input(prompt_text: str) -> str:
+    """Get multiline input using prompt_toolkit with Ctrl+Q to finish."""
+    bindings = KeyBindings()
+    
+    @bindings.add('c-q')  # Ctrl+Q
+    def _(event):
+        event.app.exit(result=event.app.current_buffer.text)
+    
+    session = PromptSession(key_bindings=bindings, multiline=True)
+    
+    print(f"{prompt_text} (finish with Ctrl+Q):")
+    try:
+        result = session.prompt()
+        return result.strip()
+    except (KeyboardInterrupt, EOFError):
+        return ""
+
+
 def run_interactive_hybrid_search():
     """Run interactive hybrid search mode with dual prompts."""
     # Initialize the database connection pool
@@ -313,7 +333,7 @@ def run_interactive_hybrid_search():
     while True:
         try:
             # Get vector query
-            vector_query = input("Vector query (semantic search): ").strip()
+            vector_query = get_multiline_input("Vector query (semantic search)")
             if not vector_query:
                 break
             
