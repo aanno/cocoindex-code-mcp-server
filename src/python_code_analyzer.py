@@ -9,11 +9,7 @@ import ast
 import re
 from typing import List, Dict, Any, Optional, Set
 import logging
-
-from src import LOGGER
-
-logger = logging.getLogger(__name__)
-
+from __init__ import LOGGER
 
 class PythonCodeAnalyzer:
     """Analyzer for extracting metadata from Python code chunks."""
@@ -56,10 +52,10 @@ class PythonCodeAnalyzer:
             return self._build_metadata(code, filename)
             
         except SyntaxError as e:
-            logger.warning(f"Syntax error in Python code: {e}")
+            LOGGER.warning(f"Syntax error in Python code: {e}")
             return self._build_fallback_metadata(code, filename)
         except Exception as e:
-            logger.error(f"Error analyzing Python code: {e}")
+            LOGGER.error(f"Error analyzing Python code: {e}")
             return self._build_fallback_metadata(code, filename)
     
     def _visit_node(self, node: ast.AST, class_context: str = None):

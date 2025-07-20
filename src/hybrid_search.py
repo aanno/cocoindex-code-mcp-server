@@ -196,8 +196,47 @@ class HybridSearchEngine:
 
 
 def format_results_as_json(results: List[Dict[str, Any]], indent: int = 2) -> str:
-    """Format search results as JSON string."""
-    return json.dumps(results, indent=indent, default=str)
+    """Format search results as JSON string with human-readable code and metadata_json fields."""
+    
+    def format_single_result(result: Dict[str, Any], indent_level: int = 1) -> str:
+        """Format a single result with custom handling for code and metadata_json fields."""
+        lines = ["{"]
+        
+        for i, (key, value) in enumerate(result.items()):
+            is_last = i == len(result) - 1
+            comma = "" if is_last else ","
+            indent_str = "  " * indent_level
+            
+            if key in ['code', 'metadata_json'] and isinstance(value, str):
+                # For code and metadata_json, output the raw string without JSON escaping
+                # Use triple quotes to preserve formatting
+                formatted_value = f'"""{value}"""'
+                lines.append(f'{indent_str}"{key}": {formatted_value}{comma}')
+            else:
+                # For other fields, use normal JSON formatting
+                formatted_value = json.dumps(value, default=str)
+                lines.append(f'{indent_str}"{key}": {formatted_value}{comma}')
+        
+        lines.append("}")
+        return "\n".join(lines)
+    
+    # Format the entire results array
+    if not results:
+        return "[]"
+    
+    output_lines = ["["]
+    for i, result in enumerate(results):
+        is_last = i == len(results) - 1
+        comma = "" if is_last else ","
+        
+        # Format single result with proper indentation
+        formatted_result = format_single_result(result, indent_level=2)
+        # Indent the entire result block
+        indented_result = "\n".join(f"  {line}" for line in formatted_result.split("\n"))
+        output_lines.append(f"{indented_result}{comma}")
+    
+    output_lines.append("]")
+    return "\n".join(output_lines)
 
 
 def format_results_readable(results: List[Dict[str, Any]]) -> str:

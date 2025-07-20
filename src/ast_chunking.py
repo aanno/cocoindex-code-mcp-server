@@ -20,14 +20,12 @@ except ImportError as e:
     logging.warning(f"ASTChunk not available: {e}")
     ASTChunkBuilder = None
 
-logger = logging.getLogger(__name__)
-
 # Import CocoIndex conditionally to avoid circular imports
 cocoindex = None
 try:
     import cocoindex
 except ImportError:
-    logger.warning("CocoIndex not available")
+    LOGGER.warning("CocoIndex not available")
 
 
 def detect_language_from_filename(filename: str) -> str:
@@ -107,7 +105,7 @@ class CocoIndexASTChunker:
     def _get_builder(self, language: str) -> Optional[ASTChunkBuilder]:
         """Get or create an ASTChunkBuilder for the given language."""
         if ASTChunkBuilder is None:
-            logger.warning("ASTChunkBuilder not available")
+            LOGGER.warning("ASTChunkBuilder not available")
             return None
             
         if language not in self._builders:
@@ -120,7 +118,7 @@ class CocoIndexASTChunker:
                 }
                 self._builders[language] = ASTChunkBuilder(**configs)
             except Exception as e:
-                logger.error(f"Failed to create ASTChunkBuilder for {language}: {e}")
+                LOGGER.error(f"Failed to create ASTChunkBuilder for {language}: {e}")
                 return None
         
         return self._builders[language]
@@ -144,13 +142,13 @@ class CocoIndexASTChunker:
         # Map CocoIndex language to ASTChunk language
         astchunk_language = self.LANGUAGE_MAP.get(language)
         if not astchunk_language:
-            logger.warning(f"Language {language} not supported by ASTChunk")
+            LOGGER.warning(f"Language {language} not supported by ASTChunk")
             return self._fallback_chunking(code, language, file_path)
         
         # Get ASTChunkBuilder for this language
         builder = self._get_builder(astchunk_language)
         if not builder:
-            logger.warning(f"Failed to get builder for {astchunk_language}")
+            LOGGER.warning(f"Failed to get builder for {astchunk_language}")
             return self._fallback_chunking(code, language, file_path)
         
         try:
@@ -187,11 +185,11 @@ class CocoIndexASTChunker:
                     "metadata": enhanced_metadata
                 })
             
-            logger.info(f"AST chunking created {len(result_chunks)} chunks for {language}")
+            LOGGER.info(f"AST chunking created {len(result_chunks)} chunks for {language}")
             return result_chunks
             
         except Exception as e:
-            logger.error(f"AST chunking failed for {language}: {e}")
+            LOGGER.error(f"AST chunking failed for {language}: {e}")
             return self._fallback_chunking(code, language, file_path)
     
     def _fallback_chunking(self, code: str, language: str, file_path: str) -> List[Dict[str, Any]]:
@@ -232,11 +230,11 @@ class CocoIndexASTChunker:
                         "metadata": metadata
                     })
                 
-                logger.info(f"Haskell AST chunking created {len(result_chunks)} chunks")
+                LOGGER.info(f"Haskell AST chunking created {len(result_chunks)} chunks")
                 return result_chunks
                 
             except Exception as e:
-                logger.error(f"Haskell AST chunking failed: {e}")
+                LOGGER.error(f"Haskell AST chunking failed: {e}")
         
         # Simple text chunking as last resort
         return self._simple_text_chunking(code, language, file_path)
@@ -278,7 +276,7 @@ class CocoIndexASTChunker:
                     "metadata": metadata
                 })
         
-        logger.info(f"Simple text chunking created {len(chunks)} chunks")
+        LOGGER.info(f"Simple text chunking created {len(chunks)} chunks")
         return chunks
 
 
@@ -354,7 +352,7 @@ if cocoindex is not None:
     try:
         ASTChunkOperation = create_ast_chunking_operation()
     except Exception as e:
-        logger.warning(f"Failed to create ASTChunkOperation: {e}")
+        LOGGER.warning(f"Failed to create ASTChunkOperation: {e}")
 
 
 def test_ast_chunking():
@@ -466,7 +464,7 @@ def create_hybrid_chunking_operation():
                     return result
                 except ImportError:
                     # If we can't import CUSTOM_LANGUAGES, fall back to simple text chunking
-                    logger.warning("Could not import CUSTOM_LANGUAGES, using simple text chunking")
+                    LOGGER.warning("Could not import CUSTOM_LANGUAGES, using simple text chunking")
                     temp_chunker = CocoIndexASTChunker(max_chunk_size=chunk_size)
                     chunks = temp_chunker._simple_text_chunking(code, lang, file_path)
                     

@@ -13,9 +13,7 @@ import numpy as np
 import cocoindex
 from haskell_support import get_haskell_language_spec
 from python_code_analyzer import analyze_python_code
-from src import LOGGER
-# Import moved to avoid circular dependency
-
+from __init__ import LOGGER
 
 @dataclass
 class ChunkingParams:

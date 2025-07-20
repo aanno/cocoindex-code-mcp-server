@@ -13,9 +13,7 @@ Usage as external wrapper around CocoIndex's SentenceTransformerEmbed.
 from typing import Dict, Any, Optional, List
 import cocoindex
 import logging
-
-logger = logging.getLogger(__name__)
-
+from __init__ import LOGGER
 
 class LanguageModelSelector:
     """
@@ -215,7 +213,7 @@ def create_smart_code_embedding(
     final_args = selector.get_model_args(selected_model, model_args)
     
     # Log the selection for debugging
-    logger.info(f"Selected embedding model: {selected_model} for language: {language or 'auto'}")
+    LOGGER.info(f"Selected embedding model: {selected_model} for language: {language or 'auto'}")
     
     # Return CocoIndex SentenceTransformerEmbed with selected model
     return cocoindex.functions.SentenceTransformerEmbed(

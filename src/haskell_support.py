@@ -10,11 +10,7 @@ import haskell_tree_sitter
 import cocoindex
 import logging
 import re
-
-from src import LOGGER
-
-logger = logging.getLogger(__name__)
-
+from __init__ import LOGGER
 
 class HaskellChunkConfig:
     """Configuration for Haskell chunking with ASTChunk-inspired features."""
@@ -108,11 +104,11 @@ class EnhancedHaskellChunker:
             # Enhance metadata
             chunks = self._enhance_metadata(chunks, content, file_path)
             
-            logger.info(f"Successfully created {len(chunks)} Haskell chunks using AST method")
+            LOGGER.info(f"Successfully created {len(chunks)} Haskell chunks using AST method")
             return chunks
             
         except Exception as e:
-            logger.warning(f"AST chunking failed for Haskell code: {e}")
+            LOGGER.warning(f"AST chunking failed for Haskell code: {e}")
             return self._fallback_chunking(content, file_path)
     
     def _ast_based_chunking(self, content: str, file_path: str) -> List[Dict[str, Any]]:
@@ -423,7 +419,7 @@ class EnhancedHaskellChunker:
     
     def _fallback_chunking(self, content: str, file_path: str) -> List[Dict[str, Any]]:
         """Enhanced regex-based fallback chunking."""
-        logger.info("Using enhanced regex fallback for Haskell chunking")
+        LOGGER.info("Using enhanced regex fallback for Haskell chunking")
         return create_enhanced_regex_fallback_chunks(content, file_path, self.config)
 
 
@@ -564,7 +560,7 @@ def create_enhanced_regex_fallback_chunks(content: str, file_path: str, config: 
             }
             chunks.append(chunk_dict)
     
-    logger.info(f"Enhanced regex fallback created {len(chunks)} Haskell chunks")
+    LOGGER.info(f"Enhanced regex fallback created {len(chunks)} Haskell chunks")
     return chunks
 
 
