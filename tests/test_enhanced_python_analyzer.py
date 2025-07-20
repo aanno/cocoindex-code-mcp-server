@@ -18,7 +18,7 @@ def test_enhanced_analyzer():
     """Test the enhanced Python analyzer."""
     
     try:
-        from python_code_analyzer import analyze_python_code
+        from lang.python.python_code_analyzer import analyze_python_code
     except ImportError as e:
         LOGGER.error(f"Could not import analyzer: {e}")
         print(f"❌ Could not import analyzer: {e}")

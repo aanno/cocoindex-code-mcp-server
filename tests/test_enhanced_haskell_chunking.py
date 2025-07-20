@@ -12,7 +12,7 @@ import pytest
 # Add the src directory to the path to import the main module
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from haskell_support import (
+from lang.haskell.haskell_support import (
     HaskellChunkConfig, 
     EnhancedHaskellChunker, 
     get_enhanced_haskell_separators,
@@ -358,7 +358,7 @@ class TestBackwardCompatibility:
 
     def test_legacy_function_exists(self):
         """Test that legacy function still exists."""
-        from haskell_support import create_regex_fallback_chunks_python
+        from lang.haskell.haskell_support import create_regex_fallback_chunks_python
         
         haskell_code = """
 factorial :: Integer -> Integer
@@ -377,7 +377,7 @@ factorial n = product [1..n]
 
     def test_cocoindex_operation_exists(self):
         """Test that CocoIndex operation function exists."""
-        from haskell_support import extract_haskell_ast_chunks
+        from lang.haskell.haskell_support import extract_haskell_ast_chunks
         
         # Function should exist and be callable
         assert callable(extract_haskell_ast_chunks)

@@ -91,4 +91,4 @@ def display_configuration(args, paths):
     else:
         LOGGER.info("🟢 Mode: One-time indexing")
     
-    LOGGER.info()  # Empty line for readability
+    LOGGER.info("")  # Empty line for readability

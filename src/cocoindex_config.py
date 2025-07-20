@@ -11,8 +11,8 @@ from typing import List, Dict, Any
 from numpy.typing import NDArray
 import numpy as np
 import cocoindex
-from haskell_support import get_haskell_language_spec
-from python_code_analyzer import analyze_python_code
+from lang.haskell.haskell_support import get_haskell_language_spec
+from lang.python.python_code_analyzer import analyze_python_code
 from __init__ import LOGGER
 
 @dataclass

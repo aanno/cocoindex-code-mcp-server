@@ -12,7 +12,7 @@ from pgvector.psycopg import register_vector
 import cocoindex
 from cocoindex_config import code_embedding_flow, code_to_embedding
 from keyword_search_parser import KeywordSearchParser, build_sql_where_clause
-from python_code_analyzer import analyze_python_code
+from lang.python.python_code_analyzer import analyze_python_code
 
 
 class HybridSearchEngine:

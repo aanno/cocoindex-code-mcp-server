@@ -13,7 +13,7 @@ import sys
 # Add src to path (examples is one level down from root)
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from python_code_analyzer import analyze_python_code
+from lang.python.python_code_analyzer import analyze_python_code
 
 # Test code
 test_code = '''

@@ -16,7 +16,7 @@ LOGGER = logging.getLogger(__name__)
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 try:
-    from haskell_support import HaskellChunkConfig, EnhancedHaskellChunker
+    from lang.haskell.haskell_support import HaskellChunkConfig, EnhancedHaskellChunker
     HASKELL_SUPPORT_AVAILABLE = True
 except ImportError as e:
     LOGGER.warning(f"Haskell support not available: {e}")
