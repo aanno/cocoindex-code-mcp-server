@@ -39,11 +39,12 @@ hybrid_search_engine: Optional[HybridSearchEngine] = None
 connection_pool: Optional[ConnectionPool] = None
 shutdown_event = threading.Event()
 background_thread: Optional[threading.Thread] = None
+_terminating = threading.Event()  # Atomic termination flag
 
 
 def safe_embedding_function(query: str):
     """Safe wrapper for embedding function that handles shutdown gracefully."""
-    if shutdown_event.is_set():
+    if shutdown_event.is_set() or _terminating.is_set():
         # Return a zero vector if shutting down
         try:
             import numpy as np
@@ -76,6 +77,15 @@ def safe_embedding_function(query: str):
 
 def handle_shutdown(signum, frame):
     """Handle shutdown signals gracefully."""
+    global _terminating
+    
+    # Check if already terminating to avoid double cleanup
+    if _terminating.is_set():
+        print("🔴 Force terminating...", file=sys.stderr)
+        os._exit(1)
+        return
+    
+    _terminating.set()
     print("\n🛑 Shutdown signal received, cleaning up...", file=sys.stderr)
     shutdown_event.set()
     
@@ -88,7 +98,9 @@ def handle_shutdown(signum, frame):
             print("⚠️  Background thread did not finish cleanly", file=sys.stderr)
     
     print("✅ Cleanup completed", file=sys.stderr)
-    sys.exit(0)
+    
+    # Force exit after cleanup
+    os._exit(0)
 
 
 def parse_mcp_args():
@@ -147,6 +159,24 @@ MCP Resources Available:
         metavar="SECONDS",
         help="Polling interval in seconds for live updates (default: 60)"
     )
+    
+    # For MCP mode, check if we're running as MCP server (no console input expected)
+    if not sys.stdin.isatty():
+        # Running as MCP server - use environment variables for configuration
+        paths = []
+        if len(sys.argv) > 1:
+            # Take paths from command line if provided
+            paths = sys.argv[1:]
+        
+        # Create a mock args object with environment-based configuration
+        class MockArgs:
+            def __init__(self):
+                self.paths = paths
+                self.explicit_paths = None
+                self.no_live = os.getenv('COCOINDEX_NO_LIVE', 'false').lower() == 'true'
+                self.poll = int(os.getenv('COCOINDEX_POLL_INTERVAL', '60'))
+        
+        return MockArgs()
     
     return parser.parse_args()
 
@@ -628,6 +658,83 @@ async def initialize_search_engine():
         sys.exit(1)
 
 
+async def background_initialization(live_enabled: bool, poll_interval: int):
+    """Perform heavy initialization in the background after MCP server starts."""
+    try:
+        # Pre-warm the embedding function to load the model synchronously
+        print("🔧 Pre-loading embedding model...", file=sys.stderr)
+        try:
+            code_to_embedding.eval("test")  # Force model loading
+            print("✅ Embedding model loaded successfully", file=sys.stderr)
+        except Exception as e:
+            print(f"❌ Failed to pre-load embedding model: {e}", file=sys.stderr)
+            return
+        
+        # Pre-initialize database connection synchronously
+        print("🔧 Pre-initializing database connection...", file=sys.stderr)
+        try:
+            # Get database URL from environment
+            database_url = os.getenv("COCOINDEX_DATABASE_URL")
+            if not database_url:
+                print("❌ COCOINDEX_DATABASE_URL not found in environment", file=sys.stderr)
+                return
+            
+            # Test basic connection first
+            import psycopg
+            test_conn = psycopg.connect(database_url)
+            test_conn.close()
+            print("✅ Database connection test successful", file=sys.stderr)
+        except Exception as e:
+            print(f"❌ Failed to connect to database: {e}", file=sys.stderr)
+            return
+        
+        # Initialize the search engine
+        await initialize_search_engine()
+        
+        # Set up live updates if enabled
+        if live_enabled:
+            print("🔄 Running initial flow update...", file=sys.stderr)
+            
+            def run_flow_background():
+                """Background thread function for live flow updates."""
+                while not shutdown_event.is_set() and not _terminating.is_set():
+                    try:
+                        run_flow_update(live_update=True)
+                        # Wait for the polling interval or until shutdown
+                        if shutdown_event.wait(poll_interval) or _terminating.is_set():
+                            break  # Shutdown requested
+                    except Exception as e:
+                        if not shutdown_event.is_set() and not _terminating.is_set():
+                            print(f"Error in background flow update: {e}", file=sys.stderr)
+                            # Wait a bit before retrying to avoid tight error loops
+                            if shutdown_event.wait(10) or _terminating.is_set():
+                                break
+                        else:
+                            print("Background flow update stopped due to shutdown", file=sys.stderr)
+            
+            # Start background flow update
+            global background_thread
+            background_thread = threading.Thread(target=run_flow_background, daemon=True)
+            background_thread.start()
+            print("✅ Background flow update started", file=sys.stderr)
+        else:
+            print("🔄 Running one-time flow update...", file=sys.stderr)
+            run_flow_update(live_update=False)
+            print("✅ Flow update completed", file=sys.stderr)
+            
+    except Exception as e:
+        print(f"❌ Background initialization failed: {e}", file=sys.stderr)
+
+
+async def shutdown_monitor():
+    """Monitor shutdown event and signal shutdown."""
+    while not shutdown_event.is_set() and not _terminating.is_set():
+        await asyncio.sleep(0.1)
+    
+    # Just return when shutdown is requested - let the main loop handle cleanup
+    return
+
+
 async def main():
     """Main entry point for the MCP server."""
     # Set up signal handlers for graceful shutdown
@@ -637,33 +744,6 @@ async def main():
     # Load environment and initialize CocoIndex
     load_dotenv()
     cocoindex.init()
-    
-    # Pre-warm the embedding function to load the model synchronously
-    print("🔧 Pre-loading embedding model...", file=sys.stderr)
-    try:
-        code_to_embedding.eval("test")  # Force model loading
-        print("✅ Embedding model loaded successfully", file=sys.stderr)
-    except Exception as e:
-        print(f"❌ Failed to pre-load embedding model: {e}", file=sys.stderr)
-        sys.exit(1)
-    
-    # Pre-initialize database connection synchronously
-    print("🔧 Pre-initializing database connection...", file=sys.stderr)
-    try:
-        # Get database URL from environment
-        database_url = os.getenv("COCOINDEX_DATABASE_URL")
-        if not database_url:
-            print("❌ COCOINDEX_DATABASE_URL not found in environment", file=sys.stderr)
-            sys.exit(1)
-        
-        # Test basic connection first
-        import psycopg
-        test_conn = psycopg.connect(database_url)
-        test_conn.close()
-        print("✅ Database connection test successful", file=sys.stderr)
-    except Exception as e:
-        print(f"❌ Failed to connect to database: {e}", file=sys.stderr)
-        sys.exit(1)
     
     # Parse command line arguments
     args = parse_mcp_args()
@@ -684,57 +764,49 @@ async def main():
         poll_interval=args.poll
     )
     
-    # Run the flow update if live updates are enabled
-    if live_enabled:
-        print("🔄 Running initial flow update...", file=sys.stderr)
-        
-        def run_flow_background():
-            try:
-                run_flow_update(
-                    live_update=True,
-                    poll_interval=args.poll
-                )
-            except Exception as e:
-                if not shutdown_event.is_set():
-                    print(f"Background flow update failed: {e}", file=sys.stderr)
-                else:
-                    print("Background flow update stopped due to shutdown", file=sys.stderr)
-        
-        # Start background flow update
-        global background_thread
-        background_thread = threading.Thread(target=run_flow_background, daemon=True)
-        background_thread.start()
-        print("✅ Background flow update started", file=sys.stderr)
-    else:
-        print("🔄 Running one-time flow update...", file=sys.stderr)
-        run_flow_update(live_update=False)
-        print("✅ Flow update completed", file=sys.stderr)
-    
-    # Initialize the search engine
-    await initialize_search_engine()
-    
     print("🚀 MCP server starting...", file=sys.stderr)
     
     try:
         # Run the MCP server
         async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
-            await server.run(
+            # Start background initialization and shutdown monitor
+            init_task = asyncio.create_task(background_initialization(live_enabled, args.poll if hasattr(args, 'poll') else 60))
+            shutdown_task = asyncio.create_task(shutdown_monitor())
+            
+            # Run server with race condition to handle shutdown
+            server_task = asyncio.create_task(server.run(
                 read_stream,
                 write_stream,
                 NotificationOptions(
                     tools_changed=True,
                     resources_changed=True,
                 ),
-            )
-    except (KeyboardInterrupt, SystemExit):
-        print("\n🛑 MCP server shutdown requested", file=sys.stderr)
-        shutdown_event.set()
+            ))
+            
+            # Wait for either server completion or shutdown
+            try:
+                done, pending = await asyncio.wait(
+                    [server_task, shutdown_task], 
+                    return_when=asyncio.FIRST_COMPLETED
+                )
+                
+                # Cancel any pending tasks
+                for task in pending:
+                    task.cancel()
+                    try:
+                        await task
+                    except asyncio.CancelledError:
+                        pass
+            except asyncio.CancelledError:
+                # Handle cancellation gracefully
+                pass
+                    
     except Exception as e:
         print(f"❌ MCP server error: {e}", file=sys.stderr)
         shutdown_event.set()
-        raise
     finally:
         # Ensure cleanup happens
+        global background_thread
         if background_thread and background_thread.is_alive():
             print("⏳ Waiting for background thread to finish...", file=sys.stderr)
             background_thread.join(timeout=3.0)
@@ -742,4 +814,11 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except (KeyboardInterrupt, SystemExit):
+        # Graceful shutdown
+        pass
+    except Exception as e:
+        print(f"❌ Unexpected error: {e}", file=sys.stderr)
+        sys.exit(1)

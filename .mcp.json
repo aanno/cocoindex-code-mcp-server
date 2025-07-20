@@ -3,7 +3,8 @@
         "cocoindex-rag": {
             "command": "python",
             "args": [
-                "/workspaces/rust/src/cocoindex-code-mcp-server/mcp_server.py"
+                "/workspaces/rust/src/cocoindex-code-mcp-server/mcp_server.py",
+                "/workspaces/rust"
             ]
         },
         "vscode-mcp-server": {
