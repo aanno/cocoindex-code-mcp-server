@@ -37,3 +37,28 @@ sudo chown -R vscode:vscode /home/vscode/.cargo/
 # * asciidoc
 
 # Is there a way to add ASTChunk as dependency (instead of using the check-out submodule)?
+
+
+# At src/hybrid_search.py run_interactive_hybrid_search the line 316:\\
+#   \
+#   vector_query = input("Vector query (semantic search): ").strip()\
+#   \
+#   has the problem to not handle multi line input.\
+#   This interactive input should be refactored by using the prompt_toolkit 
+#   library allowing users to enter text with newlines (\n, \r\n) and mark 
+#   completion with keys Ctrl+Enter. Along this lines:
+
+#   from prompt_toolkit import PromptSession
+# from prompt_toolkit.key_binding import KeyBindings
+
+# bindings = KeyBindings()
+# @bindings.add('c-enter')  # Ctrl+Enter
+# def _(event):
+#     event.app.exit(result=event.app.current_buffer.text)
+
+# session = PromptSession(key_bindings=bindings, multiline=True)
+
+# print("Enter your text (finish with Ctrl-Enter):")
+# text = session.prompt()
+# print("You entered:\n", text)
+
