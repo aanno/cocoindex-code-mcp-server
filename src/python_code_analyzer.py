@@ -34,6 +34,7 @@ class PythonCodeAnalyzer:
             code: Python source code to analyze
             filename: Optional filename for context
             
+            
         Returns:
             Dictionary containing extracted metadata
         """
