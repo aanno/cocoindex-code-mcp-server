@@ -91,6 +91,19 @@ Examples:
 - `exists(embedding)` - Match records that have an embedding
 - `exists(source_name)` - Match records with a source name
 
+### Value Contains Checks
+
+```
+value_contains(field, "search_string")
+```
+
+Search for records where a field's value contains a specific substring. This performs case-insensitive partial matching using SQL `ILIKE`.
+
+Examples:
+- `value_contains(filename, "test")` - Match files with "test" anywhere in the filename
+- `value_contains(code, "async")` - Match code chunks containing "async" in the code content
+- `value_contains(language, "script")` - Match languages containing "script" (e.g., "JavaScript", "TypeScript")
+
 ### Boolean Operators
 
 #### AND Operator
@@ -151,6 +164,14 @@ This searches for "python function" within the actual code content.
    - Vector Query: `unit test mock assert expect`
    - Keyword Query: `filename:test and language:python`
 
+5. **Search for Async Functions**
+   - Vector Query: `asynchronous function async await`
+   - Keyword Query: `value_contains(code, "async") and language:python`
+
+6. **Find Configuration Files**
+   - Vector Query: `configuration settings config parameters`
+   - Keyword Query: `value_contains(filename, "config") and exists(embedding)`
+
 ### Advanced Keyword Queries
 
 1. **Multiple Language Support**
@@ -166,6 +187,16 @@ This searches for "python function" within the actual code content.
 3. **Source-Specific Search**
    ```
    source_name:files_0 and language:rust and exists(embedding)
+   ```
+
+4. **Value Contains Search**
+   ```
+   value_contains(filename, "test") and language:python
+   ```
+
+5. **Complex Value Contains with Boolean Logic**
+   ```
+   (value_contains(code, "async") or value_contains(code, "await")) and language:python
    ```
 
 ## Output Formats

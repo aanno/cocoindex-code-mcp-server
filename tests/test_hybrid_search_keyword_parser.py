@@ -9,9 +9,9 @@ import sys
 import os
 
 # Add src directory to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src', 'cocoindex-code-mcp-server'))
 
-from keyword_search_parser import (
+from keyword_search_parser_lark import (
     KeywordSearchParser, 
     SearchCondition, 
     SearchGroup, 
@@ -217,7 +217,6 @@ class TestKeywordSearchParser:
         assert isinstance(second_condition, SearchCondition)
         assert second_condition.is_exists_check
     
-    @pytest.mark.skip(reason="Complex nested parentheses parsing - TODO: fix operator precedence")
     def test_nested_parentheses(self, parser):
         """Test nested parentheses."""
         result = parser.parse("((language:python or language:rust) and exists(embedding)) or filename:test.py")

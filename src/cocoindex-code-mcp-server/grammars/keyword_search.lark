@@ -1,0 +1,46 @@
+// Lark grammar for keyword search syntax
+// Supports field:value, exists(field), value_contains(field, string), and boolean operators
+
+start: or_expr
+
+or_expr: and_expr ("or" and_expr)*
+
+and_expr: condition ("and" condition)*
+
+?condition: field_condition
+          | exists_condition  
+          | value_contains_condition
+          | "(" or_expr ")"
+          | text_search
+
+// Field value matching: field:value or field:"quoted value"
+field_condition: FIELD ":" value
+
+// Existence check: exists(field)
+exists_condition: "exists" "(" FIELD ")"
+
+// Value contains check: value_contains(field, "search_string")
+value_contains_condition: "value_contains" "(" FIELD "," value ")"
+
+// General text search (no field specified) - multiple words allowed  
+text_search: word+
+
+// Values can be quoted or unquoted
+?value: QUOTED_VALUE | UNQUOTED_VALUE
+
+// Single word that can be field or text search word
+word: FIELD
+
+// Terminals
+FIELD: /[a-zA-Z_][a-zA-Z0-9_]*/
+
+QUOTED_VALUE: /("([^"\\]|\\.)*"|'([^'\\]|\\.)*')/
+
+UNQUOTED_VALUE: /[^\s(),:]+/
+
+// Keywords (case insensitive)
+%import common.WS
+%ignore WS
+
+// Make keywords case insensitive
+%declare _CASE_INSENSITIVE
