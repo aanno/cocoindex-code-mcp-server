@@ -1,6 +1,6 @@
 __pycache__/
 /quickstart/
-/target/
+/rust/target/
 *.pyc
 *.log
 *.pyo
