@@ -415,7 +415,7 @@ def run_flow_update(live_update: bool = False, poll_interval: int = 30):
         # Initial update
         LOGGER.info("🚀 Initial index build...")
         stats = flow.update()
-        LOGGER.info("Initial index built:", stats)
+        LOGGER.info("Initial index built: %s", stats)
         
         # Start live updater
         LOGGER.info("👁️  Starting live file monitoring...")
@@ -434,4 +434,4 @@ def run_flow_update(live_update: bool = False, poll_interval: int = 30):
     else:
         # Regular one-time update mode
         stats = code_embedding_flow.update()
-        LOGGER.info("Updated index: ", stats)
+        LOGGER.info("Updated index: %s", stats)
