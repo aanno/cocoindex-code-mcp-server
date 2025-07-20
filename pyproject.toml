@@ -21,6 +21,14 @@ dependencies = [
 test = [
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
+    "pytest-asyncio>=0.23.0",
+]
+mcp-server = [
+    "mcp>=1.12.0",
+    "psycopg[binary]>=3.1.0",
+    "psycopg_pool>=3.1.0",
+    "lark-parser>=0.12.0",
+    "prompt-toolkit>=3.0.0",
 ]
 
 [tool.maturin]

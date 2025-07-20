@@ -123,3 +123,10 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "standalone: mark test as runnable in isolation"
     )
+    config.addinivalue_line(
+        "markers", "mcp_server: mark test as testing MCP server functionality"
+    )
+
+
+# Configure pytest-asyncio
+pytest_plugins = ('pytest_asyncio',)
