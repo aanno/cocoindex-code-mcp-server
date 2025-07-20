@@ -96,6 +96,10 @@ class PythonCodeAnalyzer:
             "type": "async_function" if is_async else "method" if class_context else "function",
             "class": class_context,
             "line": node.lineno,
+            "end_line": getattr(node, 'end_lineno', node.lineno),
+            "column": getattr(node, 'col_offset', 0) + 1,  # Convert to 1-based
+            "end_column": getattr(node, 'end_col_offset', 0) + 1,
+            "lines_of_code": (node.lineno, getattr(node, 'end_lineno', node.lineno)),
             "parameters": [],
             "return_type": None,
             "decorators": [],
@@ -141,6 +145,10 @@ class PythonCodeAnalyzer:
         class_info = {
             "name": node.name,
             "line": node.lineno,
+            "end_line": getattr(node, 'end_lineno', node.lineno),
+            "column": getattr(node, 'col_offset', 0) + 1,  # Convert to 1-based
+            "end_column": getattr(node, 'end_col_offset', 0) + 1,
+            "lines_of_code": (node.lineno, getattr(node, 'end_lineno', node.lineno)),
             "bases": [self._get_type_annotation(base) for base in node.bases],
             "decorators": [self._get_decorator_name(dec) for dec in node.decorator_list],
             "docstring": ast.get_docstring(node),
@@ -259,6 +267,9 @@ class PythonCodeAnalyzer:
     
     def _build_metadata(self, code: str, filename: str) -> Dict[str, Any]:
         """Build the final metadata dictionary."""
+        import hashlib
+        import json
+        
         # Extract unique module names from imports
         imported_modules = list(set([
             imp['module'] for imp in self.imports 
@@ -277,12 +288,35 @@ class PythonCodeAnalyzer:
             else:
                 standalone_functions.append(func)
         
-        return {
-            # Basic info
+        # Calculate content hash for unique identification
+        content_hash = hashlib.sha256(code.encode('utf-8')).hexdigest()[:16]
+        
+        # Build node relationships
+        node_relationships = self._build_node_relationships()
+        
+        # Enhanced metadata following RAG-pychunk recommendations
+        metadata = {
+            # Basic info (RAG-pychunk: file, node_type)
             "language": "Python",
             "filename": filename,
+            "file": filename,  # RAG-pychunk compatibility
+            "node_type": "MODULE",  # RAG-pychunk compatibility
             "line_count": len(code.split('\n')),
             "char_count": len(code),
+            
+            # Position information (RAG-pychunk: lines_of_code)
+            "lines_of_code": (1, len(code.split('\n'))),
+            "start_line": 1,
+            "end_line": len(code.split('\n')),
+            "start_column": 1,
+            "end_column": len(code.split('\n')[-1]) if code.split('\n') else 1,
+            
+            # Unique identifier (RAG-pychunk: hash)
+            "hash": content_hash,
+            "content_hash": content_hash,
+            
+            # Node relationships (RAG-pychunk: node_relationships)
+            "node_relationships": node_relationships,
             
             # Functions and methods
             "functions": [f['name'] for f in standalone_functions],
@@ -316,7 +350,67 @@ class PythonCodeAnalyzer:
             "has_type_hints": any(f.get('return_type') or any(p.get('type_annotation') for p in f.get('parameters', [])) for f in self.functions),
             "private_methods": [f['name'] for f in self.functions if f['is_private']],
             "dunder_methods": [f['name'] for f in self.functions if f['is_dunder']],
+            
+            # Additional metadata (RAG-pychunk: additional_metadata)
+            "additional_metadata": {
+                "analysis_method": "python_ast",
+                "parser_version": "3.x",
+                "extracted_at": self._get_timestamp(),
+                "total_functions": len(self.functions),
+                "total_classes": len(self.classes),
+                "total_imports": len(self.imports),
+                "code_patterns": {
+                    "async_functions": len([f for f in self.functions if f['type'] == 'async_function']),
+                    "private_elements": len([f for f in self.functions if f['is_private']]) + len([c for c in self.classes if c['is_private']]),
+                    "documented_elements": len([f for f in self.functions if f.get('docstring')]) + len([c for c in self.classes if c.get('docstring')])
+                }
+            }
         }
+        
+        # Add metadata_json field for compatibility
+        metadata['metadata_json'] = json.dumps(metadata, default=str)
+        
+        return metadata
+    
+    def _build_node_relationships(self) -> Dict[str, Any]:
+        """Build node relationships mapping parent-child and scope relationships."""
+        relationships = {
+            "parent": None,  # Module level has no parent
+            "children": [],
+            "scope": "module",
+            "contains": {
+                "functions": [f['name'] for f in self.functions if not f['class']],
+                "classes": [c['name'] for c in self.classes],
+                "imports": [imp['module'] for imp in self.imports if imp['module']],
+                "variables": [v['name'] for v in self.variables if not v['class']]
+            },
+            "class_hierarchies": {},
+            "import_dependencies": []
+        }
+        
+        # Build class hierarchies
+        for class_info in self.classes:
+            class_name = class_info['name']
+            relationships["class_hierarchies"][class_name] = {
+                "bases": class_info.get('bases', []),
+                "methods": [f['name'] for f in self.functions if f.get('class') == class_name],
+                "variables": [v['name'] for v in self.variables if v.get('class') == class_name]
+            }
+        
+        # Build import dependencies
+        for imp in self.imports:
+            if imp['module']:
+                dep = {"module": imp['module'], "type": imp['type']}
+                if imp.get('name'):
+                    dep["imports"] = [imp['name']]
+                relationships["import_dependencies"].append(dep)
+        
+        return relationships
+    
+    def _get_timestamp(self) -> str:
+        """Get current timestamp for metadata."""
+        from datetime import datetime
+        return datetime.now().isoformat()
     
     def _build_fallback_metadata(self, code: str, filename: str) -> Dict[str, Any]:
         """Build basic metadata when AST parsing fails."""
@@ -366,8 +460,8 @@ def analyze_python_code(code: str, filename: str = "") -> Dict[str, Any]:
         
         return metadata
     else:
-        # Fallback to the legacy analyzer
-        LOGGER.info("Using legacy Python analyzer (tree-sitter not available)")
+        # Fallback to the enhanced legacy analyzer (not tree-sitter, but still enhanced)
+        LOGGER.info("Using enhanced Python AST analyzer (tree-sitter not available)")
         analyzer = PythonCodeAnalyzer()
         return analyzer.analyze_code(code, filename)
 

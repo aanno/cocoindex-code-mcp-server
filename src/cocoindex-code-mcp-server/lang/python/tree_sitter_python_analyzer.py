@@ -56,10 +56,18 @@ class TreeSitterPythonAnalyzer:
         metadata = self._try_enhanced_python_analysis(code, filename)
         
         if not metadata or metadata.get('analysis_method') == 'basic_text':
-            # Fallback to multi-level analyzer
-            fallback_metadata = self.multilevel_analyzer.analyze_code(code, 'python', filename)
-            if fallback_metadata:
-                metadata = fallback_metadata
+            # Fallback to enhanced Python AST analyzer
+            try:
+                from lang.python.python_code_analyzer import PythonCodeAnalyzer
+                fallback_analyzer = PythonCodeAnalyzer()
+                fallback_metadata = fallback_analyzer.analyze_code(code, filename)
+                if fallback_metadata:
+                    metadata = fallback_metadata
+            except ImportError:
+                # Last resort: use multi-level analyzer
+                fallback_metadata = self.multilevel_analyzer.analyze_code(code, 'python', filename)
+                if fallback_metadata:
+                    metadata = fallback_metadata
         
         # Ensure we have all expected fields
         return self._normalize_metadata(metadata, code, filename)
@@ -123,25 +131,43 @@ class TreeSitterPythonAnalyzer:
             return None
     
     def _try_python_ast_analysis(self, code: str, filename: str) -> Optional[Dict[str, Any]]:
-        """Try Python AST analysis for detailed semantic information."""
+        """Try enhanced Python AST analysis for detailed semantic information."""
         try:
-            tree = ast.parse(code, filename=filename)
+            # Use the enhanced PythonCodeAnalyzer instead of the simple visitor
+            from lang.python.python_code_analyzer import PythonCodeAnalyzer
+            analyzer = PythonCodeAnalyzer()
+            metadata = analyzer.analyze_code(code, filename)
             
-            # Create a Python AST visitor
-            visitor = PythonASTVisitor()
-            visitor.visit(tree)
+            if metadata:
+                # Ensure analysis method is set correctly
+                metadata['analysis_method'] = 'python_ast'
+                return metadata
+            else:
+                return None
             
-            metadata = visitor.get_metadata()
-            metadata.update({
-                'analysis_method': 'python_ast',
-                'language': 'python',
-                'filename': filename,
-                'line_count': len(code.split('\n')),
-                'char_count': len(code)
-            })
-            
-            return metadata
-            
+        except ImportError:
+            # Fallback to simple AST visitor if import fails
+            try:
+                tree = ast.parse(code, filename=filename)
+                
+                # Create a Python AST visitor
+                visitor = PythonASTVisitor()
+                visitor.visit(tree)
+                
+                metadata = visitor.get_metadata()
+                metadata.update({
+                    'analysis_method': 'python_ast',
+                    'language': 'python',
+                    'filename': filename,
+                    'line_count': len(code.split('\n')),
+                    'char_count': len(code)
+                })
+                
+                return metadata
+                
+            except Exception as e:
+                LOGGER.warning(f"Python AST analysis failed: {e}")
+                return None
         except SyntaxError as e:
             LOGGER.warning(f"Python AST parsing failed (syntax error): {e}")
             return None
@@ -185,7 +211,7 @@ class TreeSitterPythonAnalyzer:
         return merged
     
     def _normalize_metadata(self, metadata: Dict[str, Any], code: str, filename: str) -> Dict[str, Any]:
-        """Ensure metadata has all expected fields."""
+        """Ensure metadata has all expected fields without overriding enhanced metadata."""
         base_metadata = {
             'language': 'Python',
             'filename': filename,
@@ -210,10 +236,15 @@ class TreeSitterPythonAnalyzer:
             'analysis_method': 'unknown'
         }
         
+        # Only add base fields that are missing, don't override enhanced ones
         if metadata:
-            base_metadata.update(metadata)
-        
-        return base_metadata
+            result = metadata.copy()
+            for key, value in base_metadata.items():
+                if key not in result:
+                    result[key] = value
+            return result
+        else:
+            return base_metadata
     
     def _empty_metadata(self, filename: str) -> Dict[str, Any]:
         """Return empty metadata structure."""
