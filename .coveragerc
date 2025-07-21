@@ -1,0 +1,17 @@
+[run]
+branch = True
+# source = mypackage,anotherpackage
+source = cocoindex-code-mcp-server,tests,src/cocoindex_code_mcp_server
+omit =
+    */migrations/*
+    */venv/*
+
+[report]
+show_missing = True
+skip_covered = True
+fail_under = 2
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    def __str__
+    if __name__ == "__main__":

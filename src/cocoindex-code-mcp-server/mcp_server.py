@@ -33,7 +33,12 @@ from keyword_search_parser_lark import KeywordSearchParser
 from lang.python.python_code_analyzer import analyze_python_code
 import cocoindex
 from cocoindex_config import code_embedding_flow, code_to_embedding, update_flow_config, run_flow_update
+from __init__ import LOGGER
 
+try:
+    import coverage
+except ImportError:
+    coverage = None
 
 # Initialize the MCP server
 server = Server("cocoindex-rag")
@@ -44,6 +49,7 @@ connection_pool: Optional[ConnectionPool] = None
 shutdown_event = threading.Event()
 background_thread: Optional[threading.Thread] = None
 _terminating = threading.Event()  # Atomic termination flag
+_want_to_save_coverage = False
 
 
 def safe_embedding_function(query: str):
@@ -102,9 +108,16 @@ def handle_shutdown(signum, frame):
             print("⚠️  Background thread did not finish cleanly", file=sys.stderr)
     
     print("✅ Cleanup completed", file=sys.stderr)
-    
+    if coverage is not None and _want_to_save_coverage:
+        _cov.stop()
+        _cov.save()
+        print("✅ Coverage data saved to 'coverage'", file=sys.stderr)
+
     # Use sys.exit instead of os._exit for cleaner shutdown
     try:
+        # TODO: exit(0) does not exit...
+        # exit(0)
+        # wait(2)
         sys.exit(0)
     except SystemExit:
         os._exit(0)
@@ -172,6 +185,12 @@ MCP Resources Available:
         help="Polling interval in seconds for live updates (default: 60)"
     )
     
+    parser.add_argument(
+        "--coverage",
+        action="store_true",
+        help="enable saving coverage data on exit"
+    )
+
     # Transport options
     transport_group = parser.add_mutually_exclusive_group()
     transport_group.add_argument(
@@ -1361,7 +1380,7 @@ async def run_http_client(url: str, live_enabled: bool, poll_interval: int):
         pass
 
 
-async def main():
+async def main(args):
     """Main entry point for the MCP server."""
     # Set up signal handlers for graceful shutdown
     signal.signal(signal.SIGINT, handle_shutdown)
@@ -1370,9 +1389,6 @@ async def main():
     # Load environment and initialize CocoIndex
     load_dotenv()
     cocoindex.init()
-    
-    # Parse command line arguments - now safe for HTTP transport
-    args = parse_mcp_args()
     
     # Determine paths to use
     paths = determine_paths(args)
@@ -1462,7 +1478,15 @@ async def main():
 
 if __name__ == "__main__":
     try:
-        asyncio.run(main())
+        # Parse command line arguments - now safe for HTTP transport
+        args = parse_mcp_args()
+        _want_to_save_coverage = args.coverage
+        LOGGER.info(f"Running with coverage: {_want_to_save_coverage}")
+        if coverage is not None and _want_to_save_coverage:
+            global _cov
+            _cov = coverage.Coverage(auto_data=True)
+
+        asyncio.run(main(args))
     except (KeyboardInterrupt, SystemExit):
         # Graceful shutdown
         pass
