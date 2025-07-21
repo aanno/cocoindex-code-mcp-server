@@ -156,7 +156,8 @@ and `src/cocoindex-code-mcp-server/lang/python/python_code_analyzer.py`
 ## Implementation Notes
 
 - **Backward Compatibility**: Ensure existing PostgreSQL-based searches continue working
-- **Configuration**: Add backend selection via environment variables or config files  
+  + However, API backward compatibility is not a goal, as we are still in early development
+- **Configuration**: Add backend selection via cli arguments  
 - **Testing**: Use adapter pattern to enable mock backends for testing
 - **Documentation**: Update API docs to reflect new abstraction layers
 
