@@ -47,7 +47,7 @@ class TestMCPServerBasics:
         resources = await mcp_server.handle_list_resources()
         
         assert isinstance(resources, list)
-        assert len(resources) == 3
+        assert len(resources) == 7
         
         # Check specific resources exist
         resource_names = [r.name for r in resources]
@@ -58,7 +58,11 @@ class TestMCPServerBasics:
         # Check resource URIs are properly formatted
         for resource in resources:
             assert str(resource.uri).startswith("cocoindex://")
-            assert resource.mimeType == "application/json"
+            # Most resources are JSON, but grammar resource is Lark format
+            if "grammar" in str(resource.uri):
+                assert resource.mimeType == "text/x-lark"
+            else:
+                assert resource.mimeType == "application/json"
 
     @pytest.mark.asyncio
     async def test_list_tools(self, mcp_server):
@@ -269,11 +273,15 @@ class TestIntegration:
             # All tools should accept arguments as objects
             assert schema["type"] == "object"
             
-            # All tools should have at least one property
-            assert len(schema["properties"]) > 0
-            
-            # All tools should have at least one required field
-            assert len(schema.get("required", [])) > 0
+            # Most tools should have at least one property, except help tools
+            if tool.name != "get_keyword_syntax_help":
+                assert len(schema["properties"]) > 0
+                # All tools should have at least one required field
+                assert len(schema.get("required", [])) > 0
+            else:
+                # Help tool can have empty properties and no required fields
+                assert isinstance(schema.get("properties", {}), dict)
+                assert isinstance(schema.get("required", []), list)
 
 
 if __name__ == "__main__":

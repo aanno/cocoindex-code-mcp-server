@@ -87,7 +87,7 @@ class TestMCPIntegrationHTTP:
         
         # Check resources
         resources = response["result"]["resources"]
-        assert len(resources) == 3
+        assert len(resources) == 7
         
         # Check specific resources exist
         resource_names = [r["name"] for r in resources]
@@ -102,7 +102,11 @@ class TestMCPIntegrationHTTP:
             assert "description" in resource
             assert "mimeType" in resource
             assert str(resource["uri"]).startswith("cocoindex://")
-            assert resource["mimeType"] == "application/json"
+            # Most resources are JSON, but grammar resource is Lark format
+            if "grammar" in str(resource["uri"]):
+                assert resource["mimeType"] == "text/x-lark"
+            else:
+                assert resource["mimeType"] == "application/json"
     
     @pytest.mark.asyncio
     async def test_list_tools(self):

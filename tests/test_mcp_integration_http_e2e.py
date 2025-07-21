@@ -28,6 +28,7 @@ from mcp.types import (
 
 
 @pytest.mark.integration
+@pytest.mark.timeout(20)
 class TestMCPIntegrationE2E:
     """End-to-End integration tests using the official MCP client library."""
     
@@ -322,7 +323,7 @@ def hello_world():
             assert tools_result is not None
             assert hasattr(tools_result, 'tools')
             tools = tools_result.tools
-            assert len(tools) == 5
+            assert len(tools) == 6
             
             # Find the hybrid_search tool
             hybrid_search_tool = None
@@ -424,7 +425,7 @@ def hello_world():
         # Should be able to perform operations
         tools_result = await session.list_tools()
         assert tools_result is not None
-        assert len(tools_result.tools) == 5
+        assert len(tools_result.tools) == 6
         
         # Should be able to close session cleanly
         await session.__aexit__(None, None, None)
