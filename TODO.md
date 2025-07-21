@@ -121,8 +121,17 @@ and `src/cocoindex-code-mcp-server/lang/python/python_code_analyzer.py`
 ## Recommendations
 
 **Disputed**:
+- First, we should have some tests with multiple languages (i.e. python, c, c++, rust, haskell, java, typescript, kotlin) to see what we got out the box
+  + If possible, the tests output should be postprocessed to a table what is supported including:
+    - Chunking strategy (and quality)
+    - Metadata extraction (list of keywords supported)
+    - Metadata quality (e.g. is the function really a function, or is it a class, etc.)
+    - AST visitor support (easy for the moment)
+    - Language-specific features (if any)
+  + The tests also makes it more easy to track the evolution of the language support
 - Next strategic step is to have haskell support on the same level as python
 - After that, we should also (in addition) support Qdrant
+- Our plan should be tailored to the above
 
 ### Phase 1: Core Abstractions (High Priority)
 1. **Create `VectorStoreBackend` interface** - Abstract away database-specific code
