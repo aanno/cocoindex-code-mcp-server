@@ -248,7 +248,6 @@ class TestServerConfiguration:
 
 
 @pytest.mark.mcp_server
-@pytest.mark.integration
 class TestIntegration:
     """Test integration with existing components."""
 

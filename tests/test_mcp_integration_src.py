@@ -21,6 +21,7 @@ import requests
 from dotenv import load_dotenv
 
 
+@pytest.mark.mcp_integration
 class MCPServerTestRunner:
     """Helper class to manage MCP server instance for testing."""
     
@@ -119,7 +120,7 @@ def mcp_server():
     server.stop_server()
 
 
-@pytest.mark.integration
+@pytest.mark.mcp_integration
 class TestMCPProtocol:
     """Test MCP protocol compliance."""
     
@@ -191,7 +192,7 @@ class TestMCPProtocol:
         assert response["error"]["code"] == -32601  # Method not found
 
 
-@pytest.mark.integration
+@pytest.mark.mcp_integration
 class TestMCPTools:
     """Test MCP tool functionality."""
     
@@ -317,7 +318,7 @@ def hello_world():
         assert len(result_data["embedding"]) > 0
 
 
-@pytest.mark.integration  
+@pytest.mark.mcp_integration
 class TestMCPResources:
     """Test MCP resource functionality."""
     
@@ -367,7 +368,7 @@ class TestMCPResources:
         assert "table_name" in schema_data or "error" in schema_data
 
 
-@pytest.mark.integration
+@pytest.mark.mcp_integration
 class TestErrorHandling:
     """Test error handling scenarios."""
     
@@ -419,7 +420,7 @@ class TestErrorHandling:
         assert "Error: Unknown tool" in content[0]["text"]
 
 
-@pytest.mark.integration
+@pytest.mark.mcp_integration
 def test_port_conflict():
     """Test graceful handling of port conflicts."""
     # Start first server

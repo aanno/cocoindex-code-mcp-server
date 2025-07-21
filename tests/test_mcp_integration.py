@@ -12,7 +12,8 @@ from mcp.client.streamable_http import streamablehttp_client
 from mcp import types
 
 
-@pytest.mark.integration
+@pytest.mark.mcp_integration
+@pytest.mark.asyncio
 class TestMCPIntegration:
     """Integration tests using MCP client library."""
     

@@ -27,8 +27,9 @@ from mcp.types import (
 )
 
 
-@pytest.mark.integration
 @pytest.mark.timeout(20)
+@pytest.mark.mcp_integration
+@pytest.mark.asyncio
 class TestMCPIntegrationE2E:
     """End-to-End integration tests using the official MCP client library."""
     

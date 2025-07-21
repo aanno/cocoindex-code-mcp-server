@@ -11,7 +11,8 @@ import httpx
 import asyncio
 
 
-@pytest.mark.integration
+@pytest.mark.mcp_integration
+@pytest.mark.asyncio
 class TestMCPIntegrationHTTP:
     """Integration tests using direct HTTP JSON-RPC requests."""
     
