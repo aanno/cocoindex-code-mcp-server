@@ -147,56 +147,56 @@ This project enhances CocoIndex with additional language support. Here's the cur
 
 These languages are natively supported by CocoIndex without additional configuration:
 
-| Language | Extensions | Support Level |
-|----------|------------|---------------|
-| **C** | `.c` | Full tree-sitter |
-| **C++** | `.cpp`, `.cc`, `.cxx`, `.h`, `.hpp` | Full tree-sitter |
-| **C#** | `.cs` | Full tree-sitter |
-| **CSS** | `.css`, `.scss` | Full tree-sitter |
-| **Fortran** | `.f`, `.f90`, `.f95`, `.f03` | Full tree-sitter |
-| **Go** | `.go` | Full tree-sitter |
-| **HTML** | `.html`, `.htm` | Full tree-sitter |
-| **Java** | `.java` | Full tree-sitter |
-| **JavaScript** | `.js`, `.mjs`, `.cjs` | Full tree-sitter |
-| **JSON** | `.json` | Full tree-sitter |
-| **Markdown** | `.md`, `.mdx` | Full tree-sitter |
-| **Pascal** | `.pas`, `.dpr` | Full tree-sitter |
-| **PHP** | `.php` | Full tree-sitter |
-| **Python** | `.py`, `.pyi` | Full tree-sitter |
-| **R** | `.r`, `.R` | Full tree-sitter |
-| **Ruby** | `.rb` | Full tree-sitter |
-| **Rust** | `.rs` | Full tree-sitter |
-| **Scala** | `.scala` | Full tree-sitter |
-| **SQL** | `.sql` | Full tree-sitter |
-| **Swift** | `.swift` | Full tree-sitter |
-| **TOML** | `.toml` | Full tree-sitter |
-| **TypeScript** | `.ts` | Full tree-sitter |
-| **TSX** | `.tsx` | Full tree-sitter |
-| **XML** | `.xml` | Full tree-sitter |
-| **YAML** | `.yaml`, `.yml` | Full tree-sitter |
+| Language | Extensions | Support Level | AST Node Handler |
+|----------|------------|---------------|------------------|
+| **C** | `.c` | Full tree-sitter | Not implemented |
+| **C++** | `.cpp`, `.cc`, `.cxx`, `.h`, `.hpp` | Full tree-sitter | Not implemented |
+| **C#** | `.cs` | Full tree-sitter | Not implemented |
+| **CSS** | `.css`, `.scss` | Full tree-sitter | Not implemented |
+| **Fortran** | `.f`, `.f90`, `.f95`, `.f03` | Full tree-sitter | Not implemented |
+| **Go** | `.go` | Full tree-sitter | Not implemented |
+| **HTML** | `.html`, `.htm` | Full tree-sitter | Not implemented |
+| **Java** | `.java` | Full tree-sitter | Not implemented |
+| **JavaScript** | `.js`, `.mjs`, `.cjs` | Full tree-sitter | Not implemented |
+| **JSON** | `.json` | Full tree-sitter | Not implemented |
+| **Markdown** | `.md`, `.mdx` | Full tree-sitter | Not implemented |
+| **Pascal** | `.pas`, `.dpr` | Full tree-sitter | Not implemented |
+| **PHP** | `.php` | Full tree-sitter | Not implemented |
+| **Python** | `.py`, `.pyi` | Full tree-sitter | **✅ Available** |
+| **R** | `.r`, `.R` | Full tree-sitter | Not implemented |
+| **Ruby** | `.rb` | Full tree-sitter | Not implemented |
+| **Rust** | `.rs` | Full tree-sitter | Not implemented |
+| **Scala** | `.scala` | Full tree-sitter | Not implemented |
+| **SQL** | `.sql` | Full tree-sitter | Not implemented |
+| **Swift** | `.swift` | Full tree-sitter | Not implemented |
+| **TOML** | `.toml` | Full tree-sitter | Not implemented |
+| **TypeScript** | `.ts` | Full tree-sitter | Not implemented |
+| **TSX** | `.tsx` | Full tree-sitter | Not implemented |
+| **XML** | `.xml` | Full tree-sitter | Not implemented |
+| **YAML** | `.yaml`, `.yml` | Full tree-sitter | Not implemented |
 
 ### Enhanced Tree-sitter Support (This Project)
 
 Languages with additional tree-sitter support added by this project:
 
-| Language | Extensions | Support Level | Implementation |
-|----------|------------|---------------|----------------|
-| **Haskell** | `.hs`, `.lhs` | Full tree-sitter | Custom maturin extension |
+| Language | Extensions | Support Level | Implementation | AST Node Handler |
+|----------|------------|---------------|----------------|------------------|
+| **Haskell** | `.hs`, `.lhs` | Full tree-sitter | Custom maturin extension | Planned |
 
 ### Ad-hoc Pattern-based Support (Custom Languages)
 
 Languages supported through regex-based chunking patterns:
 
-| Language | Extensions | Support Level | Implementation |
-|----------|------------|---------------|----------------|
-| **Shell** | `.sh`, `.bash` | Pattern-based | Custom regex separators |
-| **Makefile** | `Makefile`, `.makefile` | Pattern-based | Custom regex separators |
-| **CMake** | `.cmake`, `CMakeLists.txt` | Pattern-based | Custom regex separators |
-| **Dockerfile** | `Dockerfile`, `.dockerfile` | Pattern-based | Custom regex separators |
-| **Gradle** | `.gradle` | Pattern-based | Custom regex separators |
-| **Maven** | `pom.xml` | Pattern-based | Custom regex separators |
-| **Config** | `.ini`, `.cfg`, `.conf` | Pattern-based | Custom regex separators |
-| **Kotlin** | `.kt`, `.kts` | Pattern-based | Custom regex separators |
+| Language | Extensions | Support Level | Implementation | AST Node Handler |
+|----------|------------|---------------|----------------|------------------|
+| **Shell** | `.sh`, `.bash` | Pattern-based | Custom regex separators | N/A |
+| **Makefile** | `Makefile`, `.makefile` | Pattern-based | Custom regex separators | N/A |
+| **CMake** | `.cmake`, `CMakeLists.txt` | Pattern-based | Custom regex separators | N/A |
+| **Dockerfile** | `Dockerfile`, `.dockerfile` | Pattern-based | Custom regex separators | N/A |
+| **Gradle** | `.gradle` | Pattern-based | Custom regex separators | N/A |
+| **Maven** | `pom.xml` | Pattern-based | Custom regex separators | N/A |
+| **Config** | `.ini`, `.cfg`, `.conf` | Pattern-based | Custom regex separators | N/A |
+| **Kotlin** | `.kt`, `.kts` | Pattern-based | Custom regex separators | N/A |
 
 ### Adding New Language Support
 
