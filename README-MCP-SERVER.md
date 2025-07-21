@@ -1,6 +1,8 @@
 # CocoIndex RAG MCP Server
 
-A Model Context Protocol (MCP) server that provides hybrid search capabilities combining vector similarity and keyword metadata search for code retrieval using CocoIndex.
+✅ **PRODUCTION READY** - Fully functional MCP server for code search and analysis.
+
+A Model Context Protocol (MCP) server that provides hybrid search capabilities combining vector similarity and keyword metadata search for code retrieval using CocoIndex. Successfully integrated with Claude Desktop and other MCP clients.
 
 ## Features
 
@@ -85,7 +87,33 @@ python start_mcp_server.py --poll 30
 python mcp_server.py
 ```
 
-### Using with Claude Code
+### Claude Desktop Integration (Recommended)
+
+1. **Start the MCP server in HTTP mode:**
+   ```bash
+   python src/cocoindex-code-mcp-server/mcp_server.py --port 3033 /workspaces/rust
+   ```
+
+2. **Add to Claude Desktop configuration** (`~/.config/Claude/claude_desktop_config.json`):
+   ```json
+   {
+     "mcpServers": {
+       "cocoindex-rag": {
+         "command": "pnpm",
+         "args": [
+           "dlx",
+           "supergateway",
+           "--streamableHttp",
+           "http://localhost:3033/mcp"
+         ]
+       }
+     }
+   }
+   ```
+
+3. **Restart Claude Desktop** - Tools will appear automatically in the interface.
+
+### Using with Claude Code (Legacy)
 
 Add to your Claude Code MCP configuration:
 
@@ -172,3 +200,46 @@ This MCP server is designed to work with:
 - Any MCP-compatible client
 - Existing CocoIndex RAG pipeline
 - PostgreSQL databases with pgvector
+
+## Troubleshooting
+
+### Tools Not Visible in Claude Desktop
+
+1. **Check server is running:**
+   ```bash
+   curl -X POST http://localhost:3033/mcp -H "Content-Type: application/json" \
+     -d '{"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}'
+   ```
+
+2. **Verify supergateway connection:**
+   ```bash
+   echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}' | \
+   pnpm dlx supergateway --streamableHttp "http://localhost:3033/mcp" --logLevel debug
+   ```
+
+3. **Check Claude Desktop config file location:**
+   - File: `~/.config/Claude/claude_desktop_config.json` (NOT `.mcp.json`)
+   - Restart Claude Desktop after changes
+
+### Database Connection Issues
+
+1. **Verify PostgreSQL is running and accessible**
+2. **Check environment variables are set correctly**
+3. **Ensure pgvector extension is installed:**
+   ```sql
+   CREATE EXTENSION IF NOT EXISTS vector;
+   ```
+
+### Search Returns No Results
+
+1. **Check if code index is populated**
+2. **Verify embedding model is loaded**
+3. **Review search query syntax**
+
+For more detailed troubleshooting, see `docs/claude/Mcp_Server_Development.md`.
+
+## Documentation
+
+- **Main Documentation**: `docs/claude/Mcp_Server.md`
+- **Development Gotchas**: `docs/claude/Mcp_Server_Development.md`
+- **Test Suite**: `tests/test_mcp_integration_http_e2e.py`

@@ -46,6 +46,7 @@ class TestMCPIntegrationE2E:
             # Run the test function with the session
             return await test_func(session)
     
+    
     @pytest.mark.asyncio
     async def test_mcp_client_initialization(self):
         """Test MCP client initialization through the library."""
@@ -310,6 +311,88 @@ def hello_world():
             assert isinstance(first_content, TextContent)
             assert first_content.type == "text"
             assert first_content.text is not None
+    
+    @pytest.mark.asyncio
+    async def test_mcp_tool_advertising_hybrid_search(self):
+        """Test that hybrid_search tool is properly advertised with correct schema."""
+        async def _test(session):
+            # Get list of tools
+            tools_result = await session.list_tools()
+            assert tools_result is not None
+            assert hasattr(tools_result, 'tools')
+            tools = tools_result.tools
+            assert len(tools) == 5
+            
+            # Find the hybrid_search tool
+            hybrid_search_tool = None
+            for tool in tools:
+                if tool.name == "hybrid_search":
+                    hybrid_search_tool = tool
+                    break
+            
+            # Verify hybrid_search tool exists and has correct properties
+            assert hybrid_search_tool is not None, "hybrid_search tool not found in advertised tools"
+            assert hybrid_search_tool.description == "Perform hybrid search combining vector similarity and keyword metadata filtering"
+            
+            # Verify input schema
+            assert hasattr(hybrid_search_tool, 'inputSchema')
+            input_schema = hybrid_search_tool.inputSchema
+            assert input_schema is not None
+            assert input_schema["type"] == "object"
+            
+            # Check required properties
+            properties = input_schema["properties"]
+            required = input_schema["required"]
+            
+            assert "vector_query" in properties
+            assert "keyword_query" in properties
+            assert "vector_query" in required
+            assert "keyword_query" in required
+            
+            # Check optional properties with defaults
+            assert "top_k" in properties
+            assert "vector_weight" in properties  
+            assert "keyword_weight" in properties
+            assert properties["top_k"]["default"] == 10
+            assert properties["vector_weight"]["default"] == 0.7
+            assert properties["keyword_weight"]["default"] == 0.3
+        
+        await self._test_with_client_session(_test)
+    
+    @pytest.mark.asyncio
+    async def test_mcp_all_tools_advertised(self):
+        """Test that all expected tools are advertised."""
+        async def _test(session):
+            # Get list of tools
+            tools_result = await session.list_tools()
+            assert tools_result is not None
+            assert hasattr(tools_result, 'tools')
+            tools = tools_result.tools
+            assert len(tools) == 5
+            
+            # Check that all expected tools are present
+            expected_tools = {
+                "hybrid_search",
+                "vector_search", 
+                "keyword_search",
+                "analyze_code",
+                "get_embeddings"
+            }
+            
+            advertised_tools = {tool.name for tool in tools}
+            assert advertised_tools == expected_tools, f"Missing tools: {expected_tools - advertised_tools}, Extra tools: {advertised_tools - expected_tools}"
+            
+            # Verify each tool has required properties
+            for tool in tools:
+                assert hasattr(tool, 'name')
+                assert hasattr(tool, 'description')
+                assert hasattr(tool, 'inputSchema')
+                assert tool.name in expected_tools
+                assert isinstance(tool.description, str)
+                assert len(tool.description) > 0
+                assert isinstance(tool.inputSchema, dict)
+        
+        await self._test_with_client_session(_test)
     
     @pytest.mark.asyncio
     async def test_mcp_error_handling_through_library(self):
