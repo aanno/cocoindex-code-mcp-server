@@ -2,6 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Instructions
+
+- Think about using our own RAG (MCP server 'cocoindex-rag') before using grep or search.
+- Never try to start/stop our RAG MCP server, just ask, I will do it for you.
+- Use gw-memory to store and retrieve information about the codebase.
+  + Tag all entries with 'cocoindex-code-mcp-server' to indicate they are related to the code MCP server.
+  + After you have been started, it is a good idea to retrieve what's has been stored lately, so you have the latest context.
+
 ## Project Overview
 
 This repository contains an RAG retrieval and query application specialized on code based on CocoIndex,
