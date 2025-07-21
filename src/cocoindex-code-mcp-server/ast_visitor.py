@@ -317,12 +317,14 @@ class ASTParserFactory:
         
         # Return cached parser if available
         if language in self._parsers:
-            return self._parsers[language]
+            result = self._parsers[language]
+            # LOGGER.debug(f"Using cached parser for {language}")
+            return result
         
         try:
             # This would need to be implemented based on available tree-sitter languages
             # For now, return None and rely on fallback mechanisms
-            LOGGER.info(f"Tree-sitter language '{language}' not yet implemented")
+            LOGGER.warning(f"Tree-sitter language '{language}' not yet implemented")
             return None
             
         except Exception as e:
@@ -370,6 +372,7 @@ class MultiLevelAnalyzer:
         # Strategy 1: Tree-sitter AST parsing
         if TREE_SITTER_AVAILABLE:
             tree_metadata = self._try_treesitter_analysis(code, language)
+            LOGGER.debug(f"Strategy 1: Tree-sitter analysis result for {filename}: {tree_metadata}")
             if tree_metadata:
                 metadata.update(tree_metadata)
                 metadata['analysis_method'] = 'tree_sitter'
@@ -378,6 +381,7 @@ class MultiLevelAnalyzer:
         # Strategy 2: Language-specific AST (Python only for now)
         if language == 'python':
             python_metadata = self._try_python_ast_analysis(code, filename)
+            LOGGER.debug(f"Strategy 2: Python AST analysis result for {filename}: {python_metadata}")
             if python_metadata:
                 metadata.update(python_metadata)
                 metadata['analysis_method'] = 'python_ast'
@@ -386,12 +390,14 @@ class MultiLevelAnalyzer:
         # Strategy 3: Enhanced regex patterns
         regex_metadata = self._try_regex_analysis(code, language)
         if regex_metadata:
+            LOGGER.debug(f"Strategy 3: Regex analysis result for {filename}: {regex_metadata}")
             metadata.update(regex_metadata)
             metadata['analysis_method'] = 'enhanced_regex'
             return metadata
         
         # Strategy 4: Basic text analysis
         basic_metadata = self._basic_text_analysis(code, language)
+        LOGGER.debug(f"Strategy 4: Basic text analysis result for {filename}: {basic_metadata}")
         metadata.update(basic_metadata)
         metadata['analysis_method'] = 'basic_text'
         

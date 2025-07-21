@@ -453,6 +453,7 @@ def analyze_python_code(code: str, filename: str = "") -> Dict[str, Any]:
         # Use the enhanced tree-sitter based analyzer
         analyzer = create_python_analyzer(prefer_tree_sitter=True)
         metadata = analyzer.analyze_code(code, filename)
+        LOGGER.debug(f"Use the enhanced tree-sitter based analyzer for {filename}: {metadata}")
         
         # Ensure metadata_json field for compatibility with existing code
         if 'metadata_json' not in metadata:

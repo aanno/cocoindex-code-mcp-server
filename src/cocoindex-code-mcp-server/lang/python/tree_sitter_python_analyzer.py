@@ -59,12 +59,14 @@ class TreeSitterPythonAnalyzer:
             # Fallback to enhanced Python AST analyzer
             try:
                 from lang.python.python_code_analyzer import PythonCodeAnalyzer
+                LOGGER.debug(f"Using enhanced PythonCodeAnalyzer for detailed analysis (bad) for {filename}")
                 fallback_analyzer = PythonCodeAnalyzer()
                 fallback_metadata = fallback_analyzer.analyze_code(code, filename)
                 if fallback_metadata:
                     metadata = fallback_metadata
             except ImportError:
                 # Last resort: use multi-level analyzer
+                LOGGER.debug(f"Using MultiLevelAnalyzer as fallback for Python code (very bad) for {filename}")
                 fallback_metadata = self.multilevel_analyzer.analyze_code(code, 'python', filename)
                 if fallback_metadata:
                     metadata = fallback_metadata
@@ -78,10 +80,12 @@ class TreeSitterPythonAnalyzer:
         if self.prefer_tree_sitter:
             # Strategy 1: Tree-sitter analysis
             ts_metadata = self._try_tree_sitter_analysis(code, filename)
+            LOGGER.debug(f"Strategy 1: Tree-sitter analysis result for {filename}: {ts_metadata}")
             if ts_metadata and ts_metadata.get('analysis_method') == 'tree_sitter':
                 # Enhance with Python AST for better semantic analysis
                 ast_metadata = self._try_python_ast_analysis(code, filename)
                 if ast_metadata:
+                    LOGGER.debug(f"Enhanced tree-sitter metadata with Python AST for {filename}: {ast_metadata}")
                     return self._merge_metadata(ts_metadata, ast_metadata)
                 return ts_metadata
         
@@ -91,6 +95,7 @@ class TreeSitterPythonAnalyzer:
             if self.prefer_tree_sitter:
                 # Try to enhance with tree-sitter position info
                 ts_metadata = self._try_tree_sitter_analysis(code, filename)
+                LOGGER.debug(f"Strategy 2: Python AST analysis result for {filename}: {ast_metadata}")
                 if ts_metadata:
                     return self._merge_metadata(ast_metadata, ts_metadata)
             return ast_metadata

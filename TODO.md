@@ -120,13 +120,29 @@ and `src/cocoindex-code-mcp-server/lang/python/python_code_analyzer.py`
 
 **Disputed**:
 - We have incooperated ASTChunk for languages it supports, hence 
-  + there is a Chunking strategy selection
+  + there is a Chunking strategy selection (but perhaps not explicitly)
   + there is a hybrid chunking approach
   + there is AST-aware chunking for code structures
 - and ideas from ASTChunk into `src/cocoindex-code-mcp-server/lang/haskell/haskell_support.py`
-- Custom chunk size/overlap configuration is there based on the language
+- Custom chunk size/overlap configuration is already there based on the language
 
 ## Recommendations
+
+**Short-Term**:
+
+* for mcp server I expect 'Selected embedding model:' from `src/cocoindex-code-mcp-server/smart_code_embedding.py` in the logs, but it is not there.
+* for mcp server I expect 'AST chunking created' from `src/cocoindex-code-mcp-server/ast_chunking.py` in the logs, but it is not there.
+* for mcp server I expect 'Handled ... with result' from `src/cocoindex-code-mcp-server/language_handlers/python_handler.py` in the logs (with DEBUG), but it is not there.
+* we should run integration tests on mcp_server.py in coverage mode to see what is covered
+* we should run integration tests on hybrid_search.py in coverage mode to see what is covered
+* we should run integration tests on the language handlers in coverage mode to see what is covered
+* we should run integration tests on the AST visitor in coverage mode to see what is covered
+* we should run integration tests on the chunking strategies in coverage mode to see what is covered
+* we should run integration tests on the metadata extraction in coverage mode to see what is covered
+* we should run integration tests on the vector store backends in coverage mode to see what is covered
+* we should run integration tests on the query layer in coverage mode to see what is covered
+* we should combine all above to see if it runs through the code we expect, not through the backups/fallbacks
+* where needed, we should add tests. That make further development easier.
 
 **Disputed**:
 - First, we should have some tests with multiple languages (i.e. python, c, c++, rust, haskell, java, typescript, kotlin) to see what we got out the box

@@ -131,7 +131,9 @@ class PythonNodeHandler:
         
         if hasattr(self, handler_method):
             try:
-                return getattr(self, handler_method)(context) or {}
+                result = getattr(self, handler_method)(context) or {}
+                LOGGER.debug(f"Handled {node_type} with result: {result}")
+                return result
             except Exception as e:
                 LOGGER.warning(f"Error handling {node_type}: {e}")
                 return {}

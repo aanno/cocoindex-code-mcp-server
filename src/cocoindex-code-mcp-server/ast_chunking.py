@@ -390,6 +390,7 @@ def create_hybrid_chunking_operation():
             if chunker.is_supported_language(lang):
                 # Use AST-based chunking
                 chunks = chunker.chunk_code(code, lang, file_path)
+                LOGGER.debug(f"AST chunking created {len(chunks)} chunks for {lang}")
                 
                 # Convert to CocoIndex format
                 result = []
@@ -411,6 +412,7 @@ def create_hybrid_chunking_operation():
                     # Use basic CocoIndex chunking if available
                     if cocoindex is not None:
                         split_func = cocoindex.functions.SplitRecursively()
+                        LOGGER.debug(f"Using CocoIndex SplitRecursively for {lang} code")
                     else:
                         raise ImportError("CocoIndex not available")
                     
@@ -427,7 +429,7 @@ def create_hybrid_chunking_operation():
                     return result
                 except ImportError:
                     # If we can't import CUSTOM_LANGUAGES, fall back to simple text chunking
-                    LOGGER.warning("Could not import CUSTOM_LANGUAGES, using simple text chunking")
+                    LOGGER.warning(f"Could not import CUSTOM_LANGUAGES, using simple text chunking for {lang}")
                     temp_chunker = CocoIndexASTChunker(max_chunk_size=chunk_size)
                     chunks = temp_chunker._simple_text_chunking(code, lang, file_path)
                     

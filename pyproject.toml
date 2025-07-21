@@ -11,24 +11,27 @@ dependencies = [
     "cocoindex[embeddings]>=0.1.63", 
     "python-dotenv>=1.0.1",
     "psycopg[pool]>=3.2.9",
+    "psycopg[binary]>=3.1.0",
+    "psycopg_pool>=3.1.0",
     "pgvector>=0.4.1",
     "numpy>=2.3.1",
-    "pytest>=8.4.1",
-    "astchunk @ git+https://github.com/yilinjz/astchunk.git"
+    "astchunk @ git+https://github.com/yilinjz/astchunk.git",
+    "lark-parser>=0.12.0",
+    "prompt-toolkit>=3.0.0",
 ]
 
 [project.optional-dependencies]
 test = [
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
-    "pytest-asyncio>=0.23.0",
+    "pytest-asyncio>=1.1.0",
+    "pytest-mock>=3.10.0",
+    "pytest-timeout>=2.1.0",
+    "pytest-xdist>=3.4.0",
+    "coverage>=7.9.2",
 ]
 mcp-server = [
     "mcp>=1.12.0",
-    "psycopg[binary]>=3.1.0",
-    "psycopg_pool>=3.1.0",
-    "lark-parser>=0.12.0",
-    "prompt-toolkit>=3.0.0",
 ]
 
 [tool.maturin]
