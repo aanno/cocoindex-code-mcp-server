@@ -5,7 +5,7 @@
             "args": [
                 "dlx",
                 "supergateway",
-                "--sse",
+                "--streamableHttp",
                 "http://localhost:3033/mcp"
             ]
         },
