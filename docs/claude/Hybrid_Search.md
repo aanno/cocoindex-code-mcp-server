@@ -333,13 +333,115 @@ The hybrid search system seamlessly integrates with CocoIndex flows:
 - **Additional Metadata**: Supports custom metadata fields
 - **Source Integration**: Works with any CocoIndex source (S3, Azure, etc.)
 
+## Implementing New Operators
+
+The keyword search system is extensible and supports adding new operators. Here's how to implement new operators like `value_contains`:
+
+### Development Process
+
+1. **Update Grammar** (`src/grammars/keyword_search.lark`):
+   ```lark
+   // Add new operator rule
+   my_new_operator: "my_operator" "(" FIELD "," value ")"
+   
+   // Add to conditions
+   ?condition: field_condition
+             | exists_condition  
+             | value_contains_condition
+             | my_new_operator        // Add here
+             | "(" or_expr ")"
+   ```
+
+2. **Add SearchCondition Field** (`keyword_search_parser.py`):
+   ```python
+   @dataclass
+   class SearchCondition:
+       field: str
+       value: str
+       is_exists_check: bool = False
+       is_value_contains_check: bool = False
+       is_my_new_operator_check: bool = False  # Add new field
+   ```
+
+3. **Implement Transformer** (`keyword_search_parser_lark.py`):
+   ```python
+   def my_new_operator(self, items):
+       """Transform my_operator(field, value) condition."""
+       field, value = items
+       return SearchCondition(
+           field=str(field), 
+           value=str(value), 
+           is_my_new_operator_check=True
+       )
+   ```
+
+4. **Update Fallback Parser** (`keyword_search_parser.py`):
+   ```python
+   def __init__(self):
+       # Add regex pattern
+       self.my_operator_pattern = re.compile(r'my_operator\s*\(\s*(\w+)\s*,\s*(...)\s*\)')
+   
+   def _parse_condition(self, condition: str):
+       # Add parsing logic
+       my_match = self.my_operator_pattern.search(condition)
+       if my_match:
+           return SearchCondition(field=..., value=..., is_my_new_operator_check=True)
+   ```
+
+5. **Add SQL Generation** (`build_sql_where_clause`):
+   ```python
+   elif condition.is_my_new_operator_check:
+       # Generate appropriate SQL
+       where_parts.append(f"{prefix}{condition.field} ~ %s")  # Example: regex
+       params.append(f"^{condition.value}")
+   ```
+
+6. **Write Tests** (`tests/test_my_operator.py`):
+   ```python
+   def test_my_operator_parsing():
+       parser = KeywordSearchParser()
+       result = parser.parse('my_operator(field, "value")')
+       assert result.conditions[0].is_my_new_operator_check is True
+   ```
+
+### Example: Adding a Range Operator
+
+For a `range(field, min, max)` operator:
+
+```python
+# 1. Grammar addition
+range_condition: "range" "(" FIELD "," value "," value ")"
+
+# 2. SearchCondition extension  
+is_range_check: bool = False
+range_min: str = ""
+range_max: str = ""
+
+# 3. SQL generation
+elif condition.is_range_check:
+    where_parts.append(f"CAST({prefix}{condition.field} AS INTEGER) BETWEEN %s AND %s")
+    params.extend([condition.range_min, condition.range_max])
+```
+
+### Testing New Operators
+
+Use the existing RAG system to test implementations:
+
+```python
+# Test via MCP
+result = mcp__cocoindex-rag__hybrid_search(
+    vector_query="example search",
+    keyword_query='my_operator(field, "value") and language:python'
+)
+```
+
 ## Future Enhancements
 
 ### Planned Features
 
 1. **Fuzzy Matching**: Approximate string matching in keyword queries
-2. **Range Queries**: Numeric range filtering (e.g., `line_count:>100`)
-3. **Regex Support**: Regular expression matching in field values
+2. **Range Queries**: Numeric range filtering (e.g., `range(line_count, 10, 100)`)
+3. **Regex Support**: Regular expression matching (e.g., `regex_match(filename, ".*test.*")`)
 4. **Saved Queries**: Ability to save and reuse complex queries
 5. **Query History**: Track and replay previous searches
 

@@ -21,6 +21,7 @@ class SearchCondition:
     field: str
     value: str
     is_exists_check: bool = False
+    is_value_contains_check: bool = False
 
 
 @dataclass
@@ -38,6 +39,8 @@ class KeywordSearchParser:
         self.field_value_pattern = re.compile(r'(\w+):(?:(["\'])([^"\']*?)\2|([^\s]+))')
         # Pattern for exists checks
         self.exists_pattern = re.compile(r'exists\s*\(\s*(\w+)\s*\)', re.IGNORECASE)
+        # Pattern for value_contains checks
+        self.value_contains_pattern = re.compile(r'value_contains\s*\(\s*(\w+)\s*,\s*(?:(["\'])([^"\']*?)\2|([^\s,)]+))\s*\)', re.IGNORECASE)
         # Pattern for operators
         self.operator_pattern = re.compile(r'\b(and|or)\b', re.IGNORECASE)
         # Pattern for parentheses groups
@@ -51,6 +54,7 @@ class KeywordSearchParser:
         - field:value - match field equals value
         - field:"quoted value" - match field with quoted value
         - exists(field) - check if field exists
+        - value_contains(field, "search_string") - check if field value contains string
         - and / or - logical operators
         - (group) - parentheses for grouping
         
@@ -58,6 +62,7 @@ class KeywordSearchParser:
         - language:python and filename:main.py
         - (language:python or language:rust) and exists(embedding)
         - filename:"test file.py" and language:python
+        - value_contains(code, "function") and language:python
         """
         if not query or not query.strip():
             return SearchGroup(conditions=[])
@@ -67,23 +72,35 @@ class KeywordSearchParser:
     
     def _parse_expression(self, expr: str) -> SearchGroup:
         """Parse a full expression, handling operators and groups."""
-        # Handle parentheses first, but skip exists() function calls
+        # Handle parentheses first, but skip exists() and value_contains() function calls
         while '(' in expr:
             match = self.group_pattern.search(expr)
             if not match:
                 break
             
-            # Check if this is an exists() function call
+            # Check if this is a function call (exists or value_contains), not a grouping
             start_pos = match.start()
-            if start_pos >= 6:  # "exists".length
-                before_paren = expr[start_pos-6:start_pos].lower()
-                if before_paren == 'exists':
-                    # This is an exists() call, not a grouping - find next parentheses
-                    next_match = self.group_pattern.search(expr, match.end())
-                    if next_match:
-                        match = next_match
-                    else:
-                        break
+            is_function_call = False
+            
+            # Check for value_contains() function call
+            if start_pos >= 14:  # "value_contains".length
+                before_paren = expr[max(0, start_pos-14):start_pos].lower()
+                if before_paren.endswith('value_contains'):
+                    is_function_call = True
+            
+            # Check for exists() function call
+            if not is_function_call and start_pos >= 6:  # "exists".length
+                before_paren = expr[max(0, start_pos-6):start_pos].lower()
+                if before_paren.endswith('exists'):
+                    is_function_call = True
+            
+            if is_function_call:
+                # This is a function call, not a grouping - find next parentheses
+                next_match = self.group_pattern.search(expr, match.end())
+                if next_match:
+                    match = next_match
+                else:
+                    break
             
             group_content = match.group(1)
             group_result = self._parse_expression(group_content)
@@ -182,6 +199,14 @@ class KeywordSearchParser:
             field = exists_match.group(1)
             return SearchCondition(field=field, value="", is_exists_check=True)
         
+        # Check for value_contains condition
+        value_contains_match = self.value_contains_pattern.search(condition)
+        if value_contains_match:
+            field = value_contains_match.group(1)
+            # Group 3 is quoted value, group 4 is unquoted value
+            value = value_contains_match.group(3) or value_contains_match.group(4)
+            return SearchCondition(field=field, value=value, is_value_contains_check=True)
+        
         # Check for field:value condition
         field_value_match = self.field_value_pattern.search(condition)
         if field_value_match:
@@ -212,6 +237,10 @@ def build_sql_where_clause(search_group: SearchGroup, table_alias: str = "") -> 
         if isinstance(condition, SearchCondition):
             if condition.is_exists_check:
                 where_parts.append(f"{prefix}{condition.field} IS NOT NULL")
+            elif condition.is_value_contains_check:
+                # value_contains(field, "search_string") -> field ILIKE %search_string%
+                where_parts.append(f"{prefix}{condition.field} ILIKE %s")
+                params.append(f"%{condition.value}%")
             elif condition.field == "_text":
                 # General text search across code content
                 where_parts.append(f"{prefix}code ILIKE %s")
@@ -240,6 +269,7 @@ if __name__ == "__main__":
         "(language:python or language:rust) and exists(embedding)",
         'filename:"test file.py" and language:python',
         "exists(embedding) and (language:rust or language:go)",
+        'value_contains(code, "function") and language:python',
         "python function",  # general text search
     ]
     

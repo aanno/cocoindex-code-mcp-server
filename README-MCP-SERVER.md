@@ -170,6 +170,83 @@ Add to your Claude Code MCP configuration:
 }
 ```
 
+## RAG-Enhanced Development
+
+This MCP server demonstrates significant advantages for LLM-based development workflows:
+
+### 🚀 Development Velocity Advantages
+
+#### Context-Aware Code Discovery
+
+- **Semantic Understanding**: Vector search finds conceptually related code even without exact keyword matches
+- **Smart Navigation**: LLMs can explore codebases intelligently using natural language queries
+- **Cross-Language Insights**: Discover similar patterns across different programming languages
+
+#### Intelligent Code Analysis
+
+- **Pattern Recognition**: LLMs can identify design patterns, anti-patterns, and architectural decisions
+- **Impact Analysis**: Understanding how changes affect related components through semantic relationships
+- **Learning from Examples**: Find implementation examples for specific use cases or algorithms
+
+#### Enhanced Problem-Solving
+
+- **Contextual Debugging**: Find similar error patterns and their solutions across the codebase
+- **API Discovery**: Locate relevant functions and their usage patterns through natural language queries
+- **Documentation Generation**: Automatically generate docs by understanding code semantics
+
+### 🎯 Real-World Development Benefits
+
+#### Onboarding & Knowledge Transfer
+
+```python
+# Instead of manually grep-ing through thousands of files
+# LLM can ask: "How is authentication handled in this codebase?"
+result = hybrid_search(
+    vector_query="user authentication login security",
+    keyword_query="language:python and value_contains(code, 'auth')"
+)
+```
+
+#### Feature Development
+
+```python
+# Discover existing patterns before implementing new features  
+# "Show me how database connections are managed"
+result = vector_search("database connection pool management")
+```
+
+#### Code Reviews & Refactoring
+
+```python
+# Find all similar implementations that might need refactoring
+# "Find all error handling patterns using try-catch"
+result = hybrid_search(
+    vector_query="error handling exception try catch",
+    keyword_query="value_contains(code, 'try') and language:python"
+)
+```
+
+### 💡 Why RAG Beats Traditional Search
+
+| Traditional Search | RAG-Enhanced Search |
+|------------------|-------------------|
+| Exact keyword matching | **Semantic understanding** |
+| Syntactic queries only | **Natural language queries** |
+| No context awareness | **Contextual relationships** |
+| Manual code exploration | **AI-guided discovery** |
+| Static documentation | **Dynamic code understanding** |
+
+### 🔧 Development Workflow Integration
+
+#### IDE Integration
+The MCP server works with Claude Code, Claude Desktop, and any MCP-compatible client, bringing RAG capabilities directly into development environments.
+
+#### CI/CD Enhancement
+Automated code analysis and documentation generation based on semantic understanding of code changes.
+
+#### Team Collaboration
+Shared understanding of codebase architecture and patterns through natural language queries that work consistently across team members.
+
 ## Architecture
 
 The MCP server integrates with existing CocoIndex components:
@@ -186,7 +263,7 @@ The MCP server integrates with existing CocoIndex components:
 - `value_contains` - Substring matching
 - Field targeting: `function_name:parse`, `language:python`
 
-## Troubleshooting
+## Performance & Troubleshooting
 
 1. **Import Errors**: Ensure CocoIndex is installed via `maturin develop`
 2. **Database Connection**: Check environment variables and PostgreSQL service
@@ -201,17 +278,19 @@ This MCP server is designed to work with:
 - Existing CocoIndex RAG pipeline
 - PostgreSQL databases with pgvector
 
-## Troubleshooting
+### Advanced Troubleshooting
 
-### Tools Not Visible in Claude Desktop
+#### Tools Not Visible in Claude Desktop
 
 1. **Check server is running:**
+
    ```bash
    curl -X POST http://localhost:3033/mcp -H "Content-Type: application/json" \
      -d '{"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}'
    ```
 
 2. **Verify supergateway connection:**
+
    ```bash
    echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}' | \
    pnpm dlx supergateway --streamableHttp "http://localhost:3033/mcp" --logLevel debug
@@ -221,16 +300,17 @@ This MCP server is designed to work with:
    - File: `~/.config/Claude/claude_desktop_config.json` (NOT `.mcp.json`)
    - Restart Claude Desktop after changes
 
-### Database Connection Issues
+#### Database Connection Issues
 
 1. **Verify PostgreSQL is running and accessible**
 2. **Check environment variables are set correctly**
 3. **Ensure pgvector extension is installed:**
+
    ```sql
    CREATE EXTENSION IF NOT EXISTS vector;
    ```
 
-### Search Returns No Results
+#### Search Returns No Results
 
 1. **Check if code index is populated**
 2. **Verify embedding model is loaded**
