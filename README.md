@@ -26,10 +26,12 @@ There is a MCP server example at `/workspaces/rust/code-index-mcp`.
 
 ### tree-sitter
 
-- cocoindex uses tree-sitter, but only the grammers build in
-- [List of grammars](https://github.com/tree-sitter/tree-sitter/wiki/List-of-parsers)
-- If you want support for other languages, additonal parser should be included
-- This has so far be done for: Haskell.
+- CocoIndex uses tree-sitter, but only the grammars built in
+- [List of grammars](https://github.com/tree-sitter/tree-sitter/wiki/List-of-parsers)  
+- If you want support for other languages, additional parsers should be included
+- **NEW**: Enhanced tree-sitter implementation with working parsers for Python, C#, Java, TypeScript/TSX
+- **IMPROVED**: Eliminated tree-sitter warnings in MCP server logs through proper parser implementation
+- This has so far been done for: Haskell (custom extension) + Python/C#/Java/TypeScript (configured parsers)
 
 ### Existing MCP Server
 
@@ -88,6 +90,12 @@ This project now includes full Haskell support for CocoIndex through:
 - Rust (latest stable version)
 - Python 3.11+
 - Maturin (`pip install maturin`)
+- Tree-sitter language parsers (automatically installed via pyproject.toml)
+  - `tree-sitter>=0.24.0`
+  - `tree-sitter-python>=0.23.6`
+  - `tree-sitter-c-sharp>=0.23.1`
+  - `tree-sitter-java>=0.23.5`
+  - `tree-sitter-typescript>=0.23.2`
 
 ### Build Steps
 
@@ -147,33 +155,33 @@ This project enhances CocoIndex with additional language support. Here's the cur
 
 These languages are natively supported by CocoIndex without additional configuration:
 
-| Language | Extensions | Support Level | AST Node Handler |
-|----------|------------|---------------|------------------|
-| **C** | `.c` | Full tree-sitter | Not implemented |
-| **C++** | `.cpp`, `.cc`, `.cxx`, `.h`, `.hpp` | Full tree-sitter | Not implemented |
-| **C#** | `.cs` | Full tree-sitter | Not implemented |
-| **CSS** | `.css`, `.scss` | Full tree-sitter | Not implemented |
-| **Fortran** | `.f`, `.f90`, `.f95`, `.f03` | Full tree-sitter | Not implemented |
-| **Go** | `.go` | Full tree-sitter | Not implemented |
-| **HTML** | `.html`, `.htm` | Full tree-sitter | Not implemented |
-| **Java** | `.java` | Full tree-sitter | Not implemented |
-| **JavaScript** | `.js`, `.mjs`, `.cjs` | Full tree-sitter | Not implemented |
-| **JSON** | `.json` | Full tree-sitter | Not implemented |
-| **Markdown** | `.md`, `.mdx` | Full tree-sitter | Not implemented |
-| **Pascal** | `.pas`, `.dpr` | Full tree-sitter | Not implemented |
-| **PHP** | `.php` | Full tree-sitter | Not implemented |
-| **Python** | `.py`, `.pyi` | Full tree-sitter | **✅ Available** |
-| **R** | `.r`, `.R` | Full tree-sitter | Not implemented |
-| **Ruby** | `.rb` | Full tree-sitter | Not implemented |
-| **Rust** | `.rs` | Full tree-sitter | Not implemented |
-| **Scala** | `.scala` | Full tree-sitter | Not implemented |
-| **SQL** | `.sql` | Full tree-sitter | Not implemented |
-| **Swift** | `.swift` | Full tree-sitter | Not implemented |
-| **TOML** | `.toml` | Full tree-sitter | Not implemented |
-| **TypeScript** | `.ts` | Full tree-sitter | Not implemented |
-| **TSX** | `.tsx` | Full tree-sitter | Not implemented |
-| **XML** | `.xml` | Full tree-sitter | Not implemented |
-| **YAML** | `.yaml`, `.yml` | Full tree-sitter | Not implemented |
+| Language | Extensions | Support Level | AST Node Handler | Tree-sitter Implementation |
+|----------|------------|---------------|------------------|----------------------------|
+| **C** | `.c` | Full tree-sitter | Not implemented | Available but not configured |
+| **C++** | `.cpp`, `.cc`, `.cxx`, `.h`, `.hpp` | Full tree-sitter | Not implemented | Available but not configured |
+| **C#** | `.cs` | Full tree-sitter | Not implemented | **✅ Fully Configured** |
+| **CSS** | `.css`, `.scss` | Full tree-sitter | Not implemented | Available but not configured |
+| **Fortran** | `.f`, `.f90`, `.f95`, `.f03` | Full tree-sitter | Not implemented | Available but not configured |
+| **Go** | `.go` | Full tree-sitter | Not implemented | Available but not configured |
+| **HTML** | `.html`, `.htm` | Full tree-sitter | Not implemented | Available but not configured |
+| **Java** | `.java` | Full tree-sitter | Not implemented | **✅ Fully Configured** |
+| **JavaScript** | `.js`, `.mjs`, `.cjs` | Full tree-sitter | Not implemented | Available but not configured |
+| **JSON** | `.json` | Full tree-sitter | Not implemented | Available but not configured |
+| **Markdown** | `.md`, `.mdx` | Full tree-sitter | Not implemented | Available but not configured |
+| **Pascal** | `.pas`, `.dpr` | Full tree-sitter | Not implemented | Available but not configured |
+| **PHP** | `.php` | Full tree-sitter | Not implemented | Available but not configured |
+| **Python** | `.py`, `.pyi` | Full tree-sitter | **✅ Available** | **✅ Fully Configured** |
+| **R** | `.r`, `.R` | Full tree-sitter | Not implemented | Available but not configured |
+| **Ruby** | `.rb` | Full tree-sitter | Not implemented | Available but not configured |
+| **Rust** | `.rs` | Full tree-sitter | Not implemented | Available but not configured |
+| **Scala** | `.scala` | Full tree-sitter | Not implemented | Available but not configured |
+| **SQL** | `.sql` | Full tree-sitter | Not implemented | Available but not configured |
+| **Swift** | `.swift` | Full tree-sitter | Not implemented | Available but not configured |
+| **TOML** | `.toml` | Full tree-sitter | Not implemented | Available but not configured |
+| **TypeScript** | `.ts` | Full tree-sitter | Not implemented | **✅ Fully Configured** |
+| **TSX** | `.tsx` | Full tree-sitter | Not implemented | **✅ Fully Configured** |
+| **XML** | `.xml` | Full tree-sitter | Not implemented | Available but not configured |
+| **YAML** | `.yaml`, `.yml` | Full tree-sitter | Not implemented | Available but not configured |
 
 ### Enhanced Tree-sitter Support (This Project)
 
