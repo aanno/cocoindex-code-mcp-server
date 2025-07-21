@@ -3,7 +3,10 @@
     "name": "my-haskell-rag",
     "image": "localhost/rust-python",
     "runArgs": [
-        "--userns=keep-id:uid=${localEnv:CONTAINER_USERID},gid=${localEnv:CONTAINER_USERID}"
+        "--userns=keep-id:uid=${localEnv:CONTAINER_USERID},gid=${localEnv:CONTAINER_USERID}",
+        "--cpus=8",
+        "--memory=24g",
+        "--shm-size=1g"
     ],
     "mounts": [
         "source=${localEnv:LINUX_CONFIG}/build-with-docker/var/lib/apt,target=/var/lib/apt,type=bind,z,consistency=cached",

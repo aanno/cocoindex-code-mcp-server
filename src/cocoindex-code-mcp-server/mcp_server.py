@@ -760,7 +760,7 @@ async def handle_jsonrpc_request(request_data: dict) -> dict:
             return {
                 "jsonrpc": "2.0", 
                 "id": request_id,
-                "result": {"tools": [tool.model_dump() for tool in tools]}
+                "result": {"tools": [tool.model_dump(mode='json') for tool in tools]}
             }
         elif method == "resources/list":
             # Get resources from server handlers
@@ -768,7 +768,7 @@ async def handle_jsonrpc_request(request_data: dict) -> dict:
             return {
                 "jsonrpc": "2.0",
                 "id": request_id, 
-                "result": {"resources": [resource.model_dump() for resource in resources]}
+                "result": {"resources": [resource.model_dump(mode='json') for resource in resources]}
             }
         elif method == "resources/read":
             # Read specific resource
@@ -787,7 +787,7 @@ async def handle_jsonrpc_request(request_data: dict) -> dict:
             return {
                 "jsonrpc": "2.0", 
                 "id": request_id,
-                "result": {"content": [content.model_dump() for content in result]}
+                "result": {"content": [content.model_dump(mode='json') for content in result]}
             }
         else:
             return {
