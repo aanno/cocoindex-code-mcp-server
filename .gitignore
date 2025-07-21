@@ -24,7 +24,7 @@ build/
 
 # Test artifacts
 .pytest_cache/
-.coverage
+.coverage*
 htmlcov/
 
 # Python cache
