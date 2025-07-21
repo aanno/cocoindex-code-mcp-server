@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-Based on analysis of `docs/instructions/cocoindex-rag-architecture.md` and our current implementation using RAG search, several architectural improvements have been identified to better align with best practices for vector database abstraction and maintainability.
+Based on analysis of `docs/instructions/cocoindex-rag-architecture.md`, `docs/instructions/queries-in-cocoindex.md`, `docs/vectordb/hybrid-search-with-pgvector-vs-qdrant.md` and our current implementation using RAG search, several architectural improvements have been identified to better align with best practices for vector database abstraction and maintainability.
 
 ## Current Implementation Analysis
 
@@ -93,6 +93,16 @@ class ChunkQuery(TypedDict):
 - AST node handlers for enhanced metadata
 - Tree-sitter visitor pattern framework
 
+**Disputed**:
+- We already have the AST visitor pattern at `src/cocoindex-code-mcp-server/ast_visitor.py` and in the language_handlers
+  + However, it is only used for python now
+  + And it is pure python, not a Rust crate as the architecture document suggests
+- We already have 'AST node handlers for enhanced metadata' but only for python at `src/cocoindex-code-mcp-server/language_handlers/python_handler.py`
+and `src/cocoindex-code-mcp-server/lang/python/python_code_analyzer.py`
+  + We have even 2 implementations (but why?); the other is `src/cocoindex-code-mcp-server/lang/python/tree_sitter_python_analyzer.py`
+  + We should careful review if both are needed, and document why
+- The vistor is there but only used for python language_handler, not for anything else. Perhaps change this first?
+
 ## 6. Chunking Strategy Abstraction (**MEDIUM PRIORITY**)
 
 **Architecture Document Shows**: Multiple chunking strategies (AST-based, token-based, semantic)
@@ -104,7 +114,15 @@ class ChunkQuery(TypedDict):
 - AST-aware chunking for code structures
 - Hybrid chunking approaches
 
+**Disputed**:
+- We have incooperated ASTChunk for languages it supports 
+- and ideas from ASTChunk into `src/cocoindex-code-mcp-server/lang/haskell/haskell_support.py`
+
 ## Recommendations
+
+**Disputed**:
+- Next strategic step is to have haskell support on the same level as python
+- After that, we should also (in addition) support Qdrant
 
 ### Phase 1: Core Abstractions (High Priority)
 1. **Create `VectorStoreBackend` interface** - Abstract away database-specific code
