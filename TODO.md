@@ -99,9 +99,13 @@ class ChunkQuery(TypedDict):
   + And it is pure python, not a Rust crate as the architecture document suggests
 - We already have 'AST node handlers for enhanced metadata' but only for python at `src/cocoindex-code-mcp-server/language_handlers/python_handler.py`
 and `src/cocoindex-code-mcp-server/lang/python/python_code_analyzer.py`
-  + We have even 2 implementations (but why?); the other is `src/cocoindex-code-mcp-server/lang/python/tree_sitter_python_analyzer.py`
+  + We have even 2 implementations (but why???); the other is `src/cocoindex-code-mcp-server/lang/python/tree_sitter_python_analyzer.py`
   + We should careful review if both are needed, and document why
 - The vistor is there but only used for python language_handler, not for anything else. Perhaps change this first?
+- we have language-specific metadata fields, but only for python
+- We have enhanced metadata extraction for python, but not sure if through AST node handlers
+- We should double check if we don't register our python extractor
+  + How we managed to add support without using the API defined for that?
 
 ## 6. Chunking Strategy Abstraction (**MEDIUM PRIORITY**)
 
@@ -115,8 +119,12 @@ and `src/cocoindex-code-mcp-server/lang/python/python_code_analyzer.py`
 - Hybrid chunking approaches
 
 **Disputed**:
-- We have incooperated ASTChunk for languages it supports 
+- We have incooperated ASTChunk for languages it supports, hence 
+  + there is a Chunking strategy selection
+  + there is a hybrid chunking approach
+  + there is AST-aware chunking for code structures
 - and ideas from ASTChunk into `src/cocoindex-code-mcp-server/lang/haskell/haskell_support.py`
+- Custom chunk size/overlap configuration is there based on the language
 
 ## Recommendations
 
@@ -128,10 +136,14 @@ and `src/cocoindex-code-mcp-server/lang/python/python_code_analyzer.py`
     - Metadata quality (e.g. is the function really a function, or is it a class, etc.)
     - AST visitor support (easy for the moment)
     - Language-specific features (if any)
+  + I wonder if same of this could be done generically, i.e. if we could have a generic test that runs on all languages
   + The tests also makes it more easy to track the evolution of the language support
 - Next strategic step is to have haskell support on the same level as python
 - After that, we should also (in addition) support Qdrant
 - Our plan should be tailored to the above
+- Perhaps we should keep our current code specific to PostgreSQL
+  + and make the use of it or the new abstraction a configuration option
+  + however, we should the effected files better (something with pgvector in the name)
 
 ### Phase 1: Core Abstractions (High Priority)
 1. **Create `VectorStoreBackend` interface** - Abstract away database-specific code
