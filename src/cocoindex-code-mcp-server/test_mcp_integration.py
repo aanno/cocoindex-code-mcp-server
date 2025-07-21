@@ -157,7 +157,8 @@ class TestMCPProtocol:
             "vector_search", 
             "keyword_search",
             "analyze_code",
-            "get_embeddings"
+            "get_embeddings",
+            "get_keyword_syntax_help"
         }
         
         assert expected_tools.issubset(tool_names)

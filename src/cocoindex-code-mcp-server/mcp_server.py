@@ -132,11 +132,16 @@ MCP Tools Available:
   - keyword_search: Pure keyword metadata search  
   - analyze_code: Code analysis and metadata extraction
   - get_embeddings: Generate embeddings for text
+  - get_keyword_syntax_help: Get comprehensive help for keyword query syntax
 
 MCP Resources Available:
   - search_stats: Database and search performance statistics
   - search_config: Current hybrid search configuration
   - database_schema: Database table structure information
+  - query/grammar: Lark grammar definition for keyword syntax
+  - query/examples: Categorized example queries
+  - database/fields: Available database fields and types
+  - query/operators: Detailed operator reference
         """
     )
     
@@ -248,6 +253,30 @@ async def handle_list_resources() -> list[types.Resource]:
             description="Database table structure and schema information",
             mimeType="application/json",
         ),
+        types.Resource(
+            uri="cocoindex://query/grammar",
+            name="Keyword Search Grammar",
+            description="Lark grammar definition for keyword query syntax",
+            mimeType="text/x-lark",
+        ),
+        types.Resource(
+            uri="cocoindex://query/examples",
+            name="Query Examples",
+            description="Categorized examples of keyword query syntax",
+            mimeType="application/json",
+        ),
+        types.Resource(
+            uri="cocoindex://database/fields",
+            name="Database Fields",
+            description="Available database fields and their types for query building",
+            mimeType="application/json",
+        ),
+        types.Resource(
+            uri="cocoindex://query/operators",
+            name="Query Operators",
+            description="Detailed reference for all supported query operators",
+            mimeType="application/json",
+        ),
     ]
 
 
@@ -260,6 +289,14 @@ async def handle_read_resource(uri: str) -> str:
         return await get_search_config()
     elif uri == "cocoindex://database/schema":
         return await get_database_schema()
+    elif uri == "cocoindex://query/grammar":
+        return await get_query_grammar()
+    elif uri == "cocoindex://query/examples":
+        return await get_query_examples()
+    elif uri == "cocoindex://database/fields":
+        return await get_database_fields()
+    elif uri == "cocoindex://query/operators":
+        return await get_query_operators()
     else:
         raise ValueError(f"Unknown resource: {uri}")
 
@@ -270,7 +307,7 @@ async def handle_list_tools() -> list[types.Tool]:
     return [
         types.Tool(
             name="hybrid_search",
-            description="Perform hybrid search combining vector similarity and keyword metadata filtering",
+            description="Perform hybrid search combining vector similarity and keyword metadata filtering. Keyword syntax: field:value, exists(field), value_contains(field, 'text'), AND/OR logic. Examples: 'language:python AND function_name:parse' or '(language:python OR language:rust) AND exists(embedding)'",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -280,7 +317,7 @@ async def handle_list_tools() -> list[types.Tool]:
                     },
                     "keyword_query": {
                         "type": "string", 
-                        "description": "Keyword search query for metadata filtering (e.g., 'function_name:parse AND language:python')"
+                        "description": "Keyword search query for metadata filtering. Syntax: field:value, exists(field), value_contains(field, 'text'), AND/OR operators, parentheses for grouping. Examples: 'function_name:parse AND language:python', 'value_contains(code, \"async\") OR exists(class_name)'"
                     },
                     "top_k": {
                         "type": "integer",
@@ -322,13 +359,13 @@ async def handle_list_tools() -> list[types.Tool]:
         ),
         types.Tool(
             name="keyword_search",
-            description="Perform pure keyword metadata search",
+            description="Perform pure keyword metadata search. Supports: field:value, exists(field), value_contains(field, 'text'), AND/OR operators, parentheses grouping. Examples: 'language:python AND exists(function_name)', 'value_contains(filename, \"test\") OR function_name:main'",
             inputSchema={
                 "type": "object", 
                 "properties": {
                     "query": {
                         "type": "string",
-                        "description": "Keyword search query (e.g., 'function_name:parse AND language:python')"
+                        "description": "Keyword search query. Syntax: field:value, exists(field), value_contains(field, 'text'), AND/OR operators. Examples: 'function_name:parse AND language:python', '(language:python OR language:rust) AND exists(embedding)', 'value_contains(code, \"TODO\")'"
                     },
                     "top_k": {
                         "type": "integer",
@@ -375,6 +412,15 @@ async def handle_list_tools() -> list[types.Tool]:
                 "required": ["text"]
             },
         ),
+        types.Tool(
+            name="get_keyword_syntax_help",
+            description="Get comprehensive help and examples for keyword query syntax",
+            inputSchema={
+                "type": "object",
+                "properties": {},
+                "required": []
+            },
+        ),
     ]
 
 
@@ -400,6 +446,8 @@ async def handle_call_tool(name: str, arguments: dict) -> list[types.TextContent
             result = await analyze_code_tool(arguments)
         elif name == "get_embeddings":
             result = await get_embeddings_tool(arguments)
+        elif name == "get_keyword_syntax_help":
+            result = await get_keyword_syntax_help_tool(arguments)
         else:
             return [types.TextContent(
                 type="text",
@@ -536,6 +584,147 @@ async def get_embeddings_tool(arguments: dict) -> dict:
     }
 
 
+async def get_keyword_syntax_help_tool(arguments: dict) -> dict:
+    """Get comprehensive help and examples for keyword query syntax."""
+    help_content = {
+        "keyword_query_syntax": {
+            "description": "Comprehensive guide to keyword query syntax for searching code metadata",
+            "basic_operators": {
+                "field_matching": {
+                    "syntax": "field:value",
+                    "description": "Match exact field value",
+                    "examples": [
+                        "language:python",
+                        "function_name:main",
+                        'filename:"test file.py"'
+                    ],
+                    "notes": "Use quotes for values containing spaces or special characters"
+                },
+                "existence_check": {
+                    "syntax": "exists(field)",
+                    "description": "Check if field exists and has a non-null value",
+                    "examples": [
+                        "exists(embedding)",
+                        "exists(function_name)",
+                        "exists(class_name)"
+                    ],
+                    "notes": "Useful for filtering records with specific extracted metadata"
+                },
+                "substring_search": {
+                    "syntax": 'value_contains(field, "search_text")',
+                    "description": "Search for substring within field values",
+                    "examples": [
+                        'value_contains(code, "async")',
+                        'value_contains(filename, "test")',
+                        'value_contains(code, "TODO")'
+                    ],
+                    "notes": "Case-sensitive substring matching. Always use quotes around search text."
+                }
+            },
+            "boolean_logic": {
+                "AND_operator": {
+                    "syntax": "condition1 AND condition2",
+                    "description": "Both conditions must match",
+                    "examples": [
+                        "language:python AND function_name:main",
+                        "exists(embedding) AND language:rust",
+                        'value_contains(code, "async") AND language:python'
+                    ],
+                    "precedence": "Higher than OR"
+                },
+                "OR_operator": {
+                    "syntax": "condition1 OR condition2",
+                    "description": "Either condition can match",
+                    "examples": [
+                        "language:python OR language:rust",
+                        "function_name:main OR function_name:init",
+                        'value_contains(code, "TODO") OR value_contains(code, "FIXME")'
+                    ],
+                    "precedence": "Lower than AND"
+                },
+                "grouping": {
+                    "syntax": "(condition1 OR condition2) AND condition3",
+                    "description": "Use parentheses to control evaluation order",
+                    "examples": [
+                        "(language:python OR language:rust) AND exists(function_name)",
+                        'exists(embedding) AND (filename:main.py OR filename:lib.rs)',
+                        '(value_contains(code, "async") OR value_contains(code, "await")) AND language:python'
+                    ],
+                    "notes": "Parentheses override default operator precedence"
+                }
+            },
+            "available_fields": {
+                "description": "Common fields available for querying (varies by indexed content)",
+                "fields": {
+                    "filename": "Source code filename (e.g., 'main.py', 'lib.rs')",
+                    "language": "Programming language (e.g., 'python', 'rust', 'javascript')",
+                    "code": "Full source code content of the chunk",
+                    "function_name": "Extracted function/method names from the code chunk",
+                    "class_name": "Extracted class names from the code chunk",
+                    "embedding": "Vector embedding representation (use exists() to check)",
+                    "start_line": "Starting line number in source file",
+                    "end_line": "Ending line number in source file"
+                },
+                "note": "Use the 'get_database_fields' resource to see all available fields for your specific database"
+            },
+            "complete_examples": {
+                "simple_queries": [
+                    "language:python",
+                    "exists(function_name)",
+                    'value_contains(filename, ".test.")',
+                    "function_name:main"
+                ],
+                "intermediate_queries": [
+                    "language:python AND exists(function_name)",
+                    "language:rust OR language:go",
+                    'value_contains(code, "async") AND language:python',
+                    "exists(embedding) AND language:javascript"
+                ],
+                "advanced_queries": [
+                    "(language:python OR language:rust) AND exists(function_name)",
+                    'exists(embedding) AND (value_contains(code, "test") OR value_contains(filename, "test"))',
+                    '(function_name:main OR function_name:init) AND (language:python OR language:rust)',
+                    'value_contains(code, "TODO") OR value_contains(code, "FIXME") OR value_contains(code, "HACK")'
+                ]
+            },
+            "syntax_rules": {
+                "field_names": "Must start with letter/underscore, can contain letters, numbers, underscores",
+                "quoted_values": "Use single or double quotes for values with spaces/special characters",
+                "case_sensitivity": "Field names are case-sensitive, operators (AND/OR) are case-insensitive",
+                "whitespace": "Whitespace around operators is ignored"
+            },
+            "common_mistakes": {
+                "missing_quotes": {
+                    "wrong": "filename:test file.py",
+                    "correct": 'filename:"test file.py"',
+                    "reason": "Spaces in values require quotes"
+                },
+                "incorrect_contains_syntax": {
+                    "wrong": 'code contains "async"',
+                    "correct": 'value_contains(code, "async")',
+                    "reason": "Use value_contains() function syntax"
+                },
+                "operator_precedence": {
+                    "wrong": "language:python OR language:rust AND exists(function_name)",
+                    "correct": "(language:python OR language:rust) AND exists(function_name)",
+                    "reason": "AND has higher precedence than OR; use parentheses for clarity"
+                }
+            }
+        },
+        "additional_resources": {
+            "mcp_resources": [
+                "cocoindex://query/grammar - Lark grammar definition",
+                "cocoindex://query/examples - Categorized example queries",
+                "cocoindex://database/fields - Available database fields and types",
+                "cocoindex://query/operators - Detailed operator reference"
+            ],
+            "note": "Use MCP resource reading to access detailed documentation and examples"
+        }
+    }
+    
+    return help_content
+
+
 async def get_search_stats() -> str:
     """Get database and search statistics."""
     global connection_pool
@@ -621,6 +810,259 @@ async def get_database_schema() -> str:
         return json.dumps(schema, indent=2)
     except Exception as e:
         return json.dumps({"error": f"Failed to get schema: {str(e)}"})
+
+
+async def get_query_grammar() -> str:
+    """Get Lark grammar for keyword query syntax."""
+    import os
+    import pathlib
+    
+    # Find grammar file relative to this script
+    grammar_path = pathlib.Path(__file__).parent / "grammars" / "keyword_search.lark"
+    
+    try:
+        with open(grammar_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    except Exception as e:
+        return f"Error reading grammar file: {str(e)}"
+
+
+async def get_query_examples() -> str:
+    """Get categorized examples of keyword query syntax."""
+    examples = {
+        "basic_matching": {
+            "description": "Simple field matching",
+            "examples": [
+                "language:python",
+                "filename:main.py", 
+                'filename:"test file.py"',
+                "function_name:parse"
+            ]
+        },
+        "existence_checks": {
+            "description": "Check if field exists",
+            "examples": [
+                "exists(embedding)",
+                "exists(function_name)", 
+                "exists(language) AND language:rust"
+            ]
+        },
+        "value_contains": {
+            "description": "Substring search within field values",
+            "examples": [
+                'value_contains(code, "async")',
+                'value_contains(filename, "test")',
+                'value_contains(code, "function") AND language:python'
+            ]
+        },
+        "boolean_logic": {
+            "description": "Combining conditions with AND/OR",
+            "examples": [
+                "language:python AND function_name:main",
+                "(language:python OR language:rust) AND exists(embedding)",
+                'value_contains(code, "async") OR value_contains(code, "await")'
+            ]
+        },
+        "complex_queries": {
+            "description": "Advanced combinations with grouping",
+            "examples": [
+                '(language:python OR language:javascript) AND value_contains(code, "async")',
+                'exists(embedding) AND (filename:main.py OR filename:index.js)',
+                '(value_contains(code, "function") OR value_contains(code, "class")) AND language:python'
+            ]
+        },
+        "common_patterns": {
+            "description": "Frequently used search patterns",
+            "examples": [
+                "language:python AND exists(function_name)",
+                'value_contains(code, "TODO") OR value_contains(code, "FIXME")',
+                "language:rust AND function_name:main",
+                'exists(embedding) AND value_contains(filename, ".py")'
+            ]
+        }
+    }
+    return json.dumps(examples, indent=2)
+
+
+async def get_database_fields() -> str:
+    """Get available database fields and their types for query building."""
+    global connection_pool
+    
+    if not connection_pool:
+        return json.dumps({"error": "No database connection"})
+    
+    try:
+        with connection_pool.connection() as conn:
+            with conn.cursor() as cur:
+                table_name = hybrid_search_engine.table_name if hybrid_search_engine else "code_embeddings"
+                
+                # Get column information from database
+                cur.execute(f"""
+                    SELECT column_name, data_type, is_nullable, column_default
+                    FROM information_schema.columns 
+                    WHERE table_name = '{table_name}'
+                    ORDER BY ordinal_position
+                """)
+                columns = cur.fetchall()
+                
+                # Enhanced field descriptions based on our schema
+                field_descriptions = {
+                    "filename": "Source code filename (e.g., 'main.py', 'lib.rs')",
+                    "language": "Programming language (e.g., 'python', 'rust', 'javascript')",  
+                    "code": "Full source code content of the chunk",
+                    "function_name": "Extracted function/method names from the code chunk",
+                    "class_name": "Extracted class names from the code chunk",
+                    "embedding": "Vector embedding representation (for similarity search)",
+                    "metadata_json": "Additional metadata in JSON format",
+                    "id": "Unique identifier for the code chunk",
+                    "start_line": "Starting line number in the source file",
+                    "end_line": "Ending line number in the source file"
+                }
+                
+                # Common values for enum-like fields
+                common_values = {
+                    "language": ["python", "rust", "javascript", "typescript", "java", "go", "c", "cpp"],
+                    "function_name": ["main", "init", "setup", "test", "parse", "get", "set"],
+                    "class_name": ["Class", "Handler", "Builder", "Config", "Test"]
+                }
+                
+                fields = {}
+                for col in columns:
+                    col_name = col[0]
+                    col_type = col[1]
+                    nullable = col[2] == "YES"
+                    
+                    field_info = {
+                        "type": col_type,
+                        "nullable": nullable,
+                        "description": field_descriptions.get(col_name, f"Database field of type {col_type}")
+                    }
+                    
+                    if col_name in common_values:
+                        field_info["common_values"] = common_values[col_name]
+                    
+                    # Add query examples for each field
+                    if col_name == "embedding":
+                        field_info["query_examples"] = ["exists(embedding)"]
+                    elif col_name in ["filename", "code"]:
+                        field_info["query_examples"] = [
+                            f'{col_name}:"example value"',
+                            f'value_contains({col_name}, "search_term")'
+                        ]
+                    else:
+                        field_info["query_examples"] = [f'{col_name}:value']
+                        if col_type in ["text", "character varying"]:
+                            field_info["query_examples"].append(f'value_contains({col_name}, "search_term")')
+                    
+                    fields[col_name] = field_info
+                
+                result = {
+                    "table_name": table_name,
+                    "fields": fields,
+                    "query_help": {
+                        "field_matching": "Use field:value or field:\"quoted value\"",
+                        "existence": "Use exists(field) to check if field has any value",
+                        "contains": "Use value_contains(field, \"text\") for substring search",
+                        "boolean": "Combine with AND/OR and use parentheses for grouping"
+                    }
+                }
+                
+                return json.dumps(result, indent=2)
+                
+    except Exception as e:
+        return json.dumps({"error": f"Failed to get database fields: {str(e)}"})
+
+
+async def get_query_operators() -> str:
+    """Get detailed reference for all supported query operators."""
+    operators = {
+        "field_matching": {
+            "syntax": "field:value",
+            "description": "Match exact field value",
+            "examples": [
+                "language:python",
+                "function_name:main",
+                'filename:"test file.py"'
+            ],
+            "notes": "Use quotes for values with spaces or special characters"
+        },
+        "existence_check": {
+            "syntax": "exists(field)",
+            "description": "Check if field exists and has a non-null value", 
+            "examples": [
+                "exists(embedding)",
+                "exists(function_name)",
+                "exists(class_name)"
+            ],
+            "notes": "Useful for filtering records that have specific extracted metadata"
+        },
+        "value_contains": {
+            "syntax": 'value_contains(field, "search_text")',
+            "description": "Substring search within field values",
+            "examples": [
+                'value_contains(code, "async")',
+                'value_contains(filename, "test")',
+                'value_contains(code, "TODO")'
+            ],
+            "notes": "Case-sensitive substring matching. Use quotes around search text."
+        },
+        "boolean_and": {
+            "syntax": "condition1 AND condition2",
+            "description": "Both conditions must match",
+            "examples": [
+                "language:python AND function_name:main",
+                "exists(embedding) AND language:rust",
+                'value_contains(code, "async") AND language:python'
+            ],
+            "notes": "AND has higher precedence than OR"
+        },
+        "boolean_or": {
+            "syntax": "condition1 OR condition2", 
+            "description": "Either condition can match",
+            "examples": [
+                "language:python OR language:rust",
+                "function_name:main OR function_name:init",
+                'value_contains(code, "TODO") OR value_contains(code, "FIXME")'
+            ],
+            "notes": "OR has lower precedence than AND"
+        },
+        "grouping": {
+            "syntax": "(condition1 OR condition2) AND condition3",
+            "description": "Control evaluation order with parentheses",
+            "examples": [
+                "(language:python OR language:rust) AND exists(function_name)",
+                'exists(embedding) AND (filename:main.py OR filename:lib.rs)',
+                '(value_contains(code, "async") OR value_contains(code, "await")) AND language:python'
+            ],
+            "notes": "Use parentheses to override default operator precedence"
+        }
+    }
+    
+    result = {
+        "operators": operators,
+        "precedence": {
+            "description": "Operator precedence from highest to lowest",
+            "order": [
+                "parentheses ()",
+                "field conditions (field:value, exists(), value_contains())",
+                "AND",
+                "OR"
+            ]
+        },
+        "syntax_rules": {
+            "field_names": "Must start with letter/underscore, can contain letters, numbers, underscores",
+            "quoted_values": "Use single or double quotes for values with spaces/special chars",
+            "case_sensitivity": "Field names are case-sensitive, operators (AND/OR) are case-insensitive",
+            "whitespace": "Whitespace around operators is ignored"
+        },
+        "common_mistakes": {
+            "missing_quotes": "Use quotes around values with spaces: filename:\"test file.py\"",
+            "wrong_contains_syntax": 'Use value_contains(field, "text") not field contains "text"',
+            "precedence_errors": "Use parentheses to group OR conditions: (a OR b) AND c"
+        }
+    }
+    
+    return json.dumps(result, indent=2)
 
 
 async def initialize_search_engine():

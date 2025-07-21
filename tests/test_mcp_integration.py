@@ -113,8 +113,8 @@ class TestMCPIntegration:
             assert hasattr(response, 'result')
             tools = response.result.tools
             
-            # Should have 5 tools
-            assert len(tools) == 5
+            # Should have 6 tools
+            assert len(tools) == 6
             
             # Check tool names
             tool_names = [t.name for t in tools]
@@ -123,7 +123,8 @@ class TestMCPIntegration:
                 "vector_search", 
                 "keyword_search",
                 "analyze_code",
-                "get_embeddings"
+                "get_embeddings",
+                "get_keyword_syntax_help"
             ]
             
             for expected_tool in expected_tools:

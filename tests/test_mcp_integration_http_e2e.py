@@ -81,7 +81,7 @@ class TestMCPIntegrationE2E:
             assert tools_result is not None
             assert hasattr(tools_result, 'tools')
             tools = tools_result.tools
-            assert len(tools) == 5
+            assert len(tools) == 6
             
             # Check specific tools exist
             tool_names = [tool.name for tool in tools]
@@ -90,7 +90,8 @@ class TestMCPIntegrationE2E:
                 "vector_search", 
                 "keyword_search",
                 "analyze_code",
-                "get_embeddings"
+                "get_embeddings",
+                "get_keyword_syntax_help"
             ]
             
             for expected_tool in expected_tools:
@@ -368,7 +369,7 @@ def hello_world():
             assert tools_result is not None
             assert hasattr(tools_result, 'tools')
             tools = tools_result.tools
-            assert len(tools) == 5
+            assert len(tools) == 6
             
             # Check that all expected tools are present
             expected_tools = {
@@ -376,7 +377,8 @@ def hello_world():
                 "vector_search", 
                 "keyword_search",
                 "analyze_code",
-                "get_embeddings"
+                "get_embeddings",
+                "get_keyword_syntax_help"
             }
             
             advertised_tools = {tool.name for tool in tools}
