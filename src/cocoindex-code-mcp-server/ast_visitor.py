@@ -197,11 +197,17 @@ class TreeWalker:
         
         # Add tree-level metadata
         metadata = visitor.get_metadata()
+        
+        # Get tree language as string, not Language object (which is not JSON serializable)
+        tree_language = 'unknown'
+        if hasattr(self.tree, 'language') and self.tree.language:
+            tree_language = str(self.tree.language) if self.tree.language else 'unknown'
+        
         metadata.update({
             'node_stats': getattr(visitor, 'node_stats', {}),
             'complexity_score': getattr(visitor, 'complexity_score', 0),
             'parse_errors': len(visitor.get_errors()),
-            'tree_language': self.tree.language if hasattr(self.tree, 'language') else 'unknown'
+            'tree_language': tree_language
         })
         
         return metadata
@@ -322,10 +328,58 @@ class ASTParserFactory:
             return result
         
         try:
-            # This would need to be implemented based on available tree-sitter languages
-            # For now, return None and rely on fallback mechanisms
-            LOGGER.warning(f"Tree-sitter language '{language}' not yet implemented")
-            return None
+            # Create parser based on available tree-sitter language packages
+            parser = None
+            language_obj = None
+            
+            if language == 'python':
+                try:
+                    import tree_sitter_python
+                    language_obj = tree_sitter.Language(tree_sitter_python.language())
+                except ImportError:
+                    LOGGER.warning(f"tree-sitter-python not available")
+                    return None
+                    
+            elif language == 'c_sharp':
+                try:
+                    import tree_sitter_c_sharp
+                    language_obj = tree_sitter.Language(tree_sitter_c_sharp.language())
+                except ImportError:
+                    LOGGER.warning(f"tree-sitter-c-sharp not available")
+                    return None
+                    
+            elif language == 'java':
+                try:
+                    import tree_sitter_java
+                    language_obj = tree_sitter.Language(tree_sitter_java.language())
+                except ImportError:
+                    LOGGER.warning(f"tree-sitter-java not available")
+                    return None
+                    
+            elif language in ['typescript', 'tsx']:
+                try:
+                    import tree_sitter_typescript
+                    if language == 'tsx':
+                        language_obj = tree_sitter.Language(tree_sitter_typescript.language_tsx())
+                    else:
+                        language_obj = tree_sitter.Language(tree_sitter_typescript.language_typescript())
+                except ImportError:
+                    LOGGER.warning(f"tree-sitter-typescript not available")
+                    return None
+                    
+            else:
+                LOGGER.debug(f"Tree-sitter language '{language}' not yet implemented")
+                return None
+            
+            if language_obj:
+                parser = Parser()
+                parser.language = language_obj
+                
+                # Cache the parser
+                self._parsers[language] = parser
+                LOGGER.debug(f"Created tree-sitter parser for {language}")
+                
+            return parser
             
         except Exception as e:
             LOGGER.error(f"Failed to create parser for {language}: {e}")
