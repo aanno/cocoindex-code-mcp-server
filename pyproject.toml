@@ -42,3 +42,4 @@ mcp-server = [
 [tool.maturin]
 features = ["pyo3/extension-module"]
 module-name = "haskell_tree_sitter"
+manifest-path = "rust/Cargo.toml"

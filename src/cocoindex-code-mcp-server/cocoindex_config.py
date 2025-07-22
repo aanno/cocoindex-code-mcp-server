@@ -15,6 +15,32 @@ from lang.haskell.haskell_support import get_haskell_language_spec
 from lang.python.python_code_analyzer import analyze_python_code
 from __init__ import LOGGER
 
+# Import our custom extensions
+try:
+    from smart_code_embedding import create_smart_code_embedding
+    SMART_EMBEDDING_AVAILABLE = True
+    LOGGER.info("Smart code embedding extension loaded")
+except ImportError as e:
+    SMART_EMBEDDING_AVAILABLE = False
+    LOGGER.warning(f"Smart code embedding not available: {e}")
+
+try:
+    from ast_chunking import create_ast_chunking_operation
+    AST_CHUNKING_AVAILABLE = True
+    LOGGER.info("AST chunking extension loaded")
+except ImportError as e:
+    AST_CHUNKING_AVAILABLE = False
+    LOGGER.warning(f"AST chunking not available: {e}")
+
+try:
+    from language_handlers.python_handler import PythonNodeHandler
+    from language_handlers import get_handler_for_language
+    PYTHON_HANDLER_AVAILABLE = True
+    LOGGER.info("Python language handler extension loaded")
+except ImportError as e:
+    PYTHON_HANDLER_AVAILABLE = False
+    LOGGER.warning(f"Python language handler not available: {e}")
+
 @dataclass
 class ChunkingParams:
     """Parameters for chunking code."""
@@ -196,22 +222,27 @@ def extract_code_metadata(code: str, language: str, filename: str = ""):
         lang = record.get("language", record.get(language, ""))
         file_path = record.get("filename", record.get(filename, ""))
         
-        if lang == "Python":
+        # Check if we should use default language handler
+        use_default_handler = _global_flow_config.get('use_default_language_handler', False)
+        
+        if lang == "Python" and PYTHON_HANDLER_AVAILABLE and not use_default_handler:
+            # Use our advanced Python handler extension
+            try:
+                handler = PythonNodeHandler()
+                # Note: This is a simplified integration - the handler expects AST nodes
+                # For now, fall back to basic analysis but log that the handler is available
+                LOGGER.info("Python handler available but needs AST integration")
+                metadata = analyze_python_code(code_text, file_path)
+            except Exception as e:
+                LOGGER.warning(f"Python handler failed, falling back to basic analysis: {e}")
+                metadata = analyze_python_code(code_text, file_path)
+        elif lang == "Python":
             metadata = analyze_python_code(code_text, file_path)
-            return {
-                "metadata_json": str(metadata),  # Convert to string for storage
-                "functions": metadata.get("functions", []),
-                "classes": metadata.get("classes", []),
-                "imports": metadata.get("imports", []),
-                "complexity_score": metadata.get("complexity_score", 0),
-                "has_type_hints": metadata.get("has_type_hints", False),
-                "has_async": metadata.get("has_async", False),
-                "has_classes": metadata.get("has_classes", False),
-            }
         else:
             # For non-Python languages, return basic metadata
-            return {
-                "metadata_json": f'{{"language": "{lang}", "analysis_method": "basic"}}',
+            metadata = {
+                "language": lang,
+                "analysis_method": "basic",
                 "functions": [],
                 "classes": [],
                 "imports": [],
@@ -220,6 +251,17 @@ def extract_code_metadata(code: str, language: str, filename: str = ""):
                 "has_async": False,
                 "has_classes": False,
             }
+        
+        return {
+            "metadata_json": str(metadata),  # Convert to string for storage
+            "functions": metadata.get("functions", []),
+            "classes": metadata.get("classes", []),
+            "imports": metadata.get("imports", []),
+            "complexity_score": metadata.get("complexity_score", 0),
+            "has_type_hints": metadata.get("has_type_hints", False),
+            "has_async": metadata.get("has_async", False),
+            "has_classes": metadata.get("has_classes", False),
+        }
     
     return process_record
 
@@ -229,7 +271,7 @@ def code_to_embedding(
     text: cocoindex.DataSlice[str],
 ) -> cocoindex.DataSlice[NDArray[np.float32]]:
     """
-    Embed the text using a SentenceTransformer model.
+    Default embedding using a SentenceTransformer model.
     """
     # You can also switch to Voyage embedding model:
     #    return text.transform(
@@ -243,6 +285,36 @@ def code_to_embedding(
             model="sentence-transformers/all-MiniLM-L6-v2"
         )
     )
+
+
+@cocoindex.transform_flow()
+def smart_code_to_embedding(
+    text: cocoindex.DataSlice[str],
+    language: cocoindex.DataSlice[str],
+) -> cocoindex.DataSlice[NDArray[np.float32]]:
+    """
+    Smart embedding that selects model based on language.
+    """
+    if not SMART_EMBEDDING_AVAILABLE:
+        LOGGER.warning("Smart embedding not available, falling back to default")
+        return code_to_embedding(text)
+    
+    def embed_with_language_selection(record):
+        text_content = record.get("text", "")
+        lang = record.get("language", "")
+        
+        try:
+            # Create smart embedding function for the language
+            smart_embedding_func = create_smart_code_embedding(language=lang)
+            return smart_embedding_func(text_content)
+        except Exception as e:
+            LOGGER.warning(f"Smart embedding failed for language {lang}: {e}")
+            # Fall back to default
+            from cocoindex.functions import SentenceTransformerEmbed
+            default_embed = SentenceTransformerEmbed(model="sentence-transformers/all-MiniLM-L6-v2")
+            return default_embed([text_content])[0]
+    
+    return text.transform(embed_with_language_selection)
 
 
 # Global configuration for flow parameters
@@ -352,17 +424,67 @@ def code_embedding_flow(
             file["language"] = file["filename"].transform(extract_language)
             file["chunking_params"] = file["language"].transform(get_chunking_params)
             
-            # Use CocoIndex's built-in recursive splitting with language-specific chunking
-            file["chunks"] = file["content"].transform(
-                cocoindex.functions.SplitRecursively(),
-                language=file["language"],
-                chunk_size=file["chunking_params"]["chunk_size"],
-                min_chunk_size=file["chunking_params"]["min_chunk_size"],
-                chunk_overlap=file["chunking_params"]["chunk_overlap"],
+            # Choose chunking method based on configuration
+            use_default_chunking = _global_flow_config.get('use_default_chunking', False)
+            
+            if use_default_chunking or not AST_CHUNKING_AVAILABLE:
+                # Use CocoIndex's built-in recursive splitting
+                if not use_default_chunking and not AST_CHUNKING_AVAILABLE:
+                    LOGGER.info("AST chunking not available, falling back to default recursive splitting")
+                else:
+                    LOGGER.info("Using default recursive splitting (--default-chunking flag set)")
+                    
+                file["chunks"] = file["content"].transform(
+                    cocoindex.functions.SplitRecursively(),
+                    language=file["language"],
+                    chunk_size=file["chunking_params"]["chunk_size"],
+                    min_chunk_size=file["chunking_params"]["min_chunk_size"],
+                    chunk_overlap=file["chunking_params"]["chunk_overlap"],
                 )
+            else:
+                # Use our custom AST-aware chunking
+                LOGGER.info("Using AST-aware chunking extension")
+                try:
+                    ast_chunking_op = create_ast_chunking_operation()
+                    file["chunks"] = file["content"].transform(
+                        ast_chunking_op,
+                        language=file["language"],
+                        filename=file["filename"],
+                        chunk_size=file["chunking_params"]["chunk_size"],
+                        min_chunk_size=file["chunking_params"]["min_chunk_size"],
+                        chunk_overlap=file["chunking_params"]["chunk_overlap"],
+                    )
+                except Exception as e:
+                    LOGGER.warning(f"AST chunking failed: {e}, falling back to default")
+                    file["chunks"] = file["content"].transform(
+                        cocoindex.functions.SplitRecursively(),
+                        language=file["language"],
+                        chunk_size=file["chunking_params"]["chunk_size"],
+                        min_chunk_size=file["chunking_params"]["min_chunk_size"],
+                        chunk_overlap=file["chunking_params"]["chunk_overlap"],
+                    )
             
             with file["chunks"].row() as chunk:
-                chunk["embedding"] = chunk["text"].call(code_to_embedding)
+                # Choose embedding method based on configuration
+                use_default_embedding = _global_flow_config.get('use_default_embedding', False)
+                
+                if use_default_embedding or not SMART_EMBEDDING_AVAILABLE:
+                    if not use_default_embedding and not SMART_EMBEDDING_AVAILABLE:
+                        LOGGER.info("Smart embedding not available, using default embedding")
+                    else:
+                        LOGGER.info("Using default embedding (--default-embedding flag set)")
+                    chunk["embedding"] = chunk["text"].call(code_to_embedding)
+                else:
+                    LOGGER.info("Using smart code embedding extension")
+                    chunk["embedding"] = chunk["text"].call(smart_code_to_embedding, language=file["language"])
+                
+                # Extract metadata using appropriate method
+                chunk["metadata"] = chunk["text"].transform(
+                    extract_code_metadata, 
+                    language=file["language"], 
+                    filename=file["filename"]
+                )
+                
                 code_embeddings.collect(
                     filename=file["filename"],
                     language=file["language"],
@@ -372,6 +494,14 @@ def code_embedding_flow(
                     start=chunk["start"],
                     end=chunk["end"],
                     source_name=source_name,  # Add source name for identification
+                    # Include metadata fields
+                    functions=chunk["metadata"]["functions"],
+                    classes=chunk["metadata"]["classes"],
+                    imports=chunk["metadata"]["imports"],
+                    complexity_score=chunk["metadata"]["complexity_score"],
+                    has_type_hints=chunk["metadata"]["has_type_hints"],
+                    has_async=chunk["metadata"]["has_async"],
+                    has_classes=chunk["metadata"]["has_classes"],
                 )
 
     code_embeddings.export(
