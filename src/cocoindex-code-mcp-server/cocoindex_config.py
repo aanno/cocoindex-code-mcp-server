@@ -388,13 +388,18 @@ def code_embedding_flow(
 
 
 
-def update_flow_config(paths: List[str] = None, enable_polling: bool = False, poll_interval: int = 30):
+def update_flow_config(paths: List[str] = None, enable_polling: bool = False, poll_interval: int = 30,
+                      use_default_embedding: bool = False, use_default_chunking: bool = False, 
+                      use_default_language_handler: bool = False):
     """Update the global flow configuration."""
     global _global_flow_config
     _global_flow_config.update({
         'paths': paths or ["cocoindex"],
         'enable_polling': enable_polling,
-        'poll_interval': poll_interval
+        'poll_interval': poll_interval,
+        'use_default_embedding': use_default_embedding,
+        'use_default_chunking': use_default_chunking,
+        'use_default_language_handler': use_default_language_handler
     })
 
 

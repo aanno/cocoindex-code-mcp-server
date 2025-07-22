@@ -138,6 +138,11 @@ Examples:
   # Live update configuration (enabled by default)
   python mcp_server.py --no-live               # Disable live updates
   python mcp_server.py --poll 30               # Custom polling interval (default: 60s)
+  
+  # Default behavior options (use CocoIndex defaults instead of extensions)
+  python mcp_server.py --default-embedding     # Use CocoIndex SentenceTransformerEmbed
+  python mcp_server.py --default-chunking      # Use CocoIndex SplitRecursively  
+  python mcp_server.py --default-language-handler  # Skip Python-specific handlers
 
 MCP Tools Available:
   - hybrid_search: Combine vector similarity and keyword metadata filtering
@@ -189,6 +194,25 @@ MCP Resources Available:
         "--coverage",
         action="store_true",
         help="enable saving coverage data on exit"
+    )
+
+    # Default behavior options (to use default CocoIndex implementation)
+    parser.add_argument(
+        "--default-embedding",
+        action="store_true",
+        help="Use default CocoIndex embedding instead of smart code embedding"
+    )
+    
+    parser.add_argument(
+        "--default-chunking", 
+        action="store_true",
+        help="Use default CocoIndex chunking instead of AST-based chunking"
+    )
+    
+    parser.add_argument(
+        "--default-language-handler",
+        action="store_true", 
+        help="Use default CocoIndex language handling instead of Python handler"
     )
 
     # Transport options
