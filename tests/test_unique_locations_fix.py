@@ -39,7 +39,7 @@ class TestUniqueLocationsFix:
         print(f"\nOutput chunks with unique locations:")
         locations = []
         for i, chunk in enumerate(unique_chunks):
-            location = chunk["location"]
+            location = chunk.location  # Now returns Chunk dataclass objects
             locations.append(location)
             print(f"  Chunk {i}: location='{location}'")
         
@@ -47,7 +47,7 @@ class TestUniqueLocationsFix:
         unique_locations = set(locations)
         assert len(locations) == len(unique_locations), f"Duplicate locations found: {locations}"
         
-        # Verify the expected pattern
+        # Verify the expected pattern (function now converts everything to Chunk format)
         expected_locations = ["line:0", "line:0#1", "line:0#2", "line:5", "line:5#1"]
         assert locations == expected_locations, f"Expected {expected_locations}, got {locations}"
         
@@ -100,7 +100,7 @@ class TestUniqueLocationsFix:
         
         # Apply the fix
         result_chunks = ensure_unique_chunk_locations(unique_chunks)
-        result_locations = [chunk["location"] for chunk in result_chunks]
+        result_locations = [chunk.location for chunk in result_chunks]
         
         print(f"Output locations: {result_locations}")
         
@@ -114,8 +114,9 @@ class TestUniqueLocationsFix:
         result = ensure_unique_chunk_locations([])
         assert result == [], "Empty input should return empty output"
         
+        # Note: None input also returns empty list for CocoIndex compatibility
         result = ensure_unique_chunk_locations(None)
-        assert result is None, "None input should return None"
+        assert result == [], "None input should return empty list"
         
         print("✅ Empty/None input handled correctly")
     
@@ -138,12 +139,9 @@ class TestUniqueLocationsFix:
         print("Output mixed format chunks:")
         locations = []
         for i, chunk in enumerate(result_chunks):
-            if isinstance(chunk, dict):
-                location = chunk["location"]
-                print(f"  Chunk {i}: dict location='{location}'")
-            else:
-                location = chunk.location
-                print(f"  Chunk {i}: dataclass location='{location}'")
+            # All chunks are now Chunk dataclass objects
+            location = chunk.location
+            print(f"  Chunk {i}: Chunk location='{location}'")
             locations.append(location)
         
         # Should have unique locations

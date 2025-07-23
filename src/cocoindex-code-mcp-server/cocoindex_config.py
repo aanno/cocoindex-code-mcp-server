@@ -18,13 +18,17 @@ from __init__ import LOGGER
 from sentence_transformers import SentenceTransformer
 from ast_chunking import Chunk
 
+# Load global sentence transformer model
+model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+LOGGER.info(f"✅ Model sentence-transformers/all-MiniLM-L6-v2 loaded")
+
 # Import our custom extensions
 try:
     from smart_code_embedding import create_smart_code_embedding, LanguageModelSelector
-    SMART_EMBEDDING_AVAILABLE = True
+    # SMART_EMBEDDING_AVAILABLE = True
     # TODO: for the moment
-    # SMART_EMBEDDING_AVAILABLE = False
-    LOGGER.info("Smart code embedding extension loaded but temporarily disabled")
+    SMART_EMBEDDING_AVAILABLE = False
+    # LOGGER.info("Smart code embedding extension loaded but temporarily disabled")
 except ImportError as e:
     SMART_EMBEDDING_AVAILABLE = False
     LOGGER.warning(f"Smart code embedding not available: {e}")
@@ -404,14 +408,14 @@ def extract_has_async_field(metadata_json: str) -> bool:
 
 
 @cocoindex.op.function()
-def ensure_unique_chunk_locations(chunks):
+def ensure_unique_chunk_locations(chunks) -> List[Chunk]:
     """
     Post-process chunks to ensure location fields are unique within the file.
     This prevents PostgreSQL 'ON CONFLICT DO UPDATE' duplicate key errors.
-    Preserves original chunk format (dict or dataclass).
+    Keeps original chunk format for CocoIndex compatibility.
     """
     if not chunks:
-        return chunks
+        return []
     
     # Convert chunks to list if needed
     chunk_list = list(chunks) if hasattr(chunks, '__iter__') else [chunks]
@@ -420,53 +424,43 @@ def ensure_unique_chunk_locations(chunks):
     unique_chunks = []
     
     for i, chunk in enumerate(chunk_list):
-        # Handle different chunk formats
+        # Extract values from chunk (dict or dataclass) and convert to Chunk
         if hasattr(chunk, 'location'):
-            # AST chunking Chunk dataclass - preserve as dataclass
+            # Already a Chunk dataclass
             base_loc = chunk.location
-            unique_loc = base_loc
-            suffix = 0
-            
-            # Append suffix until unique
-            while unique_loc in seen_locations:
-                suffix += 1
-                unique_loc = f"{base_loc}#{suffix}"
-            
-            seen_locations.add(unique_loc)
-            
-            # Create new chunk with unique location using dataclass replace
-            from dataclasses import replace
-            unique_chunk = replace(chunk, location=unique_loc)
-            unique_chunks.append(unique_chunk)
-            
+            text = chunk.text
+            start = chunk.start
+            end = chunk.end
         elif isinstance(chunk, dict):
-            # Default chunking dictionary format - preserve as dict
+            # Dictionary format from SplitRecursively - convert to Chunk
             base_loc = chunk.get("location", f"chunk_{i}")
-            unique_loc = base_loc
-            suffix = 0
-            
-            # Append suffix until unique
-            while unique_loc in seen_locations:
-                suffix += 1
-                unique_loc = f"{base_loc}#{suffix}"
-            
-            seen_locations.add(unique_loc)
-            
-            # Create new chunk dict with unique location
-            unique_chunk = chunk.copy()
-            unique_chunk["location"] = unique_loc
-            unique_chunks.append(unique_chunk)
-            
+            text = chunk.get("text", "")
+            start = chunk.get("start", 0)
+            end = chunk.get("end", 0)
         else:
-            # Fallback: preserve original chunk and add to seen locations
-            unique_loc = f"chunk_{i}"
-            suffix = 0
-            while unique_loc in seen_locations:
-                suffix += 1
-                unique_loc = f"chunk_{i}#{suffix}"
-            
-            seen_locations.add(unique_loc)
-            unique_chunks.append(chunk)
+            # Fallback for unexpected types
+            base_loc = f"chunk_{i}"
+            text = str(chunk) if chunk else ""
+            start = 0
+            end = 0
+        
+        # Make location unique
+        unique_loc = base_loc
+        suffix = 0
+        while unique_loc in seen_locations:
+            suffix += 1
+            unique_loc = f"{base_loc}#{suffix}"
+        
+        seen_locations.add(unique_loc)
+        
+        # Always create Chunk dataclass with unique location
+        unique_chunk = Chunk(
+            text=text,
+            location=unique_loc,
+            start=start,
+            end=end
+        )
+        unique_chunks.append(unique_chunk)
     
     return unique_chunks
 
@@ -521,7 +515,7 @@ def smart_code_to_embedding(
             selector = LanguageModelSelector()
             selected_model = selector.select_model(language=language)
             model_args = selector.get_model_args(selected_model)
-            LOGGER.debug(f"Using smart embedding model for language: {language} -> {selected_model}")
+            LOGGER.info(f"Using smart embedding model for language: {language} -> {selected_model}")
 
             # Load the language-specific model
             smart_model = SentenceTransformer(selected_model, **model_args)
