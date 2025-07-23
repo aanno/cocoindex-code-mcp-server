@@ -34,7 +34,7 @@
             "args": [
                 "dlx",
                 "@modelcontextprotocol/server-filesystem",
-                "/workspaces/rust"
+                "/workspaces"
             ]
         },
         "sequential-thinking": {

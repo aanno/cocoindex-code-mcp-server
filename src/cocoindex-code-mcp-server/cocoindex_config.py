@@ -26,6 +26,8 @@ LOGGER.info(f"✅ Model sentence-transformers/all-MiniLM-L6-v2 loaded")
 try:
     from smart_code_embedding import create_smart_code_embedding
     SMART_EMBEDDING_AVAILABLE = True
+    # TODO: for the moment
+    # SMART_EMBEDDING_AVAILABLE = False
     LOGGER.info("Smart code embedding extension loaded")
 except ImportError as e:
     SMART_EMBEDDING_AVAILABLE = False
@@ -34,6 +36,8 @@ except ImportError as e:
 try:
     from ast_chunking import create_ast_chunking_operation
     AST_CHUNKING_AVAILABLE = True
+    # TODO: for the moment
+    # AST_CHUNKING_AVAILABLE = False
     LOGGER.info("AST chunking extension loaded")
 except ImportError as e:
     AST_CHUNKING_AVAILABLE = False
@@ -43,6 +47,8 @@ try:
     from language_handlers.python_handler import PythonNodeHandler
     from language_handlers import get_handler_for_language
     PYTHON_HANDLER_AVAILABLE = True
+    # TODO: for the moment
+    # PYTHON_HANDLER_AVAILABLE = False
     LOGGER.info("Python language handler extension loaded")
 except ImportError as e:
     PYTHON_HANDLER_AVAILABLE = False
