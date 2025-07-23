@@ -43,7 +43,7 @@ try:
     SMART_EMBEDDING_AVAILABLE = True
     # TODO: for the moment
     # SMART_EMBEDDING_AVAILABLE = False
-    LOGGER.info("Smart code embedding extension loaded but temporarily disabled")
+    # LOGGER.info("Smart code embedding extension loaded but temporarily disabled")
 except ImportError as e:
     SMART_EMBEDDING_AVAILABLE = False
     LOGGER.warning(f"Smart code embedding not available: {e}")
