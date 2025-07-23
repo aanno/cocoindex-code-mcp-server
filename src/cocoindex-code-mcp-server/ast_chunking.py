@@ -335,15 +335,21 @@ def create_ast_chunking_operation():
         raw_chunks = chunker.chunk_code(content, detected_language, "")
         
         # Convert dictionaries to Chunk dataclass instances
-        chunks = [
-            Chunk(
-                text=chunk.get("text", ""),
-                location=chunk.get("location", ""),
-                start=chunk.get("start", 0),
-                end=chunk.get("end", 0)
-            )
-            for chunk in raw_chunks
-        ]
+        chunks = []
+        for chunk in raw_chunks:
+            metadata = chunk.get("metadata", {})
+            # Construct location from file path and line numbers
+            file_path = metadata.get("file_path", "")
+            start_line = metadata.get("start_line", 0)
+            location = f"{file_path}:{start_line}" if file_path else f"line:{start_line}"
+            
+            chunks.append(Chunk(
+                text=chunk.get("content", ""),
+                location=location,
+                start=start_line,
+                end=metadata.get("end_line", 0)
+            ))
+        
         
         return chunks
     
