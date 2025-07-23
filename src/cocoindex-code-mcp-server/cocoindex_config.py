@@ -241,23 +241,23 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
     # Check if we should use default language handler
     use_default_handler = _global_flow_config.get('use_default_language_handler', False)
     
-    if lang == "Python" and PYTHON_HANDLER_AVAILABLE and not use_default_handler:
+    if language == "Python" and PYTHON_HANDLER_AVAILABLE and not use_default_handler:
         # Use our advanced Python handler extension
         try:
             handler = PythonNodeHandler()
             # Note: This is a simplified integration - the handler expects AST nodes
             # For now, fall back to basic analysis but log that the handler is available
             LOGGER.info("Python handler available but needs AST integration")
-            metadata = analyze_python_code(code_text, file_path)
+            metadata = analyze_python_code(text, filename)
         except Exception as e:
             LOGGER.warning(f"Python handler failed, falling back to basic analysis: {e}")
-            metadata = analyze_python_code(code_text, file_path)
-    elif lang == "Python":
+            metadata = analyze_python_code(text, filename)
+    elif language == "Python":
         metadata = analyze_python_code(code_text, file_path)
     else:
         # For non-Python languages, return basic metadata
         metadata = {
-            "language": lang,
+            "language": language,
             "analysis_method": "basic",
             "functions": [],
             "classes": [],

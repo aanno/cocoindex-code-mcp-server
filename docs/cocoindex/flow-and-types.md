@@ -4,281 +4,239 @@ This document covers important gotchas, type system quirks, and best practices w
 
 ## Type System Gotchas
 
-### 1. Unsupported Type Annotations
+### 1. Vector Types Are Required (Not Optional!)
 
-**❌ Problem**: CocoIndex function decorators don't support certain Python type annotations.
-
-```python
-from typing import List, Dict, Any
-
-# THIS WILL FAIL
-@cocoindex.op.function()
-def my_function(text: str) -> List[Dict[str, Any]]:
-    return [{"key": "value"}]
-```
-
-**Error Message**:
-
-```text
-ValueError: Unsupported as a specific type annotation for CocoIndex data type: typing.Any
-```
-
-**✅ Solution**: Remove problematic return type annotations:
+**✅ CORRECT**: CocoIndex requires proper Vector type annotations for embeddings.
 
 ```python
+from cocoindex.typing import Vector
+from typing import Literal
+import numpy as np
+
 @cocoindex.op.function()
-def my_function(text: str):  # No return type annotation
-    return [{"key": "value"}]
+def embed_text(text: str) -> Vector[np.float32, Literal[384]]:
+    """Must use Vector type with dimension for pgvector compatibility."""
+    model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+    embedding = model.encode(text)
+    return embedding.astype(np.float32)  # Return numpy array, not .tolist()
 ```
 
-### 2. inspect._empty Type Issues
-
-**❌ Problem**: When no return type is specified, Python's `inspect` module returns `inspect._empty`, which CocoIndex doesn't recognize.
-
-**Error Message**:
-
-```text
-ValueError: Unsupported as a specific type annotation for CocoIndex data type: <class 'inspect._empty'>
-```
-
-**✅ Solution**: Either provide a supported return type or remove the annotation entirely.
-
-### 3. Supported Type Annotations
-
-**✅ These work well**:
+**❌ WRONG**: Using generic types or lists causes pgvector issues.
 
 ```python
-@cocoindex.op.function()
-def extract_extension(filename: str) -> str:
-    return os.path.splitext(filename)[1]
+# These cause "operator class vector_cosine_ops does not accept data type jsonb"
+def embed_text(text: str) -> NDArray[np.float32]:  # Too generic
+    return embedding.tolist()  # Python list gets stored as JSONB
 
+def embed_text(text: str) -> list[float]:  # Also becomes JSONB
+    return embedding.tolist()
+```
+
+### 2. Return Type Annotations ARE Required for Complex Types
+
+**❌ OUTDATED ADVICE**: The old advice to "remove return type annotations" is wrong for modern CocoIndex.
+
+**✅ CURRENT PRACTICE**: CocoIndex requires specific type annotations for:
+
+```python
+# Vector types (essential for embeddings)
+@cocoindex.op.function()
+def create_embedding(text: str) -> Vector[np.float32, Literal[384]]:
+    return embedding.astype(np.float32)
+
+# Transform flows (still required)
 @cocoindex.transform_flow()
 def code_to_embedding(
     text: cocoindex.DataSlice[str],
 ) -> cocoindex.DataSlice[NDArray[np.float32]]:
     return text.transform(...)
-```
 
-**✅ CocoIndex-specific types**:
-
-- `cocoindex.DataSlice[T]`
-- `cocoindex.Json` (instead of `Dict[str, Any]`)
-- Basic Python types: `str`, `int`, `float`, `bool`
-- NumPy types: `NDArray[np.float32]`
-
-## Decorator Gotchas
-
-### 1. Incorrect Decorator Names
-
-**❌ Old/Incorrect**:
-
-```python
-@cocoindex.operation  # This doesn't exist
-def my_function():
-    pass
-```
-
-**✅ Correct**:
-
-```python
-@cocoindex.op.function()  # Note the parentheses
-def my_function():
-    pass
-```
-
-### 2. Transform Flow vs Function
-
-**For data transformations within flows**:
-
-```python
-@cocoindex.transform_flow()
-def code_to_embedding(text: cocoindex.DataSlice[str]) -> cocoindex.DataSlice[NDArray[np.float32]]:
-    return text.transform(cocoindex.functions.SentenceTransformerEmbed(...))
-```
-
-**For utility functions**:
-
-```python
+# Simple types (optional but recommended)
 @cocoindex.op.function()
-def extract_language(filename: str) -> str:
+def extract_extension(filename: str) -> str:
     return os.path.splitext(filename)[1]
 ```
 
-## Flow Definition Gotchas
+### 3. Supported Type Annotations (Updated)
 
-### 1. Setup Required
+**✅ Current supported types**:
 
-**❌ Problem**: Flows need to be set up before use.
+```python
+from cocoindex.typing import Vector
+from typing import Literal
+import numpy as np
 
-**Error Message**:
+# CocoIndex Vector types (REQUIRED for embeddings)
+Vector[np.float32]                           # Dynamic dimension
+Vector[np.float32, Literal[384]]            # Fixed dimension (preferred for pgvector)
+Vector[cocoindex.Float32, Literal[128]]     # Using CocoIndex float types
 
-```text
-Exception: Setup for flow `CodeEmbedding` is not up-to-date. Please run `cocoindex setup` to update the setup.
+# CocoIndex flow types
+cocoindex.DataSlice[str]
+cocoindex.DataSlice[NDArray[np.float32]]
+
+# Basic Python types
+str, int, float, bool, bytes
+
+# Date/time types
+datetime.datetime, datetime.date, uuid.UUID
+
+# NumPy types (but Vector is preferred for embeddings)
+NDArray[np.float32], NDArray[np.int64]
 ```
 
-**✅ Solution**: Run setup command:
+**❌ Still unsupported**:
+- `typing.Any`
+- Generic `List`, `Dict` without type parameters
+- Complex unions with incompatible types
+
+## Database Integration (Updated)
+
+### 1. Vector Storage and pgvector
+
+**✅ CRITICAL**: For PostgreSQL with pgvector, use fixed-dimension Vector types:
+
+```python
+@cocoindex.op.function()
+def embed_code(code: str) -> Vector[np.float32, Literal[384]]:
+    """Fixed dimension required for pgvector indexes."""
+    model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+    embedding = model.encode(code)
+    return embedding.astype(np.float32)  # NOT .tolist()
+```
+
+This creates proper PostgreSQL schema:
+```sql
+-- ✅ Correct schema
+embedding vector(384)  -- Supports vector indexes
+
+-- ❌ Wrong schema (from old approach)
+embedding jsonb        -- Cannot use vector indexes
+```
+
+### 2. Vector Index Configuration
+
+```python
+code_embeddings.export(
+    "code_embeddings",
+    cocoindex.targets.Postgres(),
+    primary_key_fields=["filename", "location"],
+    vector_indexes=[
+        cocoindex.VectorIndexDef(
+            field_name="embedding",
+            metric=cocoindex.VectorSimilarityMetric.COSINE_SIMILARITY,
+        )
+    ],
+)
+```
+
+## Custom Metadata Fields (IMPORTANT)
+
+### 1. Collecting Custom Metadata
+
+**✅ CocoIndex supports rich custom metadata collection**:
+
+```python
+code_embeddings.collect(
+    filename=file["filename"],
+    language=file["language"],
+    location=chunk["location"],
+    code=chunk["text"],
+    embedding=chunk["embedding"],
+    # Custom metadata fields
+    metadata_json=chunk["metadata"],
+    functions=str(metadata_dict.get("functions", [])),
+    classes=str(metadata_dict.get("classes", [])),
+    imports=str(metadata_dict.get("imports", [])),
+    complexity_score=metadata_dict.get("complexity_score", 0),
+    has_type_hints=metadata_dict.get("has_type_hints", False),
+    has_async=metadata_dict.get("has_async", False),
+    has_classes=metadata_dict.get("has_classes", False)
+)
+```
+
+These fields should appear in both database schema and evaluation outputs.
+
+## Flow Definition Gotchas (Still Relevant)
+
+### 1. Setup Required
+Still true - always run setup after schema changes:
 
 ```bash
 cocoindex setup src/your_config.py
 ```
 
-### 2. CocoIndex Initialization
+### 2. Model Loading Best Practices
 
-**❌ Problem**: CocoIndex library not initialized.
-
-**Error Message**:
-
-```text
-CocoIndex library is not initialized or already stopped
-```
-
-**✅ Solution**: Always initialize before using flows:
+**✅ CURRENT APPROACH**: Load models at module level to avoid repeated loading:
 
 ```python
-import cocoindex
-from dotenv import load_dotenv
+from sentence_transformers import SentenceTransformer
 
-load_dotenv()
-cocoindex.init()
+# Load once at import time
+model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
-# Now you can use flows
-stats = my_flow.update()
+@cocoindex.op.function()
+def embed_text(text: str) -> Vector[np.float32, Literal[384]]:
+    """Use global model instance."""
+    embedding = model.encode(text)
+    return embedding.astype(np.float32)
 ```
 
-### 3. Environment Variables
-
-**Required environment variables**:
-
-```bash
-COCOINDEX_DATABASE_URL=postgresql://user:password@localhost:5432/dbname
-```
-
-Load them properly:
-
-```python
-from dotenv import load_dotenv
-load_dotenv()  # Load .env file
-```
-
-## Data Flow Gotchas
-
-### 1. Custom Operations in Flows
-
-**❌ Problem**: Custom operations might not work directly in flows.
-
-```python
-# This might fail
-file["chunks"] = file["content"].transform(
-    create_hybrid_chunking_operation(),  # Returns a function
-    language=file["language"]
-)
-```
-
-**✅ Solution**: Use built-in operations or properly structured custom operations:
-
-```python
-file["chunks"] = file["content"].transform(
-    cocoindex.functions.SplitRecursively(),  # Built-in operation
-    language=file["language"],
-    chunk_size=1000
-)
-```
-
-### 2. Field Access in Records
-
-**❌ Wrong way to access fields**:
-
-```python
-def process_record(record):
-    lang = record.get(language, "")  # Variable name, not string
-```
-
-**✅ Correct way**:
-
-```python
-def process_record(record):
-    lang = record.get("language", "")  # String key
-    file_path = record.get("filename", "")
-```
-
-### 3. Return Value Structure
-
-**CocoIndex expects specific return structures**:
+**❌ AVOID**: Loading models inside functions (causes repeated loading):
 
 ```python
 @cocoindex.op.function()
-def my_chunking_operation():
-    def process_record(record):
-        # Must return records with specific fields
-        return [{
-            "text": chunk_content,
-            "location": f"{file_path}:{line_number}",
-            "start": {"line": start_line, "column": 0},
-            "end": {"line": end_line, "column": 0}
-        }]
-    return process_record
+def embed_text(text: str) -> Vector[np.float32, Literal[384]]:
+    # BAD: Loads model every time
+    model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+    embedding = model.encode(text)
+    return embedding.astype(np.float32)
 ```
 
-## Database Integration
+## Common Error Messages and Solutions (Updated)
 
-### 1. Connection Pool Setup
+| Error | Cause | Solution |
+|-------|-------|----------|
+| `operator class "vector_cosine_ops" does not accept data type jsonb` | Using Python lists instead of Vector types | Use `Vector[np.float32, Literal[dim]]` and return numpy arrays |
+| `NameError: name 'lang' is not defined` | Variable name mismatch in function | Check function parameter names match usage |
+| `Unsupported as a specific type annotation: typing.Any` | Using `typing.Any` in return types | Remove or use specific types |
+| `Setup for flow is not up-to-date` | Flow not set up | Run `cocoindex setup src/config.py` |
+| `CocoIndex library is not initialized` | Missing initialization | Call `cocoindex.init()` |
 
-**For search operations, you need a connection pool**:
+## Best Practices (Updated)
+
+### 1. Vector Types for Embeddings
 
 ```python
-from psycopg_pool import ConnectionPool
-from pgvector.psycopg import register_vector
-import os
+# ✅ ALWAYS use Vector types for embeddings
+from cocoindex.typing import Vector
+from typing import Literal
 
-pool = ConnectionPool(os.getenv("COCOINDEX_DATABASE_URL"))
-
-# Register vector extension for each connection
-with pool.connection() as conn:
-    register_vector(conn)
+@cocoindex.op.function()
+def embed_text(text: str) -> Vector[np.float32, Literal[384]]:
+    embedding = model.encode(text)
+    return embedding.astype(np.float32)
 ```
 
-### 2. Table Name Discovery
-
-**Get the actual table name CocoIndex creates**:
+### 2. Custom Metadata Collection
 
 ```python
-table_name = cocoindex.utils.get_target_default_name(
-    your_flow, "export_target_name"
+# ✅ Collect rich metadata for better search
+code_embeddings.collect(
+    # Standard fields
+    filename=file["filename"],
+    code=chunk["text"], 
+    embedding=chunk["embedding"],
+    # Custom metadata that should appear in exports
+    functions=extract_functions(chunk["text"]),
+    classes=extract_classes(chunk["text"]),
+    complexity_score=calculate_complexity(chunk["text"]),
+    has_type_hints=check_type_hints(chunk["text"])
 )
 ```
 
-Example:
-
-```python
-table_name = cocoindex.utils.get_target_default_name(
-    code_embedding_flow, "code_embeddings"
-)
-# Returns: "codeembedding__code_embeddings"
-```
-
-## Best Practices
-
-### 1. Type Annotations
-
-```python
-# ✅ Good: Simple types or no annotation
-@cocoindex.op.function()
-def extract_extension(filename: str) -> str:
-    return os.path.splitext(filename)[1]
-
-@cocoindex.op.function()
-def complex_operation(text: str):  # No return annotation
-    return complex_result
-
-# ✅ Good: CocoIndex-specific types
-@cocoindex.transform_flow()
-def embedding_transform(
-    text: cocoindex.DataSlice[str]
-) -> cocoindex.DataSlice[NDArray[np.float32]]:
-    return text.transform(...)
-```
-
-### 2. Error Handling
+### 3. Error Handling with Better Debugging
 
 ```python
 try:
@@ -286,77 +244,20 @@ try:
     print(f"✅ Flow updated: {stats}")
 except Exception as e:
     print(f"❌ Flow update failed: {e}")
-    # Check initialization, setup, environment variables
+    # Check:
+    # 1. Vector type annotations correct?
+    # 2. Model loading working?
+    # 3. Custom metadata fields properly defined?
+    # 4. Database schema up to date?
 ```
-
-### 3. Development Workflow
-
-1. **Setup environment**:
-
-   ```bash
-   # Load environment
-   source .env
-   
-   # Build Rust extensions (if modified)
-   cd cocoindex && maturin develop
-   ```
-
-2. **Initialize and setup**:
-
-   ```python
-   import cocoindex
-   from dotenv import load_dotenv
-   
-   load_dotenv()
-   cocoindex.init()
-   ```
-
-3. **Run setup** (after flow changes):
-
-   ```bash
-   cocoindex setup src/your_config.py
-   ```
-
-4. **Test your flow**:
-
-   ```python
-   stats = your_flow.update()
-   ```
-
-### 4. Custom Language Support
-
-```python
-# ✅ Correct CustomLanguageSpec usage
-custom_lang = cocoindex.functions.CustomLanguageSpec(
-    language_name="Haskell",
-    aliases=[".hs", ".lhs"],
-    separators_regex=[
-        r"\\nmodule\\s+[A-Z][a-zA-Z0-9_.']*",
-        r"\\ndata\\s+[A-Z][a-zA-Z0-9_']*",
-        # ... more patterns
-    ]
-    # Don't include unsupported parameters like chunk_config
-)
-```
-
-## Common Error Messages and Solutions
-
-| Error | Cause | Solution |
-|-------|-------|----------|
-| `Unsupported as a specific type annotation: typing.Any` | Using `typing.Any` in return types | Remove return type annotation |
-| `module 'cocoindex' has no attribute 'operation'` | Using old decorator syntax | Use `@cocoindex.op.function()` |
-| `Setup for flow is not up-to-date` | Flow not set up | Run `cocoindex setup src/config.py` |
-| `CocoIndex library is not initialized` | Missing initialization | Call `cocoindex.init()` |
-| `unexpected keyword argument 'chunk_config'` | Unsupported parameter | Remove unsupported parameters |
 
 ## Summary
 
-- **Avoid `typing.Any`** in function signatures
-- **Use `@cocoindex.op.function()`** not `@cocoindex.operation`
-- **Always call `cocoindex.init()`** before using flows
-- **Run setup** after flow definition changes
-- **Use built-in operations** when possible
-- **Check environment variables** are loaded
-- **Use proper table name discovery** for database operations
+- **USE Vector types** with fixed dimensions for embeddings: `Vector[np.float32, Literal[384]]`
+- **Return numpy arrays** (`.astype(np.float32)`), NOT Python lists (`.tolist()`)
+- **Type annotations ARE required** for Vector and complex types
+- **Custom metadata fields** should appear in evaluation outputs and database
+- **Load models once** at module level, not inside functions
+- **Always run setup** after changing collection schema or vector dimensions
 
-Following these practices will help you avoid common pitfalls when working with CocoIndex's powerful but sometimes finicky type system and flow architecture.
+Following these updated practices will ensure proper pgvector integration and rich metadata collection in your CocoIndex flows.
