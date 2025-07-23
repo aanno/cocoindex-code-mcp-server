@@ -103,7 +103,7 @@ TREE_SITTER_LANGUAGE_MAP = {
     ".tsx": "TSX",
     ".ts": "TypeScript",
     ".xml": "XML",
-    ".yaml": "YAML", ".yml": "YAML",
+    # ".yaml": "YAML", ".yml": "YAML",
     ".hs": "Haskell", ".lhs": "Haskell",
 }
 
@@ -111,7 +111,7 @@ TREE_SITTER_LANGUAGE_MAP = {
 CHUNKING_PARAMS = {
     # Larger chunks for documentation and config files
     "Markdown": ChunkingParams(chunk_size=2000, min_chunk_size=500, chunk_overlap=200),
-    "YAML": ChunkingParams(chunk_size=800, min_chunk_size=200, chunk_overlap=100),
+    #"YAML": ChunkingParams(chunk_size=800, min_chunk_size=200, chunk_overlap=100),
     "JSON": ChunkingParams(chunk_size=1500, min_chunk_size=300, chunk_overlap=200),
     "XML": ChunkingParams(chunk_size=1500, min_chunk_size=300, chunk_overlap=200),
     "TOML": ChunkingParams(chunk_size=800, min_chunk_size=200, chunk_overlap=100),
@@ -511,7 +511,8 @@ def code_embedding_flow(
                 # Go
                 "*.go", "go.mod", "go.sum",
                 # Haskell
-                "*.hs", "*.lhs", "*.cabal", "*.yaml", "*.yml", "stack.yaml",
+                "*.hs", "*.lhs", "*.cabal", 
+                # "*.yaml", "*.yml", "stack.yaml",
                 # C/C++
                 "*.c", "*.cc", "*.cpp", "*.cxx", "*.h", "*.hh", "*.hpp", "*.hxx",
                 # C#/.NET
@@ -537,10 +538,12 @@ def code_embedding_flow(
                 "*.ex", "*.exs", "*.erl", "*.hrl", "*.elm", "*.nim",
                 "*.zig", "*.odin", "*.v", "*.gleam", "*.crystal",
                 # Docker/Container
-                "Dockerfile", "*.dockerfile", "docker-compose.yml", "docker-compose.yaml",
+                "Dockerfile", "*.dockerfile",
+                # "docker-compose.yml", "docker-compose.yaml",
                 # CI/CD
-                "*.gitlab-ci.yml", ".github/workflows/*.yml", ".github/workflows/*.yaml",
-                "Jenkinsfile", "*.jenkinsfile", "azure-pipelines.yml",
+                "Jenkinsfile", "*.jenkinsfile",
+                # "*.gitlab-ci.yml", ".github/workflows/*.yml", ".github/workflows/*.yaml",
+                # "azure-pipelines.yml",
                 # Package managers
                 "package.json", "package-lock.json", "yarn.lock", "requirements.txt",
                 "Pipfile", "poetry.lock", "pyproject.toml", "setup.py", "setup.cfg",
