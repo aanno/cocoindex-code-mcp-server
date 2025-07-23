@@ -20,3 +20,4 @@
 ## smart embedding
 
 * Smart embedding failed for language Python, falling back to basic model: Cannot copy out of meta tensor; no data! Please use torch.nn.Module.to_empty() instead of torch.nn.Module.to() when moving module from meta to a different device.
+* device = 'cpu' (search for that)

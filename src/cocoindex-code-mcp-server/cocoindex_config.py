@@ -7,6 +7,7 @@ CocoIndex configuration and flow definitions.
 import os
 import datetime
 from dataclasses import dataclass
+
 from typing import List, Dict, Literal
 from numpy.typing import NDArray
 import numpy as np
@@ -18,18 +19,34 @@ from __init__ import LOGGER
 from sentence_transformers import SentenceTransformer
 from ast_chunking import Chunk
 
+# No, we never do this!
+# Set environment to avoid meta tensor issues
+# TODO:
+# os.environ.setdefault('PYTORCH_DISABLE_PER_OP_PROFILING', '1')
+
 # Models will be instantiated directly (HuggingFace handles caching)
 
 # Import our custom extensions
-try:
-    from smart_code_embedding import create_smart_code_embedding, LanguageModelSelector
-    # SMART_EMBEDDING_AVAILABLE = True
-    # TODO: for the moment
-    SMART_EMBEDDING_AVAILABLE = False
-    # LOGGER.info("Smart code embedding extension loaded but temporarily disabled")
-except ImportError as e:
-    SMART_EMBEDDING_AVAILABLE = False
-    LOGGER.warning(f"Smart code embedding not available: {e}")
+# TODO: Temporarily disable smart embedding entirely (including imports)
+# NOTE: Even importing smart_code_embedding can cause meta tensor issues in PyTorch
+# So we skip the import entirely when disabled to prevent affecting basic embedding
+SMART_EMBEDDING_AVAILABLE = False
+if False:  # Change to True when re-enabling smart embedding
+    try:
+        from smart_code_embedding import create_smart_code_embedding, LanguageModelSelector
+        SMART_EMBEDDING_AVAILABLE = True
+        LOGGER.info("Smart code embedding extension loaded")
+    except ImportError as e:
+        SMART_EMBEDDING_AVAILABLE = False
+        LOGGER.warning(f"Smart code embedding not available: {e}")
+else:
+    LOGGER.info("Smart code embedding disabled (imports skipped to avoid meta tensor issues)")
+    # Placeholder classes for when smart embedding is disabled
+    class LanguageModelSelector:
+        def select_model(self, **kwargs):
+            return "sentence-transformers/all-MiniLM-L6-v2"
+        def get_model_args(self, model_name):
+            return {}
 
 try:
     from ast_chunking import ASTChunkOperation
@@ -487,9 +504,17 @@ def code_to_embedding(
     @cocoindex.op.function()
     def cached_embed_text(text: str) -> Vector[np.float32, Literal[384]]:
         """Embed text using SentenceTransformer model."""
-        model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-        embedding = model.encode(text)
-        return embedding.astype(np.float32)
+        try:
+            # Force CPU device to avoid meta tensor issues
+            model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", device='cpu')
+            embedding = model.encode(text)
+            return embedding.astype(np.float32)
+        except Exception as e:
+            LOGGER.error(f"Default embedding failed with device='cpu': {e}")
+            # Try without explicit device specification
+            model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+            embedding = model.encode(text, device='cpu')  # Force CPU during encoding
+            return embedding.astype(np.float32)
     
     return text.transform(cached_embed_text)
 
@@ -525,9 +550,16 @@ def smart_code_to_embedding(
         except Exception as e:
             # Fallback to basic model if smart embedding fails
             LOGGER.warning(f"Smart embedding failed for language {language}, falling back to basic model: {e}")
-            fallback_model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-            embedding = fallback_model.encode(text)
-            return embedding.astype(np.float32)
+            try:
+                fallback_model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", device='cpu')
+                embedding = fallback_model.encode(text)
+                return embedding.astype(np.float32)
+            except Exception as fallback_error:
+                LOGGER.error(f"Fallback embedding also failed: {fallback_error}")
+                # Last resort: try encoding with CPU device specified
+                fallback_model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+                embedding = fallback_model.encode(text, device='cpu')
+                return embedding.astype(np.float32)
     
     return text.transform(embed_with_language_selection, language=language)
 
