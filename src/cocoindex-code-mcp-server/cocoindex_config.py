@@ -27,11 +27,6 @@ from language_handlers.python_handler import PythonNodeHandler
 from language_handlers import get_handler_for_language
 from smart_code_embedding import LanguageModelSelector
 
-# No, we never do this!
-# Set environment to avoid meta tensor issues
-# TODO:
-# os.environ.setdefault('PYTORCH_DISABLE_PER_OP_PROFILING', '1')
-
 # Models will be instantiated directly (HuggingFace handles caching)
 
 DEFAULT_TRANSFORMER_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
@@ -264,7 +259,7 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
             # Use our advanced Python handler extension
             try:
                 handler = PythonNodeHandler()
-                # Note: This is a simplified integration - the handler expects AST nodes
+                # TODO: This is a simplified integration - the handler expects AST nodes
                 # For now, fall back to basic analysis but log that the handler is available
                 LOGGER.debug("Python handler available but needs AST integration")
                 metadata = analyze_python_code(text, filename)
