@@ -614,7 +614,7 @@ def code_embedding_flow(
                 else:
                     LOGGER.info("Using default recursive splitting (--default-chunking flag set)")
                 file["chunks"] = file["content"].transform(
-                    cocoindex.functions.SplitRecursively(),
+                    cocoindex.functions.SplitRecursively(custom_languages=CUSTOM_LANGUAGES),
                     language=file["language"],
                     chunk_size=file["chunking_params"]["chunk_size"],
                     min_chunk_size=file["chunking_params"]["min_chunk_size"],
