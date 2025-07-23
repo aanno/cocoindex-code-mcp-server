@@ -452,12 +452,32 @@ def smart_code_to_embedding(
     @cocoindex.op.function()
     def embed_with_language_selection(text: str, language: str) -> Vector[np.float32, Literal[384]]:
         """Embed text using language-specific embedding model selection."""
-        # Temporarily force use of basic model to avoid HuggingFace rate limits
-        # TODO: Re-enable smart model selection once rate limiting is resolved
-        LOGGER.debug(f"Using basic embedding model for language: {language} (smart embedding disabled)")
-        
-        embedding = model.encode(text)
-        return embedding.astype(np.float32)
+        try:
+            # Use smart model selection based on language
+            from smart_code_embedding import LanguageModelSelector
+            
+            selector = LanguageModelSelector()
+            selected_model = selector.select_model(language=language)
+            
+            LOGGER.debug(f"Using smart embedding model for language: {language} -> {selected_model}")
+            
+            # Check if we need to load a different model than the global one
+            if selected_model == "sentence-transformers/all-MiniLM-L6-v2":
+                # Use the already loaded global model
+                embedding = model.encode(text)
+            else:
+                # Load the language-specific model
+                model_args = selector.get_model_args(selected_model)
+                smart_model = SentenceTransformer(selected_model, **model_args)
+                embedding = smart_model.encode(text)
+            
+            return embedding.astype(np.float32)
+            
+        except Exception as e:
+            # Fallback to basic model if smart embedding fails
+            LOGGER.warning(f"Smart embedding failed for language {language}, falling back to basic model: {e}")
+            embedding = model.encode(text)
+            return embedding.astype(np.float32)
     
     return text.transform(embed_with_language_selection, language=language)
 
@@ -588,16 +608,32 @@ def code_embedding_flow(
             file["language"] = file["filename"].transform(extract_language)
             file["chunking_params"] = file["language"].transform(get_chunking_params)
             
-            # Temporarily use only default chunking to avoid factory name collisions
-            LOGGER.info("Using default recursive splitting (AST chunking temporarily disabled)")
-                
-            file["chunks"] = file["content"].transform(
-                cocoindex.functions.SplitRecursively(),
-                language=file["language"],
-                chunk_size=file["chunking_params"]["chunk_size"],
-                min_chunk_size=file["chunking_params"]["min_chunk_size"],
-                chunk_overlap=file["chunking_params"]["chunk_overlap"],
-            )
+            # Choose chunking method based on configuration
+            use_default_chunking = _global_flow_config.get('use_default_chunking', False)
+            
+            if use_default_chunking or not AST_CHUNKING_AVAILABLE:
+                if not use_default_chunking and not AST_CHUNKING_AVAILABLE:
+                    LOGGER.info("AST chunking not available, using default recursive splitting")
+                else:
+                    LOGGER.info("Using default recursive splitting (--default-chunking flag set)")
+                file["chunks"] = file["content"].transform(
+                    cocoindex.functions.SplitRecursively(),
+                    language=file["language"],
+                    chunk_size=file["chunking_params"]["chunk_size"],
+                    min_chunk_size=file["chunking_params"]["min_chunk_size"],
+                    chunk_overlap=file["chunking_params"]["chunk_overlap"],
+                )
+            else:
+                LOGGER.info("Using AST chunking extension")
+                ast_chunking_operation = create_ast_chunking_operation(
+                    chunk_size=file["chunking_params"]["chunk_size"],
+                    min_chunk_size=file["chunking_params"]["min_chunk_size"],
+                    chunk_overlap=file["chunking_params"]["chunk_overlap"]
+                )
+                file["chunks"] = file["content"].transform(
+                    ast_chunking_operation,
+                    language=file["language"]
+                )
             
             with file["chunks"].row() as chunk:
                 # Choose embedding method based on configuration
