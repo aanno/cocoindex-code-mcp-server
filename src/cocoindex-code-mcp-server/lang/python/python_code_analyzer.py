@@ -62,7 +62,8 @@ class PythonCodeAnalyzer:
             return self._build_metadata(code, filename)
             
         except SyntaxError as e:
-            LOGGER.warning(f"Syntax error in Python code: {e}")
+            # Don't log warnings for syntax errors - this is expected when chunking breaks code
+            LOGGER.debug(f"Syntax error in Python code (using fallback): {e}")
             return self._build_fallback_metadata(code, filename)
         except Exception as e:
             LOGGER.error(f"Error analyzing Python code: {e}")
@@ -419,17 +420,47 @@ class PythonCodeAnalyzer:
         class_names = re.findall(r'class\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*[\(:]', code)
         import_matches = re.findall(r'(?:from\s+(\S+)\s+)?import\s+([a-zA-Z_][a-zA-Z0-9_]*)', code)
         
-        return {
+        # Extract imports more carefully
+        imports = []
+        for match in import_matches:
+            if match[0]:  # from X import Y
+                imports.append(match[0])
+            else:  # import Y
+                imports.append(match[1])
+        
+        # Basic complexity estimation
+        complexity = (
+            len(function_names) + len(class_names) +
+            code.count('if ') + code.count('for ') + code.count('while ') +
+            code.count('try:') + code.count('except')
+        )
+        
+        # Check for patterns
+        has_async = 'async def' in code
+        has_type_hints = '->' in code or ':' in code  # Basic heuristic
+        has_classes = len(class_names) > 0
+        
+        fallback_metadata = {
             "language": "Python",
             "filename": filename,
             "line_count": len(code.split('\n')),
             "char_count": len(code),
             "functions": function_names,
             "classes": class_names,
-            "imports": [match[0] or match[1] for match in import_matches],
+            "imports": imports,
+            "complexity_score": complexity,
+            "has_type_hints": has_type_hints,
+            "has_async": has_async,
+            "has_classes": has_classes,
+            "decorators_used": [],  # Could regex for @decorator if needed
             "analysis_method": "regex_fallback",
-            "complexity_score": len(function_names) + len(class_names),
         }
+        
+        # Add metadata_json field for compatibility
+        import json
+        fallback_metadata['metadata_json'] = json.dumps(fallback_metadata, default=str)
+        
+        return fallback_metadata
 
 
 def analyze_python_code(code: str, filename: str = "") -> Dict[str, Any]:

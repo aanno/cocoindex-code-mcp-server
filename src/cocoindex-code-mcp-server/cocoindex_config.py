@@ -241,24 +241,54 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
     # Check if we should use default language handler
     use_default_handler = _global_flow_config.get('use_default_language_handler', False)
     
-    if language == "Python" and PYTHON_HANDLER_AVAILABLE and not use_default_handler:
-        # Use our advanced Python handler extension
-        try:
-            handler = PythonNodeHandler()
-            # Note: This is a simplified integration - the handler expects AST nodes
-            # For now, fall back to basic analysis but log that the handler is available
-            LOGGER.info("Python handler available but needs AST integration")
+    try:
+        if language == "Python" and PYTHON_HANDLER_AVAILABLE and not use_default_handler:
+            # Use our advanced Python handler extension
+            try:
+                handler = PythonNodeHandler()
+                # Note: This is a simplified integration - the handler expects AST nodes
+                # For now, fall back to basic analysis but log that the handler is available
+                LOGGER.debug("Python handler available but needs AST integration")
+                metadata = analyze_python_code(text, filename)
+            except Exception as e:
+                LOGGER.debug(f"Python handler failed, falling back to basic analysis: {e}")
+                metadata = analyze_python_code(text, filename)
+        elif language == "Python":
             metadata = analyze_python_code(text, filename)
-        except Exception as e:
-            LOGGER.warning(f"Python handler failed, falling back to basic analysis: {e}")
-            metadata = analyze_python_code(text, filename)
-    elif language == "Python":
-        metadata = analyze_python_code(code_text, file_path)
-    else:
-        # For non-Python languages, return basic metadata
-        metadata = {
-            "language": language,
-            "analysis_method": "basic",
+        else:
+            # For non-Python languages, return basic metadata
+            metadata = {
+                "language": language,
+                "analysis_method": "basic",
+                "functions": [],
+                "classes": [],
+                "imports": [],
+                "complexity_score": 0,
+                "has_type_hints": False,
+                "has_async": False,
+                "has_classes": False,
+                "decorators_used": [],
+            }
+        
+        # Return just the JSON string for now
+        import json
+        result = {
+            "functions": metadata.get("functions", []),
+            "classes": metadata.get("classes", []),
+            "imports": metadata.get("imports", []),
+            "complexity_score": metadata.get("complexity_score", 0),
+            "has_type_hints": metadata.get("has_type_hints", False),
+            "has_async": metadata.get("has_async", False),
+            "has_classes": metadata.get("has_classes", False),
+            "decorators_used": metadata.get("decorators_used", []),
+            "analysis_method": metadata.get("analysis_method", "basic"),
+        }
+        return json.dumps(result)
+        
+    except Exception as e:
+        # Fallback to empty metadata if everything fails
+        LOGGER.debug(f"Metadata extraction failed for {filename}, using empty metadata: {e}")
+        fallback_result = {
             "functions": [],
             "classes": [],
             "imports": [],
@@ -266,22 +296,123 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
             "has_type_hints": False,
             "has_async": False,
             "has_classes": False,
+            "decorators_used": [],
+            "analysis_method": "error_fallback",
         }
-    
-    # Return just the JSON string for now
+        import json
+        return json.dumps(fallback_result)
+
+
+@cocoindex.op.function()
+def extract_functions_field(metadata_json: str) -> str:
+    """Extract functions field from metadata JSON."""
     import json
-    result = {
-        "functions": metadata.get("functions", []),
-        "classes": metadata.get("classes", []),
-        "imports": metadata.get("imports", []),
-        "complexity_score": metadata.get("complexity_score", 0),
-        "has_type_hints": metadata.get("has_type_hints", False),
-        "has_async": metadata.get("has_async", False),
-        "has_classes": metadata.get("has_classes", False),
-        "decorators_used": metadata.get("decorators_used", []),
-        "analysis_method": metadata.get("analysis_method", "basic"),
-    }
-    return json.dumps(result)
+    try:
+        if not metadata_json or metadata_json.strip() == "":
+            return "[]"
+        metadata_dict = json.loads(metadata_json)
+        functions = metadata_dict.get("functions", [])
+        # Ensure it's a list and convert to string representation
+        if isinstance(functions, list):
+            return str(functions)
+        else:
+            return str([functions]) if functions else "[]"
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for functions: {e}")
+        return "[]"
+
+
+@cocoindex.op.function()
+def extract_classes_field(metadata_json: str) -> str:
+    """Extract classes field from metadata JSON."""
+    import json
+    try:
+        if not metadata_json or metadata_json.strip() == "":
+            return "[]"
+        metadata_dict = json.loads(metadata_json)
+        classes = metadata_dict.get("classes", [])
+        if isinstance(classes, list):
+            return str(classes)
+        else:
+            return str([classes]) if classes else "[]"
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for classes: {e}")
+        return "[]"
+
+
+@cocoindex.op.function()
+def extract_imports_field(metadata_json: str) -> str:
+    """Extract imports field from metadata JSON."""
+    import json
+    try:
+        if not metadata_json or metadata_json.strip() == "":
+            return "[]"
+        metadata_dict = json.loads(metadata_json)
+        imports = metadata_dict.get("imports", [])
+        if isinstance(imports, list):
+            return str(imports)
+        else:
+            return str([imports]) if imports else "[]"
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for imports: {e}")
+        return "[]"
+
+
+@cocoindex.op.function()
+def extract_complexity_score_field(metadata_json: str) -> int:
+    """Extract complexity_score field from metadata JSON."""
+    import json
+    try:
+        if not metadata_json or metadata_json.strip() == "":
+            return 0
+        metadata_dict = json.loads(metadata_json)
+        score = metadata_dict.get("complexity_score", 0)
+        return int(score) if isinstance(score, (int, float, str)) and str(score).isdigit() else 0
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for complexity_score: {e}")
+        return 0
+
+
+@cocoindex.op.function()
+def extract_has_type_hints_field(metadata_json: str) -> bool:
+    """Extract has_type_hints field from metadata JSON."""
+    import json
+    try:
+        if not metadata_json or metadata_json.strip() == "":
+            return False
+        metadata_dict = json.loads(metadata_json)
+        return bool(metadata_dict.get("has_type_hints", False))
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for has_type_hints: {e}")
+        return False
+
+
+@cocoindex.op.function()
+def extract_has_async_field(metadata_json: str) -> bool:
+    """Extract has_async field from metadata JSON."""
+    import json
+    try:
+        if not metadata_json or metadata_json.strip() == "":
+            return False
+        metadata_dict = json.loads(metadata_json)
+        return bool(metadata_dict.get("has_async", False))
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for has_async: {e}")
+        return False
+
+
+@cocoindex.op.function()
+def extract_has_classes_field(metadata_json: str) -> bool:
+    """Extract has_classes field from metadata JSON."""
+    import json
+    try:
+        if not metadata_json or metadata_json.strip() == "":
+            return False
+        metadata_dict = json.loads(metadata_json)
+        return bool(metadata_dict.get("has_classes", False))
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for has_classes: {e}")
+        return False
 
 
 @cocoindex.transform_flow()
@@ -490,12 +621,14 @@ def code_embedding_flow(
                         filename=file["filename"]
                     )
                 
-                # Parse metadata JSON to extract fields for collection
-                import json
-                try:
-                    metadata_dict = json.loads(chunk["metadata"])
-                except:
-                    metadata_dict = {}
+                # Extract individual metadata fields using CocoIndex transforms
+                chunk["functions"] = chunk["metadata"].transform(extract_functions_field)
+                chunk["classes"] = chunk["metadata"].transform(extract_classes_field)
+                chunk["imports"] = chunk["metadata"].transform(extract_imports_field)
+                chunk["complexity_score"] = chunk["metadata"].transform(extract_complexity_score_field)
+                chunk["has_type_hints"] = chunk["metadata"].transform(extract_has_type_hints_field)
+                chunk["has_async"] = chunk["metadata"].transform(extract_has_async_field)
+                chunk["has_classes"] = chunk["metadata"].transform(extract_has_classes_field)
                 
                 code_embeddings.collect(
                     filename=file["filename"],
@@ -507,14 +640,14 @@ def code_embedding_flow(
                     end=chunk["end"],
                     source_name=source_name,  # Add source name for identification
                     metadata_json=chunk["metadata"],  # Store full JSON
-                    # Include parsed metadata fields
-                    functions=str(metadata_dict.get("functions", [])),  # Convert to string for storage
-                    classes=str(metadata_dict.get("classes", [])),
-                    imports=str(metadata_dict.get("imports", [])),
-                    complexity_score=metadata_dict.get("complexity_score", 0),
-                    has_type_hints=metadata_dict.get("has_type_hints", False),
-                    has_async=metadata_dict.get("has_async", False),
-                    has_classes=metadata_dict.get("has_classes", False),
+                    # Individual metadata fields (properly extracted from JSON)
+                    functions=chunk["functions"],
+                    classes=chunk["classes"],
+                    imports=chunk["imports"],
+                    complexity_score=chunk["complexity_score"],
+                    has_type_hints=chunk["has_type_hints"],
+                    has_async=chunk["has_async"],
+                    has_classes=chunk["has_classes"],
                 )
 
     code_embeddings.export(
