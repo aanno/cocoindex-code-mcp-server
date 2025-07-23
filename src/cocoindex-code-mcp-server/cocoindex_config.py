@@ -4,10 +4,12 @@
 CocoIndex configuration and flow definitions.
 """
 
+# from __future__ import annotations  # Temporarily disabled due to cocoindex compatibility
 import os
 import datetime
 import json
 import torch
+import traceback
 from dataclasses import dataclass
 
 from typing import List, Dict, Literal
@@ -29,6 +31,8 @@ from language_handlers import get_handler_for_language
 # os.environ.setdefault('PYTORCH_DISABLE_PER_OP_PROFILING', '1')
 
 # Models will be instantiated directly (HuggingFace handles caching)
+
+STACKTRACE = False
 
 # Import our custom extensions
 try:
@@ -506,6 +510,8 @@ def code_to_embedding(
             
         except Exception as e:
             LOGGER.error(f"Meta tensor handling failed: {e}")
+            if STACKTRACE:
+                LOGGER.error(f"Full traceback:\n{traceback.format_exc()}")
             # Fallback: try with explicit device specification during construction
             try:
                 model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", device='cpu')
@@ -513,6 +519,8 @@ def code_to_embedding(
                 return embedding.astype(np.float32)
             except Exception as fallback_e:
                 LOGGER.error(f"Fallback also failed: {fallback_e}")
+                if STACKTRACE:
+                    LOGGER.error(f"Fallback full traceback:\n{traceback.format_exc()}")
                 raise
     
     return text.transform(cached_embed_text)
@@ -565,6 +573,8 @@ def smart_code_to_embedding(
                 return embedding.astype(np.float32)
             except Exception as fallback_error:
                 LOGGER.error(f"Meta tensor fallback also failed: {fallback_error}")
+                if STACKTRACE:
+                    LOGGER.error(f"Smart embedding fallback full traceback:\n{traceback.format_exc()}")
                 raise
     
     return text.transform(embed_with_language_selection, language=language)
