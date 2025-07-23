@@ -18,9 +18,7 @@ from __init__ import LOGGER
 from sentence_transformers import SentenceTransformer
 from ast_chunking import Chunk
 
-# Load global sentence transformer model
-model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-LOGGER.info(f"✅ Model sentence-transformers/all-MiniLM-L6-v2 loaded")
+# Models will be instantiated directly (HuggingFace handles caching)
 
 # Import our custom extensions
 try:
@@ -488,7 +486,8 @@ def code_to_embedding(
     """
     @cocoindex.op.function()
     def cached_embed_text(text: str) -> Vector[np.float32, Literal[384]]:
-        """Embed text using cached SentenceTransformer model."""
+        """Embed text using SentenceTransformer model."""
+        model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
         embedding = model.encode(text)
         return embedding.astype(np.float32)
     
@@ -526,7 +525,8 @@ def smart_code_to_embedding(
         except Exception as e:
             # Fallback to basic model if smart embedding fails
             LOGGER.warning(f"Smart embedding failed for language {language}, falling back to basic model: {e}")
-            embedding = model.encode(text)
+            fallback_model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+            embedding = fallback_model.encode(text)
             return embedding.astype(np.float32)
     
     return text.transform(embed_with_language_selection, language=language)
