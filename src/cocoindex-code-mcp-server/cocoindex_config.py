@@ -488,45 +488,13 @@ def code_to_embedding(
     """
     Default embedding using a SentenceTransformer model with caching.
     """
-    @cocoindex.op.function()
-    def cached_embed_text(text: str) -> Vector[np.float32, Literal[384]]:
-        """Embed text using SentenceTransformer model with meta tensor handling."""
-        
-        try:
-            # Load model normally first
-            model = SentenceTransformer(DEFAULT_TRANSFORMER_MODEL, local_files_only=True)
-            
-            # Check for meta tensors and handle them properly
-            for name, param in model.named_parameters():
-                if param.is_meta:
-                    LOGGER.warning(f"Found meta tensor in {name}, using .to_empty() to move to CPU")
-                    # Use .to_empty() for meta tensors as recommended
-                    model = model.to_empty('cpu')
-                    break
-            else:
-                # No meta tensors found, use regular .to()
-                model = model.to('cpu')
-            
-            embedding = model.encode(text)
-            return embedding.astype(np.float32)
-            
-        except Exception as e:
-            LOGGER.error(f"Meta tensor handling failed: {e}")
-            if STACKTRACE:
-                LOGGER.error(f"Full traceback:\n{traceback.format_exc()}")
-            # Fallback: try with explicit device specification during construction
-            try:
-                model = SentenceTransformer(DEFAULT_TRANSFORMER_MODEL, device='cpu',  local_files_only=True)
-                embedding = model.encode(text)
-                return embedding.astype(np.float32)
-            except Exception as fallback_e:
-                LOGGER.error(f"Fallback also failed: {fallback_e}")
-                if STACKTRACE:
-                    LOGGER.error(f"Fallback full traceback:\n{traceback.format_exc()}")
-                raise
-    
-    return text.transform(cached_embed_text)
 
+    return text.transform(
+        # Embed text using SentenceTransformer model with meta tensor handling.
+        cocoindex.functions.SentenceTransformerEmbed(
+            model=DEFAULT_TRANSFORMER_MODEL
+        )
+    )
 
 @cocoindex.transform_flow()
 def smart_code_to_embedding(
