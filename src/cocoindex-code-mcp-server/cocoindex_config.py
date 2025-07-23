@@ -26,8 +26,9 @@ LOGGER.info(f"✅ Model sentence-transformers/all-MiniLM-L6-v2 loaded")
 # Import our custom extensions
 try:
     from smart_code_embedding import create_smart_code_embedding, LanguageModelSelector
-    # TODO: Temporarily disable smart embedding due to meta tensor error
-    SMART_EMBEDDING_AVAILABLE = False
+    SMART_EMBEDDING_AVAILABLE = True
+    # TODO: for the moment
+    # SMART_EMBEDDING_AVAILABLE = False
     LOGGER.info("Smart code embedding extension loaded but temporarily disabled")
 except ImportError as e:
     SMART_EMBEDDING_AVAILABLE = False
