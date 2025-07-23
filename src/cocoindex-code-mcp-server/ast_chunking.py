@@ -11,8 +11,19 @@ import os
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 import logging
+from dataclasses import dataclass
 
 from __init__ import LOGGER
+
+
+@dataclass(frozen=True)
+class Chunk:
+    """Represents a code chunk with text and location metadata."""
+    text: str
+    location: str
+    start: int
+    end: int
+
 
 try:
     from astchunk import ASTChunkBuilder
@@ -282,68 +293,61 @@ class CocoIndexASTChunker:
 
 def create_ast_chunking_operation():
     """
-    Create a CocoIndex operation for AST-based chunking.
+    Create a CocoIndex AST chunking operation using @cocoindex.op.function() decorator.
+    Returns a function registered with CocoIndex that works with .transform() method.
     """
     if cocoindex is None:
         raise ImportError("CocoIndex not available")
     
     @cocoindex.op.function()
-    def CodeASTChunkProcessor(source_field: str, 
-                     language: str = "auto",
-                     max_chunk_size: int = 1800,
-                     chunk_overlap: int = 0,
-                     chunk_expansion: bool = False,
-                     metadata_template: str = "default"):
+    def ast_chunk_content(content: str, language: str = "auto", max_chunk_size: int = 1800, 
+                         chunk_overlap: int = 0, chunk_expansion: bool = False, 
+                         metadata_template: str = "default") -> List[Chunk]:
         """
-        Structure-aware code chunking using AST analysis.
+        AST-based code chunking function for CocoIndex.
         
         Args:
-            source_field: Field containing the source code
-            language: Programming language (auto-detect if "auto")
+            content: Text content to chunk
+            language: Programming language 
             max_chunk_size: Maximum non-whitespace characters per chunk
             chunk_overlap: Number of AST nodes to overlap between chunks
             chunk_expansion: Whether to add metadata headers to chunks
             metadata_template: Format for chunk metadata
             
         Returns:
-            List of chunks with content and metadata
+            List of chunk dictionaries with text and location metadata
         """
-        def process_record(record):
-            code = record.get(source_field, "")
-            file_path = record.get("file_path", "")
-            
-            # Auto-detect language if needed
-            if language == "auto":
-                if file_path:
-                    detected_language = detect_language_from_filename(file_path)
-                else:
-                    detected_language = "Python"  # Default fallback
-            else:
-                detected_language = language
-            
-            # Create chunker
-            chunker = CocoIndexASTChunker(
-                max_chunk_size=max_chunk_size,
-                chunk_overlap=chunk_overlap,
-                chunk_expansion=chunk_expansion,
-                metadata_template=metadata_template
-            )
-            
-            # Generate chunks
-            chunks = chunker.chunk_code(code, detected_language, file_path)
-            
-            # Return chunks as separate records
-            result = []
-            for chunk in chunks:
-                new_record = record.copy()
-                new_record.update(chunk)
-                result.append(new_record)
-            
-            return result
+        # Auto-detect language if needed
+        if language == "auto":
+            detected_language = "Python"  # Default fallback for now
+        else:
+            detected_language = language
         
-        return process_record
+        # Create chunker with helper class for complex logic
+        chunker = CocoIndexASTChunker(
+            max_chunk_size=max_chunk_size,
+            chunk_overlap=chunk_overlap,
+            chunk_expansion=chunk_expansion,
+            metadata_template=metadata_template
+        )
+        
+        # Generate chunks from the content
+        raw_chunks = chunker.chunk_code(content, detected_language, "")
+        
+        # Convert dictionaries to Chunk dataclass instances
+        chunks = [
+            Chunk(
+                text=chunk.get("text", ""),
+                location=chunk.get("location", ""),
+                start=chunk.get("start", 0),
+                end=chunk.get("end", 0)
+            )
+            for chunk in raw_chunks
+        ]
+        
+        return chunks
     
-    return CodeASTChunkProcessor
+    return ast_chunk_content
 
 
 # Create the operation conditionally
@@ -351,6 +355,7 @@ ASTChunkOperation = None
 if cocoindex is not None:
     try:
         ASTChunkOperation = create_ast_chunking_operation()
+        LOGGER.info("ASTChunkOperation created successfully")
     except Exception as e:
         LOGGER.warning(f"Failed to create ASTChunkOperation: {e}")
 

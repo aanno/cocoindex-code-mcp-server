@@ -24,17 +24,16 @@ LOGGER.info(f"✅ Model sentence-transformers/all-MiniLM-L6-v2 loaded")
 
 # Import our custom extensions
 try:
-    from smart_code_embedding import create_smart_code_embedding
-    SMART_EMBEDDING_AVAILABLE = True
-    # TODO: for the moment
-    # SMART_EMBEDDING_AVAILABLE = False
-    LOGGER.info("Smart code embedding extension loaded")
+    from smart_code_embedding import create_smart_code_embedding, LanguageModelSelector
+    # TODO: Temporarily disable smart embedding due to meta tensor error
+    SMART_EMBEDDING_AVAILABLE = False
+    LOGGER.info("Smart code embedding extension loaded but temporarily disabled")
 except ImportError as e:
     SMART_EMBEDDING_AVAILABLE = False
     LOGGER.warning(f"Smart code embedding not available: {e}")
 
 try:
-    from ast_chunking import create_ast_chunking_operation
+    from ast_chunking import ASTChunkOperation
     AST_CHUNKING_AVAILABLE = True
     # TODO: for the moment
     # AST_CHUNKING_AVAILABLE = False
@@ -454,8 +453,6 @@ def smart_code_to_embedding(
         """Embed text using language-specific embedding model selection."""
         try:
             # Use smart model selection based on language
-            from smart_code_embedding import LanguageModelSelector
-            
             selector = LanguageModelSelector()
             selected_model = selector.select_model(language=language)
             
@@ -625,14 +622,11 @@ def code_embedding_flow(
                 )
             else:
                 LOGGER.info("Using AST chunking extension")
-                ast_chunking_operation = create_ast_chunking_operation(
-                    chunk_size=file["chunking_params"]["chunk_size"],
-                    min_chunk_size=file["chunking_params"]["min_chunk_size"],
-                    chunk_overlap=file["chunking_params"]["chunk_overlap"]
-                )
                 file["chunks"] = file["content"].transform(
-                    ast_chunking_operation,
-                    language=file["language"]
+                    ASTChunkOperation,
+                    language=file["language"],
+                    max_chunk_size=file["chunking_params"]["chunk_size"],
+                    chunk_overlap=file["chunking_params"]["chunk_overlap"]
                 )
             
             with file["chunks"].row() as chunk:
