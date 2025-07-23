@@ -4,6 +4,10 @@
 
 ### Current Issue
 - `cocoindex evaluate` command is still not terminating properly
+- This also means the `python src/cocoindex-code-mcp-server/mcp_server.py --port 3033 /workspaces/rust/`
+  and the the MCP server is currently not useable.
+- Probably `src/cocoindex-code-mcp-server/lang/python/python_code_analyzer.py` introduce the problem
+  hence with an implementation of --default-chunking this could be checked easily
 - Despite fixing infinite recursion issues in Python AST analyzer, the evaluation continues to hang
 - Need to implement and test `--default-*` flags to isolate whether the issue is in our custom extensions
 
