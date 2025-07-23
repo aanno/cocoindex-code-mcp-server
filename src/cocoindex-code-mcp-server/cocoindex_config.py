@@ -6,6 +6,8 @@ CocoIndex configuration and flow definitions.
 
 import os
 import datetime
+import json
+import torch
 from dataclasses import dataclass
 
 from typing import List, Dict, Literal
@@ -17,7 +19,9 @@ from lang.haskell.haskell_support import get_haskell_language_spec
 from lang.python.python_code_analyzer import analyze_python_code
 from __init__ import LOGGER
 from sentence_transformers import SentenceTransformer
-from ast_chunking import Chunk
+from ast_chunking import Chunk, ASTChunkOperation
+from language_handlers.python_handler import PythonNodeHandler
+from language_handlers import get_handler_for_language
 
 # No, we never do this!
 # Set environment to avoid meta tensor issues
@@ -28,7 +32,7 @@ from ast_chunking import Chunk
 
 # Import our custom extensions
 try:
-    from smart_code_embedding import create_smart_code_embedding, LanguageModelSelector
+    # from smart_code_embedding import create_smart_code_embedding, LanguageModelSelector
     # SMART_EMBEDDING_AVAILABLE = True
     # TODO: for the moment
     SMART_EMBEDDING_AVAILABLE = False
@@ -38,7 +42,6 @@ except ImportError as e:
     LOGGER.warning(f"Smart code embedding not available: {e}")
 
 try:
-    from ast_chunking import ASTChunkOperation
     AST_CHUNKING_AVAILABLE = True
     # TODO: for the moment
     # AST_CHUNKING_AVAILABLE = False
@@ -48,8 +51,6 @@ except ImportError as e:
     LOGGER.warning(f"AST chunking not available: {e}")
 
 try:
-    from language_handlers.python_handler import PythonNodeHandler
-    from language_handlers import get_handler_for_language
     PYTHON_HANDLER_AVAILABLE = True
     # TODO: for the moment
     # PYTHON_HANDLER_AVAILABLE = False
@@ -281,7 +282,6 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
             }
         
         # Return just the JSON string for now
-        import json
         result = {
             "functions": metadata.get("functions", []),
             "classes": metadata.get("classes", []),
@@ -309,14 +309,12 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
             "decorators_used": [],
             "analysis_method": "error_fallback",
         }
-        import json
         return json.dumps(fallback_result)
 
 
 @cocoindex.op.function()
 def extract_functions_field(metadata_json: str) -> str:
     """Extract functions field from metadata JSON."""
-    import json
     try:
         if not metadata_json or metadata_json.strip() == "":
             return "[]"
@@ -335,7 +333,6 @@ def extract_functions_field(metadata_json: str) -> str:
 @cocoindex.op.function()
 def extract_classes_field(metadata_json: str) -> str:
     """Extract classes field from metadata JSON."""
-    import json
     try:
         if not metadata_json or metadata_json.strip() == "":
             return "[]"
@@ -353,7 +350,6 @@ def extract_classes_field(metadata_json: str) -> str:
 @cocoindex.op.function()
 def extract_imports_field(metadata_json: str) -> str:
     """Extract imports field from metadata JSON."""
-    import json
     try:
         if not metadata_json or metadata_json.strip() == "":
             return "[]"
@@ -371,7 +367,6 @@ def extract_imports_field(metadata_json: str) -> str:
 @cocoindex.op.function()
 def extract_complexity_score_field(metadata_json: str) -> int:
     """Extract complexity_score field from metadata JSON."""
-    import json
     try:
         if not metadata_json or metadata_json.strip() == "":
             return 0
@@ -386,7 +381,6 @@ def extract_complexity_score_field(metadata_json: str) -> int:
 @cocoindex.op.function()
 def extract_has_type_hints_field(metadata_json: str) -> bool:
     """Extract has_type_hints field from metadata JSON."""
-    import json
     try:
         if not metadata_json or metadata_json.strip() == "":
             return False
@@ -400,7 +394,6 @@ def extract_has_type_hints_field(metadata_json: str) -> bool:
 @cocoindex.op.function()
 def extract_has_async_field(metadata_json: str) -> bool:
     """Extract has_async field from metadata JSON."""
-    import json
     try:
         if not metadata_json or metadata_json.strip() == "":
             return False
@@ -472,7 +465,6 @@ def ensure_unique_chunk_locations(chunks) -> List[Chunk]:
 @cocoindex.op.function()
 def extract_has_classes_field(metadata_json: str) -> bool:
     """Extract has_classes field from metadata JSON."""
-    import json
     try:
         if not metadata_json or metadata_json.strip() == "":
             return False
@@ -493,7 +485,6 @@ def code_to_embedding(
     @cocoindex.op.function()
     def cached_embed_text(text: str) -> Vector[np.float32, Literal[384]]:
         """Embed text using SentenceTransformer model with meta tensor handling."""
-        import torch
         
         try:
             # Load model normally first
@@ -559,7 +550,6 @@ def smart_code_to_embedding(
             # Fallback to basic model if smart embedding fails
             LOGGER.warning(f"Smart embedding failed for language {language}, falling back to basic model: {e}")
             try:
-                import torch
                 fallback_model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
                 
                 # Check for meta tensors in fallback model
@@ -748,7 +738,6 @@ def code_embedding_flow(
                 if use_default_language_handler:
                     LOGGER.info("Using default language handler (--default-language-handler flag set)")
                     # Use simple default metadata (no custom processing)
-                    import json
                     default_metadata = {
                         "functions": [],
                         "classes": [],

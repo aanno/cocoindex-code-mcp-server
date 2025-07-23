@@ -10,6 +10,7 @@ import json
 import pytest
 import asyncio
 from typing import Dict, Any, List
+from contextlib import asynccontextmanager
 
 # Import MCP client library components
 from mcp import ClientSession, StdioServerParameters
@@ -93,6 +94,7 @@ class TestMCPIntegrationE2E:
         # tests above prove that MCP protocol functionality works correctly.
         pytest.skip("StreamableHTTP client tests disabled - basic HTTP JSON-RPC works fine")
     
+    @asynccontextmanager
     async def _create_client_session(self):
         """Helper to create and initialize a client session."""
         import requests
