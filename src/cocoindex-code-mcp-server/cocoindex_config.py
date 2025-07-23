@@ -25,6 +25,7 @@ from sentence_transformers import SentenceTransformer
 from ast_chunking import Chunk, ASTChunkOperation
 from language_handlers.python_handler import PythonNodeHandler
 from language_handlers import get_handler_for_language
+from smart_code_embedding import LanguageModelSelector
 
 # No, we never do this!
 # Set environment to avoid meta tensor issues
@@ -39,9 +40,9 @@ STACKTRACE = False
 # Import our custom extensions
 try:
     # from smart_code_embedding import create_smart_code_embedding, LanguageModelSelector
-    # SMART_EMBEDDING_AVAILABLE = True
+    SMART_EMBEDDING_AVAILABLE = True
     # TODO: for the moment
-    SMART_EMBEDDING_AVAILABLE = False
+    # SMART_EMBEDDING_AVAILABLE = False
     LOGGER.info("Smart code embedding extension loaded but temporarily disabled")
 except ImportError as e:
     SMART_EMBEDDING_AVAILABLE = False
