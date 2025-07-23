@@ -18,11 +18,6 @@ from __init__ import LOGGER
 from sentence_transformers import SentenceTransformer
 from ast_chunking import Chunk
 
-# TODO: Unsure if this is the only way to do it
-# we should test a more dynamic way later
-model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-LOGGER.info(f"✅ Model sentence-transformers/all-MiniLM-L6-v2 loaded")
-
 # Import our custom extensions
 try:
     from smart_code_embedding import create_smart_code_embedding, LanguageModelSelector
@@ -525,18 +520,12 @@ def smart_code_to_embedding(
             # Use smart model selection based on language
             selector = LanguageModelSelector()
             selected_model = selector.select_model(language=language)
-            
+            model_args = selector.get_model_args(selected_model)
             LOGGER.debug(f"Using smart embedding model for language: {language} -> {selected_model}")
-            
-            # Check if we need to load a different model than the global one
-            if selected_model == "sentence-transformers/all-MiniLM-L6-v2":
-                # Use the already loaded global model
-                embedding = model.encode(text)
-            else:
-                # Load the language-specific model
-                model_args = selector.get_model_args(selected_model)
-                smart_model = SentenceTransformer(selected_model, **model_args)
-                embedding = smart_model.encode(text)
+
+            # Load the language-specific model
+            smart_model = SentenceTransformer(selected_model, **model_args)
+            embedding = smart_model.encode(text)
             
             return embedding.astype(np.float32)
             
@@ -555,12 +544,6 @@ _global_flow_config = {
     'enable_polling': False,
     'poll_interval': 30
 }
-
-# TODO: realy use the requested model
-def load_sentence_transformer(model_name: str):
-    """Load SentenceTransformer model."""
-    LOGGER.info(f"🔄 Just using sentence-transformers/all-MiniLM-L6-v2 instead of {model_name}")
-    return model
 
 
 @cocoindex.flow_def(name="CodeEmbedding")
