@@ -4,7 +4,8 @@
 CocoIndex configuration and flow definitions.
 """
 
-# from __future__ import annotations  # Temporarily disabled due to cocoindex compatibility
+# Temporarily disabled due to cocoindex compatibility
+# from __future__ import annotations  
 import os
 import datetime
 import json
@@ -32,6 +33,7 @@ from language_handlers import get_handler_for_language
 
 # Models will be instantiated directly (HuggingFace handles caching)
 
+DEFAULT_TRANSFORMER_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 STACKTRACE = False
 
 # Import our custom extensions
@@ -492,7 +494,7 @@ def code_to_embedding(
         
         try:
             # Load model normally first
-            model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+            model = SentenceTransformer(DEFAULT_TRANSFORMER_MODEL, local_files_only=True)
             
             # Check for meta tensors and handle them properly
             for name, param in model.named_parameters():
@@ -514,7 +516,7 @@ def code_to_embedding(
                 LOGGER.error(f"Full traceback:\n{traceback.format_exc()}")
             # Fallback: try with explicit device specification during construction
             try:
-                model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", device='cpu')
+                model = SentenceTransformer(DEFAULT_TRANSFORMER_MODEL, device='cpu',  local_files_only=True)
                 embedding = model.encode(text)
                 return embedding.astype(np.float32)
             except Exception as fallback_e:
@@ -549,7 +551,7 @@ def smart_code_to_embedding(
             LOGGER.info(f"Using smart embedding model for language: {language} -> {selected_model}")
 
             # Load the language-specific model
-            smart_model = SentenceTransformer(selected_model, **model_args)
+            smart_model = SentenceTransformer(selected_model,  local_files_only=True, **model_args)
             embedding = smart_model.encode(text)
             
             return embedding.astype(np.float32)
@@ -558,7 +560,7 @@ def smart_code_to_embedding(
             # Fallback to basic model if smart embedding fails
             LOGGER.warning(f"Smart embedding failed for language {language}, falling back to basic model: {e}")
             try:
-                fallback_model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+                fallback_model = SentenceTransformer(DEFAULT_TRANSFORMER_MODEL,  local_files_only=True)
                 
                 # Check for meta tensors in fallback model
                 for name, param in fallback_model.named_parameters():
