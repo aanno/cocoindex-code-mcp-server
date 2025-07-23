@@ -557,6 +557,16 @@ def code_embedding_flow(
                 "**/env", "**/.gradle", "**/.idea", "**/.vscode",
                 "**/target/debug", "**/target/release", "**/*.class",
                 "**/*.jar", "**/*.war", "**/*.ear", "**/*.pyc", "**/*.pyo",
+                # cocoindex evaluate
+                "**/eval_CodeEmbedding_*",
+                # compiled and cached
+                "**/*.o", "**/*.obj", "**/*.exe", "**/*.dll",
+                # scm
+                "**/.git", "**/.svn", "**/.hg",
+                # misc
+                "**/.DS_Store", "**/Thumbs.db", "**/*.tmp",
+                # python
+                "**/.venv",
             ]
         }
         
