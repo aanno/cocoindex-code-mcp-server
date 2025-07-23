@@ -15,6 +15,12 @@ from cocoindex.typing import Vector
 from lang.haskell.haskell_support import get_haskell_language_spec
 from lang.python.python_code_analyzer import analyze_python_code
 from __init__ import LOGGER
+from sentence_transformers import SentenceTransformer
+
+# TODO: Unsure if this is the only way to do it
+# we should test a more dynamic way later
+model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+LOGGER.info(f"✅ Model sentence-transformers/all-MiniLM-L6-v2 loaded")
 
 # Import our custom extensions
 try:
@@ -288,8 +294,6 @@ def code_to_embedding(
     @cocoindex.op.function()
     def cached_embed_text(text: str) -> Vector[np.float32, Literal[384]]:
         """Embed text using cached SentenceTransformer model."""
-        model_name = "sentence-transformers/all-MiniLM-L6-v2"
-        model = get_cached_sentence_transformer(model_name)
         embedding = model.encode(text)
         return embedding.astype(np.float32)
     
@@ -315,8 +319,6 @@ def smart_code_to_embedding(
         # TODO: Re-enable smart model selection once rate limiting is resolved
         LOGGER.debug(f"Using basic embedding model for language: {language} (smart embedding disabled)")
         
-        model_name = "sentence-transformers/all-MiniLM-L6-v2"
-        model = get_cached_sentence_transformer(model_name)
         embedding = model.encode(text)
         return embedding.astype(np.float32)
     
@@ -330,16 +332,10 @@ _global_flow_config = {
     'poll_interval': 30
 }
 
-# Try using functools.lru_cache for persistent model caching
-from functools import lru_cache
-
-@lru_cache(maxsize=3)
-def get_cached_sentence_transformer(model_name: str):
-    """Get cached SentenceTransformer model using lru_cache."""
-    LOGGER.info(f"🔄 Loading model {model_name} via lru_cache")
-    from sentence_transformers import SentenceTransformer
-    model = SentenceTransformer(model_name)
-    LOGGER.info(f"✅ Model {model_name} loaded and will be cached by lru_cache")
+# TODO: realy use the requested model
+def load_sentence_transformer(model_name: str):
+    """Load SentenceTransformer model."""
+    LOGGER.info(f"🔄 Just using sentence-transformers/all-MiniLM-L6-v2 instead of {model_name}")
     return model
 
 
