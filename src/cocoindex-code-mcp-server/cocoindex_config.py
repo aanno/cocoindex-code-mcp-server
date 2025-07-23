@@ -7,10 +7,11 @@ CocoIndex configuration and flow definitions.
 import os
 import datetime
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import List, Dict, Literal
 from numpy.typing import NDArray
 import numpy as np
 import cocoindex
+from cocoindex.typing import Vector
 from lang.haskell.haskell_support import get_haskell_language_spec
 from lang.python.python_code_analyzer import analyze_python_code
 from __init__ import LOGGER
@@ -285,12 +286,12 @@ def code_to_embedding(
     Default embedding using a SentenceTransformer model with caching.
     """
     @cocoindex.op.function()
-    def cached_embed_text(text: str) -> list[float]:
+    def cached_embed_text(text: str) -> Vector[np.float32, Literal[384]]:
         """Embed text using cached SentenceTransformer model."""
         model_name = "sentence-transformers/all-MiniLM-L6-v2"
         model = get_cached_sentence_transformer(model_name)
         embedding = model.encode(text)
-        return embedding.tolist()
+        return embedding.astype(np.float32)
     
     return text.transform(cached_embed_text)
 
@@ -308,7 +309,7 @@ def smart_code_to_embedding(
         return code_to_embedding(text)
     
     @cocoindex.op.function()
-    def embed_with_language_selection(text: str, language: str) -> list[float]:
+    def embed_with_language_selection(text: str, language: str) -> Vector[np.float32, Literal[384]]:
         """Embed text using language-specific embedding model selection."""
         # Temporarily force use of basic model to avoid HuggingFace rate limits
         # TODO: Re-enable smart model selection once rate limiting is resolved
@@ -317,7 +318,7 @@ def smart_code_to_embedding(
         model_name = "sentence-transformers/all-MiniLM-L6-v2"
         model = get_cached_sentence_transformer(model_name)
         embedding = model.encode(text)
-        return embedding.tolist()
+        return embedding.astype(np.float32)
     
     return text.transform(embed_with_language_selection, language=language)
 
