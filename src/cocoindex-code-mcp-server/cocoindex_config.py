@@ -16,6 +16,7 @@ from lang.haskell.haskell_support import get_haskell_language_spec
 from lang.python.python_code_analyzer import analyze_python_code
 from __init__ import LOGGER
 from sentence_transformers import SentenceTransformer
+from ast_chunking import Chunk
 
 # TODO: Unsure if this is the only way to do it
 # we should test a more dynamic way later
@@ -407,6 +408,74 @@ def extract_has_async_field(metadata_json: str) -> bool:
 
 
 @cocoindex.op.function()
+def ensure_unique_chunk_locations(chunks):
+    """
+    Post-process chunks to ensure location fields are unique within the file.
+    This prevents PostgreSQL 'ON CONFLICT DO UPDATE' duplicate key errors.
+    Preserves original chunk format (dict or dataclass).
+    """
+    if not chunks:
+        return chunks
+    
+    # Convert chunks to list if needed
+    chunk_list = list(chunks) if hasattr(chunks, '__iter__') else [chunks]
+    
+    seen_locations = set()
+    unique_chunks = []
+    
+    for i, chunk in enumerate(chunk_list):
+        # Handle different chunk formats
+        if hasattr(chunk, 'location'):
+            # AST chunking Chunk dataclass - preserve as dataclass
+            base_loc = chunk.location
+            unique_loc = base_loc
+            suffix = 0
+            
+            # Append suffix until unique
+            while unique_loc in seen_locations:
+                suffix += 1
+                unique_loc = f"{base_loc}#{suffix}"
+            
+            seen_locations.add(unique_loc)
+            
+            # Create new chunk with unique location using dataclass replace
+            from dataclasses import replace
+            unique_chunk = replace(chunk, location=unique_loc)
+            unique_chunks.append(unique_chunk)
+            
+        elif isinstance(chunk, dict):
+            # Default chunking dictionary format - preserve as dict
+            base_loc = chunk.get("location", f"chunk_{i}")
+            unique_loc = base_loc
+            suffix = 0
+            
+            # Append suffix until unique
+            while unique_loc in seen_locations:
+                suffix += 1
+                unique_loc = f"{base_loc}#{suffix}"
+            
+            seen_locations.add(unique_loc)
+            
+            # Create new chunk dict with unique location
+            unique_chunk = chunk.copy()
+            unique_chunk["location"] = unique_loc
+            unique_chunks.append(unique_chunk)
+            
+        else:
+            # Fallback: preserve original chunk and add to seen locations
+            unique_loc = f"chunk_{i}"
+            suffix = 0
+            while unique_loc in seen_locations:
+                suffix += 1
+                unique_loc = f"chunk_{i}#{suffix}"
+            
+            seen_locations.add(unique_loc)
+            unique_chunks.append(chunk)
+    
+    return unique_chunks
+
+
+@cocoindex.op.function()
 def extract_has_classes_field(metadata_json: str) -> bool:
     """Extract has_classes field from metadata JSON."""
     import json
@@ -613,21 +682,25 @@ def code_embedding_flow(
                     LOGGER.info("AST chunking not available, using default recursive splitting")
                 else:
                     LOGGER.info("Using default recursive splitting (--default-chunking flag set)")
-                file["chunks"] = file["content"].transform(
+                raw_chunks = file["content"].transform(
                     cocoindex.functions.SplitRecursively(custom_languages=CUSTOM_LANGUAGES),
                     language=file["language"],
                     chunk_size=file["chunking_params"]["chunk_size"],
                     min_chunk_size=file["chunking_params"]["min_chunk_size"],
                     chunk_overlap=file["chunking_params"]["chunk_overlap"],
                 )
+                # Ensure unique locations for default chunking
+                file["chunks"] = raw_chunks.transform(ensure_unique_chunk_locations)
             else:
                 LOGGER.info("Using AST chunking extension")
-                file["chunks"] = file["content"].transform(
+                raw_chunks = file["content"].transform(
                     ASTChunkOperation,
                     language=file["language"],
                     max_chunk_size=file["chunking_params"]["chunk_size"],
                     chunk_overlap=file["chunking_params"]["chunk_overlap"]
                 )
+                # Ensure unique locations for AST chunking (safety measure)
+                file["chunks"] = raw_chunks.transform(ensure_unique_chunk_locations)
             
             with file["chunks"].row() as chunk:
                 # Choose embedding method based on configuration
@@ -702,7 +775,7 @@ def code_embedding_flow(
     code_embeddings.export(
         "code_embeddings",
         cocoindex.targets.Postgres(),
-        primary_key_fields=["filename", "location"],
+        primary_key_fields=["filename", "location", "source_name"],
         vector_indexes=[
             cocoindex.VectorIndexDef(
                 field_name="embedding",

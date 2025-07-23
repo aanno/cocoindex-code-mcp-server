@@ -194,15 +194,144 @@ def embed_text(text: str) -> Vector[np.float32, Literal[384]]:
     return embedding.astype(np.float32)
 ```
 
+## Chunking and Primary Key Management (CRITICAL)
+
+### 1. Unique Chunk Locations Required
+
+**⚠️ CRITICAL GOTCHA**: CocoIndex chunking functions don't guarantee unique location identifiers within the same file, causing PostgreSQL conflicts.
+
+```python
+# ❌ PROBLEM: SplitRecursively may produce duplicate locations
+file["chunks"] = file["content"].transform(
+    cocoindex.functions.SplitRecursively(),
+    language=file["language"],
+    chunk_size=1000
+)
+# Multiple chunks may have same location → PostgreSQL error:
+# "ON CONFLICT DO UPDATE command cannot affect row a second time"
+```
+
+**✅ SOLUTION**: Always post-process chunks to ensure unique locations:
+
+```python
+@cocoindex.op.function()
+def ensure_unique_chunk_locations(chunks) -> list:
+    """Post-process chunks to ensure location fields are unique within the file."""
+    if not chunks:
+        return chunks
+    
+    chunk_list = list(chunks) if hasattr(chunks, '__iter__') else [chunks]
+    seen_locations = set()
+    unique_chunks = []
+    
+    for i, chunk in enumerate(chunk_list):
+        if hasattr(chunk, 'location'):
+            # AST chunking Chunk dataclass
+            base_loc = chunk.location
+        elif isinstance(chunk, dict):
+            # Default chunking dictionary format
+            base_loc = chunk.get("location", f"chunk_{i}")
+        else:
+            base_loc = f"chunk_{i}"
+        
+        # Make location unique
+        unique_loc = base_loc
+        suffix = 0
+        while unique_loc in seen_locations:
+            suffix += 1
+            unique_loc = f"{base_loc}#{suffix}"
+        
+        seen_locations.add(unique_loc)
+        
+        # Update chunk with unique location
+        if hasattr(chunk, 'location'):
+            from dataclasses import replace
+            unique_chunk = replace(chunk, location=unique_loc)
+        elif isinstance(chunk, dict):
+            unique_chunk = chunk.copy()
+            unique_chunk["location"] = unique_loc
+        else:
+            unique_chunk = chunk
+            
+        unique_chunks.append(unique_chunk)
+    
+    return unique_chunks
+
+# ✅ Apply to ALL chunking methods
+# Default chunking
+raw_chunks = file["content"].transform(
+    cocoindex.functions.SplitRecursively(custom_languages=CUSTOM_LANGUAGES),
+    language=file["language"],
+    chunk_size=file["chunking_params"]["chunk_size"],
+    min_chunk_size=file["chunking_params"]["min_chunk_size"],
+    chunk_overlap=file["chunking_params"]["chunk_overlap"],
+)
+file["chunks"] = raw_chunks.transform(ensure_unique_chunk_locations)
+
+# AST chunking
+raw_chunks = file["content"].transform(
+    ASTChunkOperation,
+    language=file["language"],
+    max_chunk_size=file["chunking_params"]["chunk_size"],
+)
+file["chunks"] = raw_chunks.transform(ensure_unique_chunk_locations)
+```
+
+### 2. Primary Key Design Considerations
+
+**✅ BEST PRACTICE**: Use comprehensive primary keys that prevent conflicts:
+
+```python
+code_embeddings.export(
+    "code_embeddings",
+    cocoindex.targets.Postgres(),
+    # Include source_name to handle multiple sources with same files
+    primary_key_fields=["filename", "location", "source_name"],
+    vector_indexes=[
+        cocoindex.VectorIndexDef(
+            field_name="embedding",
+            metric=cocoindex.VectorSimilarityMetric.COSINE_SIMILARITY,
+        )
+    ],
+)
+```
+
+**Why this matters**:
+- `filename` alone isn't unique (same file in multiple sources)
+- `location` alone isn't unique (SplitRecursively may produce duplicates)
+- `source_name` prevents conflicts when same file appears in multiple paths
+
+### 3. Chunking Method Selection
+
+**CocoIndex chunking method hierarchy**:
+
+```python
+# 1. AST chunking (best for supported languages: Python, TypeScript, Java)
+if language in ["Python", "TypeScript", "JavaScript", "Java"]:
+    chunks = content.transform(ASTChunkOperation, language=language)
+    
+# 2. Default chunking (for unsupported languages: Rust, Go, C++)
+else:
+    chunks = content.transform(
+        cocoindex.functions.SplitRecursively(custom_languages=CUSTOM_LANGUAGES),
+        language=language
+    )
+
+# 3. ALWAYS ensure unique locations regardless of method
+chunks = chunks.transform(ensure_unique_chunk_locations)
+```
+
 ## Common Error Messages and Solutions (Updated)
 
 | Error | Cause | Solution |
 |-------|-------|----------|
 | `operator class "vector_cosine_ops" does not accept data type jsonb` | Using Python lists instead of Vector types | Use `Vector[np.float32, Literal[dim]]` and return numpy arrays |
+| `ON CONFLICT DO UPDATE command cannot affect row a second time` | Duplicate chunk locations within same file | Post-process chunks with `ensure_unique_chunk_locations()` |
 | `NameError: name 'lang' is not defined` | Variable name mismatch in function | Check function parameter names match usage |
 | `Unsupported as a specific type annotation: typing.Any` | Using `typing.Any` in return types | Remove or use specific types |
 | `Setup for flow is not up-to-date` | Flow not set up | Run `cocoindex setup src/config.py` |
 | `CocoIndex library is not initialized` | Missing initialization | Call `cocoindex.init()` |
+| `'SplitRecursively' object is not callable` | Missing custom_languages parameter | Use `SplitRecursively(custom_languages=CUSTOM_LANGUAGES)` |
 
 ## Best Practices (Updated)
 
@@ -256,8 +385,34 @@ except Exception as e:
 - **USE Vector types** with fixed dimensions for embeddings: `Vector[np.float32, Literal[384]]`
 - **Return numpy arrays** (`.astype(np.float32)`), NOT Python lists (`.tolist()`)
 - **Type annotations ARE required** for Vector and complex types
+- **ALWAYS ensure unique chunk locations** with post-processing to prevent PostgreSQL conflicts
+- **Use comprehensive primary keys** including `source_name` to handle multiple sources
+- **Apply `SplitRecursively(custom_languages=CUSTOM_LANGUAGES)`** with proper parameters
 - **Custom metadata fields** should appear in evaluation outputs and database
 - **Load models once** at module level, not inside functions
 - **Always run setup** after changing collection schema or vector dimensions
 
-Following these updated practices will ensure proper pgvector integration and rich metadata collection in your CocoIndex flows.
+Following these updated practices will ensure proper pgvector integration, prevent database conflicts, and enable rich metadata collection in your CocoIndex flows.
+
+## Real-World Lessons Learned
+
+### PostgreSQL Conflict Resolution
+The most common production issue is duplicate primary keys causing `ON CONFLICT DO UPDATE command cannot affect row a second time` errors. This happens because:
+
+1. **SplitRecursively doesn't guarantee unique locations** for chunks within the same file
+2. **Multiple processing runs** of the same file generate identical keys  
+3. **Path overlaps** cause the same file to be processed multiple times
+
+The solution is **mandatory post-processing** of all chunks to ensure location uniqueness, regardless of chunking method used.
+
+### Chunking Method Selection Strategy
+- **AST chunking**: Use for languages with good AST support (Python, TypeScript, Java, C#)
+- **Default chunking**: Fallback for other languages (Rust, Go, Markdown, etc.)
+- **Always post-process**: Both methods require unique location enforcement
+
+### Database Schema Evolution
+When adding new metadata fields to collection, remember:
+1. Run `cocoindex setup` to update schema
+2. Test with `cocoindex evaluate` to verify field population
+3. Check that evaluation outputs show your custom fields
+4. Ensure primary key covers all uniqueness requirements
