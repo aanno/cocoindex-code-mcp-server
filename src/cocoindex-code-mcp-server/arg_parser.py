@@ -16,15 +16,15 @@ def parse_args():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python src/main.py                           # Use default path (cocoindex)
-  python src/main.py /path/to/code             # Index single directory
-  python src/main.py /path/to/code1 /path/to/code2  # Index multiple directories
-  python src/main.py --paths /path/to/code     # Explicit paths argument
+  python src/main_interactive_query.py                           # Use default path (cocoindex)
+  python src/main_interactive_query.py /path/to/code             # Index single directory
+  python src/main_interactive_query.py /path/to/code1 /path/to/code2  # Index multiple directories
+  python src/main_interactive_query.py --paths /path/to/code     # Explicit paths argument
   
   # Live update mode
-  python src/main.py --live                    # Live updates with event monitoring
-  python src/main.py --live --poll 10         # Live updates with 10s polling
-  python src/main.py --live --poll 60 /path/to/code  # Custom path with polling
+  python src/main_interactive_query.py --live                    # Live updates with event monitoring
+  python src/main_interactive_query.py --live --poll 10         # Live updates with 10s polling
+  python src/main_interactive_query.py --live --poll 60 /path/to/code  # Custom path with polling
         """
     )
     

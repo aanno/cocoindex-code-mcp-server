@@ -133,7 +133,7 @@ and `src/cocoindex-code-mcp-server/lang/python/python_code_analyzer.py`
 * for mcp server I expect 'Selected embedding model:' from `src/cocoindex-code-mcp-server/smart_code_embedding.py` in the logs, but it is not there.
 * for mcp server I expect 'AST chunking created' from `src/cocoindex-code-mcp-server/ast_chunking.py` in the logs, but it is not there.
 * for mcp server I expect 'Handled ... with result' from `src/cocoindex-code-mcp-server/language_handlers/python_handler.py` in the logs (with DEBUG), but it is not there.
-* we should run integration tests on mcp_server.py in coverage mode to see what is covered
+* we should run integration tests on main_mcp_server.py in coverage mode to see what is covered
 * we should run integration tests on hybrid_search.py in coverage mode to see what is covered
 * we should run integration tests on the language handlers in coverage mode to see what is covered
 * we should run integration tests on the AST visitor in coverage mode to see what is covered
@@ -193,7 +193,7 @@ and `src/cocoindex-code-mcp-server/lang/python/python_code_analyzer.py`
 
 ### Core Architecture
 - `src/cocoindex-code-mcp-server/hybrid_search.py` - Add backend abstraction
-- `src/cocoindex-code-mcp-server/mcp_server.py` - Update to use backend factory
+- `src/cocoindex-code-mcp-server/main_mcp_server.py` - Update to use backend factory
 
 ### New Components
 - `src/cocoindex-code-mcp-server/backends/` - Backend implementations

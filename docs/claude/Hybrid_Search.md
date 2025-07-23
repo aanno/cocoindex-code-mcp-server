@@ -68,7 +68,7 @@ field:value
 
 Examples:
 - `language:python` - Match files with language "python"
-- `filename:main.py` - Match files named "main.py"
+- `filename:main_interactive_query.py` - Match files named "main_interactive_query.py"
 - `source_name:files_0` - Match specific source
 
 ### Quoted Values
@@ -112,7 +112,7 @@ condition1 and condition2
 ```
 
 Examples:
-- `language:python and filename:main.py`
+- `language:python and filename:main_interactive_query.py`
 - `exists(embedding) and language:rust`
 
 #### OR Operator
@@ -122,7 +122,7 @@ condition1 or condition2
 
 Examples:
 - `language:python or language:rust`
-- `filename:main.py or filename:app.py`
+- `filename:main_interactive_query.py or filename:app.py`
 
 ### Grouping with Parentheses
 
@@ -132,7 +132,7 @@ Examples:
 
 Examples:
 - `(language:python or language:rust) and exists(embedding)`
-- `filename:main.py and (language:python or language:go)`
+- `filename:main_interactive_query.py and (language:python or language:go)`
 
 ### General Text Search
 
@@ -181,7 +181,7 @@ This searches for "python function" within the actual code content.
 
 2. **Specific File Patterns**
    ```
-   (filename:main.py or filename:app.py) and language:python
+   (filename:main_interactive_query.py or filename:app.py) and language:python
    ```
 
 3. **Source-Specific Search**
@@ -208,7 +208,7 @@ When results contain complex nested data structures (like detailed location info
 ```json
 [
   {
-    "filename": "src/main.py",
+    "filename": "src/main_interactive_query.py",
     "language": "Python",
     "code": "def authenticate_user(username, password):\n    ...",
     "score": 0.856,

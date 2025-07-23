@@ -130,19 +130,19 @@ def parse_mcp_args():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python mcp_server.py                         # Use default path (cocoindex) with live updates
-  python mcp_server.py /path/to/code           # Index single directory
-  python mcp_server.py /path/to/code1 /path/to/code2  # Index multiple directories
-  python mcp_server.py --paths /path/to/code   # Explicit paths argument
+  python main_mcp_server.py                         # Use default path (cocoindex) with live updates
+  python main_mcp_server.py /path/to/code           # Index single directory
+  python main_mcp_server.py /path/to/code1 /path/to/code2  # Index multiple directories
+  python main_mcp_server.py --paths /path/to/code   # Explicit paths argument
   
   # Live update configuration (enabled by default)
-  python mcp_server.py --no-live               # Disable live updates
-  python mcp_server.py --poll 30               # Custom polling interval (default: 60s)
+  python main_mcp_server.py --no-live               # Disable live updates
+  python main_mcp_server.py --poll 30               # Custom polling interval (default: 60s)
   
   # Default behavior options (use CocoIndex defaults instead of extensions)
-  python mcp_server.py --default-embedding     # Use CocoIndex SentenceTransformerEmbed
-  python mcp_server.py --default-chunking      # Use CocoIndex SplitRecursively  
-  python mcp_server.py --default-language-handler  # Skip Python-specific handlers
+  python main_mcp_server.py --default-embedding     # Use CocoIndex SentenceTransformerEmbed
+  python main_mcp_server.py --default-chunking      # Use CocoIndex SplitRecursively  
+  python main_mcp_server.py --default-language-handler  # Skip Python-specific handlers
 
 MCP Tools Available:
   - hybrid_search: Combine vector similarity and keyword metadata filtering
@@ -690,7 +690,7 @@ async def get_keyword_syntax_help_tool(arguments: dict) -> dict:
                     "description": "Use parentheses to control evaluation order",
                     "examples": [
                         "(language:python OR language:rust) AND exists(function_name)",
-                        'exists(embedding) AND (filename:main.py OR filename:lib.rs)',
+                        'exists(embedding) AND (filename:main_interactive_query.py OR filename:lib.rs)',
                         '(value_contains(code, "async") OR value_contains(code, "await")) AND language:python'
                     ],
                     "notes": "Parentheses override default operator precedence"
@@ -699,7 +699,7 @@ async def get_keyword_syntax_help_tool(arguments: dict) -> dict:
             "available_fields": {
                 "description": "Common fields available for querying (varies by indexed content)",
                 "fields": {
-                    "filename": "Source code filename (e.g., 'main.py', 'lib.rs')",
+                    "filename": "Source code filename (e.g., 'main_interactive_query.py', 'lib.rs')",
                     "language": "Programming language (e.g., 'python', 'rust', 'javascript')",
                     "code": "Full source code content of the chunk",
                     "function_name": "Extracted function/method names from the code chunk",
@@ -877,7 +877,7 @@ async def get_query_examples() -> str:
             "description": "Simple field matching",
             "examples": [
                 "language:python",
-                "filename:main.py", 
+                "filename:main_interactive_query.py", 
                 'filename:"test file.py"',
                 "function_name:parse"
             ]
@@ -910,7 +910,7 @@ async def get_query_examples() -> str:
             "description": "Advanced combinations with grouping",
             "examples": [
                 '(language:python OR language:javascript) AND value_contains(code, "async")',
-                'exists(embedding) AND (filename:main.py OR filename:index.js)',
+                'exists(embedding) AND (filename:main_interactive_query.py OR filename:index.js)',
                 '(value_contains(code, "function") OR value_contains(code, "class")) AND language:python'
             ]
         },
@@ -950,7 +950,7 @@ async def get_database_fields() -> str:
                 
                 # Enhanced field descriptions based on our schema
                 field_descriptions = {
-                    "filename": "Source code filename (e.g., 'main.py', 'lib.rs')",
+                    "filename": "Source code filename (e.g., 'main_interactive_query.py', 'lib.rs')",
                     "language": "Programming language (e.g., 'python', 'rust', 'javascript')",  
                     "code": "Full source code content of the chunk",
                     "function_name": "Extracted function/method names from the code chunk",
@@ -1074,7 +1074,7 @@ async def get_query_operators() -> str:
             "description": "Control evaluation order with parentheses",
             "examples": [
                 "(language:python OR language:rust) AND exists(function_name)",
-                'exists(embedding) AND (filename:main.py OR filename:lib.rs)',
+                'exists(embedding) AND (filename:main_interactive_query.py OR filename:lib.rs)',
                 '(value_contains(code, "async") OR value_contains(code, "await")) AND language:python'
             ],
             "notes": "Use parentheses to override default operator precedence"

@@ -25,7 +25,7 @@ def main():
     # Forward all command line arguments to the main server
     # This preserves the original sys.argv for argument parsing
     try:
-        from mcp_server import main as server_main
+        from main_mcp_server import main as server_main
         import asyncio
         asyncio.run(server_main())
     except KeyboardInterrupt:

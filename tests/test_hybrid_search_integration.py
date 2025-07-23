@@ -253,21 +253,21 @@ class TestWorkflowIntegration:
             
             # Mock database results
             mock_cursor.fetchall.return_value = [
-                ("main.py", "Python", "def main():", 0.3, 
+                ("main_interactive_query.py", "Python", "def main():", 0.3, 
                  {"line": 1}, {"line": 10}, "files", 0.75)
             ]
             
             # Execute search with complex keyword query
             results = engine.search(
                 vector_query="main function entry point",
-                keyword_query="(filename:main.py or filename:app.py) and language:python and exists(embedding)",
+                keyword_query="(filename:main_interactive_query.py or filename:app.py) and language:python and exists(embedding)",
                 top_k=10
             )
             
             # Verify that complex query was parsed and executed
             assert len(results) == 1
             result = results[0]
-            assert result["filename"] == "main.py"
+            assert result["filename"] == "main_interactive_query.py"
             assert result["score_type"] == "hybrid"
         except ImportError:
             pytest.skip("CocoIndex not available in test environment")
@@ -448,7 +448,7 @@ class TestPerformanceCharacteristics:
         # Test very complex nested query
         complex_query = (
             "((language:python or language:rust or language:go) and "
-            "(filename:main.py or filename:app.py or filename:server.py)) and "
+            "(filename:main_interactive_query.py or filename:app.py or filename:server.py)) and "
             "exists(embedding) and "
             "((source_name:files_0 or source_name:files_1) and "
             "(exists(start) and exists(end)))"

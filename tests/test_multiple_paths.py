@@ -39,7 +39,7 @@ class TestMultiplePaths(unittest.TestCase):
         from arg_parser import parse_args
         
         # Test default behavior
-        with patch('sys.argv', ['main.py']):
+        with patch('sys.argv', ['main_interactive_query.py']):
             args = parse_args()
             paths = None
             if args.explicit_paths:
@@ -50,7 +50,7 @@ class TestMultiplePaths(unittest.TestCase):
             self.assertIsNone(paths)
         
         # Test multiple paths
-        with patch('sys.argv', ['main.py', str(self.dir1), str(self.dir2)]):
+        with patch('sys.argv', ['main_interactive_query.py', str(self.dir1), str(self.dir2)]):
             args = parse_args()
             paths = None
             if args.explicit_paths:
@@ -76,7 +76,7 @@ class TestMultiplePaths(unittest.TestCase):
                     
                     # This should not raise an exception
                     try:
-                        with patch('sys.argv', ['main.py', str(self.dir1), str(self.dir2)]):
+                        with patch('sys.argv', ['main_interactive_query.py', str(self.dir1), str(self.dir2)]):
                             main()
                     except (KeyboardInterrupt, SystemExit):
                         pass  # Expected when input() is mocked

@@ -56,7 +56,7 @@ class TestSearchGroup:
     def test_and_group(self):
         """Test AND group creation."""
         condition1 = SearchCondition(field="language", value="python")
-        condition2 = SearchCondition(field="filename", value="main.py")
+        condition2 = SearchCondition(field="filename", value="main_interactive_query.py")
         group = SearchGroup(conditions=[condition1, condition2], operator=Operator.AND)
         
         assert len(group.conditions) == 2
@@ -138,7 +138,7 @@ class TestKeywordSearchParser:
     
     def test_and_operator(self, parser):
         """Test AND operator parsing."""
-        result = parser.parse("language:python and filename:main.py")
+        result = parser.parse("language:python and filename:main_interactive_query.py")
         
         assert len(result.conditions) == 2
         assert result.operator == Operator.AND
@@ -149,7 +149,7 @@ class TestKeywordSearchParser:
         assert condition1.field == "language"
         assert condition1.value == "python"
         assert condition2.field == "filename"
-        assert condition2.value == "main.py"
+        assert condition2.value == "main_interactive_query.py"
     
     def test_or_operator(self, parser):
         """Test OR operator parsing."""
@@ -177,9 +177,9 @@ class TestKeywordSearchParser:
     
     def test_mixed_operators_or_precedence(self, parser):
         """Test mixed operators with OR having lower precedence."""
-        result = parser.parse("language:python and filename:main.py or language:rust")
+        result = parser.parse("language:python and filename:main_interactive_query.py or language:rust")
         
-        # Should be parsed as: (language:python and filename:main.py) or (language:rust)
+        # Should be parsed as: (language:python and filename:main_interactive_query.py) or (language:rust)
         assert result.operator == Operator.OR
         assert len(result.conditions) == 2
         
@@ -240,15 +240,15 @@ class TestKeywordSearchParser:
     
     def test_case_insensitive_operators(self, parser):
         """Test that operators are case insensitive."""
-        result1 = parser.parse("language:python AND filename:main.py")
-        result2 = parser.parse("language:python Or filename:main.py")
+        result1 = parser.parse("language:python AND filename:main_interactive_query.py")
+        result2 = parser.parse("language:python Or filename:main_interactive_query.py")
         
         assert result1.operator == Operator.AND
         assert result2.operator == Operator.OR
     
     def test_whitespace_handling(self, parser):
         """Test proper whitespace handling."""
-        result = parser.parse("  language:python   and   filename:main.py  ")
+        result = parser.parse("  language:python   and   filename:main_interactive_query.py  ")
         
         assert len(result.conditions) == 2
         assert result.operator == Operator.AND
@@ -301,13 +301,13 @@ class TestBuildSqlWhereClause:
     def test_and_conditions(self):
         """Test AND conditions."""
         condition1 = SearchCondition(field="language", value="python")
-        condition2 = SearchCondition(field="filename", value="main.py")
+        condition2 = SearchCondition(field="filename", value="main_interactive_query.py")
         group = SearchGroup(conditions=[condition1, condition2], operator=Operator.AND)
         
         where_clause, params = build_sql_where_clause(group)
         
         assert where_clause == "language = %s AND filename = %s"
-        assert params == ["python", "main.py"]
+        assert params == ["python", "main_interactive_query.py"]
     
     def test_or_conditions(self):
         """Test OR conditions."""
@@ -388,7 +388,7 @@ class TestComplexQueries:
     
     def test_complex_mixed_query(self, parser):
         """Test complex query with multiple operators and grouping."""
-        query = '(filename:main.py or filename:app.py) and (language:python or language:go) and exists(embedding)'
+        query = '(filename:main_interactive_query.py or filename:app.py) and (language:python or language:go) and exists(embedding)'
         result = parser.parse(query)
         
         assert result.operator == Operator.AND

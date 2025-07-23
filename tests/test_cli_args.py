@@ -9,11 +9,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 class TestCliArguments(unittest.TestCase):
-    """Test command-line argument parsing for main.py."""
+    """Test command-line argument parsing for main_interactive_query.py."""
     
     def test_default_args(self):
         """Test that no arguments defaults to cocoindex."""
-        with patch('sys.argv', ['main.py']):
+        with patch('sys.argv', ['main_interactive_query.py']):
             from arg_parser import parse_args
             args = parse_args()
             self.assertEqual(args.paths, [])
@@ -21,7 +21,7 @@ class TestCliArguments(unittest.TestCase):
     
     def test_single_path_argument(self):
         """Test single positional path argument."""
-        with patch('sys.argv', ['main.py', '/path/to/code']):
+        with patch('sys.argv', ['main_interactive_query.py', '/path/to/code']):
             from arg_parser import parse_args
             args = parse_args()
             self.assertEqual(args.paths, ['/path/to/code'])
@@ -29,7 +29,7 @@ class TestCliArguments(unittest.TestCase):
     
     def test_multiple_path_arguments(self):
         """Test multiple positional path arguments."""
-        with patch('sys.argv', ['main.py', '/path/to/code1', '/path/to/code2']):
+        with patch('sys.argv', ['main_interactive_query.py', '/path/to/code1', '/path/to/code2']):
             from arg_parser import parse_args
             args = parse_args()
             self.assertEqual(args.paths, ['/path/to/code1', '/path/to/code2'])
@@ -37,7 +37,7 @@ class TestCliArguments(unittest.TestCase):
     
     def test_explicit_paths_argument(self):
         """Test --paths argument."""
-        with patch('sys.argv', ['main.py', '--paths', '/path/to/code1', '/path/to/code2']):
+        with patch('sys.argv', ['main_interactive_query.py', '--paths', '/path/to/code1', '/path/to/code2']):
             from arg_parser import parse_args
             args = parse_args()
             self.assertEqual(args.paths, [])
@@ -45,7 +45,7 @@ class TestCliArguments(unittest.TestCase):
     
     def test_mixed_arguments(self):
         """Test both positional and --paths arguments (--paths takes precedence)."""
-        with patch('sys.argv', ['main.py', '/positional/path', '--paths', '/explicit/path']):
+        with patch('sys.argv', ['main_interactive_query.py', '/positional/path', '--paths', '/explicit/path']):
             from arg_parser import parse_args
             args = parse_args()
             self.assertEqual(args.paths, ['/positional/path'])
@@ -54,7 +54,7 @@ class TestCliArguments(unittest.TestCase):
     def test_path_determination_logic(self):
         """Test the logic for determining which paths to use."""
         # Test default (no paths)
-        with patch('sys.argv', ['main.py']):
+        with patch('sys.argv', ['main_interactive_query.py']):
             from arg_parser import parse_args
             args = parse_args()
             
@@ -67,7 +67,7 @@ class TestCliArguments(unittest.TestCase):
             self.assertIsNone(paths)
         
         # Test explicit paths take precedence
-        with patch('sys.argv', ['main.py', '/pos/path', '--paths', '/exp/path']):
+        with patch('sys.argv', ['main_interactive_query.py', '/pos/path', '--paths', '/exp/path']):
             from arg_parser import parse_args
             args = parse_args()
             
@@ -80,7 +80,7 @@ class TestCliArguments(unittest.TestCase):
             self.assertEqual(paths, ['/exp/path'])
         
         # Test positional paths when no explicit
-        with patch('sys.argv', ['main.py', '/pos/path']):
+        with patch('sys.argv', ['main_interactive_query.py', '/pos/path']):
             from arg_parser import parse_args
             args = parse_args()
             

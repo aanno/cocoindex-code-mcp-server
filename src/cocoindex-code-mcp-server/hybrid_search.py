@@ -323,9 +323,9 @@ def run_interactive_hybrid_search():
     print("Press Enter with empty vector query to quit.\n")
     
     print("📝 Keyword search syntax:")
-    print("  - field:value (e.g., language:python, filename:main.py)")
+    print("  - field:value (e.g., language:python, filename:main_interactive_query.py)")
     print("  - exists(field) (e.g., exists(embedding))")
-    print("  - and/or operators (e.g., language:python and filename:main.py)")
+    print("  - and/or operators (e.g., language:python and filename:main_interactive_query.py)")
     print("  - parentheses for grouping (e.g., (language:python or language:rust) and exists(embedding))")
     print("  - quoted values for spaces (e.g., filename:\"test file.py\")")
     print()

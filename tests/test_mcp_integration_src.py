@@ -37,7 +37,7 @@ class MCPServerTestRunner:
         load_dotenv()
         
         # Start server process - updated path to point to src directory
-        server_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "src", "cocoindex-code-mcp-server", "mcp_server.py")
+        server_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "src", "cocoindex-code-mcp-server", "main_mcp_server.py")
         cmd = [
             sys.executable,
             server_path,
@@ -108,7 +108,7 @@ class MCPServerTestRunner:
 
 
 @pytest.fixture(scope="session")
-def mcp_server():
+def main_mcp_server():
     """Pytest fixture to provide a running MCP server."""
     server = MCPServerTestRunner()
     
@@ -124,9 +124,9 @@ def mcp_server():
 class TestMCPProtocol:
     """Test MCP protocol compliance."""
     
-    def test_initialize(self, mcp_server):
+    def test_initialize(self, main_mcp_server):
         """Test MCP initialize handshake."""
-        response = mcp_server.make_request(
+        response = main_mcp_server.make_request(
             "initialize",
             {
                 "protocolVersion": "2024-11-05",
@@ -144,9 +144,9 @@ class TestMCPProtocol:
         assert "serverInfo" in result
         assert result["serverInfo"]["name"] == "cocoindex-rag"
     
-    def test_list_tools(self, mcp_server):
+    def test_list_tools(self, main_mcp_server):
         """Test listing available tools."""
-        response = mcp_server.make_request("tools/list")
+        response = main_mcp_server.make_request("tools/list")
         
         assert response["jsonrpc"] == "2.0"
         assert "result" in response
@@ -165,9 +165,9 @@ class TestMCPProtocol:
         
         assert expected_tools.issubset(tool_names)
     
-    def test_list_resources(self, mcp_server):
+    def test_list_resources(self, main_mcp_server):
         """Test listing available resources."""
-        response = mcp_server.make_request("resources/list")
+        response = main_mcp_server.make_request("resources/list")
         
         assert response["jsonrpc"] == "2.0"
         assert "result" in response
@@ -183,9 +183,9 @@ class TestMCPProtocol:
         
         assert expected_uris.issubset(resource_uris)
     
-    def test_unknown_method(self, mcp_server):
+    def test_unknown_method(self, main_mcp_server):
         """Test handling of unknown methods."""
-        response = mcp_server.make_request("unknown/method")
+        response = main_mcp_server.make_request("unknown/method")
         
         assert response["jsonrpc"] == "2.0"
         assert "error" in response
@@ -196,9 +196,9 @@ class TestMCPProtocol:
 class TestMCPTools:
     """Test MCP tool functionality."""
     
-    def test_vector_search(self, mcp_server):
+    def test_vector_search(self, main_mcp_server):
         """Test vector search tool."""
-        response = mcp_server.make_request(
+        response = main_mcp_server.make_request(
             "tools/call",
             {
                 "name": "vector_search",
@@ -221,9 +221,9 @@ class TestMCPTools:
         assert "results" in result_data
         assert result_data["query"] == "python function"
     
-    def test_keyword_search(self, mcp_server):
+    def test_keyword_search(self, main_mcp_server):
         """Test keyword search tool."""
-        response = mcp_server.make_request(
+        response = main_mcp_server.make_request(
             "tools/call",
             {
                 "name": "keyword_search", 
@@ -242,9 +242,9 @@ class TestMCPTools:
         assert "query" in result_data
         assert "results" in result_data
     
-    def test_hybrid_search(self, mcp_server):
+    def test_hybrid_search(self, main_mcp_server):
         """Test hybrid search tool."""
-        response = mcp_server.make_request(
+        response = main_mcp_server.make_request(
             "tools/call",
             {
                 "name": "hybrid_search",
@@ -267,7 +267,7 @@ class TestMCPTools:
         assert result_data["query"]["vector_query"] == "error handling"
         assert result_data["query"]["keyword_query"] == "language:python"
     
-    def test_analyze_code(self, mcp_server):
+    def test_analyze_code(self, main_mcp_server):
         """Test code analysis tool."""
         sample_code = '''
 def hello_world():
@@ -276,7 +276,7 @@ def hello_world():
     return "success"
 '''
         
-        response = mcp_server.make_request(
+        response = main_mcp_server.make_request(
             "tools/call",
             {
                 "name": "analyze_code",
@@ -295,9 +295,9 @@ def hello_world():
         assert result_data["language"] == "python"
         assert result_data["file_path"] == "test.py"
     
-    def test_get_embeddings(self, mcp_server):
+    def test_get_embeddings(self, main_mcp_server):
         """Test embedding generation tool."""
-        response = mcp_server.make_request(
+        response = main_mcp_server.make_request(
             "tools/call",
             {
                 "name": "get_embeddings",
@@ -322,9 +322,9 @@ def hello_world():
 class TestMCPResources:
     """Test MCP resource functionality."""
     
-    def test_read_search_stats(self, mcp_server):
+    def test_read_search_stats(self, main_mcp_server):
         """Test reading search statistics resource."""
-        response = mcp_server.make_request(
+        response = main_mcp_server.make_request(
             "resources/read",
             {"uri": "cocoindex://search/stats"}
         )
@@ -338,9 +338,9 @@ class TestMCPResources:
         stats_data = json.loads(contents[0]["text"])
         assert "table_name" in stats_data or "error" in stats_data
     
-    def test_read_search_config(self, mcp_server):
+    def test_read_search_config(self, main_mcp_server):
         """Test reading search configuration resource."""
-        response = mcp_server.make_request(
+        response = main_mcp_server.make_request(
             "resources/read",
             {"uri": "cocoindex://search/config"}
         )
@@ -353,9 +353,9 @@ class TestMCPResources:
         assert "embedding_model" in config_data
         assert "supported_operators" in config_data
     
-    def test_read_database_schema(self, mcp_server):
+    def test_read_database_schema(self, main_mcp_server):
         """Test reading database schema resource."""
-        response = mcp_server.make_request(
+        response = main_mcp_server.make_request(
             "resources/read",
             {"uri": "cocoindex://database/schema"}
         )
@@ -372,10 +372,10 @@ class TestMCPResources:
 class TestErrorHandling:
     """Test error handling scenarios."""
     
-    def test_invalid_json(self, mcp_server):
+    def test_invalid_json(self, main_mcp_server):
         """Test handling of invalid JSON."""
         response = requests.post(
-            mcp_server.mcp_url,
+            main_mcp_server.mcp_url,
             data="invalid json",
             headers={"Content-Type": "application/json"},
             timeout=10
@@ -385,7 +385,7 @@ class TestErrorHandling:
         error_data = response.json()
         assert "error" in error_data
     
-    def test_missing_method(self, mcp_server):
+    def test_missing_method(self, main_mcp_server):
         """Test handling of missing method field."""
         payload = {
             "jsonrpc": "2.0",
@@ -394,7 +394,7 @@ class TestErrorHandling:
         }
         
         response = requests.post(
-            mcp_server.mcp_url,
+            main_mcp_server.mcp_url,
             json=payload,
             headers={"Content-Type": "application/json"},
             timeout=10
@@ -403,9 +403,9 @@ class TestErrorHandling:
         # Should handle gracefully
         assert response.status_code in [200, 500]
     
-    def test_invalid_tool_name(self, mcp_server):
+    def test_invalid_tool_name(self, main_mcp_server):
         """Test calling non-existent tool."""
-        response = mcp_server.make_request(
+        response = main_mcp_server.make_request(
             "tools/call",
             {
                 "name": "nonexistent_tool",

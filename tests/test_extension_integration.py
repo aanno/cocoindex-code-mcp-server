@@ -5,7 +5,7 @@ This is a lightweight test that checks if extensions load properly and
 configuration flags work correctly, without running actual CocoIndex flows.
 
 For comprehensive integration testing that verifies extensions are actually 
-called during flow execution, see test_mcp_server_module_integration.py
+called during flow execution, see test_main_mcp_server_module_integration.py
 """
 
 import sys
@@ -73,7 +73,7 @@ def test_cli_args_integration():
     print("\n🔍 Testing CLI argument integration...")
     
     try:
-        from mcp_server import parse_mcp_args
+        from main_mcp_server import parse_mcp_args
         
         # Test with default flags
         test_args = [

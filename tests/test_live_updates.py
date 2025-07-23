@@ -17,19 +17,19 @@ class TestLiveUpdates(unittest.TestCase):
         from arg_parser import parse_args
         
         # Test --live flag
-        with patch('sys.argv', ['main.py', '--live']):
+        with patch('sys.argv', ['main_interactive_query.py', '--live']):
             args = parse_args()
             self.assertTrue(args.live)
             self.assertEqual(args.poll, 0)  # Default no polling
         
         # Test --live with --poll
-        with patch('sys.argv', ['main.py', '--live', '--poll', '30']):
+        with patch('sys.argv', ['main_interactive_query.py', '--live', '--poll', '30']):
             args = parse_args()
             self.assertTrue(args.live)
             self.assertEqual(args.poll, 30)
         
         # Test --poll without --live (should work)
-        with patch('sys.argv', ['main.py', '--poll', '60']):
+        with patch('sys.argv', ['main_interactive_query.py', '--poll', '60']):
             args = parse_args()
             self.assertFalse(args.live)
             self.assertEqual(args.poll, 60)
@@ -38,7 +38,7 @@ class TestLiveUpdates(unittest.TestCase):
         """Test live update arguments combined with paths."""
         from arg_parser import parse_args
         
-        with patch('sys.argv', ['main.py', '--live', '--poll', '15', '/path/to/code']):
+        with patch('sys.argv', ['main_interactive_query.py', '--live', '--poll', '15', '/path/to/code']):
             args = parse_args()
             self.assertTrue(args.live)
             self.assertEqual(args.poll, 15)
@@ -54,7 +54,7 @@ class TestLiveUpdates(unittest.TestCase):
         with patch('cocoindex_config.code_embedding_flow') as mock_flow:
             with patch('query_interactive.ConnectionPool'):
                 with patch('builtins.input', side_effect=['']):  # Exit immediately
-                    with patch('sys.argv', ['main.py', '--poll', '45', '/test/path']):
+                    with patch('sys.argv', ['main_interactive_query.py', '--poll', '45', '/test/path']):
                         # Test configuration update
                         main()
                     
@@ -73,12 +73,12 @@ class TestLiveUpdates(unittest.TestCase):
             with patch('query_interactive.ConnectionPool'):
                 with patch('builtins.input', side_effect=['', '', '', '']):  # Multiple empty inputs
                     # Test with poll_interval = 0 (should disable polling)
-                    with patch('sys.argv', ['main.py', '--poll', '0', '/test']):
+                    with patch('sys.argv', ['main_interactive_query.py', '--poll', '0', '/test']):
                         main()
                     self.assertFalse(_global_flow_config['enable_polling'])
                     
                     # Test with poll_interval > 0 (should enable polling)
-                    with patch('sys.argv', ['main.py', '--poll', '30', '/test']):
+                    with patch('sys.argv', ['main_interactive_query.py', '--poll', '30', '/test']):
                         main()
                     self.assertTrue(_global_flow_config['enable_polling'])
     

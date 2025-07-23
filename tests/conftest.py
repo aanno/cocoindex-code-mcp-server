@@ -124,7 +124,7 @@ def pytest_configure(config):
         "markers", "standalone: mark test as runnable in isolation"
     )
     config.addinivalue_line(
-        "markers", "mcp_server: mark test as testing MCP server functionality"
+        "markers", "main_mcp_server: mark test as testing MCP server functionality"
     )
 
 

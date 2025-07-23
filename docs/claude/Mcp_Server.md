@@ -20,10 +20,10 @@ The MCP server is fully functional and successfully integrated with Claude Deskt
 
 ```bash
 # HTTP mode (recommended for Claude Desktop integration)
-python src/cocoindex-code-mcp-server/mcp_server.py --port 3033 /workspaces/rust
+python src/cocoindex-code-mcp-server/main_mcp_server.py --port 3033 /workspaces/rust
 
 # Stdio mode (for direct MCP client integration)
-python src/cocoindex-code-mcp-server/mcp_server.py /workspaces/rust
+python src/cocoindex-code-mcp-server/main_mcp_server.py /workspaces/rust
 ```
 
 ### Claude Desktop Configuration
@@ -50,7 +50,7 @@ Add to `~/.config/Claude/claude_desktop_config.json`:
 
 ### Core Components
 
-1. **MCP Server** (`mcp_server.py`)
+1. **MCP Server** (`main_mcp_server.py`)
    - Built on mcp-1.12.0 SDK
    - Supports both HTTP/StreamableHTTP and stdio transports
    - Graceful shutdown and error handling
@@ -240,7 +240,7 @@ Database table structure and schema information.
 ### Code Structure
 ```
 src/cocoindex-code-mcp-server/
-├── mcp_server.py              # Main MCP server implementation
+├── main_mcp_server.py              # Main MCP server implementation
 ├── hybrid_search.py           # Search engine core
 ├── cocoindex_config.py        # CocoIndex flow configuration
 ├── keyword_search_parser_lark.py  # Query parser
@@ -252,7 +252,7 @@ src/cocoindex-code-mcp-server/
 - **New search algorithms**: Extend `HybridSearchEngine`
 - **Additional languages**: Add analyzers in `lang/` directory
 - **Custom metadata**: Extend code analysis pipeline
-- **New tools**: Add MCP tool handlers in `mcp_server.py`
+- **New tools**: Add MCP tool handlers in `main_mcp_server.py`
 
 ## Future Enhancements
 

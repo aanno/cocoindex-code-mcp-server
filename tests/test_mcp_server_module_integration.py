@@ -46,7 +46,7 @@ def test_corpus():
     
     # Create test Python files
     test_files = {
-        "main.py": '''
+        "main_interactive_query.py": '''
 import os
 import sys
 from typing import List, Dict

@@ -40,7 +40,7 @@ Hybrid Search Queries:
   
   2. Keyword Query (metadata filtering):
      - language:python
-     - language:python and filename:main.py
+     - language:python and filename:main_interactive_query.py
      - (language:python or language:rust) and exists(embedding)
      - filename:"test file.py" and language:python
      - exists(embedding) and (language:rust or language:go)

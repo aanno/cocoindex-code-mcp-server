@@ -49,7 +49,7 @@ This project now includes full Haskell support for CocoIndex through:
    - Python bindings for Haskell AST manipulation
    - Custom separator patterns for optimal code chunking
 
-2. **Integration with CocoIndex**: Enhanced `src/main.py` with:
+2. **Integration with CocoIndex**: Enhanced `src/main_interactive_query.py` with:
    - Haskell language detection (`.hs`, `.lhs` files)
    - Custom chunking parameters optimized for Haskell code
    - Tree-sitter-aware code splitting using our custom extension
@@ -221,19 +221,19 @@ Languages supported through regex-based chunking patterns:
 export COCOINDEX_DATABASE_URL="postgresql://user:pass@localhost/dbname"
 
 # Run with default path (cocoindex directory)
-python src/main.py
+python src/main_interactive_query.py
 
 # Index a specific directory
-python src/main.py /path/to/your/code
+python src/main_interactive_query.py /path/to/your/code
 
 # Index multiple directories (fully supported!)
-python src/main.py /path/to/code1 /path/to/code2
+python src/main_interactive_query.py /path/to/code1 /path/to/code2
 
 # Alternative syntax with explicit --paths argument
-python src/main.py --paths /path/to/your/code
+python src/main_interactive_query.py --paths /path/to/your/code
 
 # Show help and usage examples
-python src/main.py --help
+python src/main_interactive_query.py --help
 ```
 
 ## ✅ Multiple Path Support

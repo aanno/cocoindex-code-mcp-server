@@ -13,7 +13,7 @@ This directory contains tests for MCP server extension integration.
 
 **Use when**: You want to quickly verify that extensions are available and configuration works
 
-### `test_mcp_server_module_integration.py` 
+### `test_main_mcp_server_module_integration.py` 
 **Purpose**: Comprehensive integration test for actual extension usage
 - 🔍 Creates test corpus and runs real CocoIndex flows
 - 🕵️ Uses pytest-mock to spy on extension function calls
@@ -29,7 +29,7 @@ This directory contains tests for MCP server extension integration.
 python -m pytest tests/test_extension_integration.py -v
 
 # Comprehensive integration test  
-python -m pytest tests/test_mcp_server_module_integration.py -v
+python -m pytest tests/test_main_mcp_server_module_integration.py -v
 
 # All extension tests
 python -m pytest tests/ -k "extension" -v

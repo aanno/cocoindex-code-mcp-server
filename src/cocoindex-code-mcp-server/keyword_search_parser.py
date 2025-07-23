@@ -59,7 +59,7 @@ class KeywordSearchParser:
         - (group) - parentheses for grouping
         
         Examples:
-        - language:python and filename:main.py
+        - language:python and filename:main_interactive_query.py
         - (language:python or language:rust) and exists(embedding)
         - filename:"test file.py" and language:python
         - value_contains(code, "function") and language:python
@@ -265,7 +265,7 @@ if __name__ == "__main__":
     
     test_queries = [
         "language:python",
-        "language:python and filename:main.py",
+        "language:python and filename:main_interactive_query.py",
         "(language:python or language:rust) and exists(embedding)",
         'filename:"test file.py" and language:python',
         "exists(embedding) and (language:rust or language:go)",

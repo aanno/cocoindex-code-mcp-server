@@ -4,7 +4,7 @@
 
 ### Current Issue
 - `cocoindex evaluate` command is still not terminating properly
-- This also means the `python src/cocoindex-code-mcp-server/mcp_server.py --port 3033 /workspaces/rust/`
+- This also means the `python src/cocoindex-code-mcp-server/main_mcp_server.py --port 3033 /workspaces/rust/`
   and the the MCP server is currently not useable.
 - Probably `src/cocoindex-code-mcp-server/lang/python/python_code_analyzer.py` introduce the problem
   hence with an implementation of --default-chunking this could be checked easily
@@ -29,7 +29,7 @@
    - These flags are critical for testing whether our custom extensions are causing the hang
 
 ### Next Critical Actions Needed
-1. **URGENT**: Fix the MCP server to pass default flags to `update_flow_config()` (line ~1419 in mcp_server.py)
+1. **URGENT**: Fix the MCP server to pass default flags to `update_flow_config()` (line ~1419 in main_mcp_server.py)
 2. **Test with all default flags**: Run `cocoindex evaluate` with `--default-embedding --default-chunking --default-language-handler` to isolate the issue
 3. **If defaults work**: Systematically re-enable extensions one by one to identify the problematic component
 4. **If defaults still hang**: The issue is in base CocoIndex or our flow configuration, not our extensions
@@ -40,7 +40,7 @@
 - `/workspaces/rust/src/cocoindex-code-mcp-server/arg_parser.py` - Added missing default flag definitions
 
 ### Critical Code Locations
-- **MCP server flag handling**: Line 1419 in mcp_server.py - `update_flow_config()` call missing default flags
+- **MCP server flag handling**: Line 1419 in main_mcp_server.py - `update_flow_config()` call missing default flags
 - **Flow configuration**: Lines 620-632 in cocoindex_config.py - `update_flow_config()` function
 - **AST analyzer protection**: Lines 75-112 in python_code_analyzer.py - Recursion protection
 

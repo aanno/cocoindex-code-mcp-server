@@ -16,35 +16,35 @@ import mcp.types as types
 
 
 @pytest.fixture
-def mcp_server():
+def main_mcp_server():
     """Fixture to import and provide the MCP server module."""
-    import mcp_server
-    return mcp_server
+    import main_mcp_server
+    return main_mcp_server
 
 
-@pytest.mark.mcp_server
+@pytest.mark.main_mcp_server
 @pytest.mark.unit
 class TestMCPServerBasics:
     """Test basic MCP server functionality."""
 
-    def test_server_module_import(self, mcp_server):
+    def test_server_module_import(self, main_mcp_server):
         """Test that the MCP server module can be imported."""
-        assert mcp_server is not None
-        assert hasattr(mcp_server, 'server')
-        assert hasattr(mcp_server, 'handle_list_resources')
-        assert hasattr(mcp_server, 'handle_list_tools')
+        assert main_mcp_server is not None
+        assert hasattr(main_mcp_server, 'server')
+        assert hasattr(main_mcp_server, 'handle_list_resources')
+        assert hasattr(main_mcp_server, 'handle_list_tools')
 
-    def test_server_object_creation(self, mcp_server):
+    def test_server_object_creation(self, main_mcp_server):
         """Test that the server object is created properly."""
-        server = mcp_server.server
+        server = main_mcp_server.server
         assert server is not None
         # Check that it's an MCP Server instance
         assert str(type(server)).endswith("Server'>")
 
     @pytest.mark.asyncio
-    async def test_list_resources(self, mcp_server):
+    async def test_list_resources(self, main_mcp_server):
         """Test that resources are properly defined."""
-        resources = await mcp_server.handle_list_resources()
+        resources = await main_mcp_server.handle_list_resources()
         
         assert isinstance(resources, list)
         assert len(resources) == 7
@@ -65,9 +65,9 @@ class TestMCPServerBasics:
                 assert resource.mimeType == "application/json"
 
     @pytest.mark.asyncio
-    async def test_list_tools(self, mcp_server):
+    async def test_list_tools(self, main_mcp_server):
         """Test that tools are properly defined."""
-        tools = await mcp_server.handle_list_tools()
+        tools = await main_mcp_server.handle_list_tools()
         
         assert isinstance(tools, list)
         assert len(tools) == 6
@@ -87,15 +87,15 @@ class TestMCPServerBasics:
             assert expected_tool in tool_names
 
 
-@pytest.mark.mcp_server
+@pytest.mark.main_mcp_server
 @pytest.mark.unit
 class TestToolSchemas:
     """Test tool input schemas."""
 
     @pytest.mark.asyncio
-    async def test_tool_schemas_valid(self, mcp_server):
+    async def test_tool_schemas_valid(self, main_mcp_server):
         """Test that all tool schemas are valid JSON Schema."""
-        tools = await mcp_server.handle_list_tools()
+        tools = await main_mcp_server.handle_list_tools()
         
         for tool in tools:
             schema = tool.inputSchema
@@ -114,9 +114,9 @@ class TestToolSchemas:
                 assert req_field in properties, f"Tool {tool.name}: Missing required property '{req_field}'"
 
     @pytest.mark.asyncio
-    async def test_hybrid_search_schema(self, mcp_server):
+    async def test_hybrid_search_schema(self, main_mcp_server):
         """Test hybrid_search tool schema specifically."""
-        tools = await mcp_server.handle_list_tools()
+        tools = await main_mcp_server.handle_list_tools()
         hybrid_search = next(t for t in tools if t.name == "hybrid_search")
         
         schema = hybrid_search.inputSchema
@@ -134,9 +134,9 @@ class TestToolSchemas:
         assert properties["vector_weight"]["default"] == 0.7
 
     @pytest.mark.asyncio
-    async def test_vector_search_schema(self, mcp_server):
+    async def test_vector_search_schema(self, main_mcp_server):
         """Test vector_search tool schema specifically."""
-        tools = await mcp_server.handle_list_tools()
+        tools = await main_mcp_server.handle_list_tools()
         vector_search = next(t for t in tools if t.name == "vector_search")
         
         schema = vector_search.inputSchema
@@ -151,9 +151,9 @@ class TestToolSchemas:
         assert properties["top_k"]["default"] == 10
 
     @pytest.mark.asyncio
-    async def test_analyze_code_schema(self, mcp_server):
+    async def test_analyze_code_schema(self, main_mcp_server):
         """Test analyze_code tool schema specifically."""
-        tools = await mcp_server.handle_list_tools()
+        tools = await main_mcp_server.handle_list_tools()
         analyze_code = next(t for t in tools if t.name == "analyze_code")
         
         schema = analyze_code.inputSchema
@@ -168,15 +168,15 @@ class TestToolSchemas:
         assert "language" in properties
 
 
-@pytest.mark.mcp_server
+@pytest.mark.main_mcp_server
 @pytest.mark.unit
 class TestResourceHandling:
     """Test MCP resource handling."""
 
     @pytest.mark.asyncio
-    async def test_search_config_resource(self, mcp_server):
+    async def test_search_config_resource(self, main_mcp_server):
         """Test reading the search configuration resource."""
-        config_content = await mcp_server.get_search_config()
+        config_content = await main_mcp_server.get_search_config()
         
         # Should be valid JSON
         config_data = json.loads(config_content)
@@ -195,9 +195,9 @@ class TestResourceHandling:
             assert key in config_data
 
     @pytest.mark.asyncio
-    async def test_search_config_operators(self, mcp_server):
+    async def test_search_config_operators(self, main_mcp_server):
         """Test that search config includes expected operators."""
-        config_content = await mcp_server.get_search_config()
+        config_content = await main_mcp_server.get_search_config()
         config_data = json.loads(config_content)
         
         operators = config_data["supported_operators"]
@@ -207,10 +207,10 @@ class TestResourceHandling:
             assert op in operators
 
     @pytest.mark.asyncio
-    async def test_read_resource_handler(self, mcp_server):
+    async def test_read_resource_handler(self, main_mcp_server):
         """Test the general resource reading handler."""
         # Test valid resource
-        config_result = await mcp_server.handle_read_resource("cocoindex://search/config")
+        config_result = await main_mcp_server.handle_read_resource("cocoindex://search/config")
         assert isinstance(config_result, str)
         
         # Should be valid JSON
@@ -218,40 +218,40 @@ class TestResourceHandling:
         
         # Test invalid resource
         with pytest.raises(ValueError, match="Unknown resource"):
-            await mcp_server.handle_read_resource("cocoindex://invalid/resource")
+            await main_mcp_server.handle_read_resource("cocoindex://invalid/resource")
 
 
-@pytest.mark.mcp_server
+@pytest.mark.main_mcp_server
 @pytest.mark.unit
 class TestServerConfiguration:
     """Test server configuration and setup."""
 
-    def test_environment_variable_defaults(self, mcp_server):
+    def test_environment_variable_defaults(self, main_mcp_server):
         """Test that the server has reasonable defaults for configuration."""
         # The server should handle missing environment variables gracefully
         # This is tested indirectly by checking that the server can be imported
         # without throwing errors
-        assert mcp_server is not None
+        assert main_mcp_server is not None
 
     @pytest.mark.asyncio
-    async def test_server_handlers_exist(self, mcp_server):
+    async def test_server_handlers_exist(self, main_mcp_server):
         """Test that all required MCP handlers are defined."""
         # These should not raise AttributeError
-        assert callable(mcp_server.handle_list_resources)
-        assert callable(mcp_server.handle_list_tools) 
-        assert callable(mcp_server.handle_read_resource)
-        assert callable(mcp_server.handle_call_tool)
+        assert callable(main_mcp_server.handle_list_resources)
+        assert callable(main_mcp_server.handle_list_tools) 
+        assert callable(main_mcp_server.handle_read_resource)
+        assert callable(main_mcp_server.handle_call_tool)
         
         # These should not raise errors when called
-        await mcp_server.handle_list_resources()
-        await mcp_server.handle_list_tools()
+        await main_mcp_server.handle_list_resources()
+        await main_mcp_server.handle_list_tools()
 
 
-@pytest.mark.mcp_server
+@pytest.mark.main_mcp_server
 class TestIntegration:
     """Test integration with existing components."""
 
-    def test_imports_work(self, mcp_server):
+    def test_imports_work(self, main_mcp_server):
         """Test that all required imports work."""
         # If the module imported successfully, all imports worked
         # This includes:
@@ -259,12 +259,12 @@ class TestIntegration:
         # - psycopg_pool, pgvector.psycopg
         # - hybrid_search, keyword_search_parser_lark, etc.
         # - cocoindex, cocoindex_config
-        assert mcp_server is not None
+        assert main_mcp_server is not None
 
     @pytest.mark.asyncio
-    async def test_tool_argument_structure(self, mcp_server):
+    async def test_tool_argument_structure(self, main_mcp_server):
         """Test that tool arguments follow expected structure."""
-        tools = await mcp_server.handle_list_tools()
+        tools = await main_mcp_server.handle_list_tools()
         
         for tool in tools:
             schema = tool.inputSchema

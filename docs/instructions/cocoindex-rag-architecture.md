@@ -949,7 +949,7 @@ def index_if_changed(file_path: str, state_cache: dict):
 ================
 
 ```python
-# main.py
+# main_interactive_query.py
 from qdrant_helpers import initialize_qdrant_collection
 from live_indexer import index_if_changed
 import time

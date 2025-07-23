@@ -2,7 +2,7 @@
 
 ## Overview
 
-The main.py file has been successfully refactored into smaller, more maintainable modules. This improves code organization, readability, and testability.
+The main_interactive_query.py file has been successfully refactored into smaller, more maintainable modules. This improves code organization, readability, and testability.
 
 ## New Module Structure
 
@@ -38,7 +38,7 @@ The main.py file has been successfully refactored into smaller, more maintainabl
 - `update_flow_config()`: Update global flow configuration
 - `run_flow_update()`: Run flow updates (one-time or live)
 
-### 5. `src/main.py` (Updated)
+### 5. `src/main_interactive_query.py` (Updated)
 **Purpose**: Main entry point
 - `main()`: Orchestrates the entire application
 - Imports and uses all other modules
@@ -55,7 +55,7 @@ The main.py file has been successfully refactored into smaller, more maintainabl
 ## File Dependencies
 
 ```
-main.py
+main_interactive_query.py
 ├── arg_parser.py
 ├── query_interactive.py
 │   └── cocoindex_config.py
@@ -79,9 +79,9 @@ All tests pass successfully, ensuring the refactoring maintains functionality.
 The application can still be used exactly as before:
 
 ```bash
-python src/main.py --help
-python src/main.py /path/to/code
-python src/main.py --live --poll 60
+python src/main_interactive_query.py --help
+python src/main_interactive_query.py /path/to/code
+python src/main_interactive_query.py --live --poll 60
 ```
 
 The refactoring is completely backward-compatible and transparent to end users.
