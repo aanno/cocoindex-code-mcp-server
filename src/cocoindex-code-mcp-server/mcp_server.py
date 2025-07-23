@@ -1150,14 +1150,8 @@ async def initialize_search_engine():
 async def background_initialization(live_enabled: bool, poll_interval: int):
     """Perform heavy initialization in the background after MCP server starts."""
     try:
-        # Pre-warm the embedding function to load the model synchronously
-        print("🔧 Pre-loading embedding model...", file=sys.stderr)
-        try:
-            code_to_embedding.eval("test")  # Force model loading
-            print("✅ Embedding model loaded successfully", file=sys.stderr)
-        except Exception as e:
-            print(f"❌ Failed to pre-load embedding model: {e}", file=sys.stderr)
-            return
+        # Skip pre-loading embedding model to avoid HuggingFace rate limits
+        print("⏭️  Skipping embedding model pre-loading (models will load on first use)", file=sys.stderr)
         
         # Pre-initialize database connection synchronously
         print("🔧 Pre-initializing database connection...", file=sys.stderr)

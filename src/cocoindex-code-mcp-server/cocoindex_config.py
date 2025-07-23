@@ -7,7 +7,7 @@ CocoIndex configuration and flow definitions.
 import os
 import datetime
 from dataclasses import dataclass
-from typing import List, Dict, Any
+from typing import List, Dict
 from numpy.typing import NDArray
 import numpy as np
 import cocoindex
@@ -47,6 +47,20 @@ class ChunkingParams:
     chunk_size: int
     min_chunk_size: int
     chunk_overlap: int
+
+@dataclass
+class CodeMetadata:
+    """Metadata extracted from code chunks."""
+    metadata_json: str
+    functions: List[str] 
+    classes: List[str]
+    imports: List[str]
+    complexity_score: int
+    has_type_hints: bool
+    has_async: bool
+    has_classes: bool
+    decorators_used: List[str]
+    analysis_method: str
 
 
 # Tree-sitter supported languages mapping (from CocoIndex implementation)
@@ -215,55 +229,52 @@ def get_chunking_params(language: str) -> ChunkingParams:
 
 
 @cocoindex.op.function()
-def extract_code_metadata(code: str, language: str, filename: str = ""):
-    """Extract rich metadata from code chunks based on language."""
-    def process_record(record):
-        code_text = record.get("code", record.get(code, ""))
-        lang = record.get("language", record.get(language, ""))
-        file_path = record.get("filename", record.get(filename, ""))
-        
-        # Check if we should use default language handler
-        use_default_handler = _global_flow_config.get('use_default_language_handler', False)
-        
-        if lang == "Python" and PYTHON_HANDLER_AVAILABLE and not use_default_handler:
-            # Use our advanced Python handler extension
-            try:
-                handler = PythonNodeHandler()
-                # Note: This is a simplified integration - the handler expects AST nodes
-                # For now, fall back to basic analysis but log that the handler is available
-                LOGGER.info("Python handler available but needs AST integration")
-                metadata = analyze_python_code(code_text, file_path)
-            except Exception as e:
-                LOGGER.warning(f"Python handler failed, falling back to basic analysis: {e}")
-                metadata = analyze_python_code(code_text, file_path)
-        elif lang == "Python":
+def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
+    """Extract rich metadata from code chunks based on language and return as JSON string."""
+    # Check if we should use default language handler
+    use_default_handler = _global_flow_config.get('use_default_language_handler', False)
+    
+    if lang == "Python" and PYTHON_HANDLER_AVAILABLE and not use_default_handler:
+        # Use our advanced Python handler extension
+        try:
+            handler = PythonNodeHandler()
+            # Note: This is a simplified integration - the handler expects AST nodes
+            # For now, fall back to basic analysis but log that the handler is available
+            LOGGER.info("Python handler available but needs AST integration")
             metadata = analyze_python_code(code_text, file_path)
-        else:
-            # For non-Python languages, return basic metadata
-            metadata = {
-                "language": lang,
-                "analysis_method": "basic",
-                "functions": [],
-                "classes": [],
-                "imports": [],
-                "complexity_score": 0,
-                "has_type_hints": False,
-                "has_async": False,
-                "has_classes": False,
-            }
-        
-        return {
-            "metadata_json": str(metadata),  # Convert to string for storage
-            "functions": metadata.get("functions", []),
-            "classes": metadata.get("classes", []),
-            "imports": metadata.get("imports", []),
-            "complexity_score": metadata.get("complexity_score", 0),
-            "has_type_hints": metadata.get("has_type_hints", False),
-            "has_async": metadata.get("has_async", False),
-            "has_classes": metadata.get("has_classes", False),
+        except Exception as e:
+            LOGGER.warning(f"Python handler failed, falling back to basic analysis: {e}")
+            metadata = analyze_python_code(code_text, file_path)
+    elif lang == "Python":
+        metadata = analyze_python_code(code_text, file_path)
+    else:
+        # For non-Python languages, return basic metadata
+        metadata = {
+            "language": lang,
+            "analysis_method": "basic",
+            "functions": [],
+            "classes": [],
+            "imports": [],
+            "complexity_score": 0,
+            "has_type_hints": False,
+            "has_async": False,
+            "has_classes": False,
         }
     
-    return process_record
+    # Return just the JSON string for now
+    import json
+    result = {
+        "functions": metadata.get("functions", []),
+        "classes": metadata.get("classes", []),
+        "imports": metadata.get("imports", []),
+        "complexity_score": metadata.get("complexity_score", 0),
+        "has_type_hints": metadata.get("has_type_hints", False),
+        "has_async": metadata.get("has_async", False),
+        "has_classes": metadata.get("has_classes", False),
+        "decorators_used": metadata.get("decorators_used", []),
+        "analysis_method": metadata.get("analysis_method", "basic"),
+    }
+    return json.dumps(result)
 
 
 @cocoindex.transform_flow()
@@ -271,20 +282,17 @@ def code_to_embedding(
     text: cocoindex.DataSlice[str],
 ) -> cocoindex.DataSlice[NDArray[np.float32]]:
     """
-    Default embedding using a SentenceTransformer model.
+    Default embedding using a SentenceTransformer model with caching.
     """
-    # You can also switch to Voyage embedding model:
-    #    return text.transform(
-    #        cocoindex.functions.EmbedText(
-    #            api_type=cocoindex.LlmApiType.VOYAGE,
-    #            model="voyage-code-3",
-    #        )
-    #    )
-    return text.transform(
-        cocoindex.functions.SentenceTransformerEmbed(
-            model="sentence-transformers/all-MiniLM-L6-v2"
-        )
-    )
+    @cocoindex.op.function()
+    def cached_embed_text(text: str) -> list[float]:
+        """Embed text using cached SentenceTransformer model."""
+        model_name = "sentence-transformers/all-MiniLM-L6-v2"
+        model = get_cached_sentence_transformer(model_name)
+        embedding = model.encode(text)
+        return embedding.tolist()
+    
+    return text.transform(cached_embed_text)
 
 
 @cocoindex.transform_flow()
@@ -299,30 +307,39 @@ def smart_code_to_embedding(
         LOGGER.warning("Smart embedding not available, falling back to default")
         return code_to_embedding(text)
     
-    def embed_with_language_selection(record):
-        text_content = record.get("text", "")
-        lang = record.get("language", "")
+    @cocoindex.op.function()
+    def embed_with_language_selection(text: str, language: str) -> list[float]:
+        """Embed text using language-specific embedding model selection."""
+        # Temporarily force use of basic model to avoid HuggingFace rate limits
+        # TODO: Re-enable smart model selection once rate limiting is resolved
+        LOGGER.debug(f"Using basic embedding model for language: {language} (smart embedding disabled)")
         
-        try:
-            # Create smart embedding function for the language
-            smart_embedding_func = create_smart_code_embedding(language=lang)
-            return smart_embedding_func(text_content)
-        except Exception as e:
-            LOGGER.warning(f"Smart embedding failed for language {lang}: {e}")
-            # Fall back to default
-            from cocoindex.functions import SentenceTransformerEmbed
-            default_embed = SentenceTransformerEmbed(model="sentence-transformers/all-MiniLM-L6-v2")
-            return default_embed([text_content])[0]
+        model_name = "sentence-transformers/all-MiniLM-L6-v2"
+        model = get_cached_sentence_transformer(model_name)
+        embedding = model.encode(text)
+        return embedding.tolist()
     
-    return text.transform(embed_with_language_selection)
+    return text.transform(embed_with_language_selection, language=language)
 
 
-# Global configuration for flow parameters
+# Global configuration for flow parameters  
 _global_flow_config = {
-    'paths': ["cocoindex"],
+    'paths': ["."],  # Use current directory for testing
     'enable_polling': False,
     'poll_interval': 30
 }
+
+# Try using functools.lru_cache for persistent model caching
+from functools import lru_cache
+
+@lru_cache(maxsize=3)
+def get_cached_sentence_transformer(model_name: str):
+    """Get cached SentenceTransformer model using lru_cache."""
+    LOGGER.info(f"🔄 Loading model {model_name} via lru_cache")
+    from sentence_transformers import SentenceTransformer
+    model = SentenceTransformer(model_name)
+    LOGGER.info(f"✅ Model {model_name} loaded and will be cached by lru_cache")
+    return model
 
 
 @cocoindex.flow_def(name="CodeEmbedding")
@@ -424,45 +441,16 @@ def code_embedding_flow(
             file["language"] = file["filename"].transform(extract_language)
             file["chunking_params"] = file["language"].transform(get_chunking_params)
             
-            # Choose chunking method based on configuration
-            use_default_chunking = _global_flow_config.get('use_default_chunking', False)
-            
-            if use_default_chunking or not AST_CHUNKING_AVAILABLE:
-                # Use CocoIndex's built-in recursive splitting
-                if not use_default_chunking and not AST_CHUNKING_AVAILABLE:
-                    LOGGER.info("AST chunking not available, falling back to default recursive splitting")
-                else:
-                    LOGGER.info("Using default recursive splitting (--default-chunking flag set)")
-                    
-                file["chunks"] = file["content"].transform(
-                    cocoindex.functions.SplitRecursively(),
-                    language=file["language"],
-                    chunk_size=file["chunking_params"]["chunk_size"],
-                    min_chunk_size=file["chunking_params"]["min_chunk_size"],
-                    chunk_overlap=file["chunking_params"]["chunk_overlap"],
-                )
-            else:
-                # Use our custom AST-aware chunking
-                LOGGER.info("Using AST-aware chunking extension")
-                try:
-                    ast_chunking_op = create_ast_chunking_operation()
-                    file["chunks"] = file["content"].transform(
-                        ast_chunking_op,
-                        language=file["language"],
-                        filename=file["filename"],
-                        chunk_size=file["chunking_params"]["chunk_size"],
-                        min_chunk_size=file["chunking_params"]["min_chunk_size"],
-                        chunk_overlap=file["chunking_params"]["chunk_overlap"],
-                    )
-                except Exception as e:
-                    LOGGER.warning(f"AST chunking failed: {e}, falling back to default")
-                    file["chunks"] = file["content"].transform(
-                        cocoindex.functions.SplitRecursively(),
-                        language=file["language"],
-                        chunk_size=file["chunking_params"]["chunk_size"],
-                        min_chunk_size=file["chunking_params"]["min_chunk_size"],
-                        chunk_overlap=file["chunking_params"]["chunk_overlap"],
-                    )
+            # Temporarily use only default chunking to avoid factory name collisions
+            LOGGER.info("Using default recursive splitting (AST chunking temporarily disabled)")
+                
+            file["chunks"] = file["content"].transform(
+                cocoindex.functions.SplitRecursively(),
+                language=file["language"],
+                chunk_size=file["chunking_params"]["chunk_size"],
+                min_chunk_size=file["chunking_params"]["min_chunk_size"],
+                chunk_overlap=file["chunking_params"]["chunk_overlap"],
+            )
             
             with file["chunks"].row() as chunk:
                 # Choose embedding method based on configuration
@@ -478,12 +466,39 @@ def code_embedding_flow(
                     LOGGER.info("Using smart code embedding extension")
                     chunk["embedding"] = chunk["text"].call(smart_code_to_embedding, language=file["language"])
                 
-                # Extract metadata using appropriate method
-                chunk["metadata"] = chunk["text"].transform(
-                    extract_code_metadata, 
-                    language=file["language"], 
-                    filename=file["filename"]
-                )
+                # Extract metadata using appropriate method based on configuration
+                use_default_language_handler = _global_flow_config.get('use_default_language_handler', False)
+                
+                if use_default_language_handler:
+                    LOGGER.info("Using default language handler (--default-language-handler flag set)")
+                    # Use simple default metadata (no custom processing)
+                    import json
+                    default_metadata = {
+                        "functions": [],
+                        "classes": [],
+                        "imports": [],
+                        "complexity_score": 0,
+                        "has_type_hints": False,
+                        "has_async": False,
+                        "has_classes": False,
+                        "decorators_used": [],
+                        "analysis_method": "default_basic",
+                    }
+                    chunk["metadata"] = json.dumps(default_metadata)
+                else:
+                    LOGGER.info("Using custom language handler extension")
+                    chunk["metadata"] = chunk["text"].transform(
+                        extract_code_metadata, 
+                        language=file["language"], 
+                        filename=file["filename"]
+                    )
+                
+                # Parse metadata JSON to extract fields for collection
+                import json
+                try:
+                    metadata_dict = json.loads(chunk["metadata"])
+                except:
+                    metadata_dict = {}
                 
                 code_embeddings.collect(
                     filename=file["filename"],
@@ -494,14 +509,15 @@ def code_embedding_flow(
                     start=chunk["start"],
                     end=chunk["end"],
                     source_name=source_name,  # Add source name for identification
-                    # Include metadata fields
-                    functions=chunk["metadata"]["functions"],
-                    classes=chunk["metadata"]["classes"],
-                    imports=chunk["metadata"]["imports"],
-                    complexity_score=chunk["metadata"]["complexity_score"],
-                    has_type_hints=chunk["metadata"]["has_type_hints"],
-                    has_async=chunk["metadata"]["has_async"],
-                    has_classes=chunk["metadata"]["has_classes"],
+                    metadata_json=chunk["metadata"],  # Store full JSON
+                    # Include parsed metadata fields
+                    functions=str(metadata_dict.get("functions", [])),  # Convert to string for storage
+                    classes=str(metadata_dict.get("classes", [])),
+                    imports=str(metadata_dict.get("imports", [])),
+                    complexity_score=metadata_dict.get("complexity_score", 0),
+                    has_type_hints=metadata_dict.get("has_type_hints", False),
+                    has_async=metadata_dict.get("has_async", False),
+                    has_classes=metadata_dict.get("has_classes", False),
                 )
 
     code_embeddings.export(

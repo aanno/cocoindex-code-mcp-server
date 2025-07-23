@@ -18,6 +18,7 @@
         "source=${localEnv:PIP_CACHE_DIR},target=/pip,type=bind,z,consistency=cached",
         "source=${localEnv:PNPM_CACHE_DIR},target=/pnpm,type=bind,z,consistency=cached",
         "source=${localEnv:VOLTA_HOME}/tools,target=/home/vscode/.volta/tools,type=bind,z,consistency=cached",
+        "source=${localEnv:HF_HOME},target=/hf,type=bind,z,consistency=cached",
         "source=${localEnv:VENV}/lib,target=/home/vscode/.venv/lib,type=bind,z,consistency=cached",
         "source=${localEnv:VENV}/include,target=/home/vscode/.venv/include,type=bind,z,consistency=cached"
     ],

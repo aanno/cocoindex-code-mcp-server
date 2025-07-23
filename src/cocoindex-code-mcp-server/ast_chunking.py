@@ -288,12 +288,12 @@ def create_ast_chunking_operation():
         raise ImportError("CocoIndex not available")
     
     @cocoindex.op.function()
-    def ASTChunk(source_field: str, 
-                 language: str = "auto",
-                 max_chunk_size: int = 1800,
-                 chunk_overlap: int = 0,
-                 chunk_expansion: bool = False,
-                 metadata_template: str = "default"):
+    def CodeASTChunkProcessor(source_field: str, 
+                     language: str = "auto",
+                     max_chunk_size: int = 1800,
+                     chunk_overlap: int = 0,
+                     chunk_expansion: bool = False,
+                     metadata_template: str = "default"):
         """
         Structure-aware code chunking using AST analysis.
         
@@ -343,7 +343,7 @@ def create_ast_chunking_operation():
         
         return process_record
     
-    return ASTChunk
+    return CodeASTChunkProcessor
 
 
 # Create the operation conditionally
@@ -364,7 +364,7 @@ def create_hybrid_chunking_operation():
         raise ImportError("CocoIndex not available")
     
     @cocoindex.op.function()
-    def HybridChunk(source_field: str, 
+    def HybridChunkProcessor(source_field: str, 
                     language: str,
                     filename: str = "",
                     chunk_size: int = 1200,
@@ -449,7 +449,7 @@ def create_hybrid_chunking_operation():
         
         return process_record
     
-    return HybridChunk
+    return HybridChunkProcessor
 
 
 if __name__ == "__main__":
