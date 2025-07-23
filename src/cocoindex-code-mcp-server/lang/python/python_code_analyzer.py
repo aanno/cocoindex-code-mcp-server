@@ -24,6 +24,8 @@ class PythonCodeAnalyzer:
     """Analyzer for extracting metadata from Python code chunks."""
     
     def __init__(self):
+        self.max_recursion_depth = 200  # Prevent infinite recursion
+        self.visited_nodes = set()  # Cycle detection
         self.reset()
     
     def reset(self):
@@ -34,6 +36,7 @@ class PythonCodeAnalyzer:
         self.variables = []
         self.decorators = []
         self.complexity_score = 0
+        self.visited_nodes.clear()  # Clear visited nodes on reset
     
     def analyze_code(self, code: str, filename: str = "") -> Dict[str, Any]:
         """
@@ -48,6 +51,11 @@ class PythonCodeAnalyzer:
             Dictionary containing extracted metadata
         """
         self.reset()
+        
+        # Add basic size limits to prevent analyzing enormous code chunks
+        if len(code) > 100000:  # 100KB limit
+            LOGGER.debug(f"Code chunk too large ({len(code)} chars), using fallback analysis")
+            return self._build_fallback_metadata(code, filename)
         
         try:
             # Parse the code into an AST
@@ -69,26 +77,42 @@ class PythonCodeAnalyzer:
             LOGGER.error(f"Error analyzing Python code: {e}")
             return self._build_fallback_metadata(code, filename)
     
-    def _visit_node(self, node: ast.AST, class_context: str = None):
-        """Recursively visit AST nodes to extract metadata."""
-        if isinstance(node, ast.FunctionDef):
-            self._extract_function_info(node, class_context)
-        elif isinstance(node, ast.AsyncFunctionDef):
-            self._extract_function_info(node, class_context, is_async=True)
-        elif isinstance(node, ast.ClassDef):
-            self._extract_class_info(node)
-        elif isinstance(node, (ast.Import, ast.ImportFrom)):
-            self._extract_import_info(node)
-        elif isinstance(node, ast.Assign):
-            self._extract_variable_info(node, class_context)
+    def _visit_node(self, node: ast.AST, class_context: str = None, depth: int = 0):
+        """Recursively visit AST nodes to extract metadata with bounds checking."""
+        # Prevent infinite recursion
+        if depth > self.max_recursion_depth:
+            LOGGER.debug(f"Max recursion depth {self.max_recursion_depth} reached, stopping AST traversal")
+            return
         
-        # Recursively visit child nodes
-        for child in ast.iter_child_nodes(node):
-            if isinstance(node, ast.ClassDef):
-                # Pass class context to child nodes
-                self._visit_node(child, node.name)
-            else:
-                self._visit_node(child, class_context)
+        # Cycle detection using node memory address
+        node_id = id(node)
+        if node_id in self.visited_nodes:
+            LOGGER.debug("Cycle detected in AST traversal, skipping node")
+            return
+        self.visited_nodes.add(node_id)
+        
+        try:
+            if isinstance(node, ast.FunctionDef):
+                self._extract_function_info(node, class_context)
+            elif isinstance(node, ast.AsyncFunctionDef):
+                self._extract_function_info(node, class_context, is_async=True)
+            elif isinstance(node, ast.ClassDef):
+                self._extract_class_info(node)
+            elif isinstance(node, (ast.Import, ast.ImportFrom)):
+                self._extract_import_info(node)
+            elif isinstance(node, ast.Assign):
+                self._extract_variable_info(node, class_context)
+            
+            # Recursively visit child nodes with depth tracking
+            for child in ast.iter_child_nodes(node):
+                if isinstance(node, ast.ClassDef):
+                    # Pass class context to child nodes
+                    self._visit_node(child, node.name, depth + 1)
+                else:
+                    self._visit_node(child, class_context, depth + 1)
+        finally:
+            # Remove from visited set when done (allow revisiting in different contexts)
+            self.visited_nodes.discard(node_id)
     
     def _extract_function_info(self, node: ast.FunctionDef, class_context: str = None, is_async: bool = False):
         """Extract information about function definitions."""
@@ -127,7 +151,7 @@ class PythonCodeAnalyzer:
             for i, default in enumerate(defaults):
                 param_index = param_count - default_count + i
                 if 0 <= param_index < param_count:
-                    func_info["parameters"][param_index]["default"] = self._get_ast_value(default)
+                    func_info["parameters"][param_index]["default"] = self._get_ast_value(default, 0)
         
         # Extract return type annotation
         if node.returns:
@@ -135,7 +159,7 @@ class PythonCodeAnalyzer:
         
         # Extract decorators
         for decorator in node.decorator_list:
-            decorator_name = self._get_decorator_name(decorator)
+            decorator_name = self._get_decorator_name(decorator, 0)
             func_info["decorators"].append(decorator_name)
             self.decorators.append(decorator_name)
         
@@ -151,7 +175,7 @@ class PythonCodeAnalyzer:
             "end_column": getattr(node, 'end_col_offset', 0) + 1,
             "lines_of_code": (node.lineno, getattr(node, 'end_lineno', node.lineno)),
             "bases": [self._get_type_annotation(base) for base in node.bases],
-            "decorators": [self._get_decorator_name(dec) for dec in node.decorator_list],
+            "decorators": [self._get_decorator_name(dec, 0) for dec in node.decorator_list],
             "docstring": ast.get_docstring(node),
             "methods": [],
             "is_private": node.name.startswith('_'),
@@ -198,57 +222,70 @@ class PythonCodeAnalyzer:
                 }
                 self.variables.append(var_info)
     
-    def _get_type_annotation(self, annotation: ast.AST) -> str:
-        """Convert AST type annotation to string."""
+    def _get_type_annotation(self, annotation: ast.AST, depth: int = 0) -> str:
+        """Convert AST type annotation to string with recursion protection."""
+        # Prevent infinite recursion in type annotations
+        if depth > 10:
+            return "Complex"
+        
         try:
             if isinstance(annotation, ast.Name):
                 return annotation.id
             elif isinstance(annotation, ast.Constant):
                 return repr(annotation.value)
             elif isinstance(annotation, ast.Attribute):
-                return f"{self._get_type_annotation(annotation.value)}.{annotation.attr}"
+                return f"{self._get_type_annotation(annotation.value, depth + 1)}.{annotation.attr}"
             elif isinstance(annotation, ast.Subscript):
-                value = self._get_type_annotation(annotation.value)
-                slice_val = self._get_type_annotation(annotation.slice)
+                value = self._get_type_annotation(annotation.value, depth + 1)
+                slice_val = self._get_type_annotation(annotation.slice, depth + 1)
                 return f"{value}[{slice_val}]"
             elif isinstance(annotation, ast.Tuple):
-                elements = [self._get_type_annotation(elt) for elt in annotation.elts]
+                elements = [self._get_type_annotation(elt, depth + 1) for elt in annotation.elts[:5]]  # Limit elements
                 return f"({', '.join(elements)})"
             else:
-                return ast.unparse(annotation)
+                return ast.unparse(annotation)[:100]  # Limit length
         except Exception:
             return "Unknown"
     
-    def _get_decorator_name(self, decorator: ast.AST) -> str:
-        """Extract decorator name."""
+    def _get_decorator_name(self, decorator: ast.AST, depth: int = 0) -> str:
+        """Extract decorator name with recursion protection."""
+        if depth > 5:  # Limit decorator complexity
+            return "complex_decorator"
+        
         try:
             if isinstance(decorator, ast.Name):
                 return decorator.id
             elif isinstance(decorator, ast.Attribute):
-                return f"{self._get_type_annotation(decorator.value)}.{decorator.attr}"
+                return f"{self._get_type_annotation(decorator.value, depth + 1)}.{decorator.attr}"
             elif isinstance(decorator, ast.Call):
-                return self._get_decorator_name(decorator.func)
+                return self._get_decorator_name(decorator.func, depth + 1)
             else:
-                return ast.unparse(decorator)
+                return ast.unparse(decorator)[:50]  # Limit length
         except Exception:
             return "unknown_decorator"
     
-    def _get_ast_value(self, node: ast.AST) -> Any:
-        """Extract value from AST node."""
+    def _get_ast_value(self, node: ast.AST, depth: int = 0) -> Any:
+        """Extract value from AST node with recursion protection."""
+        if depth > 10:  # Prevent deep recursion in value extraction
+            return "complex_value"
+            
         try:
             if isinstance(node, ast.Constant):
                 return node.value
             elif isinstance(node, ast.Name):
                 return node.id
             elif isinstance(node, ast.List):
-                return [self._get_ast_value(elt) for elt in node.elts]
+                # Limit list size to prevent huge structures
+                return [self._get_ast_value(elt, depth + 1) for elt in node.elts[:10]]
             elif isinstance(node, ast.Dict):
+                # Limit dict size
+                items = list(zip(node.keys, node.values))[:5]
                 return {
-                    self._get_ast_value(k): self._get_ast_value(v) 
-                    for k, v in zip(node.keys, node.values)
+                    self._get_ast_value(k, depth + 1): self._get_ast_value(v, depth + 1) 
+                    for k, v in items
                 }
             else:
-                return ast.unparse(node)
+                return ast.unparse(node)[:100]  # Limit length
         except Exception:
             return "unknown_value"
     

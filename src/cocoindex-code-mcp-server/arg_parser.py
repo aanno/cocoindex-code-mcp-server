@@ -55,6 +55,25 @@ Examples:
         help="Enable file polling with specified interval in seconds (default: event-based monitoring)"
     )
     
+    # Default mode flags to disable custom extensions
+    parser.add_argument(
+        "--default-embedding",
+        action="store_true",
+        help="Use CocoIndex default embedding instead of smart code embedding extension"
+    )
+    
+    parser.add_argument(
+        "--default-chunking", 
+        action="store_true",
+        help="Use CocoIndex default SplitRecursively instead of AST chunking extension"
+    )
+    
+    parser.add_argument(
+        "--default-language-handler",
+        action="store_true", 
+        help="Skip Python-specific language handlers and use basic metadata extraction"
+    )
+    
     return parser.parse_args()
 
 

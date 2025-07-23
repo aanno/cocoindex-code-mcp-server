@@ -1419,7 +1419,10 @@ async def main(args):
     update_flow_config(
         paths=paths,
         enable_polling=live_enabled and poll_interval > 0,
-        poll_interval=poll_interval
+        poll_interval=poll_interval,
+        use_default_embedding=args.default_embedding,
+        use_default_chunking=args.default_chunking,
+        use_default_language_handler=args.default_language_handler
     )
     
     # Determine transport mode and run accordingly
