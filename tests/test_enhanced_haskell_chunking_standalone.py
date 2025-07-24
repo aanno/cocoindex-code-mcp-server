@@ -19,7 +19,7 @@ mock_cocoindex.op = Mock()
 mock_cocoindex.op.function = Mock(return_value=lambda f: f)
 
 with patch.dict('sys.modules', {'cocoindex': mock_cocoindex}):
-    from lang.haskell.haskell_support import (
+    from lang.haskell.haskell_ast_chunker import (
         HaskellChunkConfig, 
         EnhancedHaskellChunker, 
         get_enhanced_haskell_separators,
@@ -309,7 +309,7 @@ class TestBackwardCompatibility:
 
     def test_legacy_function_exists(self):
         """Test that legacy function still exists."""
-        from lang.haskell.haskell_support import create_regex_fallback_chunks_python
+        from lang.haskell.haskell_ast_chunker import create_regex_fallback_chunks_python
         
         haskell_code = """
 factorial :: Integer -> Integer
@@ -328,7 +328,7 @@ factorial n = product [1..n]
 
     def test_legacy_format_conversion(self):
         """Test that legacy format conversion works correctly."""
-        from lang.haskell.haskell_support import create_regex_fallback_chunks_python
+        from lang.haskell.haskell_ast_chunker import create_regex_fallback_chunks_python
         
         haskell_code = """
 module Test where

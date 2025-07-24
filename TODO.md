@@ -123,7 +123,7 @@ and `src/cocoindex-code-mcp-server/lang/python/python_code_analyzer.py`
   + there is a Chunking strategy selection (but perhaps not explicitly)
   + there is a hybrid chunking approach
   + there is AST-aware chunking for code structures
-- and ideas from ASTChunk into `src/cocoindex-code-mcp-server/lang/haskell/haskell_support.py`
+- and ideas from ASTChunk into `src/cocoindex-code-mcp-server/lang/haskell/haskell_ast_chunker.py`
 - Custom chunk size/overlap configuration is already there based on the language
 
 ## Recommendations

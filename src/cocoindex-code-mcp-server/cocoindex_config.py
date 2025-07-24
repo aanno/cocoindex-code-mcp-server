@@ -18,7 +18,7 @@ from numpy.typing import NDArray
 import numpy as np
 import cocoindex
 from cocoindex.typing import Vector
-from lang.haskell.haskell_support import get_haskell_language_spec
+from lang.haskell.haskell_ast_chunker import get_haskell_language_spec
 from lang.python.python_code_analyzer import analyze_python_code
 from __init__ import LOGGER
 from sentence_transformers import SentenceTransformer

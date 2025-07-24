@@ -2,7 +2,7 @@
 
 """
 Integration test for Haskell support functionality.
-Moved from src/haskell_support.py to tests/
+Moved from src/haskell_ast_chunker.py to tests/
 """
 
 import sys
@@ -16,17 +16,17 @@ LOGGER = logging.getLogger(__name__)
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 try:
-    from lang.haskell.haskell_support import HaskellChunkConfig, EnhancedHaskellChunker
-    HASKELL_SUPPORT_AVAILABLE = True
+    from lang.haskell.haskell_ast_chunker import HaskellChunkConfig, EnhancedHaskellChunker
+    haskell_ast_chunker_AVAILABLE = True
 except ImportError as e:
     LOGGER.warning(f"Haskell support not available: {e}")
-    HASKELL_SUPPORT_AVAILABLE = False
+    haskell_ast_chunker_AVAILABLE = False
 
 
 def test_enhanced_haskell_chunking():
     """Test the enhanced Haskell chunking functionality."""
-    if not HASKELL_SUPPORT_AVAILABLE:
-        print("⚠️ Skipping Haskell test - haskell_support not available")
+    if not haskell_ast_chunker_AVAILABLE:
+        print("⚠️ Skipping Haskell test - haskell_ast_chunker not available")
         return
     
     haskell_code = '''
@@ -107,8 +107,8 @@ main = do
 
 def test_haskell_chunk_config():
     """Test Haskell chunk configuration options."""
-    if not HASKELL_SUPPORT_AVAILABLE:
-        print("⚠️ Skipping Haskell config test - haskell_support not available")
+    if not haskell_ast_chunker_AVAILABLE:
+        print("⚠️ Skipping Haskell config test - haskell_ast_chunker not available")
         return
     
     # Test default configuration
@@ -141,8 +141,8 @@ def test_haskell_chunk_config():
 
 def test_haskell_simple_chunking():
     """Test simple Haskell code chunking."""
-    if not HASKELL_SUPPORT_AVAILABLE:
-        print("⚠️ Skipping simple Haskell test - haskell_support not available")
+    if not haskell_ast_chunker_AVAILABLE:
+        print("⚠️ Skipping simple Haskell test - haskell_ast_chunker not available")
         return
     
     simple_code = '''

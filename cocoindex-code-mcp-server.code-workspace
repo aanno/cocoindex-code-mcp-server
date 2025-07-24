@@ -37,6 +37,7 @@
 			"ms-python.debugpy",
 			"ms-python.isort",
 			"ms-python.vscode-pylance",
+			"ms-python.flake8",
 			"dustypomerleau.rust-syntax",
 			"rust-lang.rust-analyzer",
 			"fill-labs.dependi",
@@ -45,7 +46,8 @@
 			"Anthropic.claude-code",
 			"JuehangQin.vscode-mcp-server",
 			"dbankier.vscode-instant-markdown",
-			"DavidAnson.vscode-markdownlint"
+			"DavidAnson.vscode-markdownlint",
+			"eamodio.gitlens"
 		],
 		"unwantedRecommendations": []
 	}

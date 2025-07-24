@@ -696,4 +696,4 @@ def create_enhanced_haskell_chunking_operation():
 
 
 if __name__ == "__main__":
-    print("Enhanced Haskell support module - use tests/test_haskell_support_integration.py for testing")
+    print("Enhanced Haskell support module - use tests/test_haskell_ast_chunker_integration.py for testing")

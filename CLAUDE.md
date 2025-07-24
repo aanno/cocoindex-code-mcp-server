@@ -4,6 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Instructions
 
+- If you are technically stuck or unsure about the next step, ask for help.
+- cocoindex is a complex beast, so don't hesitate to ask for clarification or guidance.
+- Test should be pytest at ./tests (NOT at ./src/cocoindex-code-mcp-server/tests).
 - Think about using our own RAG (MCP server 'cocoindex-rag') before using grep or search.
 - Never try to start/stop our RAG MCP server, just ask, I will do it for you.
 - Use gw-memory to store and retrieve information about the codebase.

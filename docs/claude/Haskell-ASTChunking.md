@@ -6,7 +6,7 @@ This document describes the comprehensive enhancement of Haskell code chunking i
 
 ## Problem Statement
 
-The original Haskell chunking implementation (`haskell_support.py`) had several limitations:
+The original Haskell chunking implementation (`haskell_ast_chunker.py`) had several limitations:
 
 - **Fixed configuration**: Hardcoded chunk parameters with no customization options
 - **Basic metadata**: Limited location information without content analysis
@@ -451,7 +451,7 @@ def _performance_aware_chunking(self, content: str, profile_data: dict):
 **Current State**: We use tree-sitter indirectly through the `haskell_tree_sitter` module:
 
 ```python
-# Current approach in haskell_support.py
+# Current approach in haskell_ast_chunker.py
 ast_chunks = haskell_tree_sitter.get_haskell_ast_chunks_with_fallback(content)
 ```
 

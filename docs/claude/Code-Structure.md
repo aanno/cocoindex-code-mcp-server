@@ -18,7 +18,7 @@ The main_interactive_query.py file has been successfully refactored into smaller
 - `run_interactive_query_mode()`: Run the interactive query loop
 - `display_search_results()`: Format and display search results
 
-### 3. `src/haskell_support.py`
+### 3. `src/haskell_ast_chunker.py`
 **Purpose**: Haskell-specific functionality
 - `get_enhanced_haskell_separators()`: Get enhanced regex separators for Haskell
 - `extract_haskell_ast_chunks()`: Extract AST-based chunks from Haskell code
@@ -59,10 +59,10 @@ main_interactive_query.py
 ├── arg_parser.py
 ├── query_interactive.py
 │   └── cocoindex_config.py
-│       └── haskell_support.py
+│       └── haskell_ast_chunker.py
 │           └── haskell_tree_sitter (Rust module)
 └── cocoindex_config.py
-    └── haskell_support.py
+    └── haskell_ast_chunker.py
 ```
 
 ## Testing
