@@ -20,7 +20,7 @@ import pytest
 import requests
 from dotenv import load_dotenv
 
-
+CHECKHEALTH = False
 @pytest.mark.mcp_integration
 class MCPServerTestRunner:
     """Helper class to manage MCP server instance for testing."""
@@ -56,20 +56,21 @@ class MCPServerTestRunner:
         # Wait for server to be ready
         start_time = time.time()
         while time.time() - start_time < timeout:
-            try:
-                response = requests.get(f"{self.base_url}/health", timeout=1)
-                if response.status_code == 404:  # Server is running but no health endpoint
-                    return True
-            except requests.exceptions.ConnectionError:
-                pass
-            except requests.exceptions.RequestException:
-                return True  # Server is responding
+            if CHECKHEALTH:
+                try:
+                    response = requests.get(f"{self.base_url}/health", timeout=1)
+                    if response.status_code == 404:  # Server is running but no health endpoint
+                        return True
+                except requests.exceptions.ConnectionError:
+                    pass
+                except requests.exceptions.RequestException:
+                    return True  # Server is responding
             
-            # Check if process is still alive
-            if self.process.poll() is not None:
-                stdout, stderr = self.process.communicate()
-                print(f"Server failed to start:\nSTDOUT: {stdout}\nSTDERR: {stderr}")
-                return False
+                # Check if process is still alive
+                if self.process.poll() is not None:
+                    stdout, stderr = self.process.communicate()
+                    print(f"Server failed to start:\nSTDOUT: {stdout}\nSTDERR: {stderr}")
+                    return False
             
             time.sleep(0.5)
         

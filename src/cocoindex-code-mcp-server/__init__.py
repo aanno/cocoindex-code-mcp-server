@@ -7,7 +7,7 @@ from logging.handlers import RotatingFileHandler
 # Get WORKSPACE environment variable, fallback to current directory if not set
 workspace_dir = os.environ.get('WORKSPACE', '.')
 
-log_file_path = os.path.join(workspace_dir, 'cocoindex-code-mcp-server-test.log')
+log_file_path = os.path.join(workspace_dir, 'cocoindex-code-mcp-server.log')
 
 # Create a rotating file handler
 rotating_handler = RotatingFileHandler(

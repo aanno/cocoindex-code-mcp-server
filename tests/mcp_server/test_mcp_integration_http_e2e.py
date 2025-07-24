@@ -26,7 +26,9 @@ from mcp.types import (
     ListToolsRequest,
     ListResourcesRequest
 )
+import requests
 
+CHECKHEALTH = False
 
 @pytest.mark.timeout(20)
 @pytest.mark.mcp_integration
@@ -38,12 +40,12 @@ class TestMCPIntegrationE2E:
     
     async def _test_with_client_session(self, test_func):
         """Helper to run test functions with a valid MCP client session."""
-        import requests
-        try:
-            # Check if server is available first
-            requests.get("http://localhost:3033/health", timeout=5)
-        except requests.exceptions.ConnectionError:
-            pytest.skip("MCP server not running on localhost:3033")
+        if CHECKHEALTH:
+            try:
+                # Check if server is available first
+                requests.get("http://localhost:3033/health", timeout=5)
+            except requests.exceptions.ConnectionError:
+                pytest.skip("MCP server not running on localhost:3033")
         
         # Use StreamableHTTP client to connect to our StreamableHTTP MCP server
         async with streamablehttp_client(self.SERVER_URL) as (read, write, get_session_id):
@@ -60,12 +62,11 @@ class TestMCPIntegrationE2E:
     @pytest.mark.asyncio
     async def test_mcp_client_initialization(self):
         """Test MCP client initialization through the library."""
-        import requests
-        import asyncio
         
-        # First verify server is accessible via basic HTTP
-        response = requests.get("http://localhost:3033/health", timeout=5)
-        # Should get 404 which means server is running
+        if CHECKHEALTH:
+            # First verify server is accessible via basic HTTP
+            response = requests.get("http://localhost:3033/health", timeout=5)
+            # Should get 404 which means server is running
         
         # Test basic JSON-RPC request
         response = requests.post(
@@ -97,12 +98,13 @@ class TestMCPIntegrationE2E:
     @asynccontextmanager
     async def _create_client_session(self):
         """Helper to create and initialize a client session."""
-        import requests
-        try:
-            # Check if server is available first
-            requests.get("http://localhost:3033/health", timeout=5)
-        except requests.exceptions.ConnectionError:
-            pytest.skip("MCP server not running on localhost:3033")
+
+        if CHECKHEALTH:
+            try:
+                # Check if server is available first
+                requests.get("http://localhost:3033/health", timeout=5)
+            except requests.exceptions.ConnectionError:
+                pytest.skip("MCP server not running on localhost:3033")
         
         # Use StreamableHTTP client to connect to our StreamableHTTP MCP server
         async with streamablehttp_client(self.SERVER_URL) as (read, write, get_session_id):
@@ -117,12 +119,13 @@ class TestMCPIntegrationE2E:
     @pytest.mark.asyncio
     async def test_server_availability(self):
         """Test that the server is available before running other tests."""
-        import requests
-        try:
-            response = requests.get("http://localhost:3033/health", timeout=5)
-            # Server should return 404 (no health endpoint) or respond
-        except requests.exceptions.ConnectionError:
-            pytest.skip("MCP server not running on localhost:3033")
+        
+        if CHECKHEALTH:
+            try:
+                response = requests.get("http://localhost:3033/health", timeout=5)
+                # Server should return 404 (no health endpoint) or respond
+            except requests.exceptions.ConnectionError:
+                pytest.skip("MCP server not running on localhost:3033")
     
     @pytest.mark.asyncio
     async def test_mcp_list_tools_through_library(self):
