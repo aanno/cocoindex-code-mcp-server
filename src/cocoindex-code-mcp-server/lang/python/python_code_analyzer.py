@@ -181,6 +181,11 @@ class PythonCodeAnalyzer:
             "is_private": node.name.startswith('_'),
         }
         
+        # Add class decorators to global decorators list (like function decorators)
+        for decorator in node.decorator_list:
+            decorator_name = self._get_decorator_name(decorator, 0)
+            self.decorators.append(decorator_name)
+        
         # Extract methods (will be added by function extraction with class context)
         self.classes.append(class_info)
     

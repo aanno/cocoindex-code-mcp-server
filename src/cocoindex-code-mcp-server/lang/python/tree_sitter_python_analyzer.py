@@ -203,8 +203,39 @@ class TreeSitterPythonAnalyzer:
             if key in secondary:
                 merged[key] = merged.get(key, False) or secondary.get(key, False)
         
-        # Prefer more detailed information
-        for key in ['function_details', 'class_details', 'import_details']:
+        # Merge class_details with decorators from both sources
+        if 'class_details' in secondary:
+            # Create a mapping of class names to details for easier merging
+            primary_classes = {cls.get('name'): cls for cls in merged.get('class_details', [])}
+            secondary_classes = {cls.get('name'): cls for cls in secondary['class_details']}
+            
+            merged_class_details = []
+            for class_name in set(primary_classes.keys()) | set(secondary_classes.keys()):
+                primary_cls = primary_classes.get(class_name, {})
+                secondary_cls = secondary_classes.get(class_name, {})
+                
+                # Start with the more detailed one (usually secondary from Python AST)
+                if len(secondary_cls) > len(primary_cls):
+                    merged_cls = secondary_cls.copy()
+                    # Add any missing fields from primary
+                    for k, v in primary_cls.items():
+                        if k not in merged_cls:
+                            merged_cls[k] = v
+                else:
+                    merged_cls = primary_cls.copy()
+                    # Merge important fields from secondary (especially decorators)
+                    for k, v in secondary_cls.items():
+                        if k == 'decorators' and v:  # Prefer non-empty decorators
+                            merged_cls[k] = v
+                        elif k not in merged_cls:
+                            merged_cls[k] = v
+                
+                merged_class_details.append(merged_cls)
+            
+            merged['class_details'] = merged_class_details
+        
+        # Handle function_details and import_details as before
+        for key in ['function_details', 'import_details']:
             if key in secondary and len(secondary[key]) > len(merged.get(key, [])):
                 merged[key] = secondary[key]
         
