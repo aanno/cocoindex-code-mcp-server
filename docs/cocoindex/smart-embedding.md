@@ -1,4 +1,5 @@
-# I'm inside a @cocoindex.transform_flow() function. However, I want to dynamically select my     cocoindex.functions.SentenceTransformerEmbed model based on the value of str inside DataSlice[str]. What to do?
+# I'm inside a @cocoindex.transform_flow() function. However, I want to dynamically select my     cocoindex.functions.SentenceTra
+nsformerEmbed model based on the value of str inside DataSlice[str]. What to do?
 
 cocoindex.functions.SentenceTransformerEmbed expects the model name to be fixed when constructing the transform, and there is no direct public API to dynamically change the model on a *per-row* or *per-call* basis inside a transform_flow. The model parameter is bound at function construction time, not run time[^4_1][^4_2][^4_8].
 

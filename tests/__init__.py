@@ -1,25 +1,39 @@
 # Test package for haskell-tree-sitter project
 
 import logging
+import os
+from logging.handlers import RotatingFileHandler
 
-# https://stackoverflow.com/questions/13479295/python-using-basicconfig-method-to-log-to-console-and-file
+# Get WORKSPACE environment variable, fallback to current directory if not set
+workspace_dir = os.environ.get('WORKSPACE', '.')
 
-# set up logging to file
-logging.basicConfig(
-    filename='cocoindex-code-mcp-server-test.log',
-    level=logging.DEBUG, 
-    format= '[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
-    datefmt='%H:%M:%S'
+log_file_path = os.path.join(workspace_dir, 'cocoindex-code-mcp-server-test.log')
+
+# Create a rotating file handler
+rotating_handler = RotatingFileHandler(
+    log_file_path,
+    maxBytes=20*1024,    # 20 KB
+    backupCount=3
 )
+rotating_handler.setLevel(logging.DEBUG)
 
-# set up logging to console
+# Formatter for the file logs (can be same or different)
+file_formatter = logging.Formatter('[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s', datefmt='%H:%M:%S')
+rotating_handler.setFormatter(file_formatter)
+
+# Set up console handler separately
 console = logging.StreamHandler()
 console.setLevel(logging.INFO)
+console_formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
+console.setFormatter(console_formatter)
 
-# set a format which is simpler for console use
-formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
-console.setFormatter(formatter)
+# Get root logger and configure it
+LOGGER = logging.getLogger()  # root logger
+LOGGER.setLevel(logging.DEBUG)  # or whatever level you want
 
-LOGGER = logging.getLogger(__name__)
-# add the handler to the root logger
+# Remove all existing handlers
+LOGGER.handlers.clear()
+
+# Add the handlers
+LOGGER.addHandler(rotating_handler)
 LOGGER.addHandler(console)

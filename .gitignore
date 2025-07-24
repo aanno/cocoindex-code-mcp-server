@@ -16,7 +16,7 @@ __pycache__/
 /.claude/*.local.*
 /eval_CodeEmbedding_*
 /log
-*.log
+*.log*
 
 # Maturin build artifacts
 *.so

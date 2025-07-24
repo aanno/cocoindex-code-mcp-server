@@ -388,5 +388,234 @@ def hello_world():
             assert "Error" in first_content["text"] or "error" in first_content["text"].lower()
 
 
+    @pytest.mark.asyncio
+    async def test_ast_improvements_decorator_detection(self):
+        """Test AST improvements: decorator detection through hybrid search."""
+        response = await self._send_jsonrpc_request(
+            "tools/call",
+            {
+                "name": "hybrid_search",
+                "arguments": {
+                    "vector_query": "Python classes with decorators",
+                    "keyword_query": "language:python AND exists(decorators)",
+                    "top_k": 10
+                }
+            },
+            11
+        )
+        
+        # Check response structure
+        assert response["jsonrpc"] == "2.0"
+        assert response["id"] == 11
+        assert "result" in response
+        
+        # Parse results to verify decorator detection
+        content = response["result"]["content"][0]
+        results_text = content["text"]
+        
+        # Should find results with decorators
+        assert "decorators" in results_text.lower()
+        # Common decorators should be detected
+        assert any(decorator in results_text for decorator in ["@dataclass", "@property", "@staticmethod"])
+
+    @pytest.mark.asyncio
+    async def test_ast_improvements_class_method_detection(self):
+        """Test AST improvements: class method detection."""
+        response = await self._send_jsonrpc_request(
+            "tools/call",
+            {
+                "name": "hybrid_search",
+                "arguments": {
+                    "vector_query": "class methods with docstrings",
+                    "keyword_query": "language:python AND exists(function_details)",
+                    "top_k": 10
+                }
+            },
+            12
+        )
+        
+        # Check response structure
+        assert response["jsonrpc"] == "2.0"
+        assert response["id"] == 12
+        assert "result" in response
+        
+        # Parse results to verify class method detection
+        content = response["result"]["content"][0]
+        results_text = content["text"]
+        
+        # Should find class methods like __init__, from_dict, etc.
+        assert "function_details" in results_text.lower()
+        # Common class methods should be detected
+        assert any(method in results_text for method in ["__init__", "from_dict", "classmethod"])
+
+    @pytest.mark.asyncio
+    async def test_ast_improvements_docstring_detection(self):
+        """Test AST improvements: docstring detection."""
+        response = await self._send_jsonrpc_request(
+            "tools/call",
+            {
+                "name": "keyword_search",
+                "arguments": {
+                    "query": "has_docstrings:true AND language:python",
+                    "top_k": 10
+                }
+            },
+            13
+        )
+        
+        # Check response structure
+        assert response["jsonrpc"] == "2.0"
+        assert response["id"] == 13
+        assert "result" in response
+        
+        # Parse results to verify docstring detection
+        content = response["result"]["content"][0]
+        results_text = content["text"]
+        
+        # Should find entries with has_docstrings=true
+        assert "has_docstrings" in results_text.lower()
+        # Should find actual docstring content
+        assert any(indicator in results_text for indicator in ["docstring", "\"\"\"", "description"])
+
+    @pytest.mark.asyncio
+    async def test_ast_improvements_private_dunder_methods(self):
+        """Test AST improvements: private and dunder method detection."""
+        response = await self._send_jsonrpc_request(
+            "tools/call",
+            {
+                "name": "keyword_search",
+                "arguments": {
+                    "query": "language:python AND (exists(private_methods) OR exists(dunder_methods))",
+                    "top_k": 10
+                }
+            },
+            14
+        )
+        
+        # Check response structure
+        assert response["jsonrpc"] == "2.0"
+        assert response["id"] == 14
+        assert "result" in response
+        
+        # Parse results to verify method classification
+        content = response["result"]["content"][0]
+        results_text = content["text"]
+        
+        # Should find private methods (starting with _) and dunder methods (__x__)
+        assert any(field in results_text for field in ["private_methods", "dunder_methods"])
+        # Common patterns should be detected
+        assert any(method in results_text for method in ["__init__", "_private", "__str__"])
+
+    @pytest.mark.asyncio
+    async def test_ast_improvements_metadata_completeness(self):
+        """Test AST improvements: comprehensive metadata fields."""
+        response = await self._send_jsonrpc_request(
+            "tools/call",
+            {
+                "name": "vector_search",
+                "arguments": {
+                    "query": "python function class metadata",
+                    "top_k": 5
+                }
+            },
+            15
+        )
+        
+        # Check response structure
+        assert response["jsonrpc"] == "2.0"
+        assert response["id"] == 15
+        assert "result" in response
+        
+        # Parse results to verify comprehensive metadata
+        content = response["result"]["content"][0]
+        results_text = content["text"]
+        
+        # Should include comprehensive metadata fields from our improvements
+        expected_fields = [
+            "functions", "classes", "decorators", "has_decorators", 
+            "has_classes", "has_docstrings", "function_details", 
+            "class_details", "analysis_method"
+        ]
+        
+        # At least several of these fields should be present
+        found_fields = sum(1 for field in expected_fields if field in results_text)
+        assert found_fields >= 4, f"Expected at least 4 metadata fields, found {found_fields}"
+
+    @pytest.mark.asyncio
+    async def test_ast_improvements_analysis_method_hybrid(self):
+        """Test AST improvements: hybrid analysis method detection."""
+        response = await self._send_jsonrpc_request(
+            "tools/call",
+            {
+                "name": "keyword_search",
+                "arguments": {
+                    "query": "analysis_method:tree_sitter OR analysis_method:python_ast",
+                    "top_k": 5
+                }
+            },
+            16
+        )
+        
+        # Check response structure
+        assert response["jsonrpc"] == "2.0"
+        assert response["id"] == 16
+        assert "result" in response
+        
+        # Parse results to verify analysis method tracking
+        content = response["result"]["content"][0]
+        results_text = content["text"]
+        
+        # Should show our hybrid analysis approach
+        assert "analysis_method" in results_text.lower()
+        # Should indicate tree-sitter or python_ast analysis
+        assert any(method in results_text for method in ["tree_sitter", "python_ast", "hybrid"])
+
+    @pytest.mark.asyncio
+    async def test_ast_improvements_regression_prevention(self):
+        """Test AST improvements: ensure previous bugs don't return."""
+        # Test 1: Verify .type vs .kind fix by searching for functions
+        response1 = await self._send_jsonrpc_request(
+            "tools/call",
+            {
+                "name": "keyword_search",
+                "arguments": {
+                    "query": "language:python AND exists(functions)",
+                    "top_k": 5
+                }
+            },
+            17
+        )
+        
+        assert response1["jsonrpc"] == "2.0"
+        assert response1["id"] == 17
+        assert "result" in response1
+        
+        # Should find functions without AttributeError
+        content1 = response1["result"]["content"][0]
+        assert "functions" in content1["text"].lower()
+        
+        # Test 2: Verify class decorator merging by searching for @dataclass
+        response2 = await self._send_jsonrpc_request(
+            "tools/call",
+            {
+                "name": "keyword_search",
+                "arguments": {
+                    "query": "decorators:dataclass",
+                    "top_k": 3
+                }
+            },
+            18
+        )
+        
+        assert response2["jsonrpc"] == "2.0"
+        assert response2["id"] == 18
+        assert "result" in response2
+        
+        # Should find dataclass decorators in results
+        content2 = response2["result"]["content"][0]
+        results_text2 = content2["text"]
+        assert any(indicator in results_text2 for indicator in ["dataclass", "decorator"])
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
