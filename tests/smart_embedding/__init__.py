@@ -1,0 +1,1 @@
+# Smart embedding test package
