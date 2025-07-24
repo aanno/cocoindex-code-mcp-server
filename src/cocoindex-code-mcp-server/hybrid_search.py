@@ -179,6 +179,7 @@ class HybridSearchEngine:
                     "private_methods": metadata.get("private_methods", []),
                     "dunder_methods": metadata.get("dunder_methods", []),
                     "decorators": metadata.get("decorators", []),
+                    "analysis_method": metadata.get("analysis_method", "python_ast"),
                     "metadata_json": json.dumps(metadata, default=str)
                 })
             except Exception as e:
@@ -191,6 +192,7 @@ class HybridSearchEngine:
                     "has_type_hints": False,
                     "has_async": False,
                     "has_classes": False,
+                    "analysis_method": "python_ast",
                     "analysis_error": str(e)
                 })
         

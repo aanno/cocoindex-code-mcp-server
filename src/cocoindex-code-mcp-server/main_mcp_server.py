@@ -338,16 +338,16 @@ def main(
             elif name == "get_keyword_syntax_help":
                 result = await get_keyword_syntax_help_tool(arguments)
             else:
-                return [types.TextContent(
-                    type="text",
-                    text=f"Error: Unknown tool '{name}'"
-                )]
+                raise ValueError(f"Unknown tool '{name}'")
             
             return [types.TextContent(
                 type="text",
                 text=json.dumps(result, indent=2, ensure_ascii=False)
             )]
             
+        except ValueError as e:
+            # Re-raise ValueError for unknown tools/resources
+            raise e
         except Exception as e:
             logger.exception(f"Error executing tool '{name}'")
             return [types.TextContent(
@@ -356,18 +356,20 @@ def main(
             )]
 
     @app.read_resource()
-    async def read_resource(uri: str) -> str:
+    async def read_resource(uri: str) -> list[types.TextResourceContents]:
         """Read MCP resource content."""
         if uri == "cocoindex://search/stats":
-            return await get_search_stats()
+            content = await get_search_stats()
         elif uri == "cocoindex://search/config":
-            return await get_search_config()
+            content = await get_search_config()
         elif uri == "cocoindex://database/schema":
-            return await get_database_schema()
+            content = await get_database_schema()
         elif uri == "cocoindex://query/examples":
-            return await get_query_examples()
+            content = await get_query_examples()
         else:
             raise ValueError(f"Unknown resource: {uri}")
+        
+        return [types.TextResourceContents(uri=uri, text=content)]
 
     # Tool implementation functions
     async def perform_hybrid_search(arguments: dict) -> dict:
