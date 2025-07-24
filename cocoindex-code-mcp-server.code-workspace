@@ -51,4 +51,40 @@
 		],
 		"unwantedRecommendations": []
 	}
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "debugpy: Current File (IT)",
+				"type": "debugpy",
+				"request": "launch",
+				"program": "${file}",
+				"console": "integratedTerminal"
+			},
+			{
+				"name": "debugpy: MCP RAG Server (IT)",
+				"type": "debugpy",
+				"request": "launch",
+				"program": "src/cocoindex-code-mcp-server/main_mcp_server.py",
+				"args": [
+					"--port",
+					"3033",
+					"/workspaces/rust"
+				],
+				"console": "integratedTerminal"
+			},
+			{
+				"name": "debugpy: Interactive Hybrid Search (Integrated Terminal)",
+				"type": "debugpy",
+				"request": "launch",
+				"program": "src/cocoindex-code-mcp-server/main_hybrid_search.py",
+				"args": [
+					"/workspaces/rust",
+				],
+				"console": "integratedTerminal"
+			}
+		],
+		"compounds": [
+		]
+	}
 }
