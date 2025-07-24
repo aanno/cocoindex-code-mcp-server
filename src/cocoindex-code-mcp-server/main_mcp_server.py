@@ -115,9 +115,6 @@ def handle_shutdown(signum, frame):
 
     # Use sys.exit instead of os._exit for cleaner shutdown
     try:
-        # TODO: exit(0) does not exit...
-        # exit(0)
-        # wait(2)
         sys.exit(0)
     except SystemExit:
         os._exit(0)
@@ -1451,6 +1448,10 @@ async def main(args):
             print("🚀 MCP server starting (stdio mode)...", file=sys.stderr)
     
     try:
+        # TODO: 
+        # mcp.server.stdio.stdio_server() is not suited for streamable HTTP transport
+        # we should stick to the example
+        # https://github.com/modelcontextprotocol/python-sdk/blob/main/examples/servers/simple-streamablehttp-stateless/mcp_simple_streamablehttp_stateless/server.py
         # Run the MCP server
         async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
             # Start background initialization and shutdown monitor

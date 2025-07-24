@@ -7,6 +7,8 @@ This script forwards all arguments to the main MCP server.
 
 import os
 import sys
+from main_mcp_server import main as server_main
+import asyncio
 
 def main():
     """Start the MCP server with forwarded arguments."""
@@ -25,8 +27,6 @@ def main():
     # Forward all command line arguments to the main server
     # This preserves the original sys.argv for argument parsing
     try:
-        from main_mcp_server import main as server_main
-        import asyncio
         asyncio.run(server_main())
     except KeyboardInterrupt:
         print("\n👋 MCP server stopped.", file=sys.stderr)

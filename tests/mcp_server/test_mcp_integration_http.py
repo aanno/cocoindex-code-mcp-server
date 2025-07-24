@@ -27,6 +27,9 @@ class TestMCPIntegrationHTTP:
             "params": params or {}
         }
         
+        # TODO: POST is not the right thing to in streamable HTTP client
+        # we should follow the example: 
+        # https://github.com/modelcontextprotocol/python-sdk/blob/main/examples/clients/simple-chatbot/mcp_simple_chatbot/main.py
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 self.SERVER_URL,
@@ -75,7 +78,17 @@ class TestMCPIntegrationHTTP:
         server_info = result["serverInfo"]
         assert server_info["name"] == "cocoindex-rag"
         assert server_info["version"] == "1.0.0"
-    
+        
+# TODO: A test should be like this:
+# @pytest.mark.asyncio
+# async def test_list_tools_streaming(self):
+#     async with self._create_client_session() as session:
+#         tools_result = await session.list_tools()
+#         # Assertions follow...
+#
+# Here you reuse one session, and the connections are persistent during 
+# the async with, matching MCP Streamable HTTP expectations.
+
     @pytest.mark.asyncio
     async def test_list_resources(self):
         """Test listing resources via JSON-RPC."""
