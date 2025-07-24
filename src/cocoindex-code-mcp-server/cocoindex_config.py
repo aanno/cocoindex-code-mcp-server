@@ -489,6 +489,14 @@ def code_to_embedding(
         )
     )
 
+# TODO:
+# This is plain wrong:
+# 1. There are no str in a flow, but cocoindex.DataSlice[str]
+# 2. We can't dynmically select model based on language in a transform
+#    i.e. cocoindex.functions.SentenceTransformerEmbed(model=selected_model) does not work
+# 3. Instead we must:
+#    Split your data ahead of time by which model should be used, then run the 
+#    transform_flow separately for each subset with the appropriate model.
 @cocoindex.op.function()
 def embed_text_with_smart_model(text: str, language: str) -> NDArray[np.float32]:
     """Embed text using language-specific model selection with proper CocoIndex SentenceTransformerEmbed."""
@@ -516,48 +524,8 @@ def smart_code_to_embedding(
         return code_to_embedding(text)
 
     # Use the proper CocoIndex transform pattern with both text and language
+    # TODO: TypeError: 'SentenceTransformerEmbed' object is not callable
     return text.transform(embed_text_with_smart_model, language)
-
-    # @cocoindex.op.function()
-    # def embed_with_language_selection(text: str, language: str) -> Vector[np.float32, Literal[384]]:
-    #     """Embed text using language-specific embedding model selection."""
-    #     try:
-    #         # Use smart model selection based on language
-    #         selector = LanguageModelSelector()
-    #         selected_model = selector.select_model(language=language)
-    #         model_args = selector.get_model_args(selected_model)
-    #         LOGGER.info(f"Using smart embedding model for language: {language} -> {selected_model}")
-
-    #         # Load the language-specific model
-    #         smart_model = SentenceTransformer(selected_model,  local_files_only=True, **model_args)
-    #         embedding = smart_model.encode(text)
-            
-    #         return embedding.astype(np.float32)
-            
-    #     except Exception as e:
-    #         # Fallback to basic model if smart embedding fails
-    #         LOGGER.warning(f"Smart embedding failed for language {language}, falling back to basic model: {e}")
-    #         try:
-    #             fallback_model = SentenceTransformer(DEFAULT_TRANSFORMER_MODEL,  local_files_only=True)
-                
-    #             # Check for meta tensors in fallback model
-    #             for name, param in fallback_model.named_parameters():
-    #                 if param.is_meta:
-    #                     LOGGER.warning(f"Found meta tensor in fallback model {name}, using .to_empty()")
-    #                     fallback_model = fallback_model.to_empty('cpu')
-    #                     break
-    #             else:
-    #                 fallback_model = fallback_model.to('cpu')
-                
-    #             embedding = fallback_model.encode(text)
-    #             return embedding.astype(np.float32)
-    #         except Exception as fallback_error:
-    #             LOGGER.error(f"Meta tensor fallback also failed: {fallback_error}")
-    #             if STACKTRACE:
-    #                 LOGGER.error(f"Smart embedding fallback full traceback:\n{traceback.format_exc()}")
-    #             raise
-    
-    # return text.transform(embed_with_language_selection, language=language)
 
 
 # Global configuration for flow parameters  
