@@ -6,6 +6,9 @@ Each handler implements the NodeHandler protocol for a specific programming lang
 """
 
 from typing import Dict, Any, Optional
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 # Import language-specific handlers
 try:
