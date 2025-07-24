@@ -21,7 +21,7 @@ from cocoindex.typing import Vector
 from lang.haskell.haskell_ast_chunker import get_haskell_language_spec
 from lang.python.python_code_analyzer import analyze_python_code
 from __init__ import LOGGER
-from sentence_transformers import SentenceTransformer
+# from sentence_transformers import SentenceTransformer  # Use cocoindex.functions.SentenceTransformerEmbed instead
 from ast_chunking import Chunk, ASTChunkOperation
 from smart_code_embedding import LanguageModelSelector
 
@@ -32,7 +32,7 @@ STACKTRACE = False
 
 # Import our custom extensions
 try:
-    from smart_code_embedding import create_smart_code_embedding, LanguageModelSelector
+    from smart_code_embedding import LanguageModelSelector
     SMART_EMBEDDING_AVAILABLE = True
     LOGGER.info("Smart code embedding enabled and loaded successfully")
 except ImportError as e:
@@ -490,34 +490,98 @@ def code_to_embedding(
 # Removed helper function that was causing DataScope context issues
 
 
-@cocoindex.transform_flow()
-def smart_code_to_embedding(
-    text: cocoindex.DataSlice[str],
-    language: cocoindex.DataSlice[str]
-) -> cocoindex.DataSlice[NDArray[np.float32]]:
+@cocoindex.op.function()
+def select_embedding_model_for_language(language: str) -> str:
     """
-    Smart language-aware embedding using external wrapper.
-    Uses appropriate models based on programming language.
+    Select appropriate embedding model based on programming language.
     """
     if not SMART_EMBEDDING_AVAILABLE:
-        LOGGER.warning("Smart embedding not available, falling back to default")
-        return text.transform(
-            cocoindex.functions.SentenceTransformerEmbed(
-                model=DEFAULT_TRANSFORMER_MODEL
-            )
-        )
+        LOGGER.debug(f"Smart embedding not available for {language}, using default")
+        return DEFAULT_TRANSFORMER_MODEL
     
-    # For now, use a single smart model selection based on the first language
-    # This is a simplified approach - the advanced filtering will come in later steps
+    # Use the smart embedding selector with actual language value
+    selector = LanguageModelSelector()
+    selected_model = selector.select_model(language=language.lower())
+    
+    LOGGER.debug(f"Selected embedding model: {selected_model} for language: {language}")
+    return selected_model
+
+
+@cocoindex.transform_flow()
+def graphcodebert_embedding(
+    text: cocoindex.DataSlice[str],
+) -> cocoindex.DataSlice[NDArray[np.float32]]:
+    """GraphCodeBERT embedding for Python, Java, JavaScript, PHP, Ruby, Go, C, C++."""
     return text.transform(
-        create_smart_code_embedding(language="python")  # Start with Python as default
+        cocoindex.functions.SentenceTransformerEmbed(
+            model="microsoft/graphcodebert-base"
+        )
     )
+
+
+@cocoindex.transform_flow()
+def unixcoder_embedding(
+    text: cocoindex.DataSlice[str],
+) -> cocoindex.DataSlice[NDArray[np.float32]]:
+    """UniXcode embedding for Rust, TypeScript, C#, Kotlin, Scala, Swift, Dart."""
+    return text.transform(
+        cocoindex.functions.SentenceTransformerEmbed(
+            model="microsoft/unixcoder-base"
+        )
+    )
+
+
+@cocoindex.transform_flow()
+def fallback_embedding(
+    text: cocoindex.DataSlice[str],
+) -> cocoindex.DataSlice[NDArray[np.float32]]:
+    """Fallback embedding for languages not supported by specialized models."""
+    return text.transform(
+        cocoindex.functions.SentenceTransformerEmbed(
+            model=DEFAULT_TRANSFORMER_MODEL
+        )
+    )
+
+
+# Language group to embedding model mapping for smart embedding
+LANGUAGE_MODEL_GROUPS = {
+    # GraphCodeBERT - optimized for these specific languages
+    'graphcodebert': {
+        'model': 'microsoft/graphcodebert-base',
+        'languages': {'python', 'java', 'javascript', 'php', 'ruby', 'go', 'c', 'c++'}
+    },
+    # UniXcode - optimized for these languages  
+    'unixcoder': {
+        'model': 'microsoft/unixcoder-base',
+        'languages': {'rust', 'typescript', 'tsx', 'c#', 'kotlin', 'scala', 'swift', 'dart'}
+    },
+    # Fallback for all other languages
+    'fallback': {
+        'model': DEFAULT_TRANSFORMER_MODEL,
+        'languages': set()  # Will catch everything else
+    }
+}
+
+
+@cocoindex.op.function()
+def get_embedding_model_group(language: str) -> str:
+    """Get the appropriate embedding model group for a language."""
+    lang_lower = language.lower()
+    
+    for group_name, group_info in LANGUAGE_MODEL_GROUPS.items():
+        if group_name == 'fallback':
+            continue  # Handle fallback last
+        if lang_lower in group_info['languages']:
+            return group_name
+    
+    # Default to fallback for unrecognized languages
+    return 'fallback'
 
 
 # Global configuration for flow parameters  
 _global_flow_config = {
     'paths': ["."],  # Use current directory for testing
-    'enable_polling': False,
+    'enable_polling': False, 
     'poll_interval': 30,
     'use_smart_embedding': True,  # Enable smart language-aware embedding
 }
@@ -667,10 +731,24 @@ def code_embedding_flow(
             use_smart_embedding = _global_flow_config.get('use_smart_embedding', False)
             LOGGER.debug(f"Embedding config: use_smart_embedding={use_smart_embedding}, SMART_EMBEDDING_AVAILABLE={SMART_EMBEDDING_AVAILABLE}")
             
+            # Add model group information for smart embedding
+            if use_smart_embedding and SMART_EMBEDDING_AVAILABLE:
+                with file["chunks"].row() as chunk:
+                    chunk["model_group"] = file["language"].transform(get_embedding_model_group)
+            
             with file["chunks"].row() as chunk:
+                # Smart embedding with language-aware model selection
                 if use_smart_embedding and SMART_EMBEDDING_AVAILABLE:
-                    LOGGER.info("Using smart language-aware embedding")
-                    chunk["embedding"] = chunk["text"].call(smart_code_to_embedding, language=file["language"])
+                    model_group = chunk["model_group"]
+                    if model_group == "graphcodebert":
+                        LOGGER.info(f"Using GraphCodeBERT for {file['language']}")
+                        chunk["embedding"] = chunk["text"].call(graphcodebert_embedding)
+                    elif model_group == "unixcoder":
+                        LOGGER.info(f"Using UniXcode for {file['language']}")
+                        chunk["embedding"] = chunk["text"].call(unixcoder_embedding)
+                    else:  # fallback
+                        LOGGER.info(f"Using fallback model for {file['language']}")
+                        chunk["embedding"] = chunk["text"].call(fallback_embedding)
                 else:
                     LOGGER.info("Using default embedding")
                     chunk["embedding"] = chunk["text"].call(code_to_embedding)
