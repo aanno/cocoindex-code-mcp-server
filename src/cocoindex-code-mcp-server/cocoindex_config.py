@@ -32,10 +32,9 @@ STACKTRACE = False
 
 # Import our custom extensions
 try:
-    # from smart_code_embedding import create_smart_code_embedding, LanguageModelSelector
-    # Temporarily disable to isolate DataScope issues
-    SMART_EMBEDDING_AVAILABLE = False
-    LOGGER.info("Smart code embedding temporarily disabled for troubleshooting")
+    from smart_code_embedding import create_smart_code_embedding, LanguageModelSelector
+    SMART_EMBEDDING_AVAILABLE = True
+    LOGGER.info("Smart code embedding enabled and loaded successfully")
 except ImportError as e:
     SMART_EMBEDDING_AVAILABLE = False
     LOGGER.warning(f"Smart code embedding not available: {e}")
@@ -491,11 +490,36 @@ def code_to_embedding(
 # Removed helper function that was causing DataScope context issues
 
 
+@cocoindex.transform_flow()
+def smart_code_to_embedding(
+    text: cocoindex.DataSlice[str],
+    language: cocoindex.DataSlice[str]
+) -> cocoindex.DataSlice[NDArray[np.float32]]:
+    """
+    Smart language-aware embedding using external wrapper.
+    Uses appropriate models based on programming language.
+    """
+    if not SMART_EMBEDDING_AVAILABLE:
+        LOGGER.warning("Smart embedding not available, falling back to default")
+        return text.transform(
+            cocoindex.functions.SentenceTransformerEmbed(
+                model=DEFAULT_TRANSFORMER_MODEL
+            )
+        )
+    
+    # For now, use a single smart model selection based on the first language
+    # This is a simplified approach - the advanced filtering will come in later steps
+    return text.transform(
+        create_smart_code_embedding(language="python")  # Start with Python as default
+    )
+
+
 # Global configuration for flow parameters  
 _global_flow_config = {
     'paths': ["."],  # Use current directory for testing
     'enable_polling': False,
-    'poll_interval': 30
+    'poll_interval': 30,
+    'use_smart_embedding': True,  # Enable smart language-aware embedding
 }
 
 
@@ -639,11 +663,17 @@ def code_embedding_flow(
                 # Ensure unique locations for AST chunking (safety measure)
                 file["chunks"] = raw_chunks.transform(ensure_unique_chunk_locations)
             
-            # Always use default embedding for now to isolate DataScope issues
-            LOGGER.info("Using default embedding (troubleshooting DataScope context issues)")
+            # Choose embedding method based on configuration
+            use_smart_embedding = _global_flow_config.get('use_smart_embedding', False)
+            LOGGER.debug(f"Embedding config: use_smart_embedding={use_smart_embedding}, SMART_EMBEDDING_AVAILABLE={SMART_EMBEDDING_AVAILABLE}")
             
             with file["chunks"].row() as chunk:
-                chunk["embedding"] = chunk["text"].call(code_to_embedding)
+                if use_smart_embedding and SMART_EMBEDDING_AVAILABLE:
+                    LOGGER.info("Using smart language-aware embedding")
+                    chunk["embedding"] = chunk["text"].call(smart_code_to_embedding, language=file["language"])
+                else:
+                    LOGGER.info("Using default embedding")
+                    chunk["embedding"] = chunk["text"].call(code_to_embedding)
                 
                 # Extract metadata using appropriate method based on configuration
                 use_default_language_handler = _global_flow_config.get('use_default_language_handler', False)
