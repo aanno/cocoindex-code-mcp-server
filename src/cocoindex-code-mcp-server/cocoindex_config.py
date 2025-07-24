@@ -489,28 +489,34 @@ def code_to_embedding(
         )
     )
 
+@cocoindex.op.function()
+def embed_text_with_smart_model(text: str, language: str) -> NDArray[np.float32]:
+    """Embed text using language-specific model selection with proper CocoIndex SentenceTransformerEmbed."""
+    # Select the appropriate model based on language
+    selector = LanguageModelSelector()
+    selected_model = selector.select_model(language=language)
+    LOGGER.info(f"Selected embedding model for language '{language}': {selected_model}")
+    
+    # Use CocoIndex SentenceTransformerEmbed with the selected model
+    embed_func = cocoindex.functions.SentenceTransformerEmbed(model=selected_model)
+    
+    # Apply the embedding function to the text
+    return embed_func(text)
+
 @cocoindex.transform_flow()
 def smart_code_to_embedding(
     text: cocoindex.DataSlice[str],
     language: cocoindex.DataSlice[str],
 ) -> cocoindex.DataSlice[NDArray[np.float32]]:
     """
-    Smart embedding that selects model based on language.
+    Smart embedding that selects model based on language using proper CocoIndex patterns.
     """
     if not SMART_EMBEDDING_AVAILABLE:
         LOGGER.warning("Smart embedding not available, falling back to default")
         return code_to_embedding(text)
 
-    selector = LanguageModelSelector()
-    selected_model = selector.select_model(language=language)
-    LOGGER.info(f"Using smart embedding model for language: {language} -> {selected_model}")
-
-    return text.transform(
-        # Embed text using SentenceTransformer model with meta tensor handling.
-        cocoindex.functions.SentenceTransformerEmbed(
-            model=selected_model
-        )
-    )
+    # Use the proper CocoIndex transform pattern with both text and language
+    return text.transform(embed_text_with_smart_model, language)
 
     # @cocoindex.op.function()
     # def embed_with_language_selection(text: str, language: str) -> Vector[np.float32, Literal[384]]:
