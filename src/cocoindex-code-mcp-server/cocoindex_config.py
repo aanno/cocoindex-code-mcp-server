@@ -23,8 +23,6 @@ from lang.python.python_code_analyzer import analyze_python_code
 from __init__ import LOGGER
 from sentence_transformers import SentenceTransformer
 from ast_chunking import Chunk, ASTChunkOperation
-from language_handlers.python_handler import PythonNodeHandler
-from language_handlers import get_handler_for_language
 from smart_code_embedding import LanguageModelSelector
 
 # Models will be instantiated directly (HuggingFace handles caching)
@@ -256,15 +254,14 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
     
     try:
         if language == "Python" and PYTHON_HANDLER_AVAILABLE and not use_default_handler:
-            # Use our advanced Python handler extension
+            # Use our advanced Python handler through the tree-sitter analyzer
             try:
-                handler = PythonNodeHandler()
-                # TODO: This is a simplified integration - the handler expects AST nodes
-                # For now, fall back to basic analysis but log that the handler is available
-                LOGGER.debug("Python handler available but needs AST integration")
-                metadata = analyze_python_code(text, filename)
+                from lang.python.tree_sitter_python_analyzer import TreeSitterPythonAnalyzer
+                LOGGER.debug("Using TreeSitterPythonAnalyzer with integrated PythonNodeHandler")
+                analyzer = TreeSitterPythonAnalyzer(prefer_tree_sitter=True)
+                metadata = analyzer.analyze_code(text, filename)
             except Exception as e:
-                LOGGER.debug(f"Python handler failed, falling back to basic analysis: {e}")
+                LOGGER.debug(f"TreeSitterPythonAnalyzer failed, falling back to basic analysis: {e}")
                 metadata = analyze_python_code(text, filename)
         elif language == "Python":
             metadata = analyze_python_code(text, filename)
@@ -506,7 +503,6 @@ def smart_code_to_embedding(
 
     selector = LanguageModelSelector()
     selected_model = selector.select_model(language=language)
-    model_args = selector.get_model_args(selected_model)
     LOGGER.info(f"Using smart embedding model for language: {language} -> {selected_model}")
 
     return text.transform(

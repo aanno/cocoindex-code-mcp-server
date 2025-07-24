@@ -127,7 +127,7 @@ class GenericMetadataVisitor(ASTVisitor):
     
     def visit_node(self, context: NodeContext) -> Optional[Dict[str, Any]]:
         """Visit a node using registered handlers."""
-        node_type = context.node.kind if hasattr(context.node, 'kind') else str(type(context.node))
+        node_type = context.node.type if hasattr(context.node, 'type') else str(type(context.node))
         
         # Track node statistics
         self.node_stats[node_type] = self.node_stats.get(node_type, 0) + 1
@@ -250,18 +250,18 @@ class TreeWalker:
     
     def _get_scope_name(self, context: NodeContext) -> Optional[str]:
         """Extract scope name from certain node types."""
-        node_type = context.node.kind if hasattr(context.node, 'kind') else ""
+        node_type = context.node.type if hasattr(context.node, 'type') else ""
         
         if node_type in ['function_definition', 'method_definition', 'function_declaration']:
             # Try to extract function name
             for child in context.node.children if hasattr(context.node, 'children') else []:
-                if hasattr(child, 'kind') and child.kind in ['identifier', 'name']:
+                if hasattr(child, 'type') and child.type in ['identifier', 'name']:
                     return context.source_text[child.start_byte:child.end_byte]
         
         elif node_type in ['class_definition', 'class_declaration']:
             # Try to extract class name
             for child in context.node.children if hasattr(context.node, 'children') else []:
-                if hasattr(child, 'kind') and child.kind in ['identifier', 'name', 'type_identifier']:
+                if hasattr(child, 'type') and child.type in ['identifier', 'name', 'type_identifier']:
                     return context.source_text[child.start_byte:child.end_byte]
         
         return None

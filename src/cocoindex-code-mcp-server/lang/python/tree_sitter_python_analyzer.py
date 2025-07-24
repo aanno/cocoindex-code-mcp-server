@@ -199,7 +199,7 @@ class TreeSitterPythonAnalyzer:
             )
         
         # Merge boolean flags (OR operation)
-        for key in ['has_async', 'has_classes', 'has_decorators', 'has_type_hints']:
+        for key in ['has_async', 'has_classes', 'has_decorators', 'has_type_hints', 'has_docstrings']:
             if key in secondary:
                 merged[key] = merged.get(key, False) or secondary.get(key, False)
         
@@ -533,7 +533,7 @@ class PythonASTVisitor(ast.NodeVisitor):
                 for f in self.functions
             ),
             'has_docstrings': any(
-                f.get('docstring') for f in self.functions + self.classes
+                f.get('docstring') or f.get('has_docstring') for f in self.functions + self.classes
             ),
             'private_methods': [f['name'] for f in self.functions if f['is_private']],
             'dunder_methods': [f['name'] for f in self.functions if f['is_dunder']],

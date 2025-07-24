@@ -122,7 +122,7 @@ class PythonNodeHandler:
     
     def extract_metadata(self, context: NodeContext) -> Dict[str, Any]:
         """Extract metadata from a Python AST node."""
-        node_type = context.node.kind if hasattr(context.node, 'kind') else str(type(context.node))
+        node_type = context.node.type if hasattr(context.node, 'type') else str(type(context.node))
         
         if not self.can_handle(node_type):
             return {}
@@ -327,7 +327,7 @@ class PythonNodeHandler:
             return None
         
         for child in node.children:
-            if hasattr(child, 'kind') and child.kind == 'identifier':
+            if hasattr(child, 'type') and child.type == 'identifier':
                 return source_text[child.start_byte:child.end_byte]
         
         return None
@@ -338,7 +338,7 @@ class PythonNodeHandler:
             return None
         
         for child in node.children:
-            if hasattr(child, 'kind') and child.kind == 'identifier':
+            if hasattr(child, 'type') and child.type == 'identifier':
                 return source_text[child.start_byte:child.end_byte]
         
         return None
@@ -352,7 +352,7 @@ class PythonNodeHandler:
         
         # Find parameters node
         for child in node.children:
-            if hasattr(child, 'kind') and child.kind == 'parameters':
+            if hasattr(child, 'type') and child.type == 'parameters':
                 parameters = self._parse_parameters_node(child, source_text)
                 break
         
@@ -366,8 +366,8 @@ class PythonNodeHandler:
             return parameters
         
         for child in params_node.children:
-            if hasattr(child, 'kind'):
-                if child.kind == 'identifier':
+            if hasattr(child, 'type'):
+                if child.type == 'identifier':
                     # Simple parameter
                     param_name = source_text[child.start_byte:child.end_byte]
                     parameters.append({
@@ -375,12 +375,12 @@ class PythonNodeHandler:
                         'type_annotation': None,
                         'default': None
                     })
-                elif child.kind == 'typed_parameter':
+                elif child.type == 'typed_parameter':
                     # Parameter with type annotation
                     param_info = self._parse_typed_parameter(child, source_text)
                     if param_info:
                         parameters.append(param_info)
-                elif child.kind == 'default_parameter':
+                elif child.type == 'default_parameter':
                     # Parameter with default value
                     param_info = self._parse_default_parameter(child, source_text)
                     if param_info:
@@ -396,8 +396,8 @@ class PythonNodeHandler:
             return None
         
         for child in param_node.children:
-            if hasattr(child, 'kind'):
-                if child.kind == 'identifier':
+            if hasattr(child, 'type'):
+                if child.type == 'identifier':
                     param_info['name'] = source_text[child.start_byte:child.end_byte]
                 else:
                     # Type annotation
@@ -415,7 +415,7 @@ class PythonNodeHandler:
         children = list(param_node.children)
         if len(children) >= 2:
             # First child is parameter name
-            if hasattr(children[0], 'kind') and children[0].kind == 'identifier':
+            if hasattr(children[0], 'type') and children[0].type == 'identifier':
                 param_info['name'] = source_text[children[0].start_byte:children[0].end_byte]
             
             # Last child is default value
@@ -429,7 +429,7 @@ class PythonNodeHandler:
             return None
         
         for child in node.children:
-            if hasattr(child, 'kind') and child.kind == 'type':
+            if hasattr(child, 'type') and child.type == 'type':
                 return source_text[child.start_byte:child.end_byte]
         
         return None
@@ -442,7 +442,7 @@ class PythonNodeHandler:
             return decorators
         
         for child in node.children:
-            if hasattr(child, 'kind') and child.kind == 'decorator':
+            if hasattr(child, 'type') and child.type == 'decorator':
                 decorator_text = source_text[child.start_byte:child.end_byte]
                 # Remove @ symbol and extract decorator name
                 if decorator_text.startswith('@'):
@@ -461,7 +461,7 @@ class PythonNodeHandler:
         
         # Look for string literal as first statement in body
         for child in node.children:
-            if hasattr(child, 'kind') and child.kind in ['block', 'suite']:
+            if hasattr(child, 'type') and child.type in ['block', 'suite']:
                 return self._find_docstring_in_block(child, source_text)
         
         return None
@@ -472,13 +472,13 @@ class PythonNodeHandler:
             return None
         
         for child in block_node.children:
-            if hasattr(child, 'kind'):
-                if child.kind == 'expression_statement':
+            if hasattr(child, 'type'):
+                if child.type == 'expression_statement':
                     # Check if this expression statement contains a string
                     docstring = self._extract_string_from_expression(child, source_text)
                     if docstring:
                         return docstring
-                elif child.kind not in ['comment', 'newline']:
+                elif child.type not in ['comment', 'newline']:
                     # First non-comment/newline statement that's not a string means no docstring
                     break
         
@@ -490,7 +490,7 @@ class PythonNodeHandler:
             return None
         
         for child in expr_node.children:
-            if hasattr(child, 'kind') and child.kind == 'string':
+            if hasattr(child, 'type') and child.type == 'string':
                 string_content = source_text[child.start_byte:child.end_byte]
                 # Remove quotes and return content
                 return self._clean_string_literal(string_content)
@@ -515,7 +515,7 @@ class PythonNodeHandler:
             return bases
         
         for child in node.children:
-            if hasattr(child, 'kind') and child.kind == 'argument_list':
+            if hasattr(child, 'type') and child.type == 'argument_list':
                 # Extract base class names from argument list
                 bases.extend(self._extract_names_from_argument_list(child, source_text))
         
@@ -529,10 +529,10 @@ class PythonNodeHandler:
             return names
         
         for child in arg_list_node.children:
-            if hasattr(child, 'kind'):
-                if child.kind == 'identifier':
+            if hasattr(child, 'type'):
+                if child.type == 'identifier':
                     names.append(source_text[child.start_byte:child.end_byte])
-                elif child.kind == 'attribute':
+                elif child.type == 'attribute':
                     # Handle module.Class syntax
                     names.append(source_text[child.start_byte:child.end_byte])
         
@@ -547,11 +547,11 @@ class PythonNodeHandler:
             return module_name, alias
         
         for child in node.children:
-            if hasattr(child, 'kind'):
-                if child.kind in ['dotted_name', 'identifier']:
+            if hasattr(child, 'type'):
+                if child.type in ['dotted_name', 'identifier']:
                     if not module_name:
                         module_name = source_text[child.start_byte:child.end_byte]
-                elif child.kind == 'aliased_import':
+                elif child.type == 'aliased_import':
                     # Handle "import module as alias"
                     module_name, alias = self._extract_aliased_import(child, source_text)
         
@@ -566,10 +566,10 @@ class PythonNodeHandler:
             return module_name, imported_names
         
         for child in node.children:
-            if hasattr(child, 'kind'):
-                if child.kind in ['dotted_name', 'identifier'] and not module_name:
+            if hasattr(child, 'type'):
+                if child.type in ['dotted_name', 'identifier'] and not module_name:
                     module_name = source_text[child.start_byte:child.end_byte]
-                elif child.kind == 'import_list':
+                elif child.type == 'import_list':
                     imported_names = self._extract_import_list(child, source_text)
         
         return module_name, imported_names
@@ -585,11 +585,11 @@ class PythonNodeHandler:
         children = list(aliased_node.children)
         if len(children) >= 2:
             # First child is module name
-            if hasattr(children[0], 'kind'):
+            if hasattr(children[0], 'type'):
                 module_name = source_text[children[0].start_byte:children[0].end_byte]
             
             # Last child is alias
-            if hasattr(children[-1], 'kind'):
+            if hasattr(children[-1], 'type'):
                 alias = source_text[children[-1].start_byte:children[-1].end_byte]
         
         return module_name, alias
@@ -602,10 +602,10 @@ class PythonNodeHandler:
             return names
         
         for child in import_list_node.children:
-            if hasattr(child, 'kind'):
-                if child.kind == 'identifier':
+            if hasattr(child, 'type'):
+                if child.type == 'identifier':
                     names.append(source_text[child.start_byte:child.end_byte])
-                elif child.kind == 'aliased_import':
+                elif child.type == 'aliased_import':
                     # Handle "from module import name as alias"
                     original_name, alias = self._extract_aliased_import(child, source_text)
                     if original_name:
@@ -621,10 +621,10 @@ class PythonNodeHandler:
             return targets
         
         for child in node.children:
-            if hasattr(child, 'kind'):
-                if child.kind == 'identifier':
+            if hasattr(child, 'type'):
+                if child.type == 'identifier':
                     targets.append(source_text[child.start_byte:child.end_byte])
-                elif child.kind in ['pattern_list', 'tuple_pattern']:
+                elif child.type in ['pattern_list', 'tuple_pattern']:
                     # Handle multiple assignment like a, b = 1, 2
                     targets.extend(self._extract_pattern_names(child, source_text))
         
@@ -638,7 +638,7 @@ class PythonNodeHandler:
             return names
         
         for child in pattern_node.children:
-            if hasattr(child, 'kind') and child.kind == 'identifier':
+            if hasattr(child, 'type') and child.type == 'identifier':
                 names.append(source_text[child.start_byte:child.end_byte])
         
         return names
