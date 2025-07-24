@@ -33,10 +33,9 @@ STACKTRACE = False
 # Import our custom extensions
 try:
     # from smart_code_embedding import create_smart_code_embedding, LanguageModelSelector
-    SMART_EMBEDDING_AVAILABLE = True
-    # TODO: for the moment
-    # SMART_EMBEDDING_AVAILABLE = False
-    # LOGGER.info("Smart code embedding extension loaded but temporarily disabled")
+    # Temporarily disable to isolate DataScope issues
+    SMART_EMBEDDING_AVAILABLE = False
+    LOGGER.info("Smart code embedding temporarily disabled for troubleshooting")
 except ImportError as e:
     SMART_EMBEDDING_AVAILABLE = False
     LOGGER.warning(f"Smart code embedding not available: {e}")
@@ -489,43 +488,7 @@ def code_to_embedding(
         )
     )
 
-# TODO:
-# This is plain wrong:
-# 1. There are no str in a flow, but cocoindex.DataSlice[str]
-# 2. We can't dynmically select model based on language in a transform
-#    i.e. cocoindex.functions.SentenceTransformerEmbed(model=selected_model) does not work
-# 3. Instead we must:
-#    Split your data ahead of time by which model should be used, then run the 
-#    transform_flow separately for each subset with the appropriate model.
-@cocoindex.op.function()
-def embed_text_with_smart_model(text: str, language: str) -> NDArray[np.float32]:
-    """Embed text using language-specific model selection with proper CocoIndex SentenceTransformerEmbed."""
-    # Select the appropriate model based on language
-    selector = LanguageModelSelector()
-    selected_model = selector.select_model(language=language)
-    LOGGER.info(f"Selected embedding model for language '{language}': {selected_model}")
-    
-    # Use CocoIndex SentenceTransformerEmbed with the selected model
-    embed_func = cocoindex.functions.SentenceTransformerEmbed(model=selected_model)
-    
-    # Apply the embedding function to the text
-    return embed_func(text)
-
-@cocoindex.transform_flow()
-def smart_code_to_embedding(
-    text: cocoindex.DataSlice[str],
-    language: cocoindex.DataSlice[str],
-) -> cocoindex.DataSlice[NDArray[np.float32]]:
-    """
-    Smart embedding that selects model based on language using proper CocoIndex patterns.
-    """
-    if not SMART_EMBEDDING_AVAILABLE:
-        LOGGER.warning("Smart embedding not available, falling back to default")
-        return code_to_embedding(text)
-
-    # Use the proper CocoIndex transform pattern with both text and language
-    # TODO: TypeError: 'SentenceTransformerEmbed' object is not callable
-    return text.transform(embed_text_with_smart_model, language)
+# Removed helper function that was causing DataScope context issues
 
 
 # Global configuration for flow parameters  
@@ -676,19 +639,11 @@ def code_embedding_flow(
                 # Ensure unique locations for AST chunking (safety measure)
                 file["chunks"] = raw_chunks.transform(ensure_unique_chunk_locations)
             
+            # Always use default embedding for now to isolate DataScope issues
+            LOGGER.info("Using default embedding (troubleshooting DataScope context issues)")
+            
             with file["chunks"].row() as chunk:
-                # Choose embedding method based on configuration
-                use_default_embedding = _global_flow_config.get('use_default_embedding', False)
-                
-                if use_default_embedding or not SMART_EMBEDDING_AVAILABLE:
-                    if not use_default_embedding and not SMART_EMBEDDING_AVAILABLE:
-                        LOGGER.info("Smart embedding not available, using default embedding")
-                    else:
-                        LOGGER.info("Using default embedding (--default-embedding flag set)")
-                    chunk["embedding"] = chunk["text"].call(code_to_embedding)
-                else:
-                    LOGGER.info("Using smart code embedding extension")
-                    chunk["embedding"] = chunk["text"].call(smart_code_to_embedding, language=file["language"])
+                chunk["embedding"] = chunk["text"].call(code_to_embedding)
                 
                 # Extract metadata using appropriate method based on configuration
                 use_default_language_handler = _global_flow_config.get('use_default_language_handler', False)
