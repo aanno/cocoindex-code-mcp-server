@@ -395,13 +395,29 @@ def main(
         vector_weight = arguments.get("vector_weight", 0.7)
         keyword_weight = arguments.get("keyword_weight", 0.3)
         
-        results = hybrid_search_engine.search(
-            vector_query=vector_query,
-            keyword_query=keyword_query, 
-            top_k=top_k,
-            vector_weight=vector_weight,
-            keyword_weight=keyword_weight
-        )
+        try:
+            results = hybrid_search_engine.search(
+                vector_query=vector_query,
+                keyword_query=keyword_query, 
+                top_k=top_k,
+                vector_weight=vector_weight,
+                keyword_weight=keyword_weight
+            )
+        except ValueError as e:
+            # Handle field validation errors with helpful messages
+            error_msg = str(e)
+            if "Invalid field" in error_msg:
+                from schema_validator import get_valid_fields_help
+                help_text = get_valid_fields_help()
+                raise ValueError(f"{error_msg}\n\n{help_text}")
+            raise
+        except Exception as e:
+            # Handle SQL-related errors
+            if "column" in str(e) and "does not exist" in str(e):
+                from schema_validator import get_valid_fields_help
+                help_text = get_valid_fields_help()
+                raise ValueError(f"Database schema error: {e}\n\n{help_text}")
+            raise
         
         return {
             "query": {

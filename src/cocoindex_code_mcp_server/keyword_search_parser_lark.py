@@ -230,11 +230,17 @@ class KeywordSearchParser:
 
 def build_sql_where_clause(search_group: SearchGroup, table_alias: str = "") -> tuple[str, List[Any]]:
     """
-    Build a SQL WHERE clause from a SearchGroup.
+    Build a SQL WHERE clause from a SearchGroup with proper field validation and SQL injection protection.
     
     Returns:
         tuple: (where_clause, parameters)
+    
+    Raises:
+        ValueError: If any field names are invalid or don't exist in the schema
     """
+    # Import here to avoid circular imports
+    from schema_validator import schema_validator
+    
     if not search_group.conditions:
         return "TRUE", []
     
@@ -244,18 +250,25 @@ def build_sql_where_clause(search_group: SearchGroup, table_alias: str = "") -> 
     
     for condition in search_group.conditions:
         if isinstance(condition, SearchCondition):
+            # Validate and map field name to prevent SQL injection and unknown column errors
+            field_result = schema_validator.validate_field(condition.field)
+            if not field_result.is_valid:
+                raise ValueError(f"Invalid field in search condition: {field_result.error_message}")
+            
+            validated_field = field_result.mapped_field
+            
             if condition.is_exists_check:
-                where_parts.append(f"{prefix}{condition.field} IS NOT NULL")
+                where_parts.append(f"{prefix}{validated_field} IS NOT NULL")
             elif condition.is_value_contains_check:
                 # value_contains(field, "search_string") -> field ILIKE %search_string%
-                where_parts.append(f"{prefix}{condition.field} ILIKE %s")
+                where_parts.append(f"{prefix}{validated_field} ILIKE %s")
                 params.append(f"%{condition.value}%")
             elif condition.field == "_text":
-                # General text search across code content
+                # General text search across code content - map to 'code' field
                 where_parts.append(f"{prefix}code ILIKE %s")
                 params.append(f"%{condition.value}%")
             else:
-                where_parts.append(f"{prefix}{condition.field} = %s")
+                where_parts.append(f"{prefix}{validated_field} = %s")
                 params.append(condition.value)
         elif isinstance(condition, SearchGroup):
             sub_where, sub_params = build_sql_where_clause(condition, table_alias)
