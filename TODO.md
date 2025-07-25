@@ -128,6 +128,8 @@ class ChunkQuery(TypedDict):
 
 **Short-Term**:
 
+* ✅ **COMPLETED**: Haskell AST visitor implementation with specialized visitor pattern
+* **NEXT**: Create baseline comparison test for Haskell using fixtures/test_haskell.hs and RAG analysis
 * for mcp server I expect 'Selected embedding model:' from `src/cocoindex-code-mcp-server/smart_code_embedding.py` in the logs, but it is not there.
 * for mcp server I expect 'AST chunking created' from `src/cocoindex-code-mcp-server/ast_chunking.py` in the logs, but it is not there.
 * for mcp server I expect 'Handled ... with result' from `src/cocoindex-code-mcp-server/language_handlers/python_handler.py` in the logs (with DEBUG), but it is not there.
@@ -142,22 +144,12 @@ class ChunkQuery(TypedDict):
 * we should combine all above to see if it runs through the code we expect, not through the backups/fallbacks
 * where needed, we should add tests. That make further development easier.
 
-**Disputed**:
-- First, we should have some tests with multiple languages (i.e. python, c, c++, rust, haskell, java, typescript, kotlin) to see what we got out the box
-  + If possible, the tests output should be postprocessed to a table what is supported including:
-    - Chunking strategy (and quality)
-    - Metadata extraction (list of keywords supported)
-    - Metadata quality (e.g. is the function really a function, or is it a class, etc.)
-    - AST visitor support (easy for the moment)
-    - Language-specific features (if any)
-  + I wonder if same of this could be done generically, i.e. if we could have a generic test that runs on all languages
-  + The tests also makes it more easy to track the evolution of the language support
-- Next strategic step is to have haskell support on the same level as python
-- After that, we should also (in addition) support Qdrant
-- Our plan should be tailored to the above
-- Perhaps we should keep our current code specific to PostgreSQL
-  + and make the use of it or the new abstraction a configuration option
-  + however, we should the effected files better (something with pgvector in the name)
+**Strategic Direction**:
+- ✅ **COMPLETED**: Haskell support now at same level as Python for AST visitor-based metadata extraction
+- Next: Create comprehensive baseline test comparing our Haskell implementation vs CocoIndex defaults
+- After that: Support additional languages (C, C++, Rust, Java, TypeScript, Kotlin) 
+- Eventually: Add Qdrant backend support with abstraction layer
+- Testing approach: Multi-language comparison matrix for chunking quality, metadata extraction, AST support
 
 ### Phase 1: Core Abstractions (High Priority)
 1. **Create `VectorStoreBackend` interface** - Abstract away database-specific code
