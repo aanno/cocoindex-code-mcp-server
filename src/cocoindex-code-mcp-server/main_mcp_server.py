@@ -311,20 +311,23 @@ def main(
                 description="Categorized examples of keyword query syntax",
                 mimeType="application/json",
             ),
+            types.Resource(
+                uri="cocoindex://test/simple",
+                name="Test Resource",
+                description="Simple test resource for debugging",
+                mimeType="application/json",
+            ),
         ]
 
     @app.call_tool()
     async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
-        """Handle MCP tool calls."""
+        """Handle MCP tool calls with proper error handling."""
         global hybrid_search_engine
         
-        if not hybrid_search_engine:
-            return [types.TextContent(
-                type="text",
-                text="Error: Hybrid search engine not initialized. Please check database connection."
-            )]
-        
         try:
+            if not hybrid_search_engine:
+                raise RuntimeError("Hybrid search engine not initialized. Please check database connection.")
+            
             if name == "hybrid_search":
                 result = await perform_hybrid_search(arguments)
             elif name == "vector_search":
@@ -345,19 +348,26 @@ def main(
                 text=json.dumps(result, indent=2, ensure_ascii=False)
             )]
             
-        except ValueError as e:
-            # Re-raise ValueError for unknown tools/resources
-            raise e
         except Exception as e:
             logger.exception(f"Error executing tool '{name}'")
+            # Return proper MCP error dict as per protocol recommendation
+            error_response = {
+                "error": {
+                    "type": "mcp_protocol_error",
+                    "code": 32603,
+                    "message": str(e)
+                }
+            }
             return [types.TextContent(
-                type="text", 
-                text=f"Error executing tool '{name}': {str(e)}"
+                type="text",
+                text=json.dumps(error_response, indent=2, ensure_ascii=False)
             )]
 
     @app.read_resource()
-    async def read_resource(uri: str) -> list[types.TextResourceContents]:
+    async def handle_read_resource(uri: str) -> list[types.TextResourceContents]:
         """Read MCP resource content."""
+        logger.info(f"🔍 Reading resource: '{uri}' (type: {type(uri)}, repr: {repr(uri)})")
+        
         if uri == "cocoindex://search/stats":
             content = await get_search_stats()
         elif uri == "cocoindex://search/config":
@@ -366,9 +376,14 @@ def main(
             content = await get_database_schema()
         elif uri == "cocoindex://query/examples":
             content = await get_query_examples()
+        elif uri == "cocoindex://test/simple":
+            logger.info("✅ Test resource accessed successfully!")
+            content = json.dumps({"message": "Test resource working", "uri": uri}, indent=2)
         else:
+            logger.error(f"❌ Unknown resource requested: '{uri}' (available: search/stats, search/config, database/schema, query/examples, test/simple)")
             raise ValueError(f"Unknown resource: {uri}")
         
+        logger.info(f"✅ Successfully retrieved resource: '{uri}'")
         return [types.TextResourceContents(uri=uri, text=content)]
 
     # Tool implementation functions
@@ -482,7 +497,7 @@ def main(
             "dimensions": len(embedding)
         }
 
-    async def get_keyword_syntax_help_tool(arguments: dict) -> dict:
+    async def get_keyword_syntax_help_tool(_arguments: dict) -> dict:
         """Get comprehensive help and examples for keyword query syntax."""
         return {
             "keyword_query_syntax": {
@@ -677,7 +692,7 @@ def main(
         await session_manager.handle_request(scope, receive, send)
 
     @contextlib.asynccontextmanager
-    async def lifespan(app: Starlette) -> AsyncIterator[None]:
+    async def lifespan(_app: Starlette) -> AsyncIterator[None]:
         """Context manager for session manager."""
         # Get database URL from environment
         database_url = os.getenv("COCOINDEX_DATABASE_URL")

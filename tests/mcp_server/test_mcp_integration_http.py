@@ -245,6 +245,14 @@ async def mcp_server():
             if isinstance(mcp_result, dict) and "content" in mcp_result:
                 content_items = []
                 for item in mcp_result["content"]:
+                    # Check if the content contains an error response
+                    try:
+                        content_data = json.loads(item["text"])
+                        if isinstance(content_data, dict) and "error" in content_data:
+                            raise Exception(f"MCP Tool Error: {content_data['error']['message']}")
+                    except json.JSONDecodeError:
+                        pass  # Not JSON, continue normally
+                    
                     content_items.append(
                         SimpleNamespace(type=item["type"], text=item["text"])
                     )
