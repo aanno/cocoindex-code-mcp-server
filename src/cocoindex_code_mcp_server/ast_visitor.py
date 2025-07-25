@@ -24,7 +24,8 @@ except ImportError:
     class Tree: pass
     class Node: pass
 
-from __init__ import LOGGER
+import logging
+LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -518,6 +519,7 @@ class MultiLevelAnalyzer:
             visitor = GenericMetadataVisitor(language)
             
             # Add language-specific handler if available
+            handler = None
             try:
                 from language_handlers import get_handler_for_language
                 handler = get_handler_for_language(language)
