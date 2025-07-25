@@ -331,4 +331,152 @@ async def handle_list_tools():
 4. **Error Handling**: Provide clear, actionable error messages
 5. **Documentation**: Document gotchas and debugging procedures
 
+## 🔧 Exception Handling Gotchas
+
+### 11. **Tool vs Resource Exception Handling Inconsistency**
+
+**Problem**: The MCP library's `StreamableHTTPSessionManager` handles exceptions differently for tools vs resources, leading to inconsistent error propagation.
+
+**Issue Discovered**:
+
+- `@app.call_tool()` decorated functions: Exceptions get wrapped in `"isError": true` within a successful result
+- `@app.read_resource()` decorated functions: Exceptions properly return MCP protocol error responses
+
+**Bad Result for Tools**:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "content": [{"type": "text", "text": "Unknown tool 'invalid'"}],
+    "isError": true
+  }
+}
+```
+
+**Good Result for Resources**:
+
+```json
+{
+  "jsonrpc": "2.0", 
+  "id": 1,
+  "error": {"code": 0, "message": "Unknown resource: invalid://uri"}
+}
+```
+
+**Solution - Manual Exception Handling for Tools**:
+
+```python
+@app.call_tool()
+async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
+    try:
+        # Tool logic here
+        if name == "unknown_tool":
+            raise ValueError(f"Unknown tool '{name}'")
+        # ... normal processing
+        return [types.TextContent(type="text", text=json.dumps(result))]
+    
+    except Exception as e:
+        # Return proper MCP error dict manually
+        error_response = {
+            "error": {
+                "type": "mcp_protocol_error", 
+                "code": 32603,
+                "message": str(e)
+            }
+        }
+        return [types.TextContent(type="text", text=json.dumps(error_response))]
+```
+
+**Client-Side Handling**:
+
+```python
+# Check for both top-level errors and content-embedded errors
+result = parse_mcp_response(response)
+if "error" in result:
+    raise Exception(f"MCP Error: {result['error']}")
+
+# For tool responses, also check content for embedded errors
+if "result" in result and "content" in result["result"]:
+    for item in result["result"]["content"]:
+        try:
+            content_data = json.loads(item["text"])
+            if isinstance(content_data, dict) and "error" in content_data:
+                raise Exception(f"Tool Error: {content_data['error']['message']}")
+        except json.JSONDecodeError:
+            pass
+```
+
+### 12. **Resource Handler Registration Mystery**
+
+**Problem**: Resources can be listed correctly but return "Unknown resource" when accessed, even with proper handler functions.
+
+**Symptoms**:
+
+- `resources/list` returns the resource URIs correctly
+- `resources/read` for the same URIs returns "Unknown resource"
+- Handler function is defined with `@app.read_resource()` decorator
+- Multiple attempts with different function names fail
+- Debug logging in handler function never executes
+
+**Diagnostic Evidence**:
+
+```bash
+# Resources list correctly
+curl -X POST .../mcp/ -d '{"method": "resources/list"}'
+# Returns: {"resources": [{"uri": "cocoindex://search/config", ...}]}
+
+# But reading fails
+curl -X POST .../mcp/ -d '{"method": "resources/read", "params": {"uri": "cocoindex://search/config"}}'  
+# Returns: {"error": {"message": "Unknown resource: cocoindex://search/config"}}
+```
+
+**Possible Causes** (unresolved):
+
+1. **Decorator Registration Issue**: `@app.read_resource()` may not properly register handler functions
+2. **Function Signature Mismatch**: MCP library expects specific function signatures
+3. **URI Routing Problem**: MCP library's internal URI routing may be failing
+4. **Session Manager Bug**: `StreamableHTTPSessionManager` may have resource handling bugs
+
+**Current Status**: **UNRESOLVED** - This represents a significant limitation in the MCP library or our understanding of proper resource handler registration.
+
+**Workaround**: For critical resource functionality, consider:
+
+1. Converting resources to tools with resource-like parameters
+2. Using alternative MCP server implementations (FastMCP vs low-level Server)
+3. Implementing custom HTTP endpoints outside the MCP protocol
+
+### 13. **MCP Library Version Compatibility**
+
+**Critical Discovery**: MCP Python SDK versions have significant behavioral differences in exception handling.
+
+**Recommendation**:
+
+- Always pin MCP library versions in `requirements.txt`
+- Test exception handling behavior when upgrading MCP versions
+- Document which MCP version your server was tested with
+
+**Version-Specific Issues**:
+
+- Pre-v1.10.0: Known issues with error propagation
+- v1.10.0+: Improved error handling but still inconsistent between decorators
+
+## 🚨 Critical Action Items
+
+### For Future MCP Development
+
+1. **Always implement manual exception handling for tools** - don't rely on automatic MCP exception wrapping
+2. **Test both tools and resources early** - resource handling has more complex failure modes
+3. **Use comprehensive error detection in clients** - check both protocol-level and content-embedded errors
+4. **Document unresolved issues** - some MCP library behaviors remain mysterious
+5. **Consider alternative architectures** - pure HTTP APIs may be more reliable than MCP protocol for complex scenarios
+
 Remember: MCP is a protocol specification, not just a Python library. Understanding the protocol requirements is crucial for successful implementation.
+
+**Current CocoIndex MCP Server Status**:
+
+- ✅ Tool error handling: FIXED with manual exception handling
+- ❌ Resource reading: UNRESOLVED - documented as known limitation
+- ✅ Tool functionality: Working correctly
+- ✅ MCP protocol compliance: Achieved for tools

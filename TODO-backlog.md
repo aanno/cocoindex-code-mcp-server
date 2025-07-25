@@ -2,7 +2,6 @@
 
 * yml is not supported because of `eval_CodeEmbedding_*`
   from `cocoindex evaluate` will trash the scanning (recursion problem?)
-* smart embedding is currently disabled
 * logic for PYTHON_HANDLER_AVAILABLE is not implemented
 * AST Visitor in rust
 * Use AST Visitor everywhere
@@ -16,6 +15,8 @@
 * use cocoindex API (instead of `cocoindex evaluate` and `cocoindex update`)
   (new main for this?)
 * test for metadata extraction (for table what is supported where)
+* MCP server resource problem (see skip test in tests/mcp_server/test_mcp_integration_http.py)
+* Convert other MCP server integration test to tests/mcp_server/test_mcp_integration_http.py technology
 
 ## smart embedding
 
