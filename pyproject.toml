@@ -42,7 +42,7 @@ mcp-server = [
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
-module-name = "haskell_tree_sitter"
+module-name = "cocoindex_code_mcp_server"
 manifest-path = "rust/Cargo.toml"
 bindings = "pyo3"
 compatibility = "linux"  # or linux, macos, etc.
