@@ -368,6 +368,38 @@ class ASTParserFactory:
                     LOGGER.warning(f"tree-sitter-typescript not available")
                     return None
                     
+            elif language == 'c':
+                try:
+                    import tree_sitter_c
+                    language_obj = tree_sitter.Language(tree_sitter_c.language())
+                except ImportError:
+                    LOGGER.warning(f"tree-sitter-c not available")
+                    return None
+                    
+            elif language in ['cpp', 'cc', 'cxx']:
+                try:
+                    import tree_sitter_cpp
+                    language_obj = tree_sitter.Language(tree_sitter_cpp.language())
+                except ImportError:
+                    LOGGER.warning(f"tree-sitter-cpp not available")
+                    return None
+                    
+            elif language == 'rust':
+                try:
+                    import tree_sitter_rust
+                    language_obj = tree_sitter.Language(tree_sitter_rust.language())
+                except ImportError:
+                    LOGGER.warning(f"tree-sitter-rust not available")
+                    return None
+                    
+            elif language == 'kotlin':
+                try:
+                    import tree_sitter_kotlin
+                    language_obj = tree_sitter.Language(tree_sitter_kotlin.language())
+                except ImportError:
+                    LOGGER.warning(f"tree-sitter-kotlin not available")
+                    return None
+                    
             elif language == 'haskell':
                 # Haskell uses a specialized visitor, no parser needed here
                 LOGGER.debug("Haskell uses specialized visitor, not generic parser")

@@ -96,6 +96,7 @@ class HaskellNodeHandler:
         
         # Functions and bindings
         'function': 'function_definition',
+        'bind': 'function_definition',  # Handle bind chunks as potential function definitions
         'signature': 'type_signature',
         'pattern': 'pattern_binding',
         'variable': 'variable_binding',
@@ -187,6 +188,9 @@ class HaskellNodeHandler:
         if node_type == 'data_type':
             return self._handle_data_type_chunk(chunk, chunk_text, position)
         elif node_type == 'function':
+            return self._handle_function_chunk(chunk, chunk_text, position)
+        elif node_type == 'bind':
+            # Handle bind chunks as potential function definitions
             return self._handle_function_chunk(chunk, chunk_text, position)
         elif node_type == 'signature':
             return self._handle_signature_chunk(chunk, chunk_text, position)
