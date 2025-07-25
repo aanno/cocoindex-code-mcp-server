@@ -15,7 +15,7 @@ import os
 from typing import Dict, Any, List
 
 # Add src to path to import modules
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src', 'cocoindex-code-mcp-server'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src', 'cocoindex_code_mcp_server'))
 
 from cocoindex_config import extract_code_metadata, _global_flow_config
 

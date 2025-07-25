@@ -3,11 +3,11 @@ requires = ["maturin>=1.0,<2.0"]
 build-backend = "maturin"
 
 [project]
-name = "cocoindex-code-mcp-server"
+name = "cocoindex_code_mcp_server"
 version = "0.1.0"
 description = "RAG based on cocoindex as MCP server (streamingHttp), with Haskell support"
 requires-python = ">=3.11"
-package = { include = ["src/cocoindex-code-mcp-server/**/*.py"] }
+package = { include = ["src/cocoindex_code_mcp_server/**/*.py"] }
 dependencies = [
     "cocoindex[embeddings]>=0.1.63", 
     "python-dotenv>=1.0.1",
@@ -47,4 +47,4 @@ manifest-path = "rust/Cargo.toml"
 bindings = "pyo3"
 compatibility = "linux"  # or linux, macos, etc.
 python-source = "src"
-include = ["src/cocoindex-code-mcp-server/**/*.py"]
+include = ["src/cocoindex_code_mcp_server/**/*.py"]

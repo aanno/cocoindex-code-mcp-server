@@ -8,7 +8,7 @@ Successfully fixed critical issues in the Python AST analysis pipeline and RAG s
 ### 1. Fixed TODO at cocoindex_config.py:261 ✅
 **Problem**: PythonNodeHandler not properly integrated with TreeSitterPythonAnalyzer
 **Solution**: 
-- **File**: `src/cocoindex-code-mcp-server/cocoindex_config.py`
+- **File**: `src/cocoindex_code_mcp_server/cocoindex_config.py`
 - **Change**: Line 261 replaced direct PythonNodeHandler instantiation with proper TreeSitterPythonAnalyzer integration
 - **Code**: `analyzer = TreeSitterPythonAnalyzer(prefer_tree_sitter=True)` instead of `handler = PythonNodeHandler()`
 
@@ -16,20 +16,20 @@ Successfully fixed critical issues in the Python AST analysis pipeline and RAG s
 **Problem**: AST node processing failed due to incorrect attribute access
 **Root Cause**: Tree-sitter nodes use `.type` attribute, not `.kind`
 **Files Fixed**:
-- `src/cocoindex-code-mcp-server/ast_visitor.py`: GenericMetadataVisitor.visit_node()
-- `src/cocoindex-code-mcp-server/language_handlers/python_handler.py`: All extract methods
+- `src/cocoindex_code_mcp_server/ast_visitor.py`: GenericMetadataVisitor.visit_node()
+- `src/cocoindex_code_mcp_server/language_handlers/python_handler.py`: All extract methods
 **Result**: Function detection now works correctly, finding all methods including class methods
 
 ### 3. Fixed Class Decorator Merging ✅ 
 **Problem**: Class decorators not appearing in global decorators list
 **Files Fixed**:
-- `src/cocoindex-code-mcp-server/lang/python/python_code_analyzer.py`: Added class decorators to global list
-- `src/cocoindex-code-mcp-server/lang/python/tree_sitter_python_analyzer.py`: Enhanced metadata merging
+- `src/cocoindex_code_mcp_server/lang/python/python_code_analyzer.py`: Added class decorators to global list
+- `src/cocoindex_code_mcp_server/lang/python/tree_sitter_python_analyzer.py`: Enhanced metadata merging
 **Result**: Both function and class decorators now properly detected and merged
 
 ### 4. Fixed RAG System DataSlice Error ✅
 **Problem**: `'DataSlice' object has no attribute 'lower'` and PyTorch meta tensor errors
-**File**: `src/cocoindex-code-mcp-server/cocoindex_config.py`
+**File**: `src/cocoindex_code_mcp_server/cocoindex_config.py`
 **Solution**: Created proper CocoIndex function pattern:
 ```python
 @cocoindex.op.function()
@@ -163,11 +163,11 @@ def compare_handlers():
 
 ## Files Modified
 ### Core Fixes
-- `src/cocoindex-code-mcp-server/cocoindex_config.py` 
-- `src/cocoindex-code-mcp-server/ast_visitor.py`
-- `src/cocoindex-code-mcp-server/language_handlers/python_handler.py`
-- `src/cocoindex-code-mcp-server/lang/python/python_code_analyzer.py`
-- `src/cocoindex-code-mcp-server/lang/python/tree_sitter_python_analyzer.py`
+- `src/cocoindex_code_mcp_server/cocoindex_config.py` 
+- `src/cocoindex_code_mcp_server/ast_visitor.py`
+- `src/cocoindex_code_mcp_server/language_handlers/python_handler.py`
+- `src/cocoindex_code_mcp_server/lang/python/python_code_analyzer.py`
+- `src/cocoindex_code_mcp_server/lang/python/tree_sitter_python_analyzer.py`
 
 ### Tests Added
 - `tests/test_python_handler_integration.py`

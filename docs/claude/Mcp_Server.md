@@ -20,10 +20,10 @@ The MCP server is fully functional and successfully integrated with Claude Deskt
 
 ```bash
 # HTTP mode (recommended for Claude Desktop integration)
-python src/cocoindex-code-mcp-server/main_mcp_server.py --port 3033 /workspaces/rust
+python src/cocoindex_code_mcp_server/main_mcp_server.py --port 3033 /workspaces/rust
 
 # Stdio mode (for direct MCP client integration)
-python src/cocoindex-code-mcp-server/main_mcp_server.py /workspaces/rust
+python src/cocoindex_code_mcp_server/main_mcp_server.py /workspaces/rust
 ```
 
 ### Claude Desktop Configuration
@@ -239,7 +239,7 @@ Database table structure and schema information.
 
 ### Code Structure
 ```
-src/cocoindex-code-mcp-server/
+src/cocoindex_code_mcp_server/
 ├── main_mcp_server.py              # Main MCP server implementation
 ├── hybrid_search.py           # Search engine core
 ├── cocoindex_config.py        # CocoIndex flow configuration

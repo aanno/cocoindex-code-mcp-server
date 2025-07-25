@@ -15,7 +15,7 @@ import shutil
 from pathlib import Path
 
 # Add src to path
-src_path = Path(__file__).parent.parent / "src" / "cocoindex-code-mcp-server"
+src_path = Path(__file__).parent.parent / "src" / "cocoindex_code_mcp_server"
 sys.path.insert(0, str(src_path))
 
 def test_extension_integration():

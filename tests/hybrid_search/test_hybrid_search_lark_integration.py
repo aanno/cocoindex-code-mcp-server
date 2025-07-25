@@ -8,7 +8,7 @@ import sys
 import os
 
 # Add src to path to import modules
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src', 'cocoindex-code-mcp-server'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src', 'cocoindex_code_mcp_server'))
 
 def test_hybrid_search_lark_integration():
     """Test that hybrid search imports and initializes with Lark parser."""

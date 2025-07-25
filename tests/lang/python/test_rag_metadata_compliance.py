@@ -15,7 +15,7 @@ from typing import Dict, Any, List
 LOGGER = logging.getLogger(__name__)
 
 # Add src to path to import modules
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src', 'cocoindex-code-mcp-server'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src', 'cocoindex_code_mcp_server'))
 
 def test_rag_metadata_compliance():
     """Test that Python analyzer generates all recommended RAG metadata fields."""

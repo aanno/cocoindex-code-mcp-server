@@ -10,7 +10,7 @@ import sys
 import os
 
 # Add src directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..', 'src', 'cocoindex-code-mcp-server'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..', 'src', 'cocoindex_code_mcp_server'))
 
 import cocoindex
 from cocoindex_config import (
@@ -80,8 +80,8 @@ A Model Context Protocol (MCP) server that provides code indexing and search cap
 ## Installation
 
 ```bash
-git clone https://github.com/user/cocoindex-code-mcp-server.git
-cd cocoindex-code-mcp-server
+git clone https://github.com/user/cocoindex_code_mcp_server.git
+cd cocoindex_code_mcp_server
 pip install -e .
 ```
 

@@ -9,7 +9,7 @@ import sys
 import os
 
 # Add src directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..', 'src', 'cocoindex-code-mcp-server'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..', 'src', 'cocoindex_code_mcp_server'))
 
 import cocoindex
 from cocoindex_config import ensure_unique_chunk_locations

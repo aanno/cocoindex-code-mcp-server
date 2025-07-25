@@ -15,7 +15,7 @@ from typing import Dict, Any, List
 # Import our custom handler
 import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src', 'cocoindex-code-mcp-server'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src', 'cocoindex_code_mcp_server'))
 
 from lang.python.tree_sitter_python_analyzer import TreeSitterPythonAnalyzer
 from lang.python.python_code_analyzer import analyze_python_code

@@ -12,7 +12,7 @@ from pathlib import Path
 
 # Add src to path to import modules
 sys.path.append(os.path.join(
-    os.path.dirname(__file__), '..', '..', '..', 'src', 'cocoindex-code-mcp-server'
+    os.path.dirname(__file__), '..', '..', '..', 'src', 'cocoindex_code_mcp_server'
 ))
 
 try:

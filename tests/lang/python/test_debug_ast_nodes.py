@@ -9,7 +9,7 @@ import os
 
 # Add src to path to import modules
 sys.path.append(os.path.join(
-    os.path.dirname(__file__), '..', 'src', 'cocoindex-code-mcp-server'
+    os.path.dirname(__file__), '..', 'src', 'cocoindex_code_mcp_server'
 ))
 
 from lang.python.tree_sitter_python_analyzer import TreeSitterPythonAnalyzer

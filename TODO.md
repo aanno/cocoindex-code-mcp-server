@@ -121,7 +121,7 @@ class ChunkQuery(TypedDict):
   + there is a Chunking strategy selection (but perhaps not explicitly)
   + there is a hybrid chunking approach
   + there is AST-aware chunking for code structures
-- and ideas from ASTChunk into `src/cocoindex-code-mcp-server/lang/haskell/haskell_ast_chunker.py`
+- and ideas from ASTChunk into `src/cocoindex_code_mcp_server/lang/haskell/haskell_ast_chunker.py`
 - Custom chunk size/overlap configuration is already there based on the language
 
 ## Recommendations
@@ -130,9 +130,9 @@ class ChunkQuery(TypedDict):
 
 * ✅ **COMPLETED**: Haskell AST visitor implementation with specialized visitor pattern
 * **NEXT**: Create baseline comparison test for Haskell using fixtures/test_haskell.hs and RAG analysis
-* for mcp server I expect 'Selected embedding model:' from `src/cocoindex-code-mcp-server/smart_code_embedding.py` in the logs, but it is not there.
-* for mcp server I expect 'AST chunking created' from `src/cocoindex-code-mcp-server/ast_chunking.py` in the logs, but it is not there.
-* for mcp server I expect 'Handled ... with result' from `src/cocoindex-code-mcp-server/language_handlers/python_handler.py` in the logs (with DEBUG), but it is not there.
+* for mcp server I expect 'Selected embedding model:' from `src/cocoindex_code_mcp_server/smart_code_embedding.py` in the logs, but it is not there.
+* for mcp server I expect 'AST chunking created' from `src/cocoindex_code_mcp_server/ast_chunking.py` in the logs, but it is not there.
+* for mcp server I expect 'Handled ... with result' from `src/cocoindex_code_mcp_server/language_handlers/python_handler.py` in the logs (with DEBUG), but it is not there.
 * we should run integration tests on main_mcp_server.py in coverage mode to see what is covered
 * we should run integration tests on hybrid_search.py in coverage mode to see what is covered
 * we should run integration tests on the language handlers in coverage mode to see what is covered
@@ -182,16 +182,16 @@ class ChunkQuery(TypedDict):
 ## Files Requiring Changes
 
 ### Core Architecture
-- `src/cocoindex-code-mcp-server/hybrid_search.py` - Add backend abstraction
-- `src/cocoindex-code-mcp-server/main_mcp_server.py` - Update to use backend factory
+- `src/cocoindex_code_mcp_server/hybrid_search.py` - Add backend abstraction
+- `src/cocoindex_code_mcp_server/main_mcp_server.py` - Update to use backend factory
 
 ### New Components
-- `src/cocoindex-code-mcp-server/backends/` - Backend implementations
+- `src/cocoindex_code_mcp_server/backends/` - Backend implementations
   - `__init__.py` - Backend factory and interface
   - `postgres_backend.py` - Existing PostgreSQL functionality
   - `qdrant_backend.py` - Future Qdrant support
-- `src/cocoindex-code-mcp-server/schemas.py` - Metadata and query schemas
-- `src/cocoindex-code-mcp-server/mappers.py` - Field mapping utilities
+- `src/cocoindex_code_mcp_server/schemas.py` - Metadata and query schemas
+- `src/cocoindex_code_mcp_server/mappers.py` - Field mapping utilities
 
 ### Configuration
 - Configuration files for backend selection and tuning

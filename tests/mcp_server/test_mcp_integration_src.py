@@ -37,7 +37,7 @@ class MCPServerTestRunner:
         load_dotenv()
         
         # Start server process - updated path to point to src directory
-        server_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "src", "cocoindex-code-mcp-server", "main_mcp_server.py")
+        server_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "src", "cocoindex_code_mcp_server", "main_mcp_server.py")
         cmd = [
             sys.executable,
             server_path,

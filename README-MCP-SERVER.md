@@ -91,7 +91,7 @@ python main_mcp_server.py
 
 1. **Start the MCP server in HTTP mode:**
    ```bash
-   python src/cocoindex-code-mcp-server/main_mcp_server.py --port 3033 /workspaces/rust
+   python src/cocoindex_code_mcp_server/main_mcp_server.py --port 3033 /workspaces/rust
    ```
 
 2. **Add to Claude Desktop configuration** (`~/.config/Claude/claude_desktop_config.json`):
@@ -121,7 +121,7 @@ Add to your Claude Code MCP configuration:
 {
   "cocoindex-rag": {
     "command": "python",
-    "args": ["/path/to/cocoindex-code-mcp-server/main_mcp_server.py"],
+    "args": ["/path/to/cocoindex_code_mcp_server/main_mcp_server.py"],
     "env": {
       "DB_HOST": "localhost",
       "DB_NAME": "cocoindex", 

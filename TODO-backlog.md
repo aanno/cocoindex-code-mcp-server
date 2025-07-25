@@ -9,7 +9,7 @@
 * Implement haskell support in parity with python
   (improve chunking, check embedding, implement own metadata extractor)
 * Graph support (for GraphRAG)
-* src/cocoindex-code-mcp-server/lang/python/python_code_analyzer.py is bad
+* src/cocoindex_code_mcp_server/lang/python/python_code_analyzer.py is bad
   and needs more tests and fixing
 * unify command line argument parsing (in arg_parser.py)
 * use cocoindex API (instead of `cocoindex evaluate` and `cocoindex update`)
