@@ -17,11 +17,20 @@ try:
 except ImportError:
     PYTHON_HANDLER_AVAILABLE = False
 
+try:
+    from .haskell_handler import HaskellNodeHandler
+    HASKELL_HANDLER_AVAILABLE = True
+except ImportError:
+    HASKELL_HANDLER_AVAILABLE = False
+
 # Registry of available handlers
 AVAILABLE_HANDLERS = {}
 
 if PYTHON_HANDLER_AVAILABLE:
     AVAILABLE_HANDLERS['python'] = PythonNodeHandler
+
+if HASKELL_HANDLER_AVAILABLE:
+    AVAILABLE_HANDLERS['haskell'] = HaskellNodeHandler
 
 
 def get_handler_for_language(language: str) -> Optional[Any]:
@@ -47,3 +56,6 @@ __all__ = [
 
 if PYTHON_HANDLER_AVAILABLE:
     __all__.append('PythonNodeHandler')
+
+if HASKELL_HANDLER_AVAILABLE:
+    __all__.append('HaskellNodeHandler')

@@ -277,6 +277,7 @@ class ASTParserFactory:
         '.cs': 'c_sharp',
         '.css': 'css', '.scss': 'css',
         '.go': 'go',
+        '.hs': 'haskell', '.lhs': 'haskell',
         '.html': 'html', '.htm': 'html',
         '.java': 'java',
         '.js': 'javascript', '.mjs': 'javascript', '.cjs': 'javascript',
@@ -366,6 +367,11 @@ class ASTParserFactory:
                 except ImportError:
                     LOGGER.warning(f"tree-sitter-typescript not available")
                     return None
+                    
+            elif language == 'haskell':
+                # Haskell uses a specialized visitor, no parser needed here
+                LOGGER.debug("Haskell uses specialized visitor, not generic parser")
+                return None
                     
             else:
                 LOGGER.debug(f"Tree-sitter language '{language}' not yet implemented")
@@ -459,15 +465,49 @@ class MultiLevelAnalyzer:
     
     def _try_treesitter_analysis(self, code: str, language: str) -> Optional[Dict[str, Any]]:
         """Try tree-sitter based analysis."""
+        # Special handling for Haskell using dedicated visitor
+        if language == 'haskell':
+            try:
+                from language_handlers.haskell_visitor import analyze_haskell_code
+                metadata = analyze_haskell_code(code, "")
+                LOGGER.debug(f"Used specialized Haskell visitor")
+                return metadata
+            except ImportError:
+                LOGGER.debug("Haskell visitor not available, falling back to generic")
+            except Exception as e:
+                LOGGER.warning(f"Haskell visitor failed: {e}")
+        
+        # Generic tree-sitter analysis for other languages
         try:
             tree = self.parser_factory.parse_code(code, language)
             if not tree:
                 return None
             
             visitor = GenericMetadataVisitor(language)
-            walker = TreeWalker(code, tree)
             
-            return walker.walk(visitor)
+            # Add language-specific handler if available
+            try:
+                from language_handlers import get_handler_for_language
+                handler = get_handler_for_language(language)
+                if handler:
+                    visitor.add_handler(handler)
+                    LOGGER.debug(f"Added {language} handler to visitor")
+            except ImportError:
+                LOGGER.debug("Language handlers not available")
+            
+            walker = TreeWalker(code, tree)
+            metadata = walker.walk(visitor)
+            
+            # Add language-specific summary if handler was used
+            if handler:
+                try:
+                    language_summary = handler.get_summary()
+                    metadata.update(language_summary)
+                    metadata['analysis_method'] = f'tree_sitter+{language}_handler'
+                except Exception as e:
+                    LOGGER.warning(f"Error getting {language} handler summary: {e}")
+            
+            return metadata
             
         except Exception as e:
             LOGGER.warning(f"Tree-sitter analysis failed: {e}")

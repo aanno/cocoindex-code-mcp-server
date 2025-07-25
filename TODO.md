@@ -93,19 +93,17 @@ class ChunkQuery(TypedDict):
 - AST node handlers for enhanced metadata
 - Tree-sitter visitor pattern framework
 
-**Disputed**:
-- We already have the AST visitor pattern at `src/cocoindex-code-mcp-server/ast_visitor.py` and in the language_handlers
-  + However, it is only used for python now
-  + And it is pure python, not a Rust crate as the architecture document suggests
-- We already have 'AST node handlers for enhanced metadata' but only for python at `src/cocoindex-code-mcp-server/language_handlers/python_handler.py`
-and `src/cocoindex-code-mcp-server/lang/python/python_code_analyzer.py`
-  + We have even 2 implementations (but why???); the other is `src/cocoindex-code-mcp-server/lang/python/tree_sitter_python_analyzer.py`
-  + We should careful review if both are needed, and document why
-- The vistor is there but only used for python language_handler, not for anything else. Perhaps change this first?
-- we have language-specific metadata fields, but only for python
-- We have enhanced metadata extraction for python, but not sure if through AST node handlers
-- We should double check if we don't register our python extractor
-  + How we managed to add support without using the API defined for that?
+**✅ COMPLETED**: 
+- Extended AST visitor pattern to support Haskell via specialized HaskellASTVisitor subclass
+- Implemented Haskell metadata extraction with direct haskell_tree_sitter chunk processing
+- Created HaskellNodeHandler with chunk-based text parsing for functions, data types, modules, imports
+- Achieved clean separation: generic visitor for standard tree-sitter, specialized visitor for Haskell chunks
+- Successfully extracts functions, data types, type signatures, complexity analysis from Haskell code
+- Integration tested and working through main analyze_code() function
+
+**Still Disputed**:
+- We have 2 Python implementations that should be reviewed: python_handler.py vs tree_sitter_python_analyzer.py
+- Need baseline comparison test for Haskell similar to Python's cocoindex_baseline_comparison.py
 
 ## 6. Chunking Strategy Abstraction (**MEDIUM PRIORITY**)
 
