@@ -356,6 +356,7 @@ async def handle_list_tools():
 ```
 
 **Good Result for Resources**:
+
 ```json
 {
   "jsonrpc": "2.0", 
@@ -365,6 +366,7 @@ async def handle_list_tools():
 ```
 
 **Solution - Manual Exception Handling for Tools**:
+
 ```python
 @app.call_tool()
 async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
@@ -388,6 +390,7 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
 ```
 
 **Client-Side Handling**:
+
 ```python
 # Check for both top-level errors and content-embedded errors
 result = parse_mcp_response(response)
@@ -410,13 +413,15 @@ if "result" in result and "content" in result["result"]:
 **Problem**: Resources can be listed correctly but return "Unknown resource" when accessed, even with proper handler functions.
 
 **Symptoms**:
+
 - `resources/list` returns the resource URIs correctly
-- `resources/read` for the same URIs returns "Unknown resource" 
+- `resources/read` for the same URIs returns "Unknown resource"
 - Handler function is defined with `@app.read_resource()` decorator
 - Multiple attempts with different function names fail
 - Debug logging in handler function never executes
 
 **Diagnostic Evidence**:
+
 ```bash
 # Resources list correctly
 curl -X POST .../mcp/ -d '{"method": "resources/list"}'
@@ -428,6 +433,7 @@ curl -X POST .../mcp/ -d '{"method": "resources/read", "params": {"uri": "cocoin
 ```
 
 **Possible Causes** (unresolved):
+
 1. **Decorator Registration Issue**: `@app.read_resource()` may not properly register handler functions
 2. **Function Signature Mismatch**: MCP library expects specific function signatures
 3. **URI Routing Problem**: MCP library's internal URI routing may be failing
@@ -436,6 +442,7 @@ curl -X POST .../mcp/ -d '{"method": "resources/read", "params": {"uri": "cocoin
 **Current Status**: **UNRESOLVED** - This represents a significant limitation in the MCP library or our understanding of proper resource handler registration.
 
 **Workaround**: For critical resource functionality, consider:
+
 1. Converting resources to tools with resource-like parameters
 2. Using alternative MCP server implementations (FastMCP vs low-level Server)
 3. Implementing custom HTTP endpoints outside the MCP protocol
@@ -444,18 +451,20 @@ curl -X POST .../mcp/ -d '{"method": "resources/read", "params": {"uri": "cocoin
 
 **Critical Discovery**: MCP Python SDK versions have significant behavioral differences in exception handling.
 
-**Recommendation**: 
+**Recommendation**:
+
 - Always pin MCP library versions in `requirements.txt`
 - Test exception handling behavior when upgrading MCP versions
 - Document which MCP version your server was tested with
 
 **Version-Specific Issues**:
+
 - Pre-v1.10.0: Known issues with error propagation
 - v1.10.0+: Improved error handling but still inconsistent between decorators
 
 ## 🚨 Critical Action Items
 
-### For Future MCP Development:
+### For Future MCP Development
 
 1. **Always implement manual exception handling for tools** - don't rely on automatic MCP exception wrapping
 2. **Test both tools and resources early** - resource handling has more complex failure modes
@@ -466,6 +475,7 @@ curl -X POST .../mcp/ -d '{"method": "resources/read", "params": {"uri": "cocoin
 Remember: MCP is a protocol specification, not just a Python library. Understanding the protocol requirements is crucial for successful implementation.
 
 **Current CocoIndex MCP Server Status**:
+
 - ✅ Tool error handling: FIXED with manual exception handling
 - ❌ Resource reading: UNRESOLVED - documented as known limitation
 - ✅ Tool functionality: Working correctly
