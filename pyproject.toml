@@ -3,10 +3,11 @@ requires = ["maturin>=1.0,<2.0"]
 build-backend = "maturin"
 
 [project]
-name = "haskell-tree-sitter"
+name = "cocoindex-code-mcp-server"
 version = "0.1.0"
-description = "Haskell tree-sitter support for CocoIndex"
+description = "RAG based on cocoindex as MCP server (streamingHttp), with Haskell support"
 requires-python = ">=3.11"
+package = { include = ["src/cocoindex-code-mcp-server/**/*.py"] }
 dependencies = [
     "cocoindex[embeddings]>=0.1.63", 
     "python-dotenv>=1.0.1",
@@ -43,3 +44,7 @@ mcp-server = [
 features = ["pyo3/extension-module"]
 module-name = "haskell_tree_sitter"
 manifest-path = "rust/Cargo.toml"
+bindings = "pyo3"
+compatibility = "linux"  # or linux, macos, etc.
+python-source = "src"
+include = ["src/cocoindex-code-mcp-server/**/*.py"]
