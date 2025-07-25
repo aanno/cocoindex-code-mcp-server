@@ -464,7 +464,7 @@ class MultiLevelAnalyzer:
         
         # Strategy 1: Tree-sitter AST parsing
         if TREE_SITTER_AVAILABLE:
-            tree_metadata = self._try_treesitter_analysis(code, language)
+            tree_metadata = self._try_treesitter_analysis(code, language, filename)
             LOGGER.debug(f"Strategy 1: Tree-sitter analysis result for {filename}: {tree_metadata}")
             if tree_metadata:
                 metadata.update(tree_metadata)
@@ -496,12 +496,12 @@ class MultiLevelAnalyzer:
         
         return metadata
     
-    def _try_treesitter_analysis(self, code: str, language: str) -> Optional[Dict[str, Any]]:
+    def _try_treesitter_analysis(self, code: str, language: str, filename: str = "") -> Optional[Dict[str, Any]]:
         """Try tree-sitter based analysis."""
-        # Special handling for Haskell using dedicated visitor
+        # Special handling for languages using dedicated visitors
         if language == 'haskell':
             try:
-                from language_handlers.haskell_visitor import analyze_haskell_code
+                from cocoindex_code_mcp_server.language_handlers.haskell_visitor import analyze_haskell_code
                 metadata = analyze_haskell_code(code, "")
                 LOGGER.debug(f"Used specialized Haskell visitor")
                 return metadata
@@ -509,6 +509,83 @@ class MultiLevelAnalyzer:
                 LOGGER.debug("Haskell visitor not available, falling back to generic")
             except Exception as e:
                 LOGGER.warning(f"Haskell visitor failed: {e}")
+        
+        elif language == 'c':
+            try:
+                from cocoindex_code_mcp_server.language_handlers.c_visitor import analyze_c_code
+                metadata = analyze_c_code(code, filename)
+                LOGGER.debug(f"Used specialized C visitor")
+                return metadata
+            except ImportError:
+                LOGGER.debug("C visitor not available, falling back to generic")
+            except Exception as e:
+                LOGGER.warning(f"C visitor failed: {e}")
+        
+        elif language in ['cpp', 'cc', 'cxx']:
+            try:
+                from cocoindex_code_mcp_server.language_handlers.cpp_visitor import analyze_cpp_code
+                metadata = analyze_cpp_code(code, language, filename)
+                LOGGER.debug(f"Used specialized C++ visitor")
+                return metadata
+            except ImportError:
+                LOGGER.debug("C++ visitor not available, falling back to generic")
+            except Exception as e:
+                LOGGER.warning(f"C++ visitor failed: {e}")
+        
+        elif language == 'rust':
+            try:
+                from cocoindex_code_mcp_server.language_handlers.rust_visitor import analyze_rust_code
+                metadata = analyze_rust_code(code, filename)
+                LOGGER.debug(f"Used specialized Rust visitor")
+                return metadata
+            except ImportError:
+                LOGGER.debug("Rust visitor not available, falling back to generic")
+            except Exception as e:
+                LOGGER.warning(f"Rust visitor failed: {e}")
+        
+        elif language == 'kotlin':
+            try:
+                from cocoindex_code_mcp_server.language_handlers.kotlin_visitor import analyze_kotlin_code
+                metadata = analyze_kotlin_code(code, filename)
+                LOGGER.debug(f"Used specialized Kotlin visitor")
+                return metadata
+            except ImportError:
+                LOGGER.debug("Kotlin visitor not available, falling back to generic")
+            except Exception as e:
+                LOGGER.warning(f"Kotlin visitor failed: {e}")
+        
+        elif language == 'java':
+            try:
+                from cocoindex_code_mcp_server.language_handlers.java_visitor import analyze_java_code
+                metadata = analyze_java_code(code, filename)
+                LOGGER.debug(f"Used specialized Java visitor")
+                return metadata
+            except ImportError:
+                LOGGER.debug("Java visitor not available, falling back to generic")
+            except Exception as e:
+                LOGGER.warning(f"Java visitor failed: {e}")
+        
+        elif language in ['javascript', 'js']:
+            try:
+                from cocoindex_code_mcp_server.language_handlers.javascript_visitor import analyze_javascript_code
+                metadata = analyze_javascript_code(code, language, filename)
+                LOGGER.debug(f"Used specialized JavaScript visitor")
+                return metadata
+            except ImportError:
+                LOGGER.debug("JavaScript visitor not available, falling back to generic")
+            except Exception as e:
+                LOGGER.warning(f"JavaScript visitor failed: {e}")
+        
+        elif language in ['typescript', 'tsx']:
+            try:
+                from cocoindex_code_mcp_server.language_handlers.typescript_visitor import analyze_typescript_code
+                metadata = analyze_typescript_code(code, language, filename)
+                LOGGER.debug(f"Used specialized TypeScript visitor")
+                return metadata
+            except ImportError:
+                LOGGER.debug("TypeScript visitor not available, falling back to generic")
+            except Exception as e:
+                LOGGER.warning(f"TypeScript visitor failed: {e}")
         
         # Generic tree-sitter analysis for other languages
         try:
@@ -521,7 +598,7 @@ class MultiLevelAnalyzer:
             # Add language-specific handler if available
             handler = None
             try:
-                from language_handlers import get_handler_for_language
+                from cocoindex_code_mcp_server.language_handlers import get_handler_for_language
                 handler = get_handler_for_language(language)
                 if handler:
                     visitor.add_handler(handler)
