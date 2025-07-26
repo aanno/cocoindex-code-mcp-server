@@ -13,7 +13,7 @@ Usage as external wrapper around CocoIndex's SentenceTransformerEmbed.
 from typing import Dict, Any, Optional, List
 import cocoindex
 import logging
-from __init__ import LOGGER
+from . import LOGGER
 
 class LanguageModelSelector:
     """

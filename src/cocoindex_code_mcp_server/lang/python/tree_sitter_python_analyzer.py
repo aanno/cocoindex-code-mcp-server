@@ -18,7 +18,7 @@ from ast_visitor import (
     NodeContext
 )
 from language_handlers import get_handler_for_language, PythonNodeHandler
-from __init__ import LOGGER
+from . import LOGGER
 
 
 class TreeSitterPythonAnalyzer:

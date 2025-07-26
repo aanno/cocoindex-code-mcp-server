@@ -6,7 +6,7 @@ Command-line argument parsing for the code embedding pipeline.
 
 import argparse
 
-from __init__ import LOGGER
+from . import LOGGER
 
 
 def parse_args():

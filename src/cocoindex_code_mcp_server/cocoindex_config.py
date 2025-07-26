@@ -20,7 +20,7 @@ import cocoindex
 from cocoindex.typing import Vector
 from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import get_haskell_language_spec
 from cocoindex_code_mcp_server.lang.python.python_code_analyzer import analyze_python_code
-from cocoindex_code_mcp_server import LOGGER
+from . import LOGGER
 # from sentence_transformers import SentenceTransformer  # Use cocoindex.functions.SentenceTransformerEmbed instead
 from cocoindex_code_mcp_server.ast_chunking import Chunk, ASTChunkOperation
 from smart_code_embedding import LanguageModelSelector

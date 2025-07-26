@@ -10,7 +10,7 @@ import haskell_tree_sitter
 import cocoindex
 import logging
 import re
-from __init__ import LOGGER
+from . import LOGGER
 
 class HaskellChunkConfig:
     """Configuration for Haskell chunking with ASTChunk-inspired features."""

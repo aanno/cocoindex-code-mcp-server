@@ -10,7 +10,7 @@ import re
 import json
 from typing import List, Dict, Any, Optional, Set
 import logging
-from __init__ import LOGGER
+from . import LOGGER
 
 # Import the new tree-sitter based analyzer
 try:

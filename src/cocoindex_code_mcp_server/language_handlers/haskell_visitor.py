@@ -14,7 +14,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from ast_visitor import ASTVisitor, GenericMetadataVisitor, NodeContext
 from language_handlers.haskell_handler import HaskellNodeHandler
-from __init__ import LOGGER
+from . import LOGGER
 
 try:
     import haskell_tree_sitter
