@@ -9,8 +9,7 @@ import sys
 from pathlib import Path
 from typing import Dict, Any, Set
 
-# Add src to path for imports
-sys.path.append('src')
+# Package should be installed via maturin develop or pip install -e .
 
 from cocoindex_code_mcp_server.ast_visitor import analyze_code
 

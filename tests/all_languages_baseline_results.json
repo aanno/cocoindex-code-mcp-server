@@ -9,7 +9,7 @@
         "precision": 0.5,
         "f1": 0.4,
         "detected": "{'fibonacci', 'is_prime'}",
-        "expected": "{'main', 'fibonacci', 'process_data'}",
+        "expected": "{'fibonacci', 'main', 'process_data'}",
         "missing": "{'main', 'process_data'}",
         "extra": "{'is_prime'}"
       },
@@ -85,7 +85,7 @@
         },
         "complexity_score": 13,
         "parse_errors": 0,
-        "tree_language": "<Language id=140174928616736, version=14>",
+        "tree_language": "<Language id=140521505652000, version=14>",
         "functions": [
           "fibonacci",
           "is_prime"
@@ -142,10 +142,10 @@
         "recall": 1.0,
         "precision": 0.5833333333333334,
         "f1": 0.7368421052631579,
-        "detected": "{'main', 'addTen', 'fibonacci', 'numbers', 'tree', 'treeMap', 'sumList', 'doubledTree', 'multiplyByTwo', 'compose', 'processNumber', 'person'}",
-        "expected": "{'main', 'multiplyByTwo', 'addTen', 'fibonacci', 'compose', 'treeMap', 'sumList'}",
+        "detected": "{'multiplyByTwo', 'tree', 'fibonacci', 'numbers', 'doubledTree', 'addTen', 'processNumber', 'compose', 'main', 'sumList', 'person', 'treeMap'}",
+        "expected": "{'addTen', 'compose', 'main', 'sumList', 'fibonacci', 'multiplyByTwo', 'treeMap'}",
         "missing": "set()",
-        "extra": "{'numbers', 'tree', 'doubledTree', 'processNumber', 'person'}"
+        "extra": "{'tree', 'numbers', 'doubledTree', 'processNumber', 'person'}"
       },
       "constructs": {
         "data_types": {
@@ -361,8 +361,8 @@
         "recall": 1.0,
         "precision": 1.0,
         "f1": 1.0,
-        "detected": "{'add', 'get_default_color', 'main', 'print_point', 'create_point'}",
-        "expected": "{'add', 'get_default_color', 'main', 'print_point', 'create_point'}",
+        "detected": "{'print_point', 'get_default_color', 'create_point', 'main', 'add'}",
+        "expected": "{'create_point', 'print_point', 'main', 'add', 'get_default_color'}",
         "missing": "set()",
         "extra": "set()"
       },
@@ -458,7 +458,7 @@
         "complexity_score": 0,
         "success": true,
         "parse_errors": 0,
-        "tree_language": "<Language id=140174926863648, version=14>"
+        "tree_language": "<Language id=140521498463520, version=14>"
       }
     },
     "rust": {
@@ -469,8 +469,8 @@
         "recall": 1.0,
         "precision": 1.0,
         "f1": 1.0,
-        "detected": "{'new', 'main', 'fibonacci', 'is_adult'}",
-        "expected": "{'new', 'main', 'fibonacci', 'is_adult'}",
+        "detected": "{'new', 'fibonacci', 'main', 'is_adult'}",
+        "expected": "{'new', 'fibonacci', 'main', 'is_adult'}",
         "missing": "set()",
         "extra": "set()"
       },
@@ -594,7 +594,7 @@
         "complexity_score": 0,
         "success": true,
         "parse_errors": 0,
-        "tree_language": "<Language id=140174921026848, version=14>"
+        "tree_language": "<Language id=140521497861408, version=14>"
       }
     },
     "cpp": {
@@ -605,8 +605,8 @@
         "recall": 1.0,
         "precision": 1.0,
         "f1": 1.0,
-        "detected": "{'add', 'get_default_color', 'main', 'print_point', 'create_point'}",
-        "expected": "{'add', 'get_default_color', 'main', 'print_point', 'create_point'}",
+        "detected": "{'print_point', 'get_default_color', 'create_point', 'main', 'add'}",
+        "expected": "{'create_point', 'print_point', 'main', 'add', 'get_default_color'}",
         "missing": "set()",
         "extra": "set()"
       },
@@ -696,7 +696,7 @@
         "templates": [],
         "success": true,
         "parse_errors": 0,
-        "tree_language": "<Language id=140174917930272, version=14>"
+        "tree_language": "<Language id=140521495366944, version=14>"
       }
     },
     "kotlin": {
@@ -715,10 +715,10 @@
         "recall": 0.0,
         "precision": 0.0,
         "f1": 0,
-        "detected": "{'createUser', 'findById', 'getActiveUsers', 'save', 'constructor', 'findAll'}",
-        "expected": "{'greet', 'fibonacci'}",
-        "missing": "{'greet', 'fibonacci'}",
-        "extra": "{'createUser', 'getActiveUsers', 'findById', 'save', 'constructor', 'findAll'}"
+        "detected": "{'findById', 'save', 'constructor', 'findAll', 'getActiveUsers', 'createUser'}",
+        "expected": "{'fibonacci', 'greet'}",
+        "missing": "{'fibonacci', 'greet'}",
+        "extra": "{'findById', 'save', 'findAll', 'constructor', 'getActiveUsers', 'createUser'}"
       },
       "constructs": {
         "classes": {
@@ -839,7 +839,7 @@
         "decorators": [],
         "success": true,
         "parse_errors": 0,
-        "tree_language": "<Language id=140174913441056, version=14>"
+        "tree_language": "<Language id=140521490877728, version=14>"
       }
     }
   },
