@@ -53,7 +53,7 @@ class KotlinASTVisitor(GenericMetadataVisitor):
         try:
             # Kotlin function structure: function_declaration -> identifier (after 'fun' keyword)
             for child in node.children:
-                if child.type == 'simple_identifier':
+                if child.type == 'identifier':
                     func_name = child.text.decode('utf-8')
                     self.functions.append(func_name)
                     LOGGER.debug(f"Found Kotlin function: {func_name}")
@@ -68,11 +68,16 @@ class KotlinASTVisitor(GenericMetadataVisitor):
             is_data_class = False
             class_name = None
             
-            # Check if it's a data class
+            # Check if it's a data class by looking at modifiers
             for child in node.children:
-                if child.type == 'data' or (hasattr(child, 'text') and child.text.decode('utf-8') == 'data'):
-                    is_data_class = True
-                elif child.type == 'simple_identifier':
+                if child.type == 'modifiers':
+                    # Check for data modifier
+                    for modifier_child in child.children:
+                        if modifier_child.type == 'class_modifier':
+                            for modifier_grandchild in modifier_child.children:
+                                if modifier_grandchild.type == 'data':
+                                    is_data_class = True
+                elif child.type == 'identifier':
                     class_name = child.text.decode('utf-8')
                     break
             
@@ -92,7 +97,7 @@ class KotlinASTVisitor(GenericMetadataVisitor):
         try:
             # Look for interface name
             for child in node.children:
-                if child.type == 'simple_identifier':
+                if child.type == 'identifier':
                     interface_name = child.text.decode('utf-8')
                     self.interfaces.append(interface_name)
                     LOGGER.debug(f"Found Kotlin interface: {interface_name}")
@@ -105,7 +110,7 @@ class KotlinASTVisitor(GenericMetadataVisitor):
         try:
             # Look for object name
             for child in node.children:
-                if child.type == 'simple_identifier':
+                if child.type == 'identifier':
                     object_name = child.text.decode('utf-8')
                     self.objects.append(object_name)
                     LOGGER.debug(f"Found Kotlin object: {object_name}")
@@ -118,7 +123,7 @@ class KotlinASTVisitor(GenericMetadataVisitor):
         try:
             # Look for enum name
             for child in node.children:
-                if child.type == 'simple_identifier':
+                if child.type == 'identifier':
                     enum_name = child.text.decode('utf-8')
                     self.enums.append(enum_name)
                     LOGGER.debug(f"Found Kotlin enum: {enum_name}")
