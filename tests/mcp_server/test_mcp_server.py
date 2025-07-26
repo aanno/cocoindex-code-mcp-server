@@ -18,8 +18,8 @@ import mcp.types as types
 @pytest.fixture
 def main_mcp_server():
     """Fixture to import and provide the MCP server module."""
-    import main_mcp_server
-    return main_mcp_server
+    import cocoindex_code_mcp_server.main_mcp_server
+    return cocoindex_code_mcp_server.main_mcp_server
 
 
 @pytest.mark.main_mcp_server

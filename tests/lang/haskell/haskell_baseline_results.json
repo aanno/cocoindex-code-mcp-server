@@ -641,11 +641,11 @@
       "data_type_precision": 1.0,
       "data_type_f1": 1.0,
       "overall_score": 0.868421052631579,
-      "detected_functions": "{'treeMap', 'main', 'multiplyByTwo', 'doubledTree', 'tree', 'numbers', 'fibonacci', 'sumList', 'processNumber', 'compose', 'person', 'addTen'}",
+      "detected_functions": "{'person', 'treeMap', 'processNumber', 'doubledTree', 'compose', 'addTen', 'multiplyByTwo', 'tree', 'sumList', 'main', 'numbers', 'fibonacci'}",
       "detected_data_types": "{'Person', 'Tree'}",
       "missing_functions": "set()",
       "missing_data_types": "set()",
-      "extra_functions": "{'doubledTree', 'tree', 'numbers', 'processNumber', 'person'}",
+      "extra_functions": "{'person', 'doubledTree', 'tree', 'processNumber', 'numbers'}",
       "extra_data_types": "set()"
     },
     "generic_visitor": {
@@ -656,11 +656,11 @@
       "data_type_precision": 1.0,
       "data_type_f1": 1.0,
       "overall_score": 0.868421052631579,
-      "detected_functions": "{'treeMap', 'main', 'multiplyByTwo', 'doubledTree', 'tree', 'numbers', 'fibonacci', 'sumList', 'processNumber', 'compose', 'person', 'addTen'}",
+      "detected_functions": "{'person', 'treeMap', 'processNumber', 'doubledTree', 'compose', 'addTen', 'multiplyByTwo', 'tree', 'sumList', 'main', 'numbers', 'fibonacci'}",
       "detected_data_types": "{'Person', 'Tree'}",
       "missing_functions": "set()",
       "missing_data_types": "set()",
-      "extra_functions": "{'doubledTree', 'tree', 'numbers', 'processNumber', 'person'}",
+      "extra_functions": "{'person', 'doubledTree', 'tree', 'processNumber', 'numbers'}",
       "extra_data_types": "set()"
     },
     "cocoindex_baseline": {
@@ -671,7 +671,7 @@
       "data_type_precision": 1.0,
       "data_type_f1": 1.0,
       "overall_score": 1.0,
-      "detected_functions": "{'treeMap', 'main', 'multiplyByTwo', 'fibonacci', 'sumList', 'compose', 'addTen'}",
+      "detected_functions": "{'treeMap', 'compose', 'addTen', 'multiplyByTwo', 'main', 'sumList', 'fibonacci'}",
       "detected_data_types": "{'Person', 'Tree'}",
       "missing_functions": "set()",
       "missing_data_types": "set()",
