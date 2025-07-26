@@ -55,5 +55,16 @@ compatibility = "linux"  # or linux, macos, etc.
 python-source = "src"
 include = ["src/cocoindex_code_mcp_server/**/*.py"]
 
+[tool.flake8]
+max-line-length = 120
+exclude = [".git", "__pycache__", ".venv", "build", "dist", "docs"]
+extend-ignore = ["E203", "W503"]
+
+[tool.autoflake8]
+max-line-length = 120
+remove-unused-variables = true
+remove-all-unused-imports = true
+expand-star-imports = true
+
 [tool.autopep8]
 max_line_length = 120
