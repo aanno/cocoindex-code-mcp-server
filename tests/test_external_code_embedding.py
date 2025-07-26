@@ -180,7 +180,7 @@ class TestLanguageModelSelector:
 class TestExternalAPIFunctions:
     """Test suite for external API functions."""
     
-    @patch('smart_code_embedding.cocoindex')
+    @patch('cocoindex_code_mcp_server.smart_code_embedding.cocoindex')
     def test_create_smart_code_embedding(self, mock_cocoindex):
         """Test smart code embedding creation."""
         # Mock the SentenceTransformerEmbed function
@@ -197,7 +197,7 @@ class TestExternalAPIFunctions:
         )
         assert result == mock_embed_func
     
-    @patch('smart_code_embedding.cocoindex')
+    @patch('cocoindex_code_mcp_server.smart_code_embedding.cocoindex')
     def test_create_smart_code_embedding_manual_language(self, mock_cocoindex):
         """Test smart code embedding with manual language."""
         mock_embed_func = Mock()
@@ -212,7 +212,7 @@ class TestExternalAPIFunctions:
         )
         assert result == mock_embed_func
     
-    @patch('smart_code_embedding.cocoindex')
+    @patch('cocoindex_code_mcp_server.smart_code_embedding.cocoindex')
     def test_create_smart_code_embedding_force_model(self, mock_cocoindex):
         """Test smart code embedding with forced model."""
         mock_embed_func = Mock()
@@ -230,7 +230,7 @@ class TestExternalAPIFunctions:
         )
         assert result == mock_embed_func
     
-    @patch('smart_code_embedding.cocoindex')
+    @patch('cocoindex_code_mcp_server.smart_code_embedding.cocoindex')
     def test_create_smart_code_embedding_fallback(self, mock_cocoindex):
         """Test smart code embedding fallback for unsupported language."""
         mock_embed_func = Mock()
@@ -245,7 +245,7 @@ class TestExternalAPIFunctions:
         )
         assert result == mock_embed_func
     
-    @patch('smart_code_embedding.cocoindex')
+    @patch('cocoindex_code_mcp_server.smart_code_embedding.cocoindex')
     def test_language_specific_functions(self, mock_cocoindex):
         """Test language-specific convenience functions."""
         mock_embed_func = Mock()
@@ -317,7 +317,7 @@ class TestIntegrationScenarios:
             assert selected_model == expected_model, \
                 f"Language {detected_language}: expected model {expected_model}, got {selected_model}"
     
-    @patch('smart_code_embedding.cocoindex')
+    @patch('cocoindex_code_mcp_server.smart_code_embedding.cocoindex')
     def test_file_context_integration(self, mock_cocoindex):
         """Test integration with file context from CocoIndex flows."""
         from cocoindex_code_mcp_server.smart_code_embedding import create_smart_embedding_from_file_context
