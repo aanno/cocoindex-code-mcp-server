@@ -59,23 +59,67 @@ def print_metrics(data):
     elif 'results' in data:
         # Multi-language format
         print("\n📊 All Languages Summary:")
-        print(f"{'Language':<12} {'Recall':<8} {'Precision':<10} {'F1 Score':<10} {'Status'}")
-        print("-" * 60)
+        print("=" * 80)
+        print("🌳 TREE-SITTER IMPLEMENTATION vs 📝 BASELINE COMPARISON")
+        print("=" * 80)
+        print(f"{'Language':<12} {'Implementation':<25} {'Baseline':<25} {'Improvement':<15}")
+        print(f"{'':12} {'Recall Prec  F1':25} {'Recall Prec  F1':25} {'(F1 Δ)':15}")
+        print("-" * 80)
         
         for lang_name, result in data['results'].items():
             if result['success']:
-                functions = result['functions']
-                status = "✅"
-                recall = f"{functions['recall']:.1%}"
-                precision = f"{functions['precision']:.1%}"
-                f1 = f"{functions['f1']:.1%}"
+                # Tree-sitter metrics
+                ts_functions = result['functions']
+                ts_recall = f"{ts_functions['recall']:.1%}"
+                ts_precision = f"{ts_functions['precision']:.1%}"
+                ts_f1 = f"{ts_functions['f1']:.1%}"
+                ts_summary = f"{ts_recall:5} {ts_precision:5} {ts_f1:5}"
+                
+                # Baseline metrics (if available)
+                if 'baseline' in result and result['baseline'].get('success', False):
+                    baseline_functions = result['baseline']['functions']
+                    baseline_recall = f"{baseline_functions['recall']:.1%}"
+                    baseline_precision = f"{baseline_functions['precision']:.1%}"
+                    baseline_f1 = f"{baseline_functions['f1']:.1%}"
+                    baseline_summary = f"{baseline_recall:5} {baseline_precision:5} {baseline_f1:5}"
+                    
+                    # Calculate improvement
+                    improvement = ts_functions['f1'] - baseline_functions['f1']
+                    if improvement > 0:
+                        improvement_str = f"↗ +{improvement:.1%}"
+                    elif improvement < 0:
+                        improvement_str = f"↘ {improvement:.1%}"
+                    else:
+                        improvement_str = "→ Same"
+                else:
+                    baseline_summary = "Not available".ljust(25)
+                    improvement_str = "N/A"
+                
+                print(f"{lang_name:<12} {ts_summary:25} {baseline_summary:25} {improvement_str:15}")
             else:
-                status = "❌"
-                recall = "N/A"
-                precision = "N/A"
-                f1 = "N/A"
+                print(f"{lang_name:<12} {'FAILED':25} {'N/A':25} {'N/A':15}")
+        
+        print("-" * 80)
+        
+        # Summary statistics
+        successful_results = [r for r in data['results'].values() if r['success']]
+        if successful_results:
+            avg_ts_recall = sum(r['functions']['recall'] for r in successful_results) / len(successful_results)
+            avg_ts_precision = sum(r['functions']['precision'] for r in successful_results) / len(successful_results)
+            avg_ts_f1 = sum(r['functions']['f1'] for r in successful_results) / len(successful_results)
             
-            print(f"{lang_name:<12} {recall:<8} {precision:<10} {f1:<10} {status}")
+            baseline_results = [r for r in successful_results if 'baseline' in r and r['baseline'].get('success', False)]
+            if baseline_results:
+                avg_baseline_recall = sum(r['baseline']['functions']['recall'] for r in baseline_results) / len(baseline_results)
+                avg_baseline_precision = sum(r['baseline']['functions']['precision'] for r in baseline_results) / len(baseline_results)
+                avg_baseline_f1 = sum(r['baseline']['functions']['f1'] for r in baseline_results) / len(baseline_results)
+                avg_improvement = avg_ts_f1 - avg_baseline_f1
+                
+                print(f"{'AVERAGE':<12} {avg_ts_recall:.1%} {avg_ts_precision:.1%} {avg_ts_f1:.1%}     {avg_baseline_recall:.1%} {avg_baseline_precision:.1%} {avg_baseline_f1:.1%}     {avg_improvement:+.1%}")
+            else:
+                print(f"{'AVERAGE':<12} {avg_ts_recall:.1%} {avg_ts_precision:.1%} {avg_ts_f1:.1%}     {'N/A':17}     {'N/A':15}")
+        
+        print("=" * 80)
 
 def extract_specific_metric(data, language='haskell', method='specialized_visitor', metric='function_recall'):
     """Extract a specific metric value."""

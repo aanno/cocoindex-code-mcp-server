@@ -22,33 +22,164 @@ class LanguageBaseline:
         self.expected_functions = expected_functions
         self.expected_constructs = expected_constructs or {}
         
+    def analyze_with_cocoindex_baseline(self, code: str) -> Dict[str, Any]:
+        """Simple pattern-based baseline analysis similar to CocoIndex text analysis."""
+        try:
+            lines = code.split('\n')
+            functions = set()
+            classes = set()
+            
+            for line in lines:
+                line = line.strip()
+                
+                # Skip comments based on language
+                if self.language == 'python' and line.startswith('#'):
+                    continue
+                elif self.language in ['c', 'cpp', 'java', 'javascript', 'typescript'] and line.startswith('//'):
+                    continue
+                elif self.language == 'haskell' and line.startswith('--'):
+                    continue
+                elif self.language == 'rust' and line.startswith('//'):
+                    continue
+                elif self.language == 'kotlin' and line.startswith('//'):
+                    continue
+                
+                # Language-specific function detection
+                if self.language == 'python':
+                    if line.startswith('def ') and '(' in line:
+                        func_name = line.split('def ')[1].split('(')[0].strip()
+                        if func_name.isidentifier():
+                            functions.add(func_name)
+                    elif line.startswith('class '):
+                        class_name = line.split('class ')[1].split('(')[0].split(':')[0].strip()
+                        if class_name.isidentifier():
+                            classes.add(class_name)
+                            
+                elif self.language == 'haskell':
+                    if '::' in line and not line.startswith('--'):
+                        func_name = line.split('::')[0].strip()
+                        if func_name and func_name.replace("'", "").isidentifier():
+                            functions.add(func_name)
+                    elif line.startswith('data '):
+                        parts = line.split()
+                        if len(parts) > 1:
+                            type_name = parts[1].split('=')[0].strip()
+                            if type_name:
+                                classes.add(type_name)
+                                
+                elif self.language in ['c', 'cpp']:
+                    # Simple function detection: return_type function_name(
+                    import re
+                    func_pattern = r'\b(\w+)\s*\('
+                    if '(' in line and ')' in line and not line.strip().startswith('//'):
+                        # Look for function definitions
+                        matches = re.findall(func_pattern, line)
+                        for match in matches:
+                            if match not in ['if', 'while', 'for', 'switch', 'printf', 'scanf']:
+                                functions.add(match)
+                    # Struct detection
+                    if line.startswith('struct ') or 'struct ' in line:
+                        struct_match = re.search(r'struct\s+(\w+)', line)
+                        if struct_match:
+                            classes.add(struct_match.group(1))
+                            
+                elif self.language == 'rust':
+                    if line.startswith('fn ') and '(' in line:
+                        func_name = line.split('fn ')[1].split('(')[0].strip()
+                        if func_name.isidentifier():
+                            functions.add(func_name)
+                    elif line.startswith('struct ') or 'struct ' in line:
+                        import re
+                        struct_match = re.search(r'struct\s+(\w+)', line)
+                        if struct_match:
+                            classes.add(struct_match.group(1))
+                            
+                elif self.language in ['java', 'kotlin']:
+                    # Method detection
+                    import re
+                    if 'fun ' in line and '(' in line:  # Kotlin
+                        func_match = re.search(r'fun\s+(\w+)\s*\(', line)
+                        if func_match:
+                            functions.add(func_match.group(1))
+                    elif ' ' in line and '(' in line and ')' in line:  # Java methods
+                        # Look for method patterns: visibility return_type method_name(
+                        method_pattern = r'\b(\w+)\s*\('
+                        matches = re.findall(method_pattern, line)
+                        for match in matches:
+                            if match not in ['if', 'while', 'for', 'switch', 'System', 'new']:
+                                functions.add(match)
+                    # Class detection
+                    if 'class ' in line:
+                        class_match = re.search(r'class\s+(\w+)', line)
+                        if class_match:
+                            classes.add(class_match.group(1))
+                    elif 'data class ' in line:  # Kotlin data class
+                        class_match = re.search(r'data\s+class\s+(\w+)', line)
+                        if class_match:
+                            classes.add(class_match.group(1))
+                            
+                elif self.language in ['javascript', 'typescript']:
+                    if line.startswith('function ') and '(' in line:
+                        func_name = line.split('function ')[1].split('(')[0].strip()
+                        if func_name.isidentifier():
+                            functions.add(func_name)
+                    elif 'class ' in line:
+                        import re
+                        class_match = re.search(r'class\s+(\w+)', line)
+                        if class_match:
+                            classes.add(class_match.group(1))
+                    # Method detection inside classes
+                    elif re.match(r'\s*\w+\s*\(.*\)\s*[:{]', line):
+                        method_match = re.match(r'\s*(\w+)\s*\(', line)
+                        if method_match and method_match.group(1) not in ['if', 'while', 'for', 'constructor']:
+                            functions.add(method_match.group(1))
+            
+            return {
+                'analysis_method': 'cocoindex_text_baseline',
+                'functions': sorted(list(functions)),
+                'classes': sorted(list(classes)),
+                'success': True
+            }
+            
+        except Exception as e:
+            return {
+                'analysis_method': 'cocoindex_baseline_failed',
+                'error': str(e),
+                'functions': [],
+                'classes': [],
+                'success': False
+            }
+        
     def run_test(self) -> Dict[str, Any]:
-        """Run baseline test for this language."""
+        """Run baseline test for this language comparing tree-sitter vs baseline."""
         if not self.fixture_file.exists():
             return {'success': False, 'error': f'Fixture file {self.fixture_file} not found'}
             
         with open(self.fixture_file) as f:
             code = f.read()
             
-        # Run AST visitor analysis
-        result = analyze_code(code, self.language, str(self.fixture_file))
+        # Run both analyses
+        tree_sitter_result = analyze_code(code, self.language, str(self.fixture_file))
+        baseline_result = self.analyze_with_cocoindex_baseline(code)
         
-        # Calculate metrics
-        detected_functions = set(result.get('functions', []))
+        # Calculate metrics for tree-sitter implementation
+        ts_detected_functions = set(tree_sitter_result.get('functions', []))
+        ts_true_positives = len(ts_detected_functions & self.expected_functions)
+        ts_precision = ts_true_positives / len(ts_detected_functions) if ts_detected_functions else 0
+        ts_recall = ts_true_positives / len(self.expected_functions) if self.expected_functions else 0
+        ts_f1 = 2 * (ts_precision * ts_recall) / (ts_precision + ts_recall) if (ts_precision + ts_recall) > 0 else 0
         
-        # Function metrics
-        true_positives = len(detected_functions & self.expected_functions)
-        false_positives = len(detected_functions - self.expected_functions)
-        false_negatives = len(self.expected_functions - detected_functions)
+        # Calculate metrics for baseline implementation
+        baseline_detected_functions = set(baseline_result.get('functions', []))
+        baseline_true_positives = len(baseline_detected_functions & self.expected_functions)
+        baseline_precision = baseline_true_positives / len(baseline_detected_functions) if baseline_detected_functions else 0
+        baseline_recall = baseline_true_positives / len(self.expected_functions) if self.expected_functions else 0
+        baseline_f1 = 2 * (baseline_precision * baseline_recall) / (baseline_precision + baseline_recall) if (baseline_precision + baseline_recall) > 0 else 0
         
-        precision = true_positives / len(detected_functions) if detected_functions else 0
-        recall = true_positives / len(self.expected_functions) if self.expected_functions else 0
-        f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
-        
-        # Construct-specific metrics
+        # Construct-specific metrics for tree-sitter
         construct_metrics = {}
         for construct_type, expected_items in self.expected_constructs.items():
-            detected_items = set(result.get(construct_type, []))
+            detected_items = set(tree_sitter_result.get(construct_type, []))
             if expected_items:
                 construct_recall = len(detected_items & expected_items) / len(expected_items)
                 construct_precision = len(detected_items & expected_items) / len(detected_items) if detected_items else 0
@@ -62,20 +193,49 @@ class LanguageBaseline:
                 }
         
         return {
-            'success': result.get('success') is not False and 'analysis_method' in result,
+            'success': tree_sitter_result.get('success') is not False and 'analysis_method' in tree_sitter_result,
             'language': self.language,
-            'analysis_method': result.get('analysis_method'),
+            'tree_sitter': {
+                'analysis_method': tree_sitter_result.get('analysis_method'),
+                'functions': {
+                    'recall': ts_recall,
+                    'precision': ts_precision,
+                    'f1': ts_f1,
+                    'detected': ts_detected_functions,
+                    'expected': self.expected_functions,
+                    'missing': self.expected_functions - ts_detected_functions,
+                    'extra': ts_detected_functions - self.expected_functions
+                },
+                'constructs': construct_metrics,
+                'raw_result': tree_sitter_result
+            },
+            'baseline': {
+                'analysis_method': baseline_result.get('analysis_method'),
+                'functions': {
+                    'recall': baseline_recall,
+                    'precision': baseline_precision,
+                    'f1': baseline_f1,
+                    'detected': baseline_detected_functions,
+                    'expected': self.expected_functions,
+                    'missing': self.expected_functions - baseline_detected_functions,
+                    'extra': baseline_detected_functions - self.expected_functions
+                },
+                'success': baseline_result.get('success', False),
+                'raw_result': baseline_result
+            },
+            # Legacy format for backward compatibility
+            'analysis_method': tree_sitter_result.get('analysis_method'),
             'functions': {
-                'recall': recall,
-                'precision': precision,
-                'f1': f1,
-                'detected': detected_functions,
+                'recall': ts_recall,
+                'precision': ts_precision,
+                'f1': ts_f1,
+                'detected': ts_detected_functions,
                 'expected': self.expected_functions,
-                'missing': self.expected_functions - detected_functions,
-                'extra': detected_functions - self.expected_functions
+                'missing': self.expected_functions - ts_detected_functions,
+                'extra': ts_detected_functions - self.expected_functions
             },
             'constructs': construct_metrics,
-            'raw_result': result
+            'raw_result': tree_sitter_result
         }
 
 class MultiLanguageBaseline:
@@ -182,7 +342,7 @@ class MultiLanguageBaseline:
         print(f"  • Average function recall: {summary['average_function_recall']:.1%}")
         print(f"  • Average function precision: {summary['average_function_precision']:.1%}")
         
-        print(f"\n🏆 Language Performance Ranking:")
+        print(f"\n🏆 Language Performance Ranking (Tree-Sitter Implementation):")
         print(f"{'Language':<12} {'F1 Score':<10} {'Recall':<8} {'Precision':<10} {'Method':<20}")
         print("-" * 70)
         
@@ -193,15 +353,36 @@ class MultiLanguageBaseline:
         print(f"\n📋 Detailed Results by Language:")
         for lang_name, result in data['results'].items():
             if result['success']:
-                functions = result['functions']
+                # Tree-sitter results
+                ts_functions = result['functions']
                 print(f"\n{lang_name.upper()}:")
-                print(f"  Functions - Recall: {functions['recall']:.1%}, Precision: {functions['precision']:.1%}, F1: {functions['f1']:.1%}")
-                print(f"  Found: {sorted(functions['detected'])}")
-                print(f"  Expected: {sorted(functions['expected'])}")
-                if functions['missing']:
-                    print(f"  Missing: {sorted(functions['missing'])}")
-                if functions['extra']:
-                    print(f"  Extra: {sorted(functions['extra'])}")
+                print(f"  🌳 Tree-Sitter - Recall: {ts_functions['recall']:.1%}, Precision: {ts_functions['precision']:.1%}, F1: {ts_functions['f1']:.1%}")
+                print(f"     Found: {sorted(ts_functions['detected'])}")
+                
+                # Baseline results (if available)
+                if 'baseline' in result and result['baseline'].get('success', False):
+                    baseline_functions = result['baseline']['functions']
+                    print(f"  📝 Baseline - Recall: {baseline_functions['recall']:.1%}, Precision: {baseline_functions['precision']:.1%}, F1: {baseline_functions['f1']:.1%}")
+                    print(f"     Found: {sorted(baseline_functions['detected'])}")
+                    
+                    # Comparison
+                    ts_f1 = ts_functions['f1']
+                    baseline_f1 = baseline_functions['f1']
+                    improvement = ts_f1 - baseline_f1
+                    if improvement > 0:
+                        print(f"  ⬆️ Improvement: Tree-sitter is {improvement:.1%} better (F1 score)")
+                    elif improvement < 0:
+                        print(f"  ⬇️ Regression: Tree-sitter is {abs(improvement):.1%} worse (F1 score)")
+                    else:
+                        print(f"  ➡️ Same performance")
+                else:
+                    print(f"  📝 Baseline - Not available")
+                
+                print(f"  Expected: {sorted(ts_functions['expected'])}")
+                if ts_functions['missing']:
+                    print(f"  Missing: {sorted(ts_functions['missing'])}")
+                if ts_functions['extra']:
+                    print(f"  Extra: {sorted(ts_functions['extra'])}")
             else:
                 print(f"\n{lang_name.upper()}: ❌ FAILED - {result.get('error', 'Unknown error')}")
 
