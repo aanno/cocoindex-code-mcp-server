@@ -17,6 +17,8 @@ __pycache__/
 /eval_CodeEmbedding_*
 /log
 *.log*
+/tests/all_languages_baseline_results.json
+/tests/lang/haskell/haskell_baseline_results.json
 
 # Maturin build artifacts
 *.so
