@@ -37,7 +37,7 @@ from keyword_search_parser_lark import KeywordSearchParser
 from lang.python.python_code_analyzer import analyze_python_code
 import cocoindex
 from cocoindex_config import code_embedding_flow, code_to_embedding, update_flow_config, run_flow_update
-from . import LOGGER
+from __init__ import LOGGER
 
 # Configure logging
 logger = logging.getLogger(__name__)

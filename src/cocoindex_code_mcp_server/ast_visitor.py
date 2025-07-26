@@ -501,7 +501,7 @@ class MultiLevelAnalyzer:
         # Special handling for languages using dedicated visitors
         if language == 'haskell':
             try:
-                from cocoindex_code_mcp_server.language_handlers.haskell_visitor import analyze_haskell_code
+                from language_handlers.haskell_visitor import analyze_haskell_code
                 metadata = analyze_haskell_code(code, "")
                 LOGGER.debug(f"Used specialized Haskell visitor")
                 return metadata
@@ -512,7 +512,7 @@ class MultiLevelAnalyzer:
         
         elif language == 'c':
             try:
-                from cocoindex_code_mcp_server.language_handlers.c_visitor import analyze_c_code
+                from language_handlers.c_visitor import analyze_c_code
                 metadata = analyze_c_code(code, filename)
                 LOGGER.debug(f"Used specialized C visitor")
                 return metadata
@@ -523,7 +523,7 @@ class MultiLevelAnalyzer:
         
         elif language in ['cpp', 'cc', 'cxx']:
             try:
-                from cocoindex_code_mcp_server.language_handlers.cpp_visitor import analyze_cpp_code
+                from language_handlers.cpp_visitor import analyze_cpp_code
                 metadata = analyze_cpp_code(code, language, filename)
                 LOGGER.debug(f"Used specialized C++ visitor")
                 return metadata
@@ -534,7 +534,7 @@ class MultiLevelAnalyzer:
         
         elif language == 'rust':
             try:
-                from cocoindex_code_mcp_server.language_handlers.rust_visitor import analyze_rust_code
+                from language_handlers.rust_visitor import analyze_rust_code
                 metadata = analyze_rust_code(code, filename)
                 LOGGER.debug(f"Used specialized Rust visitor")
                 return metadata
@@ -545,7 +545,7 @@ class MultiLevelAnalyzer:
         
         elif language == 'kotlin':
             try:
-                from cocoindex_code_mcp_server.language_handlers.kotlin_visitor import analyze_kotlin_code
+                from language_handlers.kotlin_visitor import analyze_kotlin_code
                 metadata = analyze_kotlin_code(code, filename)
                 LOGGER.debug(f"Used specialized Kotlin visitor")
                 return metadata
@@ -556,7 +556,7 @@ class MultiLevelAnalyzer:
         
         elif language == 'java':
             try:
-                from cocoindex_code_mcp_server.language_handlers.java_visitor import analyze_java_code
+                from language_handlers.java_visitor import analyze_java_code
                 metadata = analyze_java_code(code, filename)
                 LOGGER.debug(f"Used specialized Java visitor")
                 return metadata
@@ -567,7 +567,7 @@ class MultiLevelAnalyzer:
         
         elif language in ['javascript', 'js']:
             try:
-                from cocoindex_code_mcp_server.language_handlers.javascript_visitor import analyze_javascript_code
+                from language_handlers.javascript_visitor import analyze_javascript_code
                 metadata = analyze_javascript_code(code, language, filename)
                 LOGGER.debug(f"Used specialized JavaScript visitor")
                 return metadata
@@ -578,7 +578,7 @@ class MultiLevelAnalyzer:
         
         elif language in ['typescript', 'tsx']:
             try:
-                from cocoindex_code_mcp_server.language_handlers.typescript_visitor import analyze_typescript_code
+                from language_handlers.typescript_visitor import analyze_typescript_code
                 metadata = analyze_typescript_code(code, language, filename)
                 LOGGER.debug(f"Used specialized TypeScript visitor")
                 return metadata
@@ -598,7 +598,7 @@ class MultiLevelAnalyzer:
             # Add language-specific handler if available
             handler = None
             try:
-                from cocoindex_code_mcp_server.language_handlers import get_handler_for_language
+                from language_handlers import get_handler_for_language
                 handler = get_handler_for_language(language)
                 if handler:
                     visitor.add_handler(handler)

@@ -19,7 +19,7 @@ with patch('pgvector.psycopg.register_vector'):
         format_results_as_json, 
         format_results_readable
     )
-from keyword_search_parser import KeywordSearchParser, SearchCondition, SearchGroup, Operator
+from cocoindex_code_mcp_server.keyword_search_parser import KeywordSearchParser, SearchCondition, SearchGroup, Operator
 
 
 @pytest.fixture

@@ -182,7 +182,7 @@ class TestWorkflowIntegration:
         """Test the end-to-end search pipeline with mocked components."""
         try:
             from cocoindex_code_mcp_server.db.pgvector.hybrid_search import HybridSearchEngine
-            from keyword_search_parser import KeywordSearchParser
+            from cocoindex_code_mcp_server.keyword_search_parser import KeywordSearchParser
             
             mock_pool, mock_conn, mock_cursor = mock_database_setup
             
@@ -234,7 +234,7 @@ class TestWorkflowIntegration:
         """Test complex query parsing and execution."""
         try:
             from cocoindex_code_mcp_server.db.pgvector.hybrid_search import HybridSearchEngine
-            from keyword_search_parser import KeywordSearchParser
+            from cocoindex_code_mcp_server.keyword_search_parser import KeywordSearchParser
             
             mock_pool, mock_conn, mock_cursor = mock_database_setup
             
@@ -349,8 +349,8 @@ class TestErrorHandling:
     def test_search_with_invalid_keyword_syntax(self):
         """Test search with invalid keyword syntax."""
         try:
-            from cocoindex_code_mcp_server.db.pgvector.hybrid_search import HybridSearchEngine
-            from keyword_search_parser import KeywordSearchParser
+            from cocoindex_code_mcp_server.db.pgvector.cocoindex_code_mcp_server.hybrid_search import HybridSearchEngine
+            from cocoindex_code_mcp_server.keyword_search_parser import KeywordSearchParser
             
             # Use real parser to test actual parsing behavior
             parser = KeywordSearchParser()
@@ -439,7 +439,7 @@ class TestPerformanceCharacteristics:
     
     def test_query_complexity_handling(self):
         """Test handling of complex queries."""
-        from keyword_search_parser import KeywordSearchParser
+        from cocoindex_code_mcp_server.keyword_search_parser import KeywordSearchParser
         
         parser = KeywordSearchParser()
         

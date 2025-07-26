@@ -5,10 +5,10 @@ import pytest
 import sys
 import os
 
-from keyword_search_parser import KeywordSearchParser as FallbackParser, build_sql_where_clause, SearchCondition, SearchGroup
+from cocoindex_code_mcp_server.keyword_search_parser import KeywordSearchParser as FallbackParser, build_sql_where_clause, SearchCondition, SearchGroup
 
 try:
-    from keyword_search_parser_lark import KeywordSearchParser as LarkParser, build_sql_where_clause as lark_build_sql_where_clause
+    from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser as LarkParser, build_sql_where_clause as lark_build_sql_where_clause
     LARK_AVAILABLE = True
 except ImportError:
     LARK_AVAILABLE = False

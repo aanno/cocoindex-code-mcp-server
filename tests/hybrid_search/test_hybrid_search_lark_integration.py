@@ -16,7 +16,7 @@ def test_hybrid_search_lark_integration():
     try:
         # Test the imports work correctly
         from cocoindex_code_mcp_server.db.pgvector.hybrid_search import HybridSearchEngine
-        from keyword_search_parser_lark import KeywordSearchParser, build_sql_where_clause
+        from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser, build_sql_where_clause
         
         print("✅ Successfully imported hybrid search with Lark parser")
         
@@ -83,7 +83,7 @@ def test_nested_parentheses_with_value_contains():
     """Test the complex nested parentheses with value_contains that was previously failing."""
     
     try:
-        from keyword_search_parser_lark import KeywordSearchParser, build_sql_where_clause
+        from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser, build_sql_where_clause
         
         parser = KeywordSearchParser()
         

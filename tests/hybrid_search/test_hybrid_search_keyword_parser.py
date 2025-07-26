@@ -11,7 +11,7 @@ import os
 # Add src directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..', 'src', 'cocoindex_code_mcp_server'))
 
-from keyword_search_parser_lark import (
+from cocoindex_code_mcp_server.keyword_search_parser_lark import (
     KeywordSearchParser, 
     SearchCondition, 
     SearchGroup, 

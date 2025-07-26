@@ -13,7 +13,7 @@ from pathlib import Path
 import logging
 from dataclasses import dataclass
 
-from . import LOGGER
+from __init__ import LOGGER
 
 
 @dataclass(frozen=True)
