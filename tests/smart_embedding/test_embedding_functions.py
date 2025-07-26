@@ -114,7 +114,7 @@ class TestEmbeddingFunctions:
         ]
         
         # Import the module to check for function existence
-        import cocoindex_config as config
+        import cocoindex_code_mcp_server.cocoindex_config as config
         
         for func_name in required_functions:
             assert hasattr(config, func_name), f"Function '{func_name}' should be defined in cocoindex_config"

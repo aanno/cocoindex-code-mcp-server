@@ -93,6 +93,164 @@ def handle_shutdown(signum, frame):
     logger.info("Cleanup completed")
 
 
+def get_mcp_tools() -> list[types.Tool]:
+    """Get the list of MCP tools with their schemas."""
+    return [
+        types.Tool(
+            name="hybrid_search",
+            description="Perform hybrid search combining vector similarity and keyword metadata filtering. Keyword syntax: field:value, exists(field), value_contains(field, 'text'), AND/OR logic.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "vector_query": {
+                        "type": "string",
+                        "description": "Text to embed and search for semantic similarity"
+                    },
+                    "keyword_query": {
+                        "type": "string", 
+                        "description": "Keyword search query for metadata filtering. Syntax: field:value, exists(field), value_contains(field, 'text'), AND/OR operators"
+                    },
+                    "top_k": {
+                        "type": "integer",
+                        "description": "Number of results to return",
+                        "default": 10
+                    },
+                    "vector_weight": {
+                        "type": "number",
+                        "description": "Weight for vector similarity score (0-1)",
+                        "default": 0.7
+                    },
+                    "keyword_weight": {
+                        "type": "number", 
+                        "description": "Weight for keyword match score (0-1)",
+                        "default": 0.3
+                    }
+                },
+                "required": ["vector_query", "keyword_query"]
+            },
+        ),
+        types.Tool(
+            name="vector_search",
+            description="Perform pure vector similarity search",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Text to embed and search for semantic similarity"
+                    },
+                    "top_k": {
+                        "type": "integer",
+                        "description": "Number of results to return",
+                        "default": 10
+                    }
+                },
+                "required": ["query"]
+            },
+        ),
+        types.Tool(
+            name="keyword_search",
+            description="Perform pure keyword metadata search using field:value, exists(field), value_contains(field, 'text') syntax",
+            inputSchema={
+                "type": "object", 
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Keyword search query with AND/OR operators and parentheses grouping"
+                    },
+                    "top_k": {
+                        "type": "integer",
+                        "description": "Number of results to return", 
+                        "default": 10
+                    }
+                },
+                "required": ["query"]
+            },
+        ),
+        types.Tool(
+            name="analyze_code",
+            description="Analyze code and extract metadata for indexing",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "Code content to analyze"
+                    },
+                    "file_path": {
+                        "type": "string",
+                        "description": "File path for context"
+                    },
+                    "language": {
+                        "type": "string",
+                        "description": "Programming language (auto-detected if not provided)"
+                    }
+                },
+                "required": ["code", "file_path"]
+            },
+        ),
+        types.Tool(
+            name="get_embeddings",
+            description="Generate embeddings for text using the configured embedding model",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "text": {
+                        "type": "string",
+                        "description": "Text to generate embeddings for"
+                    }
+                },
+                "required": ["text"]
+            },
+        ),
+        types.Tool(
+            name="get_keyword_syntax_help",
+            description="Get comprehensive help and examples for keyword query syntax",
+            inputSchema={
+                "type": "object",
+                "properties": {},
+                "required": []
+            },
+        ),
+    ]
+
+
+def get_mcp_resources() -> list[types.Resource]:
+    """Get the list of MCP resources."""
+    return [
+        types.Resource(
+            uri="cocoindex://search/stats",
+            name="Search Statistics",
+            description="Database and search performance statistics",
+            mimeType="application/json",
+        ),
+        types.Resource(
+            uri="cocoindex://search/config",
+            name="Search Configuration", 
+            description="Current hybrid search configuration and settings",
+            mimeType="application/json",
+        ),
+        types.Resource(
+            uri="cocoindex://database/schema",
+            name="Database Schema",
+            description="Database table structure and schema information",
+            mimeType="application/json",
+        ),
+        types.Resource(
+            uri="cocoindex://query/examples",
+            name="Query Examples",
+            description="Categorized examples of keyword query syntax",
+            mimeType="application/json",
+        ),
+        types.Resource(
+            uri="cocoindex://test/simple",
+            name="Test Resource",
+            description="Simple test resource for debugging",
+            mimeType="application/json",
+        ),
+    ]
+
+
 @click.command()
 @click.argument("paths", nargs=-1)
 @click.option("--paths", "explicit_paths", multiple=True, help="Alternative way to specify paths")
@@ -164,160 +322,12 @@ def main(
     @app.list_tools()
     async def list_tools() -> list[types.Tool]:
         """List available MCP tools."""
-        return [
-            types.Tool(
-                name="hybrid_search",
-                description="Perform hybrid search combining vector similarity and keyword metadata filtering. Keyword syntax: field:value, exists(field), value_contains(field, 'text'), AND/OR logic.",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "vector_query": {
-                            "type": "string",
-                            "description": "Text to embed and search for semantic similarity"
-                        },
-                        "keyword_query": {
-                            "type": "string", 
-                            "description": "Keyword search query for metadata filtering. Syntax: field:value, exists(field), value_contains(field, 'text'), AND/OR operators"
-                        },
-                        "top_k": {
-                            "type": "integer",
-                            "description": "Number of results to return",
-                            "default": 10
-                        },
-                        "vector_weight": {
-                            "type": "number",
-                            "description": "Weight for vector similarity score (0-1)",
-                            "default": 0.7
-                        },
-                        "keyword_weight": {
-                            "type": "number", 
-                            "description": "Weight for keyword match score (0-1)",
-                            "default": 0.3
-                        }
-                    },
-                    "required": ["vector_query", "keyword_query"]
-                },
-            ),
-            types.Tool(
-                name="vector_search",
-                description="Perform pure vector similarity search",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": "Text to embed and search for semantic similarity"
-                        },
-                        "top_k": {
-                            "type": "integer",
-                            "description": "Number of results to return",
-                            "default": 10
-                        }
-                    },
-                    "required": ["query"]
-                },
-            ),
-            types.Tool(
-                name="keyword_search",
-                description="Perform pure keyword metadata search using field:value, exists(field), value_contains(field, 'text') syntax",
-                inputSchema={
-                    "type": "object", 
-                    "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": "Keyword search query with AND/OR operators and parentheses grouping"
-                        },
-                        "top_k": {
-                            "type": "integer",
-                            "description": "Number of results to return", 
-                            "default": 10
-                        }
-                    },
-                    "required": ["query"]
-                },
-            ),
-            types.Tool(
-                name="analyze_code",
-                description="Analyze code and extract metadata for indexing",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "code": {
-                            "type": "string",
-                            "description": "Code content to analyze"
-                        },
-                        "file_path": {
-                            "type": "string",
-                            "description": "File path for context"
-                        },
-                        "language": {
-                            "type": "string",
-                            "description": "Programming language (auto-detected if not provided)"
-                        }
-                    },
-                    "required": ["code", "file_path"]
-                },
-            ),
-            types.Tool(
-                name="get_embeddings",
-                description="Generate embeddings for text using the configured embedding model",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "text": {
-                            "type": "string",
-                            "description": "Text to generate embeddings for"
-                        }
-                    },
-                    "required": ["text"]
-                },
-            ),
-            types.Tool(
-                name="get_keyword_syntax_help",
-                description="Get comprehensive help and examples for keyword query syntax",
-                inputSchema={
-                    "type": "object",
-                    "properties": {},
-                    "required": []
-                },
-            ),
-        ]
+        return get_mcp_tools()
 
     @app.list_resources()
     async def list_resources() -> list[types.Resource]:
         """List available MCP resources."""
-        return [
-            types.Resource(
-                uri="cocoindex://search/stats",
-                name="Search Statistics",
-                description="Database and search performance statistics",
-                mimeType="application/json",
-            ),
-            types.Resource(
-                uri="cocoindex://search/config",
-                name="Search Configuration", 
-                description="Current hybrid search configuration and settings",
-                mimeType="application/json",
-            ),
-            types.Resource(
-                uri="cocoindex://database/schema",
-                name="Database Schema",
-                description="Database table structure and schema information",
-                mimeType="application/json",
-            ),
-            types.Resource(
-                uri="cocoindex://query/examples",
-                name="Query Examples",
-                description="Categorized examples of keyword query syntax",
-                mimeType="application/json",
-            ),
-            types.Resource(
-                uri="cocoindex://test/simple",
-                name="Test Resource",
-                description="Simple test resource for debugging",
-                mimeType="application/json",
-            ),
-        ]
+        return get_mcp_resources()
 
     @app.call_tool()
     async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
@@ -760,243 +770,52 @@ def main(
 # Export module-level objects for testing
 # These are created when the module is imported for testing
 try:
-    # Create a test server instance for module-level access
+    # Create a test server instance for module-level access using the same functions
     server = Server("cocoindex-rag-test")
     
     @server.list_tools()
     async def handle_list_tools() -> list[types.Tool]:
         """List available MCP tools."""
-        return [
-            types.Tool(
-                name="hybrid_search",
-                description="Perform hybrid search combining vector similarity and keyword metadata filtering. Keyword syntax: field:value, exists(field), value_contains(field, 'text'), AND/OR logic.",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "vector_query": {
-                            "type": "string",
-                            "description": "Text to embed and search for semantic similarity"
-                        },
-                        "keyword_query": {
-                            "type": "string", 
-                            "description": "Keyword search query for metadata filtering. Syntax: field:value, exists(field), value_contains(field, 'text'), AND/OR operators"
-                        },
-                        "top_k": {
-                            "type": "integer",
-                            "description": "Number of results to return",
-                            "default": 10
-                        },
-                        "vector_weight": {
-                            "type": "number",
-                            "description": "Weight for vector similarity score (0-1)",
-                            "default": 0.7
-                        },
-                        "keyword_weight": {
-                            "type": "number", 
-                            "description": "Weight for keyword match score (0-1)",
-                            "default": 0.3
-                        }
-                    },
-                    "required": ["vector_query", "keyword_query"]
-                },
-            ),
-            types.Tool(
-                name="vector_search",
-                description="Perform pure vector similarity search",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": "Text to embed and search for semantic similarity"
-                        },
-                        "top_k": {
-                            "type": "integer",
-                            "description": "Number of results to return",
-                            "default": 10
-                        }
-                    },
-                    "required": ["query"]
-                },
-            ),
-            types.Tool(
-                name="keyword_search",
-                description="Perform pure keyword metadata search using field:value, exists(field), value_contains(field, 'text') syntax",
-                inputSchema={
-                    "type": "object", 
-                    "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": "Keyword search query with AND/OR operators and parentheses grouping"
-                        },
-                        "top_k": {
-                            "type": "integer",
-                            "description": "Number of results to return", 
-                            "default": 10
-                        }
-                    },
-                    "required": ["query"]
-                },
-            ),
-            types.Tool(
-                name="analyze_code",
-                description="Analyze code and extract metadata for indexing",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "code": {
-                            "type": "string",
-                            "description": "Code content to analyze"
-                        },
-                        "file_path": {
-                            "type": "string",
-                            "description": "File path for context"
-                        },
-                        "language": {
-                            "type": "string",
-                            "description": "Programming language (auto-detected if not provided)"
-                        }
-                    },
-                    "required": ["code", "file_path"]
-                },
-            ),
-            types.Tool(
-                name="get_embeddings",
-                description="Generate embeddings for text using the configured embedding model",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "text": {
-                            "type": "string",
-                            "description": "Text to generate embeddings for"
-                        }
-                    },
-                    "required": ["text"]
-                },
-            ),
-            types.Tool(
-                name="get_keyword_syntax_help",
-                description="Get comprehensive help and examples for keyword query syntax",
-                inputSchema={
-                    "type": "object",
-                    "properties": {},
-                    "required": []
-                },
-            ),
-        ]
+        return get_mcp_tools()
 
     @server.list_resources()
     async def handle_list_resources() -> list[types.Resource]:
         """List available MCP resources."""
-        return [
-            types.Resource(
-                uri="cocoindex://search/stats",
-                name="Search Statistics",
-                description="Database and search performance statistics",
-                mimeType="application/json",
-            ),
-            types.Resource(
-                uri="cocoindex://search/config",
-                name="Search Configuration", 
-                description="Current hybrid search configuration and settings",
-                mimeType="application/json",
-            ),
-            types.Resource(
-                uri="cocoindex://database/schema",
-                name="Database Schema",
-                description="Database table structure and schema information",
-                mimeType="application/json",
-            ),
-            types.Resource(
-                uri="cocoindex://query/examples",
-                name="Query Examples",
-                description="Categorized examples of keyword query syntax",
-                mimeType="application/json",
-            ),
-            types.Resource(
-                uri="cocoindex://test/simple",
-                name="Test Resource",
-                description="Simple test resource for debugging",
-                mimeType="application/json",
-            ),
-            types.Resource(
-                uri="cocoindex://keyword/grammar",
-                name="Keyword Grammar",
-                description="Lark grammar for keyword search syntax",
-                mimeType="text/x-lark",
-            ),
-            types.Resource(
-                uri="cocoindex://search/history",
-                name="Search History",
-                description="Recent search queries and results",
-                mimeType="application/json",
-            ),
-        ]
+        return get_mcp_resources()
+
+    @server.call_tool()
+    async def handle_call_tool(name: str, arguments: dict) -> list[types.TextContent]:
+        """Handle MCP tool calls with proper error handling."""
+        # Simplified version - just return mock responses for testing
+        test_response = {
+            "test_mode": True,
+            "tool": name,
+            "arguments": arguments,
+            "message": "This is a test response from the module-level server instance"
+        }
+        
+        return [types.TextContent(
+            type="text",
+            text=json.dumps(test_response, indent=2, ensure_ascii=False)
+        )]
 
     @server.read_resource()
     async def handle_read_resource(uri: str) -> list[types.TextResourceContents]:
         """Read MCP resource content."""
-        if uri == "cocoindex://search/config":
-            config = {
-                "table_name": "code_embeddings",
-                "embedding_model": "cocoindex default",
-                "parser_type": "lark_keyword_parser",
-                "supported_operators": ["AND", "OR", "NOT", "value_contains", "==", "!=", "<", ">", "<=", ">="],
-                "default_weights": {
-                    "vector_weight": 0.7,
-                    "keyword_weight": 0.3
-                }
-            }
-            content = json.dumps(config, indent=2)
-        elif uri == "cocoindex://test/simple":
-            content = json.dumps({"message": "Test resource working", "uri": uri}, indent=2)
-        else:
-            raise ValueError(f"Unknown resource: {uri}")
+        # Simplified version - just return mock responses for testing
+        test_content = json.dumps({
+            "test_mode": True,
+            "uri": uri,
+            "message": "This is a test resource from the module-level server instance"
+        }, indent=2)
         
-        return [types.TextResourceContents(uri=uri, text=content)]
+        return [types.TextResourceContents(uri=uri, text=test_content)]
 
-    @server.call_tool()
-    async def handle_call_tool(name: str, arguments: dict) -> list[types.TextContent]:
-        """Handle MCP tool calls."""
-        # For tests, return mock responses
-        if name == "hybrid_search":
-            result = {
-                "query": arguments,
-                "results": [],
-                "total_results": 0
-            }
-        elif name == "get_keyword_syntax_help":
-            result = {
-                "keyword_query_syntax": {
-                    "description": "Test help response",
-                    "basic_operators": {},
-                    "available_fields": []
-                }
-            }
-        else:
-            result = {"test": "response", "tool": name, "arguments": arguments}
-        
-        return [types.TextContent(
-            type="text",
-            text=json.dumps(result, indent=2, ensure_ascii=False)
-        )]
-
-    # Export helper functions
-    async def get_search_config() -> str:
-        """Get current search configuration."""
-        config = {
-            "table_name": "code_embeddings",
-            "embedding_model": "cocoindex default",
-            "parser_type": "lark_keyword_parser",
-            "supported_operators": ["AND", "OR", "NOT", "value_contains", "==", "!=", "<", ">", "<=", ">="],
-            "default_weights": {
-                "vector_weight": 0.7,
-                "keyword_weight": 0.3
-            }
-        }
-        return json.dumps(config, indent=2)
-
-    # Create a wrapper for handle_read_resource that returns just the text for tests
+    # Export the test server and handlers for testing
+    # Note: The actual handler functions are already defined above with @server decorators
+    # We just need to export them by their function names
+    
+    # Create a simple wrapper for handle_read_resource that returns just text
     _original_handle_read_resource = handle_read_resource
     
     async def handle_read_resource(uri: str) -> str:
