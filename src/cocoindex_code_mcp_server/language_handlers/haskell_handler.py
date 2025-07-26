@@ -14,7 +14,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from ast_visitor import NodeContext
+from ..ast_visitor import NodeContext
 from . import LOGGER
 
 

@@ -12,8 +12,8 @@ from typing import Dict, List, Any, Optional
 # Import from parent directory
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from ast_visitor import ASTVisitor, GenericMetadataVisitor, NodeContext
-from language_handlers.haskell_handler import HaskellNodeHandler
+from ..ast_visitor import ASTVisitor, GenericMetadataVisitor, NodeContext
+from ..language_handlers.haskell_handler import HaskellNodeHandler
 from . import LOGGER
 
 try:
@@ -150,7 +150,7 @@ class HaskellChunkContext(NodeContext):
     
     def get_position(self):
         """Get position from the chunk."""
-        from ast_visitor import Position
+        from ..ast_visitor import Position
         return Position(
             line=self.node.start_line(),
             column=0,  # haskell_tree_sitter doesn't provide column info

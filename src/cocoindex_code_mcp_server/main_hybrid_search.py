@@ -10,8 +10,8 @@ from dotenv import load_dotenv
 import cocoindex
 
 # Import our modular components
-from cocoindex_config import update_flow_config, run_flow_update
-from db.pgvector.hybrid_search import run_interactive_hybrid_search
+from .cocoindex_config import update_flow_config, run_flow_update
+from .db.pgvector.hybrid_search import run_interactive_hybrid_search
 
 
 def parse_hybrid_search_args():
@@ -155,7 +155,7 @@ def main():
         # Start live update in background and then run interactive search
         try:
             # Setup and initial update
-            from cocoindex_config import code_embedding_flow
+            from .cocoindex_config import code_embedding_flow
             flow = code_embedding_flow
             flow.setup()
             
@@ -184,7 +184,7 @@ def main():
             
     else:
         print("🔨 Building index (one-time)...")
-        from cocoindex_config import code_embedding_flow
+        from .cocoindex_config import code_embedding_flow
         stats = code_embedding_flow.update()
         print(f"✅ Index built: {stats}")
         print()

@@ -20,8 +20,8 @@ except ImportError:
 
 # Import the fallback parser components
 try:
-    from keyword_search_parser import KeywordSearchParser as FallbackParser
-    from keyword_search_parser import build_sql_where_clause as fallback_build_sql_where_clause
+    from .keyword_search_parser import KeywordSearchParser as FallbackParser
+    from .keyword_search_parser import build_sql_where_clause as fallback_build_sql_where_clause
     FALLBACK_AVAILABLE = True
 except ImportError:
     FALLBACK_AVAILABLE = False

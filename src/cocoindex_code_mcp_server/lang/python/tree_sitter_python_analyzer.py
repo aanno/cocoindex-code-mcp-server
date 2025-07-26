@@ -10,14 +10,14 @@ import json
 from typing import Dict, List, Any, Optional
 from pathlib import Path
 
-from ast_visitor import (
+from ...ast_visitor import (
     MultiLevelAnalyzer, 
     GenericMetadataVisitor, 
     TreeWalker, 
     ASTParserFactory,
     NodeContext
 )
-from language_handlers import get_handler_for_language, PythonNodeHandler
+from ...language_handlers import get_handler_for_language, PythonNodeHandler
 from . import LOGGER
 
 
@@ -58,7 +58,7 @@ class TreeSitterPythonAnalyzer:
         if not metadata or metadata.get('analysis_method') == 'basic_text':
             # Fallback to enhanced Python AST analyzer
             try:
-                from lang.python.python_code_analyzer import PythonCodeAnalyzer
+                from ...lang.python.python_code_analyzer import PythonCodeAnalyzer
                 LOGGER.debug(f"Using enhanced PythonCodeAnalyzer for detailed analysis (bad) for {filename}")
                 fallback_analyzer = PythonCodeAnalyzer()
                 fallback_metadata = fallback_analyzer.analyze_code(code, filename)
@@ -139,7 +139,7 @@ class TreeSitterPythonAnalyzer:
         """Try enhanced Python AST analysis for detailed semantic information."""
         try:
             # Use the enhanced PythonCodeAnalyzer instead of the simple visitor
-            from lang.python.python_code_analyzer import PythonCodeAnalyzer
+            from ...lang.python.python_code_analyzer import PythonCodeAnalyzer
             analyzer = PythonCodeAnalyzer()
             metadata = analyzer.analyze_code(code, filename)
             

@@ -30,12 +30,12 @@ def temp_directory():
 class TestMainHybridSearchIntegration:
     """Integration tests for the main hybrid search entry point."""
     
-    @patch('main_hybrid_search.cocoindex.init')
-    @patch('main_hybrid_search.load_dotenv')
+    @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
+    @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
     def test_argument_parsing_basic(self, mock_load_dotenv, mock_cocoindex_init):
         """Test basic argument parsing."""
         try:
-            from main_hybrid_search import parse_hybrid_search_args, determine_paths
+            from cocoindex_code_mcp_server.main_hybrid_search import parse_hybrid_search_args, determine_paths
             
             # Test default arguments
             with patch('sys.argv', ['main_hybrid_search.py']):
@@ -48,12 +48,12 @@ class TestMainHybridSearchIntegration:
         except ImportError:
             pytest.skip("CocoIndex not available in test environment")
     
-    @patch('main_hybrid_search.cocoindex.init')
-    @patch('main_hybrid_search.load_dotenv')
+    @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
+    @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
     def test_argument_parsing_custom_paths(self, mock_load_dotenv, mock_cocoindex_init):
         """Test argument parsing with custom paths."""
         try:
-            from main_hybrid_search import parse_hybrid_search_args, determine_paths
+            from cocoindex_code_mcp_server.main_hybrid_search import parse_hybrid_search_args, determine_paths
             
             # Test with positional paths
             with patch('sys.argv', ['main_hybrid_search.py', '/path1', '/path2']):
@@ -64,12 +64,12 @@ class TestMainHybridSearchIntegration:
         except ImportError:
             pytest.skip("CocoIndex not available in test environment")
     
-    @patch('main_hybrid_search.cocoindex.init')
-    @patch('main_hybrid_search.load_dotenv')
+    @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
+    @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
     def test_argument_parsing_no_live(self, mock_load_dotenv, mock_cocoindex_init):
         """Test argument parsing with live updates disabled."""
         try:
-            from main_hybrid_search import parse_hybrid_search_args
+            from cocoindex_code_mcp_server.main_hybrid_search import parse_hybrid_search_args
             
             with patch('sys.argv', ['main_hybrid_search.py', '--no-live']):
                 args = parse_hybrid_search_args()
@@ -78,12 +78,12 @@ class TestMainHybridSearchIntegration:
         except ImportError:
             pytest.skip("CocoIndex not available in test environment")
     
-    @patch('main_hybrid_search.cocoindex.init')
-    @patch('main_hybrid_search.load_dotenv')
+    @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
+    @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
     def test_argument_parsing_custom_poll(self, mock_load_dotenv, mock_cocoindex_init):
         """Test argument parsing with custom polling interval."""
         try:
-            from main_hybrid_search import parse_hybrid_search_args
+            from cocoindex_code_mcp_server.main_hybrid_search import parse_hybrid_search_args
             
             with patch('sys.argv', ['main_hybrid_search.py', '--poll', '30']):
                 args = parse_hybrid_search_args()
@@ -92,19 +92,19 @@ class TestMainHybridSearchIntegration:
         except ImportError:
             pytest.skip("CocoIndex not available in test environment")
     
-    @patch('main_hybrid_search.update_flow_config')
-    @patch('main_hybrid_search.run_interactive_hybrid_search')
-    @patch('main_hybrid_search.cocoindex.init')
+    @patch('cocoindex_code_mcp_server.main_hybrid_search.update_flow_config')
+    @patch('cocoindex_code_mcp_server.main_hybrid_search.run_interactive_hybrid_search')
+    @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
     @pytest.mark.skip(reason='Integration test needs complex database mocking')
-    @patch('main_hybrid_search.load_dotenv')
+    @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
     def test_main_workflow_no_live(self, mock_load_dotenv, mock_cocoindex_init, 
                                    mock_run_interactive, mock_update_config):
         """Test main workflow without live updates."""
         try:
-            from main_hybrid_search import main
+            from cocoindex_code_mcp_server.main_hybrid_search import main
             
             # Mock the flow update
-            with patch('main_hybrid_search.code_embedding_flow') as mock_flow:
+            with patch('cocoindex_code_mcp_server.main_hybrid_search.code_embedding_flow') as mock_flow:
                 mock_flow.update.return_value = {"processed": 10}
                 
                 with patch('sys.argv', ['main_hybrid_search.py', '--no-live']):
@@ -143,8 +143,8 @@ class TestWorkflowIntegration:
         
         return mock_pool, mock_conn, mock_cursor
     
-    @patch('hybrid_search.os.getenv')
-    @patch('hybrid_search.ConnectionPool')
+    @patch('cocoindex_code_mcp_server.hybrid_search.os.getenv')
+    @patch('cocoindex_code_mcp_server.hybrid_search.ConnectionPool')
     def test_interactive_hybrid_search_workflow(self, mock_pool_class, mock_getenv, mock_database_setup):
         """Test the complete interactive hybrid search workflow."""
         try:
@@ -278,11 +278,11 @@ class TestWorkflowIntegration:
 class TestConfigurationIntegration:
     """Test configuration and setup integration."""
     
-    @patch('cocoindex_config.code_embedding_flow')
+    @patch('cocoindex_code_mcp_server.cocoindex_config.code_embedding_flow')
     def test_flow_configuration_update(self, mock_flow):
         """Test that flow configuration is properly updated."""
         try:
-            from cocoindex_config import update_flow_config
+            from cocoindex_code_mcp_server.cocoindex_config import update_flow_config
             
             # Test configuration update
             update_flow_config(
@@ -292,7 +292,7 @@ class TestConfigurationIntegration:
             )
             
             # Import the global config to verify it was updated
-            from cocoindex_config import _global_flow_config
+            from cocoindex_code_mcp_server.cocoindex_config import _global_flow_config
             
             assert _global_flow_config['paths'] == ["/test/path1", "/test/path2"]
             assert _global_flow_config['enable_polling'] == True
@@ -300,16 +300,16 @@ class TestConfigurationIntegration:
         except ImportError:
             pytest.skip("CocoIndex not available in test environment")
     
-    @patch('cocoindex_config.code_embedding_flow')
+    @patch('cocoindex_code_mcp_server.cocoindex_config.code_embedding_flow')
     def test_flow_configuration_defaults(self, mock_flow):
         """Test flow configuration with default values."""
         try:
-            from cocoindex_config import update_flow_config
+            from cocoindex_code_mcp_server.cocoindex_config import update_flow_config
             
             # Test with default values
             update_flow_config()
             
-            from cocoindex_config import _global_flow_config
+            from cocoindex_code_mcp_server.cocoindex_config import _global_flow_config
             
             assert _global_flow_config['paths'] == ["cocoindex"]
             assert _global_flow_config['enable_polling'] == False

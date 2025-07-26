@@ -48,8 +48,8 @@ class TestLiveUpdates(unittest.TestCase):
         from cocoindex_config import _global_flow_config
         
         # Mock the flow to prevent actual execution
-        with patch('cocoindex_config.code_embedding_flow') as mock_flow:
-            with patch('query_interactive.ConnectionPool'):
+        with patch('cocoindex_code_mcp_server.cocoindex_config.code_embedding_flow') as mock_flow:
+            with patch('cocoindex_code_mcp_server.query_interactive.ConnectionPool'):
                 with patch('builtins.input', side_effect=['']):  # Exit immediately
                     with patch('sys.argv', ['main_interactive_query.py', '--poll', '45', '/test/path']):
                         # Test configuration update
@@ -66,8 +66,8 @@ class TestLiveUpdates(unittest.TestCase):
         from main import main
         from cocoindex_config import _global_flow_config
         
-        with patch('cocoindex_config.code_embedding_flow') as mock_flow:
-            with patch('query_interactive.ConnectionPool'):
+        with patch('cocoindex_code_mcp_server.cocoindex_config.code_embedding_flow') as mock_flow:
+            with patch('cocoindex_code_mcp_server.query_interactive.ConnectionPool'):
                 with patch('builtins.input', side_effect=['', '', '', '']):  # Multiple empty inputs
                     # Test with poll_interval = 0 (should disable polling)
                     with patch('sys.argv', ['main_interactive_query.py', '--poll', '0', '/test']):

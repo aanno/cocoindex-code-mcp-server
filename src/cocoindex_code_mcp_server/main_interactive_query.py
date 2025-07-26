@@ -8,9 +8,9 @@ from dotenv import load_dotenv
 import cocoindex
 
 # Import our modular components
-from arg_parser import parse_args, determine_paths, display_configuration
-from query_interactive import run_interactive_query_mode
-from cocoindex_config import update_flow_config, run_flow_update
+from .arg_parser import parse_args, determine_paths, display_configuration
+from .query_interactive import run_interactive_query_mode
+from .cocoindex_config import update_flow_config, run_flow_update
 
 
 def main():

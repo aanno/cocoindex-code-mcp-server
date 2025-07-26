@@ -65,8 +65,8 @@ class TestMultiplePaths(unittest.TestCase):
         
         # Test that the main function doesn't crash with multiple paths
         # We can't easily test the full flow without a database, but we can test the interface
-        with patch('cocoindex_config.code_embedding_flow') as mock_flow:
-            with patch('query_interactive.ConnectionPool') as mock_pool:
+        with patch('cocoindex_code_mcp_server.cocoindex_config.code_embedding_flow') as mock_flow:
+            with patch('cocoindex_code_mcp_server.query_interactive.ConnectionPool') as mock_pool:
                 with patch('builtins.input', side_effect=['', '']):  # Empty input to exit
                     # Mock the flow update
                     mock_flow.update.return_value = {"processed": 0}

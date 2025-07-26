@@ -32,11 +32,11 @@ from pgvector.psycopg import register_vector
 from dotenv import load_dotenv
 
 # Local imports
-from db.pgvector.hybrid_search import HybridSearchEngine
-from keyword_search_parser_lark import KeywordSearchParser
-from lang.python.python_code_analyzer import analyze_python_code
+from .db.pgvector.hybrid_search import HybridSearchEngine
+from .keyword_search_parser_lark import KeywordSearchParser
+from .lang.python.python_code_analyzer import analyze_python_code
 import cocoindex
-from cocoindex_config import code_embedding_flow, code_to_embedding, update_flow_config, run_flow_update
+from .cocoindex_config import code_embedding_flow, code_to_embedding, update_flow_config, run_flow_update
 from cocoindex_code_mcp_server import LOGGER
 
 # Configure logging
@@ -407,14 +407,14 @@ def main(
             # Handle field validation errors with helpful messages
             error_msg = str(e)
             if "Invalid field" in error_msg:
-                from schema_validator import get_valid_fields_help
+                from .schema_validator import get_valid_fields_help
                 help_text = get_valid_fields_help()
                 raise ValueError(f"{error_msg}\n\n{help_text}")
             raise
         except Exception as e:
             # Handle SQL-related errors
             if "column" in str(e) and "does not exist" in str(e):
-                from schema_validator import get_valid_fields_help
+                from .schema_validator import get_valid_fields_help
                 help_text = get_valid_fields_help()
                 raise ValueError(f"Database schema error: {e}\n\n{help_text}")
             raise

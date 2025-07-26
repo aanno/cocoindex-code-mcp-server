@@ -218,7 +218,7 @@ class CocoIndexASTChunker:
         # Use our existing Haskell chunking for Haskell code
         if language == "Haskell":
             try:
-                from lang.haskell.haskell_ast_chunker import extract_haskell_ast_chunks
+                from .lang.haskell.haskell_ast_chunker import extract_haskell_ast_chunks
                 chunks = extract_haskell_ast_chunks(code)
                 
                 result_chunks = []
