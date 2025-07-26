@@ -10,7 +10,7 @@ import sys
 import os
 
 # Mock pgvector before importing hybrid_search
-with patch('cocoindex_code_mcp_server.cocoindex_code_mcp_server.pgvector.psycopg.register_vector'):
+with patch('pgvector.psycopg.register_vector'):
     from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
         HybridSearchEngine, 
         format_results_as_json, 

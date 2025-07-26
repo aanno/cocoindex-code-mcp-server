@@ -641,11 +641,11 @@
       "data_type_precision": 1.0,
       "data_type_f1": 1.0,
       "overall_score": 0.868421052631579,
-      "detected_functions": "{'doubledTree', 'multiplyByTwo', 'addTen', 'compose', 'processNumber', 'person', 'tree', 'main', 'treeMap', 'fibonacci', 'numbers', 'sumList'}",
+      "detected_functions": "{'treeMap', 'main', 'multiplyByTwo', 'doubledTree', 'tree', 'numbers', 'fibonacci', 'sumList', 'processNumber', 'compose', 'person', 'addTen'}",
       "detected_data_types": "{'Person', 'Tree'}",
       "missing_functions": "set()",
       "missing_data_types": "set()",
-      "extra_functions": "{'doubledTree', 'processNumber', 'person', 'tree', 'numbers'}",
+      "extra_functions": "{'doubledTree', 'tree', 'numbers', 'processNumber', 'person'}",
       "extra_data_types": "set()"
     },
     "generic_visitor": {
@@ -656,11 +656,11 @@
       "data_type_precision": 1.0,
       "data_type_f1": 1.0,
       "overall_score": 0.868421052631579,
-      "detected_functions": "{'doubledTree', 'multiplyByTwo', 'addTen', 'compose', 'processNumber', 'person', 'tree', 'main', 'treeMap', 'fibonacci', 'numbers', 'sumList'}",
+      "detected_functions": "{'treeMap', 'main', 'multiplyByTwo', 'doubledTree', 'tree', 'numbers', 'fibonacci', 'sumList', 'processNumber', 'compose', 'person', 'addTen'}",
       "detected_data_types": "{'Person', 'Tree'}",
       "missing_functions": "set()",
       "missing_data_types": "set()",
-      "extra_functions": "{'doubledTree', 'processNumber', 'person', 'tree', 'numbers'}",
+      "extra_functions": "{'doubledTree', 'tree', 'numbers', 'processNumber', 'person'}",
       "extra_data_types": "set()"
     },
     "cocoindex_baseline": {
@@ -671,7 +671,7 @@
       "data_type_precision": 1.0,
       "data_type_f1": 1.0,
       "overall_score": 1.0,
-      "detected_functions": "{'multiplyByTwo', 'addTen', 'compose', 'main', 'treeMap', 'fibonacci', 'sumList'}",
+      "detected_functions": "{'treeMap', 'main', 'multiplyByTwo', 'fibonacci', 'sumList', 'compose', 'addTen'}",
       "detected_data_types": "{'Person', 'Tree'}",
       "missing_functions": "set()",
       "missing_data_types": "set()",
@@ -679,5 +679,5 @@
       "extra_data_types": "set()"
     }
   },
-  "analysis_date": "1753447266.5765834"
+  "analysis_date": "1753536250.878908"
 }
