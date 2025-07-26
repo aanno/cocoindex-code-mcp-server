@@ -11,7 +11,7 @@ import cocoindex
 
 # Import our modular components
 from cocoindex_config import update_flow_config, run_flow_update
-from hybrid_search import run_interactive_hybrid_search
+from db.pgvector.hybrid_search import run_interactive_hybrid_search
 
 
 def parse_hybrid_search_args():

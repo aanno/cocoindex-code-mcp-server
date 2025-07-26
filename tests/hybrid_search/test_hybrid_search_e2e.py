@@ -17,7 +17,7 @@ from pgvector.psycopg import register_vector
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from hybrid_search import HybridSearchEngine
+from db.pgvector.hybrid_search import HybridSearchEngine
 from cocoindex_config import code_embedding_flow
 
 LOGGER = logging.getLogger(__name__)

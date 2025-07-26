@@ -168,7 +168,7 @@ class TestWorkflowIntegration:
                     "",                         # empty query to quit
                 ]
                 
-                from hybrid_search import run_interactive_hybrid_search
+                from db.pgvector.hybrid_search import run_interactive_hybrid_search
                 
                 # Should not raise any exceptions
                 run_interactive_hybrid_search()
@@ -182,7 +182,7 @@ class TestWorkflowIntegration:
     def test_end_to_end_search_pipeline(self, mock_database_setup):
         """Test the end-to-end search pipeline with mocked components."""
         try:
-            from hybrid_search import HybridSearchEngine
+            from db.pgvector.hybrid_search import HybridSearchEngine
             from keyword_search_parser import KeywordSearchParser
             
             mock_pool, mock_conn, mock_cursor = mock_database_setup
@@ -234,7 +234,7 @@ class TestWorkflowIntegration:
     def test_complex_query_parsing_and_execution(self, mock_database_setup):
         """Test complex query parsing and execution."""
         try:
-            from hybrid_search import HybridSearchEngine
+            from db.pgvector.hybrid_search import HybridSearchEngine
             from keyword_search_parser import KeywordSearchParser
             
             mock_pool, mock_conn, mock_cursor = mock_database_setup
@@ -328,7 +328,7 @@ class TestErrorHandling:
     def test_search_with_database_error(self):
         """Test search behavior when database errors occur."""
         try:
-            from hybrid_search import HybridSearchEngine
+            from db.pgvector.hybrid_search import HybridSearchEngine
             
             # Mock database to raise an exception
             mock_pool = Mock()
@@ -350,7 +350,7 @@ class TestErrorHandling:
     def test_search_with_invalid_keyword_syntax(self):
         """Test search with invalid keyword syntax."""
         try:
-            from hybrid_search import HybridSearchEngine
+            from db.pgvector.hybrid_search import HybridSearchEngine
             from keyword_search_parser import KeywordSearchParser
             
             # Use real parser to test actual parsing behavior
@@ -376,7 +376,7 @@ class TestErrorHandling:
     def test_embedding_function_error(self):
         """Test behavior when embedding function fails."""
         try:
-            from hybrid_search import HybridSearchEngine
+            from db.pgvector.hybrid_search import HybridSearchEngine
             
             # Mock embedding function that raises an error
             def failing_embedding_func(query):
@@ -407,7 +407,7 @@ class TestPerformanceCharacteristics:
     def test_large_result_set_handling(self):
         """Test handling of large result sets."""
         try:
-            from hybrid_search import format_results_readable, format_results_as_json
+            from db.pgvector.hybrid_search import format_results_readable, format_results_as_json
             
             # Create a large number of mock results
             large_results = []

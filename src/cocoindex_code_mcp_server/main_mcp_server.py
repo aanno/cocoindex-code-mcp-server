@@ -32,7 +32,7 @@ from pgvector.psycopg import register_vector
 from dotenv import load_dotenv
 
 # Local imports
-from hybrid_search import HybridSearchEngine
+from db.pgvector.hybrid_search import HybridSearchEngine
 from keyword_search_parser_lark import KeywordSearchParser
 from lang.python.python_code_analyzer import analyze_python_code
 import cocoindex

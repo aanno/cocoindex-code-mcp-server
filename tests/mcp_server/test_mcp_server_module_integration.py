@@ -314,7 +314,7 @@ class TestMCPServerQueryIntegration:
             # Import required modules
             import cocoindex
             from cocoindex_config import update_flow_config, code_embedding_flow
-            from hybrid_search import HybridSearchEngine
+            from db.pgvector.hybrid_search import HybridSearchEngine
             from psycopg_pool import ConnectionPool
             
             # Skip if database not available
