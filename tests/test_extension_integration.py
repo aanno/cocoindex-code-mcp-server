@@ -14,10 +14,6 @@ import tempfile
 import shutil
 from pathlib import Path
 
-# Add src to path
-src_path = Path(__file__).parent.parent / "src" / "cocoindex_code_mcp_server"
-sys.path.insert(0, str(src_path))
-
 def test_extension_integration():
     """Test that extensions are available and properly configured."""
     print("🔍 Testing extension integration...")

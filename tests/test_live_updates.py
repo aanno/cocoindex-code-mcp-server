@@ -6,9 +6,6 @@ import sys
 from pathlib import Path
 from unittest.mock import patch
 
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
-
 class TestLiveUpdates(unittest.TestCase):
     """Test live update functionality and command-line options."""
     

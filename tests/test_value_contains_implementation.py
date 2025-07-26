@@ -5,9 +5,6 @@ import pytest
 import sys
 import os
 
-# Add the source directory to Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src', 'cocoindex_code_mcp_server'))
-
 from keyword_search_parser import KeywordSearchParser as FallbackParser, build_sql_where_clause, SearchCondition, SearchGroup
 
 try:

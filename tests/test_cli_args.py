@@ -5,9 +5,6 @@ import sys
 from unittest.mock import patch
 from pathlib import Path
 
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
-
 class TestCliArguments(unittest.TestCase):
     """Test command-line argument parsing for main_interactive_query.py."""
     

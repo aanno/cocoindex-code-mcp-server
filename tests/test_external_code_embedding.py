@@ -10,9 +10,6 @@ import sys
 import os
 from unittest.mock import Mock, patch
 
-# Add the src directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-
 from smart_code_embedding import (
     LanguageModelSelector,
     create_smart_code_embedding,

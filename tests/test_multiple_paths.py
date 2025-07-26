@@ -8,9 +8,6 @@ import os
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
-
 class TestMultiplePaths(unittest.TestCase):
     """Test multiple path handling in the code embedding flow."""
     
