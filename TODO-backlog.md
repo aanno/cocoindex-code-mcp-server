@@ -18,6 +18,7 @@
 * MCP server resource problem (see skip test in tests/mcp_server/test_mcp_integration_http.py)
 * Convert other MCP server integration test to tests/mcp_server/test_mcp_integration_http.py technology
 * pgvector on podman: use a volume for the data
+* bug report against python mcp library for the resource bug
 
 ## smart embedding
 
