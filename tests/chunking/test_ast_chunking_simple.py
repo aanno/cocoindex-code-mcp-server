@@ -20,7 +20,7 @@ def test_astchunk_builder_creation():
         "metadata_template": "default",
         "chunk_expansion": False
     }
-    
+
     builder = ASTChunkBuilder(**configs)
     assert builder is not None
 
@@ -47,22 +47,22 @@ if __name__ == "__main__":
     print(f"5 + 3 = {result}")
     hello_world()
     '''
-    
+
     configs = {
         "max_chunk_size": 300,
         "language": "python",
         "metadata_template": "default",
         "chunk_expansion": False
     }
-    
+
     builder = ASTChunkBuilder(**configs)
     chunks = builder.chunkify(python_code, **configs)
-    
+
     assert len(chunks) > 0
     assert all(isinstance(chunk, dict) for chunk in chunks)
     assert all('content' in chunk for chunk in chunks)
     assert all('metadata' in chunk for chunk in chunks)
-    
+
     # Verify metadata contains expected fields
     for chunk in chunks:
         metadata = chunk.get('metadata', {})

@@ -15,12 +15,12 @@ from cocoindex_config import code_embedding_flow, code_to_embedding
 def search(pool: ConnectionPool, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
     """
     Search for code using semantic similarity.
-    
+
     Args:
         pool: Database connection pool
         query: Search query string
         top_k: Number of results to return
-        
+
     Returns:
         List of search results with metadata
     """
@@ -61,7 +61,7 @@ def run_interactive_query_mode():
     pool = ConnectionPool(os.getenv("COCOINDEX_DATABASE_URL"))
     print("\n🔍 Interactive search mode. Type queries to search the code index.")
     print("Press Enter with empty query to quit.\n")
-    
+
     # Run queries in a loop to demonstrate the query capabilities.
     while True:
         try:

@@ -28,10 +28,10 @@ def utility_function() -> str:
     """A utility function."""
     return "test"
 '''
-    
+
     print("🔍 Debugging AST Node Processing")
     print("=" * 50)
-    
+
     # Test the full TreeSitterPythonAnalyzer
     print("\n1. Full TreeSitterPythonAnalyzer:")
     analyzer = TreeSitterPythonAnalyzer(prefer_tree_sitter=True)
@@ -39,26 +39,26 @@ def utility_function() -> str:
     print(f"Functions found: {metadata.get('functions', [])}")
     print(f"Classes found: {metadata.get('classes', [])}")
     print(f"Analysis method: {metadata.get('analysis_method')}")
-    
+
     # Test the tree-sitter components directly
     print("\n2. Direct tree-sitter analysis:")
     parser_factory = ASTParserFactory()
     tree = parser_factory.parse_code(sample_code, 'python')
-    
+
     if tree:
         print(f"Tree parsed successfully: {tree}")
-        
+
         # Create visitor and handler
         visitor = GenericMetadataVisitor('python')
         python_handler = get_handler_for_language('python')
-        
+
         if python_handler:
             print(f"Python handler found: {type(python_handler)}")
             visitor.add_handler(python_handler)
-            
+
             # Walk the tree with debugging
             walker = TreeWalker(sample_code, tree)
-            
+
             # Monkey patch to debug node types
             original_visit_node = visitor.visit_node
 
@@ -92,11 +92,11 @@ def utility_function() -> str:
                                   f"{node_type}")
 
                 return original_visit_node(context)
-            
+
             visitor.visit_node = debug_visit_node
-            
+
             metadata = walker.walk(visitor)
-            
+
             # Get handler summary
             if hasattr(python_handler, 'get_summary'):
                 handler_summary = python_handler.get_summary()
@@ -106,17 +106,17 @@ def utility_function() -> str:
                 print(f"  Function details: {len(handler_summary.get('function_details', []))}")
                 print(f"  Class details: {len(handler_summary.get('class_details', []))}")
                 metadata.update(handler_summary)
-            
+
             print(f"\n4. Final metadata:")
             print(f"  Functions: {metadata.get('functions', [])}")
             print(f"  Classes: {metadata.get('classes', [])}")
-            
+
             # Add proper assertions for pytest
             assert python_handler is not None, "Python handler should be found"
             assert metadata.get('functions') is not None, "Functions should be detected"
             assert metadata.get('classes') is not None, "Classes should be detected"
             assert 'Config' in metadata.get('classes', []), "Config class should be detected"
-            
+
             # Verify specific functions are found
             functions = metadata.get('functions', [])
             expected_functions = {'__init__', 'from_dict', 'utility_function'}
@@ -125,7 +125,7 @@ def utility_function() -> str:
                 f"Expected functions {expected_functions} not all found in "
                 f"{found_functions}"
             )
-            
+
         else:
             assert False, "Python handler should be found"
     else:

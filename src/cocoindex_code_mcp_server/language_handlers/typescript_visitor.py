@@ -16,7 +16,7 @@ LOGGER = logging.getLogger(__name__)
 
 class TypeScriptASTVisitor(JavaScriptASTVisitor):
     """Specialized visitor for TypeScript language AST analysis."""
-    
+
     def __init__(self):
         super().__init__()
         self.language = "typescript"
@@ -27,15 +27,15 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
         self.enums: List[str] = []
         self.namespaces: List[str] = []
         self.decorators: List[str] = []
-        
+
     def visit_node(self, context: NodeContext) -> Optional[Dict[str, Any]]:
         """Visit a node and extract TypeScript-specific metadata."""
         node = context.node
         node_type = node.type if hasattr(node, 'type') else str(type(node))
-        
+
         # Track node statistics
         self.node_stats[node_type] = self.node_stats.get(node_type, 0) + 1
-        
+
         # Handle TypeScript-specific constructs first
         if node_type == 'interface_declaration':
             self._extract_interface(node)
@@ -52,9 +52,9 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
         else:
             # Delegate to parent JavaScript visitor for common constructs
             super().visit_node(context)
-            
+
         return None
-    
+
     def _extract_interface(self, node):
         """Extract interface name from interface_declaration node."""
         try:
@@ -67,7 +67,7 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
                     break
         except Exception as e:
             LOGGER.warning(f"Error extracting TypeScript interface: {e}")
-    
+
     def _extract_type_alias(self, node):
         """Extract type alias name from type_alias_declaration node."""
         try:
@@ -80,7 +80,7 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
                     break
         except Exception as e:
             LOGGER.warning(f"Error extracting TypeScript type alias: {e}")
-    
+
     def _extract_enum(self, node):
         """Extract enum name from enum_declaration node."""
         try:
@@ -93,7 +93,7 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
                     break
         except Exception as e:
             LOGGER.warning(f"Error extracting TypeScript enum: {e}")
-    
+
     def _extract_namespace(self, node):
         """Extract namespace name from namespace_declaration node."""
         try:
@@ -106,7 +106,7 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
                     break
         except Exception as e:
             LOGGER.warning(f"Error extracting TypeScript namespace: {e}")
-    
+
     def _extract_module(self, node):
         """Extract module name from module_declaration node."""
         try:
@@ -119,7 +119,7 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
                     break
         except Exception as e:
             LOGGER.warning(f"Error extracting TypeScript module: {e}")
-    
+
     def _extract_decorator(self, node):
         """Extract decorator name from decorator node."""
         try:
@@ -132,7 +132,7 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
                     break
         except Exception as e:
             LOGGER.warning(f"Error extracting TypeScript decorator: {e}")
-    
+
     def get_summary(self) -> Dict[str, Any]:
         """Get analysis summary in the expected format."""
         # Get base JavaScript summary and extend with TypeScript-specific fields
@@ -151,7 +151,7 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
 def analyze_typescript_code(code: str, language: str = "typescript", filename: str = "") -> Dict[str, Any]:
     """
     Analyze TypeScript code using the specialized TypeScript AST visitor.
-    
+
     Args:
         code: TypeScript source code to analyze
         language: Language identifier ("typescript", "tsx")
@@ -159,24 +159,24 @@ def analyze_typescript_code(code: str, language: str = "typescript", filename: s
     """
     try:
         from ..ast_visitor import ASTParserFactory, TreeWalker
-        
+
         # Create parser and parse code
         factory = ASTParserFactory()
         parser = factory.create_parser(language)
         if not parser:
             LOGGER.warning(f"TypeScript parser not available for {language}")
             return {'success': False, 'error': f'TypeScript parser not available for {language}'}
-        
+
         tree = factory.parse_code(code, language)
         if not tree:
             LOGGER.warning("Failed to parse TypeScript code")
             return {'success': False, 'error': 'Failed to parse TypeScript code'}
-        
+
         # Use specialized TypeScript visitor
         visitor = TypeScriptASTVisitor()
         walker = TreeWalker(code, tree)
         walker.walk(visitor)
-        
+
         # Get results from visitor
         result = visitor.get_summary()
         result.update({
@@ -188,10 +188,11 @@ def analyze_typescript_code(code: str, language: str = "typescript", filename: s
             'parse_errors': 0,
             'tree_language': str(parser.language) if parser else None
         })
-        
-        LOGGER.debug(f"TypeScript analysis completed: {len(result.get('functions', []))} functions, {len(result.get('classes', []))} classes found")
+
+        LOGGER.debug(
+            f"TypeScript analysis completed: {len(result.get('functions', []))} functions, {len(result.get('classes', []))} classes found")
         return result
-        
+
     except Exception as e:
         LOGGER.error(f"TypeScript code analysis failed: {e}")
         return {'success': False, 'error': str(e)}

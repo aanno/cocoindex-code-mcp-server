@@ -17,7 +17,7 @@ def test_tool_standard_creation():
             "required": ["query"]
         }
     )
-    
+
     assert tool.name == "test_tool"
     assert tool.description == "A test tool"
     assert tool.title is None
@@ -32,7 +32,7 @@ def test_tool_model_dump():
         description="A test tool",
         inputSchema={"type": "object", "properties": {}}
     )
-    
+
     dumped = tool.model_dump()
     assert "name" in dumped
     assert "description" in dumped
@@ -48,7 +48,7 @@ def test_tool_model_dump_exclude_none():
         description="A test tool",
         inputSchema={"type": "object", "properties": {}}
     )
-    
+
     dumped_clean = tool.model_dump(exclude_none=True)
     assert "name" in dumped_clean
     assert "description" in dumped_clean
@@ -70,10 +70,10 @@ def test_tool_json_serialization():
             "required": ["query"]
         }
     )
-    
+
     dumped_clean = tool.model_dump(mode='json', exclude_none=True)
     json_str = json.dumps(dumped_clean, indent=2)
-    
+
     assert "test_tool" in json_str
     assert "A test tool" in json_str
     assert "title" not in json_str
@@ -91,7 +91,7 @@ def test_tool_with_optional_fields():
         outputSchema={"type": "object"},
         annotations={"experimental": True}
     )
-    
+
     dumped = tool.model_dump(exclude_none=True)
     assert dumped["name"] == "advanced_tool"
     assert dumped["description"] == "An advanced test tool"

@@ -5,7 +5,7 @@ CocoIndex configuration and flow definitions.
 """
 
 # Temporarily disabled due to cocoindex compatibility
-# from __future__ import annotations  
+# from __future__ import annotations
 import os
 import json
 from dataclasses import dataclass
@@ -53,6 +53,7 @@ except ImportError as e:
     PYTHON_HANDLER_AVAILABLE = False
     LOGGER.warning(f"Python language handler not available: {e}")
 
+
 @dataclass
 class ChunkingParams:
     """Parameters for chunking code."""
@@ -60,11 +61,12 @@ class ChunkingParams:
     min_chunk_size: int
     chunk_overlap: int
 
+
 @dataclass
 class CodeMetadata:
     """Metadata extracted from code chunks."""
     metadata_json: str
-    functions: List[str] 
+    functions: List[str]
     classes: List[str]
     imports: List[str]
     complexity_score: int
@@ -110,11 +112,11 @@ TREE_SITTER_LANGUAGE_MAP = {
 CHUNKING_PARAMS = {
     # Larger chunks for documentation and config files
     "Markdown": ChunkingParams(chunk_size=2000, min_chunk_size=500, chunk_overlap=200),
-    #"YAML": ChunkingParams(chunk_size=800, min_chunk_size=200, chunk_overlap=100),
+    # "YAML": ChunkingParams(chunk_size=800, min_chunk_size=200, chunk_overlap=100),
     "JSON": ChunkingParams(chunk_size=1500, min_chunk_size=300, chunk_overlap=200),
     "XML": ChunkingParams(chunk_size=1500, min_chunk_size=300, chunk_overlap=200),
     "TOML": ChunkingParams(chunk_size=800, min_chunk_size=200, chunk_overlap=100),
-    
+
     # Smaller chunks for dense code
     "C": ChunkingParams(chunk_size=800, min_chunk_size=200, chunk_overlap=150),
     "C++": ChunkingParams(chunk_size=800, min_chunk_size=200, chunk_overlap=150),
@@ -123,7 +125,7 @@ CHUNKING_PARAMS = {
     "Java": ChunkingParams(chunk_size=1200, min_chunk_size=300, chunk_overlap=250),
     "C#": ChunkingParams(chunk_size=1200, min_chunk_size=300, chunk_overlap=250),
     "Scala": ChunkingParams(chunk_size=1000, min_chunk_size=250, chunk_overlap=200),
-    
+
     # Medium chunks for scripting languages
     "Python": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=250),
     "JavaScript": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=250),
@@ -131,21 +133,21 @@ CHUNKING_PARAMS = {
     "TSX": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=250),
     "Ruby": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=250),
     "PHP": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=250),
-    
+
     # Web and styling
     "HTML": ChunkingParams(chunk_size=1500, min_chunk_size=400, chunk_overlap=200),
     "CSS": ChunkingParams(chunk_size=1000, min_chunk_size=250, chunk_overlap=150),
-    
+
     # Data and scientific
     "SQL": ChunkingParams(chunk_size=1200, min_chunk_size=300, chunk_overlap=200),
     "R": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200),
     "Fortran": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200),
-    
+
     # Others
     "Pascal": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200),
     "Swift": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200),
     "Haskell": ChunkingParams(chunk_size=1200, min_chunk_size=300, chunk_overlap=200),
-    
+
     # Default fallback
     "_DEFAULT": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200),
 }
@@ -168,7 +170,7 @@ CUSTOM_LANGUAGES = [
         language_name="Dockerfile",
         aliases=[".dockerfile"],
         separators_regex=[r"\n\n+",
-        r"\n(FROM|RUN|COPY|ADD|EXPOSE|ENV|CMD|ENTRYPOINT)", r"\n"]
+                          r"\n(FROM|RUN|COPY|ADD|EXPOSE|ENV|CMD|ENTRYPOINT)", r"\n"]
     ),
     cocoindex.functions.CustomLanguageSpec(
         language_name="Gradle",
@@ -199,7 +201,7 @@ CUSTOM_LANGUAGES = [
         language_name="Kotlin",
         aliases=["kt", ".kt", "kts", ".kts"],
         separators_regex=[r"\n\n+", r"\nfun\s+", r"\nclass\s+", r"\nobject\s+",
-        r"\ninterface\s+", r"\n"]
+                          r"\ninterface\s+", r"\n"]
     ),
 ]
 
@@ -208,11 +210,11 @@ CUSTOM_LANGUAGES = [
 def extract_language(filename: str) -> str:
     """Extract the language from a filename for tree-sitter processing."""
     basename = os.path.basename(filename)
-    
+
     # Handle special files without extensions
     if basename.lower() in ["makefile", "dockerfile", "jenkinsfile"]:
         return basename.lower()
-    
+
     # Handle special patterns
     if basename.lower().startswith("cmakelists"):
         return "cmake"
@@ -226,10 +228,10 @@ def extract_language(filename: str) -> str:
         return "go"
     if basename.lower() in ["stack.yaml", "cabal.project"]:
         return "haskell"
-    
+
     # Get extension
     ext = os.path.splitext(filename)[1].lower()
-    
+
     # Map to tree-sitter language
     return TREE_SITTER_LANGUAGE_MAP.get(ext, ext)
 
@@ -245,7 +247,7 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
     """Extract rich metadata from code chunks based on language and return as JSON string."""
     # Check if we should use default language handler
     use_default_handler = _global_flow_config.get('use_default_language_handler', False)
-    
+
     try:
         if language == "Python" and PYTHON_HANDLER_AVAILABLE and not use_default_handler:
             # Use our advanced Python handler through the tree-sitter analyzer
@@ -273,7 +275,7 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
                 "has_classes": False,
                 "decorators_used": [],
             }
-        
+
         # Return just the JSON string for now
         result = {
             "functions": metadata.get("functions", []),
@@ -287,7 +289,7 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
             "analysis_method": metadata.get("analysis_method", "basic"),
         }
         return json.dumps(result)
-        
+
     except Exception as e:
         # Fallback to empty metadata if everything fails
         LOGGER.debug(f"Metadata extraction failed for {filename}, using empty metadata: {e}")
@@ -406,13 +408,13 @@ def ensure_unique_chunk_locations(chunks) -> List[Chunk]:
     """
     if not chunks:
         return []
-    
+
     # Convert chunks to list if needed
     chunk_list = list(chunks) if hasattr(chunks, '__iter__') else [chunks]
-    
+
     seen_locations = set()
     unique_chunks = []
-    
+
     for i, chunk in enumerate(chunk_list):
         # Extract values from chunk (dict or dataclass) and convert to Chunk
         if hasattr(chunk, 'location'):
@@ -433,16 +435,16 @@ def ensure_unique_chunk_locations(chunks) -> List[Chunk]:
             text = str(chunk) if chunk else ""
             start = 0
             end = 0
-        
+
         # Make location unique
         unique_loc = base_loc
         suffix = 0
         while unique_loc in seen_locations:
             suffix += 1
             unique_loc = f"{base_loc}#{suffix}"
-        
+
         seen_locations.add(unique_loc)
-        
+
         # Always create Chunk dataclass with unique location
         unique_chunk = Chunk(
             text=text,
@@ -451,7 +453,7 @@ def ensure_unique_chunk_locations(chunks) -> List[Chunk]:
             end=end
         )
         unique_chunks.append(unique_chunk)
-    
+
     return unique_chunks
 
 
@@ -494,11 +496,11 @@ def select_embedding_model_for_language(language: str) -> str:
     if not SMART_EMBEDDING_AVAILABLE:
         LOGGER.debug(f"Smart embedding not available for {language}, using default")
         return DEFAULT_TRANSFORMER_MODEL
-    
+
     # Use the smart embedding selector with actual language value
     selector = LanguageModelSelector()
     selected_model = selector.select_model(language=language.lower())
-    
+
     LOGGER.debug(f"Selected embedding model: {selected_model} for language: {language}")
     return selected_model
 
@@ -546,7 +548,7 @@ LANGUAGE_MODEL_GROUPS = {
         'model': 'microsoft/graphcodebert-base',
         'languages': {'python', 'java', 'javascript', 'php', 'ruby', 'go', 'c', 'c++'}
     },
-    # UniXcode - optimized for these languages  
+    # UniXcode - optimized for these languages
     'unixcoder': {
         'model': 'microsoft/unixcoder-base',
         'languages': {'rust', 'typescript', 'tsx', 'c#', 'kotlin', 'scala', 'swift', 'dart'}
@@ -563,21 +565,21 @@ LANGUAGE_MODEL_GROUPS = {
 def get_embedding_model_group(language: str) -> str:
     """Get the appropriate embedding model group for a language."""
     lang_lower = language.lower()
-    
+
     for group_name, group_info in LANGUAGE_MODEL_GROUPS.items():
         if group_name == 'fallback':
             continue  # Handle fallback last
         if lang_lower in group_info['languages']:
             return group_name
-    
+
     # Default to fallback for unrecognized languages
     return 'fallback'
 
 
-# Global configuration for flow parameters  
+# Global configuration for flow parameters
 _global_flow_config = {
     'paths': ["."],  # Use current directory for testing
-    'enable_polling': False, 
+    'enable_polling': False,
     'poll_interval': 30,
     'use_smart_embedding': True,  # Enable smart language-aware embedding
 }
@@ -595,14 +597,14 @@ def code_embedding_flow(
     paths = _global_flow_config.get('paths', ["cocoindex"])
     enable_polling = _global_flow_config.get('enable_polling', False)
     poll_interval = _global_flow_config.get('poll_interval', 30)
-    
+
     # Add multiple sources - CocoIndex supports this natively!
     all_files_sources = []
-    
+
     for i, path in enumerate(paths):
         source_name = f"files_{i}" if len(paths) > 1 else "files"
         LOGGER.info(f"Adding source: {path} as '{source_name}'")
-        
+
         # Configure LocalFile source with optional polling
         source_config = {
             "path": path,
@@ -618,7 +620,7 @@ def code_embedding_flow(
                 # Go
                 "*.go", "go.mod", "go.sum",
                 # Haskell
-                "*.hs", "*.lhs", "*.cabal", 
+                "*.hs", "*.lhs", "*.cabal",
                 # "*.yaml", "*.yml", "stack.yaml",
                 # C/C++
                 "*.c", "*.cc", "*.cpp", "*.cxx", "*.h", "*.hh", "*.hpp", "*.hxx",
@@ -676,28 +678,28 @@ def code_embedding_flow(
                 "**/.venv",
             ]
         }
-        
+
         # Note: Polling configuration is handled by CocoIndex live updater, not LocalFile
         if enable_polling:
             LOGGER.info(f"  Polling enabled: {poll_interval}s interval (handled by live updater)")
-        
+
         data_scope[source_name] = flow_builder.add_source(
             cocoindex.sources.LocalFile(**source_config)
         )
         all_files_sources.append(source_name)
-    
+
     # Create a single collector for all sources
     code_embeddings = data_scope.add_collector()
-    
+
     # Process each source with the same logic
     for source_name in all_files_sources:
         with data_scope[source_name].row() as file:
             file["language"] = file["filename"].transform(extract_language)
             file["chunking_params"] = file["language"].transform(get_chunking_params)
-            
+
             # Choose chunking method based on configuration
             use_default_chunking = _global_flow_config.get('use_default_chunking', False)
-            
+
             if use_default_chunking or not AST_CHUNKING_AVAILABLE:
                 if not use_default_chunking and not AST_CHUNKING_AVAILABLE:
                     LOGGER.info("AST chunking not available, using default recursive splitting")
@@ -722,16 +724,17 @@ def code_embedding_flow(
                 )
                 # Ensure unique locations for AST chunking (safety measure)
                 file["chunks"] = raw_chunks.transform(ensure_unique_chunk_locations)
-            
+
             # Choose embedding method based on configuration
             use_smart_embedding = _global_flow_config.get('use_smart_embedding', False)
-            LOGGER.debug(f"Embedding config: use_smart_embedding={use_smart_embedding}, SMART_EMBEDDING_AVAILABLE={SMART_EMBEDDING_AVAILABLE}")
-            
+            LOGGER.debug(
+                f"Embedding config: use_smart_embedding={use_smart_embedding}, SMART_EMBEDDING_AVAILABLE={SMART_EMBEDDING_AVAILABLE}")
+
             # Add model group information for smart embedding
             if use_smart_embedding and SMART_EMBEDDING_AVAILABLE:
                 with file["chunks"].row() as chunk:
                     chunk["model_group"] = file["language"].transform(get_embedding_model_group)
-            
+
             with file["chunks"].row() as chunk:
                 # Smart embedding with language-aware model selection
                 if use_smart_embedding and SMART_EMBEDDING_AVAILABLE:
@@ -748,10 +751,10 @@ def code_embedding_flow(
                 else:
                     LOGGER.info("Using default embedding")
                     chunk["embedding"] = chunk["text"].call(code_to_embedding)
-                
+
                 # Extract metadata using appropriate method based on configuration
                 use_default_language_handler = _global_flow_config.get('use_default_language_handler', False)
-                
+
                 if use_default_language_handler:
                     LOGGER.info("Using default language handler (--default-language-handler flag set)")
                     # Use simple default metadata (no custom processing)
@@ -770,11 +773,11 @@ def code_embedding_flow(
                 else:
                     LOGGER.info("Using custom language handler extension")
                     chunk["metadata"] = chunk["text"].transform(
-                        extract_code_metadata, 
-                        language=file["language"], 
+                        extract_code_metadata,
+                        language=file["language"],
                         filename=file["filename"]
                     )
-                
+
                 # Extract individual metadata fields using CocoIndex transforms
                 chunk["functions"] = chunk["metadata"].transform(extract_functions_field)
                 chunk["classes"] = chunk["metadata"].transform(extract_classes_field)
@@ -783,7 +786,7 @@ def code_embedding_flow(
                 chunk["has_type_hints"] = chunk["metadata"].transform(extract_has_type_hints_field)
                 chunk["has_async"] = chunk["metadata"].transform(extract_has_async_field)
                 chunk["has_classes"] = chunk["metadata"].transform(extract_has_classes_field)
-                
+
                 code_embeddings.collect(
                     filename=file["filename"],
                     language=file["language"],
@@ -817,10 +820,9 @@ def code_embedding_flow(
     )
 
 
-
 def update_flow_config(paths: List[str] = None, enable_polling: bool = False, poll_interval: int = 30,
-                      use_default_embedding: bool = False, use_default_chunking: bool = False, 
-                      use_default_language_handler: bool = False):
+                       use_default_embedding: bool = False, use_default_chunking: bool = False,
+                       use_default_language_handler: bool = False):
     """Update the global flow configuration."""
     global _global_flow_config
     _global_flow_config.update({
@@ -841,31 +843,31 @@ def run_flow_update(live_update: bool = False, poll_interval: int = 30):
             LOGGER.info(f"📊 File polling enabled: {poll_interval} seconds")
         else:
             LOGGER.info("📊 Event-based monitoring (no polling)")
-        
+
         flow = code_embedding_flow
-        
+
         # Setup the flow first
         flow.setup()
-        
+
         # Initial update
         LOGGER.info("🚀 Initial index build...")
         stats = flow.update()
         LOGGER.info("Initial index built: %s", stats)
-        
+
         # Start live updater
         LOGGER.info("👁️  Starting live file monitoring...")
         live_options = cocoindex.FlowLiveUpdaterOptions(
             live_mode=True,
             print_stats=True
         )
-        
+
         with cocoindex.FlowLiveUpdater(flow, live_options) as updater:
             LOGGER.info("✅ Live update mode active. Press Ctrl+C to stop.")
             try:
                 updater.wait()
             except KeyboardInterrupt:
                 LOGGER.info("\n⏹️  Stopping live update mode...")
-                
+
     else:
         # Regular one-time update mode
         stats = code_embedding_flow.update()

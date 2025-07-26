@@ -18,7 +18,8 @@ rotating_handler = RotatingFileHandler(
 rotating_handler.setLevel(logging.DEBUG)
 
 # Formatter for the file logs (can be same or different)
-file_formatter = logging.Formatter('[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s', datefmt='%H:%M:%S')
+file_formatter = logging.Formatter(
+    '[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s', datefmt='%H:%M:%S')
 rotating_handler.setFormatter(file_formatter)
 
 # Set up console handler separately

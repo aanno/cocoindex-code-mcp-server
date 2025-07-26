@@ -39,7 +39,8 @@ test = [
     "pytest-timeout>=2.1.0",
     "pytest-xdist>=3.4.0",
     "coverage>=7.9.2",
-    "autoflake8>=1.7.0"
+    "autoflake8>=1.7.0",
+    "autopep8>=2.0.0",
 ]
 mcp-server = [
     "mcp>=1.12.0",
@@ -53,3 +54,6 @@ bindings = "pyo3"
 compatibility = "linux"  # or linux, macos, etc.
 python-source = "src"
 include = ["src/cocoindex_code_mcp_server/**/*.py"]
+
+[tool.autopep8]
+max_line_length = 120

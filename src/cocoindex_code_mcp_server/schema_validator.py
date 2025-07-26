@@ -52,18 +52,18 @@ class ValidationResult:
 
 class SchemaValidator:
     """Validates and maps database fields to prevent SQL injection and schema errors."""
-    
+
     def __init__(self, valid_columns: Set[str] = None, field_aliases: Dict[str, str] = None):
         self.valid_columns = valid_columns or VALID_COLUMNS
         self.field_aliases = field_aliases or FIELD_ALIASES
-    
+
     def validate_field(self, field: str) -> ValidationResult:
         """
         Validate a field name and return the mapped column name.
-        
+
         Args:
             field: Field name from user query
-            
+
         Returns:
             ValidationResult with validation status and mapped field
         """
@@ -72,35 +72,35 @@ class SchemaValidator:
                 is_valid=False,
                 error_message="Field name must be a non-empty string"
             )
-        
+
         # Sanitize field name - only allow alphanumeric and underscore
         if not field.replace('_', '').replace('-', '').isalnum():
             return ValidationResult(
                 is_valid=False,
                 error_message=f"Invalid field name '{field}' - only alphanumeric characters and underscores allowed"
             )
-        
+
         # Check if field exists directly
         if field in self.valid_columns:
             return ValidationResult(is_valid=True, mapped_field=field)
-        
+
         # Check field aliases
         if field in self.field_aliases:
             mapped_field = self.field_aliases[field]
             if mapped_field in self.valid_columns:
                 return ValidationResult(is_valid=True, mapped_field=mapped_field)
-        
+
         # Field not found
         valid_fields = sorted(list(self.valid_columns) + list(self.field_aliases.keys()))
         return ValidationResult(
             is_valid=False,
             error_message=f"Unknown field '{field}'. Valid fields: {', '.join(valid_fields)}"
         )
-    
+
     def validate_operator(self, operator: str) -> bool:
         """Validate SQL operator to prevent injection."""
         return operator.upper().strip() in SAFE_OPERATORS
-    
+
     def sanitize_value(self, value: Any) -> Any:
         """Sanitize a value for SQL parameter binding."""
         if isinstance(value, str):
@@ -108,19 +108,19 @@ class SchemaValidator:
             # The actual protection comes from parameter binding, this is additional safety
             return value.replace("'", "''").replace(";", "").replace("--", "")
         return value
-    
+
     def build_safe_condition(self, field: str, operator: str, value: Any) -> tuple[str, List[Any]]:
         """
         Build a safe SQL condition with proper parameter binding.
-        
+
         Args:
             field: Field name to query
             operator: SQL operator 
             value: Value to compare against
-            
+
         Returns:
             tuple: (sql_condition, parameters)
-            
+
         Raises:
             ValueError: If field or operator is invalid
         """
@@ -128,16 +128,16 @@ class SchemaValidator:
         field_result = self.validate_field(field)
         if not field_result.is_valid:
             raise ValueError(field_result.error_message)
-        
+
         mapped_field = field_result.mapped_field
-        
+
         # Validate operator
         if not self.validate_operator(operator):
             raise ValueError(f"Invalid operator '{operator}'. Allowed: {', '.join(SAFE_OPERATORS)}")
-        
+
         # Sanitize value
         safe_value = self.sanitize_value(value)
-        
+
         # Build condition with parameter binding (NOT string concatenation)
         if operator.upper() in ['IS NULL', 'IS NOT NULL']:
             return f"{mapped_field} {operator.upper()}", []
@@ -148,7 +148,7 @@ class SchemaValidator:
             return f"{mapped_field} {operator.upper()} ({placeholders})", list(safe_value)
         else:
             return f"{mapped_field} {operator} %s", [safe_value]
-    
+
     def get_valid_fields_help(self) -> str:
         """Get help text showing valid fields and aliases."""
         help_text = "Valid database fields:\n"
@@ -183,7 +183,7 @@ def get_valid_fields_help() -> str:
 if __name__ == "__main__":
     # Test the validator
     validator = SchemaValidator()
-    
+
     test_cases = [
         ('filename', '=', 'test.py'),
         ('path', '=', 'test.py'),  # Should map to filename
@@ -193,12 +193,12 @@ if __name__ == "__main__":
         ('complexity_score', '>', 5),
         ('has_async', 'IS NOT NULL', None),
     ]
-    
+
     for field, operator, value in test_cases:
         try:
             condition, params = validator.build_safe_condition(field, operator, value)
             print(f"✅ {field} {operator} {value} -> {condition} with params {params}")
         except ValueError as e:
             print(f"❌ {field} {operator} {value} -> ERROR: {e}")
-    
+
     print("\n" + validator.get_valid_fields_help())

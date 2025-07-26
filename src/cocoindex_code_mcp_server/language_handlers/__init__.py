@@ -36,10 +36,10 @@ if HASKELL_HANDLER_AVAILABLE:
 def get_handler_for_language(language: str) -> Optional[Any]:
     """Get the appropriate handler for a programming language."""
     language_key = language.lower()
-    
+
     if language_key in AVAILABLE_HANDLERS:
         return AVAILABLE_HANDLERS[language_key]()
-    
+
     return None
 
 

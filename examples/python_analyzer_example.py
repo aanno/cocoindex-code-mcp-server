@@ -7,13 +7,13 @@ This example demonstrates how to use the enhanced Python code analyzer
 to extract metadata from Python source code.
 """
 
+from lang.python.python_code_analyzer import analyze_python_code
 import os
 import sys
 
 # Add src to path (examples is one level down from root)
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from lang.python.python_code_analyzer import analyze_python_code
 
 # Test code
 test_code = '''

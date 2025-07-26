@@ -11,7 +11,10 @@
 		"python.testing.pytestArgs": [
 			"tests"
 		],
-		"python.formatting.provider": "black"
+		"python.formatting.provider": "autopep8",
+		"editor.formatOnSave": false,
+		"python.linting.flake8Enabled": true,
+		"python.linting.enabled": true
 	},
 	"tasks": {
 		"version": "2.0.0",
@@ -38,6 +41,7 @@
 			"ms-python.isort",
 			"ms-python.vscode-pylance",
 			"ms-python.flake8",
+			"ms-python.autopep8",
 			"dustypomerleau.rust-syntax",
 			"rust-lang.rust-analyzer",
 			"fill-labs.dependi",
@@ -84,7 +88,6 @@
 				"console": "integratedTerminal"
 			}
 		],
-		"compounds": [
-		]
+		"compounds": []
 	}
 }

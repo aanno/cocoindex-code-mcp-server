@@ -25,26 +25,27 @@ class TestJavaSupport:
         System.out.println(calc.add(5));
     }
 }'''
-        
+
         result = analyze_code(java_code, 'java', 'Calculator.java')
-        
+
         assert result.get('success', False), f"Java analysis failed: {result}"
         assert 'analysis_method' in result, "Analysis method should be reported"
-        
+
         # Check for functions/methods
         functions = result.get('functions', [])
         classes = result.get('classes', [])
-        
+
         # Should find at least some methods
         assert len(functions) > 0, f"Should find methods, got {functions}"
-        
+
         # Check for expected methods
         expected_methods = {'add', 'main'}
         found_methods = set(functions)
         found_expected = found_methods & expected_methods
-        
-        assert len(found_expected) >= 1, f"Should find at least 1 expected method from {expected_methods}, got {functions}"
-        
+
+        assert len(
+            found_expected) >= 1, f"Should find at least 1 expected method from {expected_methods}, got {functions}"
+
         # Check for class detection if supported
         if classes:
             assert 'Calculator' in classes, f"Should find Calculator class, got {classes}"
@@ -64,17 +65,17 @@ public class Circle implements Drawable {
         System.out.println("Drawing circle");
     }
 }'''
-        
+
         result = analyze_code(java_code, 'java', 'Drawable.java')
-        
+
         assert result.get('success', False), "Java interface analysis should succeed"
-        
+
         functions = result.get('functions', [])
         result.get('classes', [])
-        
+
         # Should find methods
         assert len(functions) > 0, "Should find methods in interface and class"
-        
+
         # Should find draw method
         assert 'draw' in functions, f"Should find draw method, got {functions}"
 
@@ -108,22 +109,22 @@ public class Dog extends Animal {
         System.out.println(name + " fetches");
     }
 }'''
-        
+
         result = analyze_code(java_code, 'java', 'Animal.java')
-        
+
         assert result.get('success', False), "Java inheritance analysis should succeed"
-        
+
         functions = result.get('functions', [])
         result.get('classes', [])
-        
+
         # Should find methods
         assert len(functions) > 0, "Should find methods in inheritance hierarchy"
-        
+
         # Should find some expected methods
         expected_methods = {'makeSound', 'sleep', 'fetch'}
         found_methods = set(functions)
         found_expected = found_methods & expected_methods
-        
+
         assert len(found_expected) >= 1, f"Should find at least 1 method from {expected_methods}, got {functions}"
 
     def test_java_generics(self):
@@ -150,19 +151,19 @@ public class GenericContainer<T> {
         System.out.println(item.toString());
     }
 }'''
-        
+
         result = analyze_code(java_code, 'java', 'GenericContainer.java')
-        
+
         assert result.get('success', False), "Java generics analysis should succeed"
-        
+
         functions = result.get('functions', [])
-        
+
         # Should find methods
         assert len(functions) > 0, "Should find methods in generic class"
-        
+
         # Should find some basic methods
         expected_methods = {'add', 'get', 'process'}
         found_methods = set(functions)
         found_expected = found_methods & expected_methods
-        
+
         assert len(found_expected) >= 1, f"Should find at least 1 method from {expected_methods}, got {functions}"

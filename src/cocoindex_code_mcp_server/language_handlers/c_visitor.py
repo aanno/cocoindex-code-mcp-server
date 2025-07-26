@@ -15,22 +15,22 @@ LOGGER = logging.getLogger(__name__)
 
 class CASTVisitor(GenericMetadataVisitor):
     """Specialized visitor for C language AST analysis."""
-    
+
     def __init__(self):
         super().__init__("c")
         self.functions: List[str] = []
         self.structs: List[str] = []
         self.enums: List[str] = []
         self.typedefs: List[str] = []
-        
+
     def visit_node(self, context: NodeContext) -> Optional[Dict[str, Any]]:
         """Visit a node and extract C-specific metadata."""
         node = context.node
         node_type = node.type if hasattr(node, 'type') else str(type(node))
-        
+
         # Track node statistics
         self.node_stats[node_type] = self.node_stats.get(node_type, 0) + 1
-        
+
         # Extract C-specific constructs
         if node_type == 'function_definition':
             self._extract_function(node)
@@ -40,9 +40,9 @@ class CASTVisitor(GenericMetadataVisitor):
             self._extract_enum(node)
         elif node_type == 'type_definition':
             self._extract_typedef(node)
-            
+
         return None
-    
+
     def _extract_function(self, node):
         """Extract function name from function_definition node."""
         try:
@@ -56,7 +56,7 @@ class CASTVisitor(GenericMetadataVisitor):
                     LOGGER.debug(f"Found C function: {func_name}")
         except Exception as e:
             LOGGER.warning(f"Error extracting C function: {e}")
-    
+
     def _extract_struct(self, node):
         """Extract struct name from struct_specifier node."""
         try:
@@ -69,7 +69,7 @@ class CASTVisitor(GenericMetadataVisitor):
                     break
         except Exception as e:
             LOGGER.warning(f"Error extracting C struct: {e}")
-    
+
     def _extract_enum(self, node):
         """Extract enum name from enum_specifier node."""
         try:
@@ -82,7 +82,7 @@ class CASTVisitor(GenericMetadataVisitor):
                     break
         except Exception as e:
             LOGGER.warning(f"Error extracting C enum: {e}")
-    
+
     def _extract_typedef(self, node):
         """Extract typedef name from type_definition node."""
         try:
@@ -95,14 +95,14 @@ class CASTVisitor(GenericMetadataVisitor):
                     break
         except Exception as e:
             LOGGER.warning(f"Error extracting C typedef: {e}")
-    
+
     def _find_child_by_type(self, node, target_type: str):
         """Find first child node of specified type."""
         for child in node.children:
             if child.type == target_type:
                 return child
         return None
-    
+
     def get_summary(self) -> Dict[str, Any]:
         """Get analysis summary in the expected format."""
         return {
@@ -124,24 +124,24 @@ def analyze_c_code(code: str, filename: str = "") -> Dict[str, Any]:
     """
     try:
         from ..ast_visitor import ASTParserFactory, TreeWalker
-        
+
         # Create parser and parse code
         factory = ASTParserFactory()
         parser = factory.create_parser('c')
         if not parser:
             LOGGER.warning("C parser not available")
             return {'success': False, 'error': 'C parser not available'}
-        
+
         tree = factory.parse_code(code, 'c')
         if not tree:
             LOGGER.warning("Failed to parse C code")
             return {'success': False, 'error': 'Failed to parse C code'}
-        
+
         # Use specialized C visitor
         visitor = CASTVisitor()
         walker = TreeWalker(code, tree)
         walker.walk(visitor)
-        
+
         # Get results from visitor
         result = visitor.get_summary()
         result.update({
@@ -153,10 +153,10 @@ def analyze_c_code(code: str, filename: str = "") -> Dict[str, Any]:
             'parse_errors': 0,
             'tree_language': str(parser.language) if parser else None
         })
-        
+
         LOGGER.debug(f"C analysis completed: {len(result.get('functions', []))} functions found")
         return result
-        
+
     except Exception as e:
         LOGGER.error(f"C code analysis failed: {e}")
         return {'success': False, 'error': str(e)}

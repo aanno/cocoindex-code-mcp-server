@@ -27,26 +27,26 @@ Examples:
   python src/main_interactive_query.py --live --poll 60 /path/to/code  # Custom path with polling
         """
     )
-    
+
     parser.add_argument(
-        "paths", 
-        nargs="*", 
+        "paths",
+        nargs="*",
         help="Code directory paths to index (default: cocoindex)"
     )
-    
+
     parser.add_argument(
         "--paths",
         dest="explicit_paths",
         nargs="+",
         help="Alternative way to specify paths"
     )
-    
+
     parser.add_argument(
         "--live",
         action="store_true",
         help="Enable live update mode with continuous monitoring"
     )
-    
+
     parser.add_argument(
         "--poll",
         type=int,
@@ -54,26 +54,26 @@ Examples:
         metavar="SECONDS",
         help="Enable file polling with specified interval in seconds (default: event-based monitoring)"
     )
-    
+
     # Default mode flags to disable custom extensions
     parser.add_argument(
         "--default-embedding",
         action="store_true",
         help="Use CocoIndex default embedding instead of smart code embedding extension"
     )
-    
+
     parser.add_argument(
-        "--default-chunking", 
+        "--default-chunking",
         action="store_true",
         help="Use CocoIndex default SplitRecursively instead of AST chunking extension"
     )
-    
+
     parser.add_argument(
         "--default-language-handler",
-        action="store_true", 
+        action="store_true",
         help="Skip Python-specific language handlers and use basic metadata extraction"
     )
-    
+
     return parser.parse_args()
 
 
@@ -84,7 +84,7 @@ def determine_paths(args):
         paths = args.explicit_paths
     elif args.paths:
         paths = args.paths
-    
+
     return paths
 
 
@@ -99,7 +99,7 @@ def display_configuration(args, paths):
                 LOGGER.info(f"  {i}. {path}")
     else:
         LOGGER.info("📁 Using default path: cocoindex")
-    
+
     # Display mode
     if args.live:
         LOGGER.info("🔴 Mode: Live updates")
@@ -109,5 +109,5 @@ def display_configuration(args, paths):
             LOGGER.info("⚡ Monitoring: Event-based")
     else:
         LOGGER.info("🟢 Mode: One-time indexing")
-    
+
     LOGGER.info("")  # Empty line for readability

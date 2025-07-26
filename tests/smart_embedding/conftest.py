@@ -33,7 +33,7 @@ class MathUtils:
                 return False
         return True
 ''',
-        
+
         'rust': '''
 #[derive(Debug, Clone)]
 pub struct Person {
@@ -59,7 +59,7 @@ fn fibonacci(n: u32) -> u64 {
     }
 }
 ''',
-        
+
         'javascript': '''
 function factorial(n) {
     if (n <= 1) return 1;
@@ -86,7 +86,7 @@ const isPrime = (num) => {
     return true;
 };
 ''',
-        
+
         'typescript': '''
 interface User {
     id: number;
@@ -113,7 +113,7 @@ class UserService {
     }
 }
 ''',
-        
+
         'haskell': '''
 data Person = Person
     { personName :: String
@@ -141,7 +141,7 @@ main = do
 def fixture_files():
     """Provide paths to test fixture files for different languages."""
     fixtures_dir = os.path.join(os.path.dirname(__file__), '../fixtures')
-    
+
     return {
         'python': os.path.join(fixtures_dir, 'test_python.py'),
         'rust': os.path.join(fixtures_dir, 'test_rust.rs'),
@@ -151,13 +151,13 @@ def fixture_files():
     }
 
 
-@pytest.fixture(scope="function") 
+@pytest.fixture(scope="function")
 def temp_test_files(fixture_files):
     """Create temporary copies of fixture files for testing."""
     temp_dir = tempfile.mkdtemp(prefix="smart_embedding_test_")
-    
+
     test_files = {}
-    
+
     try:
         for language, source_path in fixture_files.items():
             if os.path.exists(source_path):
@@ -165,15 +165,15 @@ def temp_test_files(fixture_files):
                 dest_path = os.path.join(temp_dir, filename)
                 shutil.copy2(source_path, dest_path)
                 test_files[language] = dest_path
-        
+
         yield test_files
-        
+
     finally:
         # Clean up temporary directory
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
-@pytest.fixture(scope="session") 
+@pytest.fixture(scope="session")
 def expected_model_mappings():
     """Provide expected language to model mappings."""
     return {
@@ -186,7 +186,7 @@ def expected_model_mappings():
         'go': 'microsoft/graphcodebert-base',
         'c': 'microsoft/graphcodebert-base',
         'c++': 'microsoft/graphcodebert-base',
-        
+
         # UniXcode languages
         'rust': 'microsoft/unixcoder-base',
         'typescript': 'microsoft/unixcoder-base',
@@ -196,7 +196,7 @@ def expected_model_mappings():
         'scala': 'microsoft/unixcoder-base',
         'swift': 'microsoft/unixcoder-base',
         'dart': 'microsoft/unixcoder-base',
-        
+
         # Fallback languages
         'haskell': 'sentence-transformers/all-MiniLM-L6-v2',
         'ocaml': 'sentence-transformers/all-MiniLM-L6-v2',

@@ -60,7 +60,7 @@ def safe_embedding_function(query: str):
             return np.zeros(384, dtype=np.float32)
         except ImportError:
             return [0.0] * 384
-    
+
     try:
         return code_to_embedding.eval(query)
     except RuntimeError as e:
@@ -84,7 +84,7 @@ def handle_shutdown(signum, frame):
     """Handle shutdown signals gracefully."""
     logger.info("Shutdown signal received, cleaning up...")
     shutdown_event.set()
-    
+
     # Wait for background thread to finish if it exists
     global background_thread
     if background_thread and background_thread.is_alive():
@@ -92,7 +92,7 @@ def handle_shutdown(signum, frame):
         background_thread.join(timeout=3.0)
         if background_thread.is_alive():
             logger.warning("Background thread did not finish cleanly")
-    
+
     logger.info("Cleanup completed")
 
 
@@ -110,7 +110,7 @@ def get_mcp_tools() -> list[types.Tool]:
                         "description": "Text to embed and search for semantic similarity"
                     },
                     "keyword_query": {
-                        "type": "string", 
+                        "type": "string",
                         "description": "Keyword search query for metadata filtering. Syntax: field:value, exists(field), value_contains(field, 'text'), AND/OR operators"
                     },
                     "top_k": {
@@ -124,7 +124,7 @@ def get_mcp_tools() -> list[types.Tool]:
                         "default": 0.7
                     },
                     "keyword_weight": {
-                        "type": "number", 
+                        "type": "number",
                         "description": "Weight for keyword match score (0-1)",
                         "default": 0.3
                     }
@@ -155,7 +155,7 @@ def get_mcp_tools() -> list[types.Tool]:
             name="keyword_search",
             description="Perform pure keyword metadata search using field:value, exists(field), value_contains(field, 'text') syntax",
             inputSchema={
-                "type": "object", 
+                "type": "object",
                 "properties": {
                     "query": {
                         "type": "string",
@@ -163,7 +163,7 @@ def get_mcp_tools() -> list[types.Tool]:
                     },
                     "top_k": {
                         "type": "integer",
-                        "description": "Number of results to return", 
+                        "description": "Number of results to return",
                         "default": 10
                     }
                 },
@@ -229,7 +229,7 @@ def get_mcp_resources() -> list[types.Resource]:
         ),
         types.Resource(
             uri="cocoindex://search/config",
-            name="Search Configuration", 
+            name="Search Configuration",
             description="Current hybrid search configuration and settings",
             mimeType="application/json",
         ),
@@ -290,31 +290,31 @@ def main(
     json_response: bool,
 ) -> int:
     """CocoIndex RAG MCP Server - Model Context Protocol server for hybrid code search."""
-    
+
     # Configure logging
     logging.basicConfig(
         level=getattr(logging, log_level.upper()),
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
-    
+
     # Set up signal handlers
     signal.signal(signal.SIGINT, handle_shutdown)
     signal.signal(signal.SIGTERM, handle_shutdown)
-    
+
     # Load environment and initialize CocoIndex
     load_dotenv()
     cocoindex.init()
-    
+
     # Determine paths to use
     final_paths = None
     if explicit_paths:
         final_paths = list(explicit_paths)
     elif paths:
         final_paths = list(paths)
-    
+
     # Configure live updates
     live_enabled = not no_live
-    
+
     # Update flow configuration
     update_flow_config(
         paths=final_paths,
@@ -324,13 +324,13 @@ def main(
         use_default_chunking=default_chunking,
         use_default_language_handler=default_language_handler
     )
-    
+
     logger.info("🚀 CocoIndex RAG MCP Server starting...")
     logger.info(f"📁 Paths: {final_paths or ['cocoindex (default)']}")
     logger.info(f"🔴 Live updates: {'ENABLED' if live_enabled else 'DISABLED'}")
     if live_enabled:
         logger.info(f"⏰ Polling interval: {poll} seconds")
-    
+
     # Create the MCP server
     app = Server("cocoindex-rag")
 
@@ -348,11 +348,11 @@ def main(
     async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
         """Handle MCP tool calls with proper error handling."""
         global hybrid_search_engine
-        
+
         try:
             if not hybrid_search_engine:
                 raise RuntimeError("Hybrid search engine not initialized. Please check database connection.")
-            
+
             if name == "hybrid_search":
                 result = await perform_hybrid_search(arguments)
             elif name == "vector_search":
@@ -367,12 +367,12 @@ def main(
                 result = await get_keyword_syntax_help_tool(arguments)
             else:
                 raise ValueError(f"Unknown tool '{name}'")
-            
+
             return [types.TextContent(
                 type="text",
                 text=json.dumps(result, indent=2, ensure_ascii=False)
             )]
-            
+
         except Exception as e:
             logger.exception(f"Error executing tool '{name}'")
             # Return proper MCP error dict as per protocol recommendation
@@ -392,7 +392,7 @@ def main(
     async def handle_read_resource(uri: str) -> list[types.TextResourceContents]:
         """Read MCP resource content."""
         logger.info(f"🔍 Reading resource: '{uri}' (type: {type(uri)}, repr: {repr(uri)})")
-        
+
         if uri == "cocoindex://search/stats":
             content = await get_search_stats()
         elif uri == "cocoindex://search/config":
@@ -409,9 +409,10 @@ def main(
             logger.info("✅ Test resource accessed successfully!")
             content = json.dumps({"message": "Test resource working", "uri": uri}, indent=2)
         else:
-            logger.error(f"❌ Unknown resource requested: '{uri}' (available: search/stats, search/config, database/schema, query/examples, search/grammar, search/operators, test/simple)")
+            logger.error(
+                f"❌ Unknown resource requested: '{uri}' (available: search/stats, search/config, database/schema, query/examples, search/grammar, search/operators, test/simple)")
             raise ValueError(f"Unknown resource: {uri}")
-        
+
         logger.info(f"✅ Successfully retrieved resource: '{uri}'")
         return [types.TextResourceContents(uri=uri, text=content)]
 
@@ -423,11 +424,11 @@ def main(
         top_k = arguments.get("top_k", 10)
         vector_weight = arguments.get("vector_weight", 0.7)
         keyword_weight = arguments.get("keyword_weight", 0.3)
-        
+
         try:
             results = hybrid_search_engine.search(
                 vector_query=vector_query,
-                keyword_query=keyword_query, 
+                keyword_query=keyword_query,
                 top_k=top_k,
                 vector_weight=vector_weight,
                 keyword_weight=keyword_weight
@@ -447,7 +448,7 @@ def main(
                 help_text = get_valid_fields_help()
                 raise ValueError(f"Database schema error: {e}\n\n{help_text}")
             raise
-        
+
         return {
             "query": {
                 "vector_query": vector_query,
@@ -464,7 +465,7 @@ def main(
         """Perform pure vector similarity search."""
         query = arguments["query"]
         top_k = arguments.get("top_k", 10)
-        
+
         results = hybrid_search_engine.search(
             vector_query=query,
             keyword_query="",
@@ -472,7 +473,7 @@ def main(
             vector_weight=1.0,
             keyword_weight=0.0
         )
-        
+
         return {
             "query": query,
             "results": results,
@@ -483,7 +484,7 @@ def main(
         """Perform pure keyword metadata search."""
         query = arguments["query"]
         top_k = arguments.get("top_k", 10)
-        
+
         results = hybrid_search_engine.search(
             vector_query="",
             keyword_query=query,
@@ -491,7 +492,7 @@ def main(
             vector_weight=0.0,
             keyword_weight=1.0
         )
-        
+
         return {
             "query": query,
             "results": results,
@@ -503,7 +504,7 @@ def main(
         code = arguments["code"]
         file_path = arguments["file_path"]
         language = arguments.get("language")
-        
+
         # Auto-detect language from file extension if not provided
         if not language:
             ext = os.path.splitext(file_path)[1].lower()
@@ -511,7 +512,7 @@ def main(
                 language = "python"
             else:
                 language = "unknown"
-        
+
         if language == "python":
             metadata = analyze_python_code(code, file_path)
         else:
@@ -523,7 +524,7 @@ def main(
                 "char_count": len(code),
                 "analysis_type": "basic"
             }
-        
+
         return {
             "file_path": file_path,
             "language": language,
@@ -533,9 +534,9 @@ def main(
     async def get_embeddings_tool(arguments: dict) -> dict:
         """Generate embeddings for text."""
         text = arguments["text"]
-        
+
         embedding = hybrid_search_engine.embedding_func(text)
-        
+
         return {
             "text": text,
             "embedding": embedding.tolist() if hasattr(embedding, 'tolist') else list(embedding),
@@ -563,7 +564,7 @@ def main(
                 },
                 "boolean_logic": {
                     "AND": "language:python AND has_async:true",
-                    "OR": "language:python OR language:rust", 
+                    "OR": "language:python OR language:rust",
                     "grouping": "(language:python OR language:rust) AND exists(functions)"
                 },
                 "available_fields": [
@@ -574,25 +575,25 @@ def main(
             }
         }
 
-    # Resource implementation functions  
+    # Resource implementation functions
     async def get_search_stats() -> str:
         """Get database and search statistics."""
         if not hybrid_search_engine or not hybrid_search_engine.pool:
             return json.dumps({"error": "No database connection"})
-        
+
         try:
             with hybrid_search_engine.pool.connection() as conn:
                 with conn.cursor() as cur:
                     table_name = hybrid_search_engine.table_name
                     cur.execute(f"SELECT COUNT(*) FROM {table_name}")
                     total_records = cur.fetchone()[0]
-                    
+
                     stats = {
                         "table_name": table_name,
                         "total_records": total_records,
                         "connection_pool_size": hybrid_search_engine.pool.max_size,
                     }
-                    
+
             return json.dumps(stats, indent=2)
         except Exception as e:
             return json.dumps({"error": f"Failed to get stats: {str(e)}"})
@@ -615,7 +616,7 @@ def main(
         """Get database schema information."""
         if not hybrid_search_engine or not hybrid_search_engine.pool:
             return json.dumps({"error": "No database connection"})
-        
+
         try:
             with hybrid_search_engine.pool.connection() as conn:
                 with conn.cursor() as cur:
@@ -627,7 +628,7 @@ def main(
                         ORDER BY ordinal_position
                     """)
                     columns = cur.fetchall()
-                    
+
                     schema = {
                         "table_name": table_name,
                         "columns": [
@@ -635,7 +636,7 @@ def main(
                             for col in columns
                         ]
                     }
-                    
+
             return json.dumps(schema, indent=2)
         except Exception as e:
             return json.dumps({"error": f"Failed to get schema: {str(e)}"})
@@ -645,12 +646,12 @@ def main(
         examples = {
             "basic_matching": [
                 "language:python",
-                "filename:main.py", 
+                "filename:main.py",
                 "has_async:true"
             ],
             "existence_checks": [
                 "exists(embedding)",
-                "exists(functions)", 
+                "exists(functions)",
                 "exists(language) AND language:rust"
             ],
             "value_contains": [
@@ -736,24 +737,24 @@ QUOTED_VALUE: /"[^"]*"/
     async def initialize_search_engine(pool: ConnectionPool):
         """Initialize the hybrid search engine with provided connection pool."""
         global hybrid_search_engine
-        
+
         try:
             # Register pgvector
             with pool.connection() as conn:
                 register_vector(conn)
-            
+
             # Initialize search engine components
             parser = KeywordSearchParser()
-            
+
             # Initialize hybrid search engine
             hybrid_search_engine = HybridSearchEngine(
                 pool=pool,
                 parser=parser,
                 embedding_func=safe_embedding_function
             )
-            
+
             logger.info("✅ CocoIndex RAG MCP Server initialized successfully")
-            
+
         except Exception as e:
             logger.error(f"Failed to initialize search engine: {e}")
             raise
@@ -765,7 +766,7 @@ QUOTED_VALUE: /"[^"]*"/
             # Set up live updates if enabled
             if live_enabled:
                 logger.info("🔄 Starting live flow updates...")
-                
+
                 def run_flow_background():
                     """Background thread function for live flow updates."""
                     while not shutdown_event.is_set():
@@ -778,7 +779,7 @@ QUOTED_VALUE: /"[^"]*"/
                                 logger.error(f"Error in background flow update: {e}")
                                 if shutdown_event.wait(10):
                                     break
-                
+
                 # Start background flow update
                 global background_thread
                 background_thread = threading.Thread(target=run_flow_background, daemon=True)
@@ -788,7 +789,7 @@ QUOTED_VALUE: /"[^"]*"/
                 logger.info("🔄 Running one-time flow update...")
                 run_flow_update(live_update=False)
                 logger.info("✅ Flow update completed")
-                
+
         except Exception as e:
             logger.error(f"❌ Background initialization failed: {e}")
 
@@ -810,11 +811,11 @@ QUOTED_VALUE: /"[^"]*"/
         database_url = os.getenv("COCOINDEX_DATABASE_URL")
         if not database_url:
             raise ValueError("COCOINDEX_DATABASE_URL not found in environment")
-        
+
         # Use connection pool as context manager for proper cleanup
         async with session_manager.run():
             logger.info("🚀 MCP Server started with StreamableHTTP session manager!")
-            
+
             # Create connection pool as context manager
             with ConnectionPool(
                 conninfo=database_url,
@@ -824,10 +825,10 @@ QUOTED_VALUE: /"[^"]*"/
             ) as pool:
                 logger.info("🔧 Initializing database connection...")
                 await initialize_search_engine(pool)
-                
+
                 # Initialize background components
                 await background_initialization()
-                
+
                 try:
                     yield
                 finally:
@@ -846,10 +847,10 @@ QUOTED_VALUE: /"[^"]*"/
 
     # Run the server
     import uvicorn
-    
+
     logger.info(f"🌐 Starting HTTP MCP server on http://127.0.0.1:{port}/mcp")
     uvicorn.run(starlette_app, host="127.0.0.1", port=port)
-    
+
     return 0
 
 
@@ -858,7 +859,7 @@ QUOTED_VALUE: /"[^"]*"/
 try:
     # Create a test server instance for module-level access using the same functions
     server = Server("cocoindex-rag-test")
-    
+
     @server.list_tools()
     async def handle_list_tools() -> list[types.Tool]:
         """List available MCP tools."""
@@ -879,7 +880,7 @@ try:
             "arguments": arguments,
             "message": "This is a test response from the module-level server instance"
         }
-        
+
         return [types.TextContent(
             type="text",
             text=json.dumps(test_response, indent=2, ensure_ascii=False)
@@ -894,32 +895,32 @@ try:
             "uri": uri,
             "message": "This is a test resource from the module-level server instance"
         }, indent=2)
-        
+
         return [types.TextResourceContents(uri=uri, text=test_content)]
 
     # Export the test server and handlers for testing
     # Note: The actual handler functions are already defined above with @server decorators
     # We just need to export them by their function names
-    
+
     # Create a simple wrapper for handle_read_resource that returns just text
     _original_handle_read_resource = handle_read_resource
-    
+
     async def handle_read_resource(uri: str) -> str:
         """Test wrapper that returns just the text content."""
         # Handle test cases for valid/invalid resources
         valid_resources = [
             "cocoindex://search/stats",
-            "cocoindex://search/config", 
+            "cocoindex://search/config",
             "cocoindex://database/schema",
             "cocoindex://query/examples",
             "cocoindex://search/grammar",
             "cocoindex://search/operators",
             "cocoindex://test/simple"
         ]
-        
+
         if uri not in valid_resources:
             raise ValueError(f"Unknown resource: {uri}")
-        
+
         # For test mode, return simple mock responses
         if uri == "cocoindex://search/config":
             config = {
@@ -936,7 +937,7 @@ try:
         else:
             # Return simple test response for other resources
             return json.dumps({"test_mode": True, "uri": uri}, indent=2)
-    
+
     # Export individual resource functions for testing
     async def get_search_config() -> str:
         """Get current search configuration for testing."""

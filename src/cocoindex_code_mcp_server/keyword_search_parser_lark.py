@@ -51,47 +51,47 @@ class SearchGroup:
 
 class KeywordSearchTransformer(Transformer):
     """Transformer to convert Lark parse tree to SearchGroup objects."""
-    
+
     def remove_quotes(self, token):
         """Remove surrounding quotes from quoted strings."""
         s = str(token)
         if (s.startswith('"') and s.endswith('"')) or (s.startswith("'") and s.endswith("'")):
             return s[1:-1]
         return s
-    
+
     def QUOTED_VALUE(self, token):
         """Transform quoted value by removing quotes."""
         return self.remove_quotes(token)
-    
+
     def field_condition(self, items):
         """Transform field:value condition."""
         field, value = items
         return SearchCondition(field=str(field), value=str(value))
-    
+
     def exists_condition(self, items):
         """Transform exists(field) condition."""
         field = items[0]
         return SearchCondition(field=str(field), value="", is_exists_check=True)
-    
+
     def value_contains_condition(self, items):
         """Transform value_contains(field, string) condition."""
         field, value = items
         return SearchCondition(
-            field=str(field), 
-            value=str(value), 
+            field=str(field),
+            value=str(value),
             is_value_contains_check=True
         )
-    
+
     def text_search(self, items):
         """Transform general text search."""
         # Join multiple words with spaces
         value = " ".join(str(item) for item in items)
         return SearchCondition(field="_text", value=value)
-    
+
     def word(self, items):
         """Transform word rule."""
         return str(items[0])
-    
+
     def and_expr(self, items):
         """Transform AND expression."""
         if len(items) == 1:
@@ -101,17 +101,17 @@ class KeywordSearchTransformer(Transformer):
                 return SearchGroup(conditions=[item], operator=Operator.AND)
             return item
         return SearchGroup(conditions=list(items), operator=Operator.AND)
-    
+
     def or_expr(self, items):
         """Transform OR expression."""
         if len(items) == 1:
-            # Single item - wrap in a SearchGroup for consistency  
+            # Single item - wrap in a SearchGroup for consistency
             item = items[0]
             if isinstance(item, SearchCondition):
                 return SearchGroup(conditions=[item], operator=Operator.OR)
             return item
         return SearchGroup(conditions=list(items), operator=Operator.OR)
-    
+
     def start(self, items):
         """Transform start rule - always return SearchGroup."""
         item = items[0]
@@ -126,13 +126,13 @@ class KeywordSearchTransformer(Transformer):
 
 class KeywordSearchParser:
     """Lark-based parser for keyword search syntax with fallback to regex parser."""
-    
+
     def __init__(self):
         """Initialize the parser with Lark grammar or fallback."""
         self.lark_parser = None
         self.transformer = KeywordSearchTransformer()
         self.fallback_parser = None
-        
+
         if LARK_AVAILABLE:
             try:
                 # Load the grammar file
@@ -140,7 +140,7 @@ class KeywordSearchParser:
                 if grammar_path.exists():
                     with open(grammar_path, 'r') as f:
                         grammar = f.read()
-                    
+
                     self.lark_parser = Lark(
                         grammar,
                         parser='lalr',
@@ -154,7 +154,7 @@ class KeywordSearchParser:
                     print(f"Warning: Grammar file not found at {grammar_path}, falling back to regex parser")
             except Exception as e:
                 print(f"Warning: Failed to initialize Lark parser ({e}), falling back to regex parser")
-        
+
         # Initialize fallback parser if Lark is not available or failed
         if self.lark_parser is None:
             if FALLBACK_AVAILABLE:
@@ -163,11 +163,11 @@ class KeywordSearchParser:
                     print("Warning: Lark not available, using regex-based parser")
             else:
                 print("Warning: No parser available - neither Lark nor fallback parser could be loaded")
-    
+
     def parse(self, query: str) -> SearchGroup:
         """
         Parse a keyword search query into a SearchGroup.
-        
+
         Supported syntax:
         - field:value - match field equals value
         - field:"quoted value" - match field with quoted value
@@ -175,7 +175,7 @@ class KeywordSearchParser:
         - value_contains(field, "search_string") - check if field value contains string
         - and / or - logical operators
         - (group) - parentheses for grouping
-        
+
         Examples:
         - language:python and filename:main_interactive_query.py
         - (language:python or language:rust) and exists(embedding)
@@ -184,7 +184,7 @@ class KeywordSearchParser:
         """
         if not query or not query.strip():
             return SearchGroup(conditions=[])
-        
+
         # Try Lark parser first
         if self.lark_parser is not None:
             try:
@@ -194,7 +194,7 @@ class KeywordSearchParser:
                 return result
             except (LarkError, ParseError) as e:
                 print(f"Warning: Lark parser failed ({e}), falling back to regex parser")
-        
+
         # Fall back to regex parser
         if self.fallback_parser is not None:
             return self.fallback_parser.parse(query)
@@ -202,15 +202,15 @@ class KeywordSearchParser:
             # Last resort: return empty group
             print("Error: No parser available")
             return SearchGroup(conditions=[])
-    
+
     def _normalize_keywords(self, query: str) -> str:
         """Normalize keywords to lowercase for case-insensitive parsing."""
         import re
-        
+
         # Replace keywords with lowercase versions, preserving word boundaries
         replacements = {
             r'\bAND\b': 'and',
-            r'\bOr\b': 'or', 
+            r'\bOr\b': 'or',
             r'\bOR\b': 'or',
             r'\bAnd\b': 'and',
             r'\bEXISTS\b': 'exists',
@@ -219,43 +219,43 @@ class KeywordSearchParser:
             r'\bValue_Contains\b': 'value_contains',
             r'\bvalue_Contains\b': 'value_contains',
         }
-        
+
         result = query
         for pattern, replacement in replacements.items():
             result = re.sub(pattern, replacement, result, flags=re.IGNORECASE)
-        
+
         return result
 
 
 def build_sql_where_clause(search_group: SearchGroup, table_alias: str = "") -> tuple[str, List[Any]]:
     """
     Build a SQL WHERE clause from a SearchGroup with proper field validation and SQL injection protection.
-    
+
     Returns:
         tuple: (where_clause, parameters)
-    
+
     Raises:
         ValueError: If any field names are invalid or don't exist in the schema
     """
     # Import here to avoid circular imports
     from .schema_validator import schema_validator
-    
+
     if not search_group.conditions:
         return "TRUE", []
-    
+
     where_parts = []
     params = []
     prefix = f"{table_alias}." if table_alias else ""
-    
+
     for condition in search_group.conditions:
         if isinstance(condition, SearchCondition):
             # Validate and map field name to prevent SQL injection and unknown column errors
             field_result = schema_validator.validate_field(condition.field)
             if not field_result.is_valid:
                 raise ValueError(f"Invalid field in search condition: {field_result.error_message}")
-            
+
             validated_field = field_result.mapped_field
-            
+
             if condition.is_exists_check:
                 where_parts.append(f"{prefix}{validated_field} IS NOT NULL")
             elif condition.is_value_contains_check:
@@ -273,20 +273,20 @@ def build_sql_where_clause(search_group: SearchGroup, table_alias: str = "") -> 
             sub_where, sub_params = build_sql_where_clause(condition, table_alias)
             where_parts.append(f"({sub_where})")
             params.extend(sub_params)
-    
+
     operator_str = " OR " if search_group.operator == Operator.OR else " AND "
     where_clause = operator_str.join(where_parts)
-    
+
     return where_clause, params
 
 
 # Example usage and testing
 if __name__ == "__main__":
     parser = KeywordSearchParser()
-    
+
     test_queries = [
         "language:python",
-        "language:python and filename:main_interactive_query.py", 
+        "language:python and filename:main_interactive_query.py",
         "(language:python or language:rust) and exists(embedding)",
         'filename:"test file.py" and language:python',
         "exists(embedding) and (language:rust or language:go)",
@@ -295,10 +295,10 @@ if __name__ == "__main__":
         'value_contains(filename, "test") or exists(embedding)',
         '(value_contains(code, "async") and language:python) or language:rust',
     ]
-    
+
     print(f"Using Lark parser: {parser.lark_parser is not None}")
     print(f"LARK_AVAILABLE: {LARK_AVAILABLE}")
-    
+
     for query in test_queries:
         print(f"\nQuery: {query}")
         try:

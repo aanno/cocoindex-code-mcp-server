@@ -26,28 +26,29 @@ class AttrExample:
 class MultiDecoratedClass:
     cached_value: str
 """
-    
+
     metadata = analyze_python_code(code, "test.py")
-    
+
     # Verify decorators are detected
     assert "decorators" in metadata
     decorators = metadata["decorators"]
-    
+
     # These should be found from class decorators
     assert "dataclass" in decorators, f"dataclass not found in {decorators}"
     assert "attr.s" in decorators, f"attr.s not found in {decorators}"
     # lru_cache might be detected as full dotted name
-    assert any("lru_cache" in dec for dec in decorators), f"lru_cache (or functools.lru_cache) not found in {decorators}"
-    
+    assert any(
+        "lru_cache" in dec for dec in decorators), f"lru_cache (or functools.lru_cache) not found in {decorators}"
+
     # Verify has_decorators flag is set
     assert metadata["has_decorators"] is True
-    
+
     # Verify class details include decorators
     class_details = metadata.get("class_details", [])
     dataclass_found = False
     attr_class_found = False
     multi_decorated_found = False
-    
+
     for cls in class_details:
         if cls["name"] == "DataExample":
             dataclass_found = True
@@ -59,9 +60,9 @@ class MultiDecoratedClass:
             multi_decorated_found = True
             decorators = cls.get("decorators", [])
             assert "dataclass" in decorators
-            # lru_cache might be detected as full dotted name  
+            # lru_cache might be detected as full dotted name
             assert any("lru_cache" in dec for dec in decorators)
-    
+
     assert dataclass_found, "DataExample class not found in class_details"
     assert attr_class_found, "AttrExample class not found in class_details"
     assert multi_decorated_found, "MultiDecoratedClass not found in class_details"
@@ -96,24 +97,25 @@ class DataExample:
 class SortableDataExample:
     value: int
 """
-    
+
     metadata = analyze_python_code(code, "test.py")
-    
+
     assert "decorators" in metadata
     decorators = metadata["decorators"]
-    
+
     # Function decorators (should be detected by tree-sitter)
     assert "property" in decorators, f"property not found in {decorators}"
     assert "staticmethod" in decorators, f"staticmethod not found in {decorators}"
     assert "classmethod" in decorators, f"classmethod not found in {decorators}"
     assert "custom_decorator" in decorators, f"custom_decorator not found in {decorators}"
     assert "another_decorator" in decorators, f"another_decorator not found in {decorators}"
-    
+
     # Class decorators (should be detected by Python AST and merged)
     assert "dataclass" in decorators, f"dataclass not found in {decorators}"
     # total_ordering might be detected as full dotted name
-    assert any("total_ordering" in dec for dec in decorators), f"total_ordering (or functools.total_ordering) not found in {decorators}"
-    
+    assert any(
+        "total_ordering" in dec for dec in decorators), f"total_ordering (or functools.total_ordering) not found in {decorators}"
+
     # Verify has_decorators flag
     assert metadata["has_decorators"] is True
 
@@ -134,11 +136,11 @@ class OuterClass:
 class TopLevelClass:
     inner_value: str
 """
-    
+
     metadata = analyze_python_code(code, "test.py")
-    
+
     decorators = metadata.get("decorators", [])
-    
+
     # Should detect both nested and top-level class decorators
     assert "dataclass" in decorators, f"dataclass not found in {decorators}"
     assert "attr.s" in decorators, f"attr.s not found in {decorators}"
@@ -159,11 +161,11 @@ def cached_function():
 class ComplexDecoratedClass:
     pass
 """
-    
+
     metadata = analyze_python_code(code, "test.py")
-    
+
     decorators = metadata.get("decorators", [])
-    
+
     # Should extract base decorator names even from complex expressions
     # Note: The exact parsing might depend on implementation details
     # but we should at least get some recognition of these decorators
@@ -181,9 +183,9 @@ class PlainClass:
 def plain_function():
     return "plain"
 """
-    
+
     metadata = analyze_python_code(code, "test.py")
-    
+
     decorators = metadata.get("decorators", [])
     assert len(decorators) == 0, f"Unexpected decorators found: {decorators}"
     assert metadata["has_decorators"] is False

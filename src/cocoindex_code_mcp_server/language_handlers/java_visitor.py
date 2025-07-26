@@ -15,7 +15,7 @@ LOGGER = logging.getLogger(__name__)
 
 class JavaASTVisitor(GenericMetadataVisitor):
     """Specialized visitor for Java language AST analysis."""
-    
+
     def __init__(self):
         super().__init__("java")
         self.functions: List[str] = []
@@ -24,15 +24,15 @@ class JavaASTVisitor(GenericMetadataVisitor):
         self.enums: List[str] = []
         self.packages: List[str] = []
         self.annotations: List[str] = []
-        
+
     def visit_node(self, context: NodeContext) -> Optional[Dict[str, Any]]:
         """Visit a node and extract Java-specific metadata."""
         node = context.node
         node_type = node.type if hasattr(node, 'type') else str(type(node))
-        
+
         # Track node statistics
         self.node_stats[node_type] = self.node_stats.get(node_type, 0) + 1
-        
+
         # Extract Java-specific constructs
         if node_type == 'method_declaration':
             self._extract_method(node)
@@ -48,9 +48,9 @@ class JavaASTVisitor(GenericMetadataVisitor):
             self._extract_package(node)
         elif node_type == 'annotation_type_declaration':
             self._extract_annotation(node)
-            
+
         return None
-    
+
     def _extract_method(self, node):
         """Extract method name from method_declaration node."""
         try:
@@ -63,7 +63,7 @@ class JavaASTVisitor(GenericMetadataVisitor):
                     break
         except Exception as e:
             LOGGER.warning(f"Error extracting Java method: {e}")
-    
+
     def _extract_constructor(self, node):
         """Extract constructor name from constructor_declaration node."""
         try:
@@ -76,7 +76,7 @@ class JavaASTVisitor(GenericMetadataVisitor):
                     break
         except Exception as e:
             LOGGER.warning(f"Error extracting Java constructor: {e}")
-    
+
     def _extract_class(self, node):
         """Extract class name from class_declaration node."""
         try:
@@ -89,7 +89,7 @@ class JavaASTVisitor(GenericMetadataVisitor):
                     break
         except Exception as e:
             LOGGER.warning(f"Error extracting Java class: {e}")
-    
+
     def _extract_interface(self, node):
         """Extract interface name from interface_declaration node."""
         try:
@@ -102,7 +102,7 @@ class JavaASTVisitor(GenericMetadataVisitor):
                     break
         except Exception as e:
             LOGGER.warning(f"Error extracting Java interface: {e}")
-    
+
     def _extract_enum(self, node):
         """Extract enum name from enum_declaration node."""
         try:
@@ -115,7 +115,7 @@ class JavaASTVisitor(GenericMetadataVisitor):
                     break
         except Exception as e:
             LOGGER.warning(f"Error extracting Java enum: {e}")
-    
+
     def _extract_package(self, node):
         """Extract package name from package_declaration node."""
         try:
@@ -128,7 +128,7 @@ class JavaASTVisitor(GenericMetadataVisitor):
                     break
         except Exception as e:
             LOGGER.warning(f"Error extracting Java package: {e}")
-    
+
     def _extract_annotation(self, node):
         """Extract annotation name from annotation_type_declaration node."""
         try:
@@ -141,7 +141,7 @@ class JavaASTVisitor(GenericMetadataVisitor):
                     break
         except Exception as e:
             LOGGER.warning(f"Error extracting Java annotation: {e}")
-    
+
     def get_summary(self) -> Dict[str, Any]:
         """Get analysis summary in the expected format."""
         return {
@@ -164,24 +164,24 @@ def analyze_java_code(code: str, filename: str = "") -> Dict[str, Any]:
     """
     try:
         from ..ast_visitor import ASTParserFactory, TreeWalker
-        
+
         # Create parser and parse code
         factory = ASTParserFactory()
         parser = factory.create_parser('java')
         if not parser:
             LOGGER.warning("Java parser not available")
             return {'success': False, 'error': 'Java parser not available'}
-        
+
         tree = factory.parse_code(code, 'java')
         if not tree:
             LOGGER.warning("Failed to parse Java code")
             return {'success': False, 'error': 'Failed to parse Java code'}
-        
+
         # Use specialized Java visitor
         visitor = JavaASTVisitor()
         walker = TreeWalker(code, tree)
         walker.walk(visitor)
-        
+
         # Get results from visitor
         result = visitor.get_summary()
         result.update({
@@ -193,10 +193,11 @@ def analyze_java_code(code: str, filename: str = "") -> Dict[str, Any]:
             'parse_errors': 0,
             'tree_language': str(parser.language) if parser else None
         })
-        
-        LOGGER.debug(f"Java analysis completed: {len(result.get('functions', []))} functions, {len(result.get('classes', []))} classes found")
+
+        LOGGER.debug(
+            f"Java analysis completed: {len(result.get('functions', []))} functions, {len(result.get('classes', []))} classes found")
         return result
-        
+
     except Exception as e:
         LOGGER.error(f"Java code analysis failed: {e}")
         return {'success': False, 'error': str(e)}

@@ -21,11 +21,11 @@ except ImportError as e:
 @pytest.mark.skipif(not IMPORTS_AVAILABLE, reason=f"Imports not available: {import_error}")
 class TestHaskellASTVisitor:
     """Test Haskell AST visitor functionality."""
-    
+
     def setup_method(self):
         """Set up test fixtures."""
         self.analyzer = MultiLevelAnalyzer()
-        
+
         # Sample Haskell code for testing
         self.sample_haskell_code = '''-- Test Haskell module
 module TestModule (
@@ -91,43 +91,43 @@ _helperFunction s = "Helper: " ++ s
 (&&&) :: Bool -> Bool -> Bool
 (&&&) = (&&)
 '''
-    
+
     def test_language_handler_registration(self):
         """Test that Haskell handler is properly registered."""
         supported_languages = list_supported_languages()
         assert 'haskell' in supported_languages, f"Haskell not in supported languages: {supported_languages}"
-        
+
         handler = get_handler_for_language('haskell')
         assert handler is not None, "Haskell handler should be available"
         assert hasattr(handler, 'can_handle'), "Handler should have can_handle method"
         assert hasattr(handler, 'extract_metadata'), "Handler should have extract_metadata method"
-    
+
     def test_haskell_code_analysis(self):
         """Test basic Haskell code analysis using the AST visitor."""
         metadata = self.analyzer.analyze_code(
-            self.sample_haskell_code, 
-            language='haskell', 
+            self.sample_haskell_code,
+            language='haskell',
             filename='test.hs'
         )
-        
+
         # Basic metadata should be present
         assert metadata['language'] == 'haskell'
         assert metadata['filename'] == 'test.hs'
         assert metadata['line_count'] > 0
         assert metadata['char_count'] > 0
-        
+
         # Should use tree-sitter analysis if available
         assert 'tree_sitter' in metadata.get('analysis_method', '')
-        
+
         print(f"Analysis method: {metadata.get('analysis_method')}")
         print(f"Available metadata keys: {list(metadata.keys())}")
-    
+
     def test_haskell_handler_functionality(self):
         """Test Haskell-specific handler functionality directly."""
         handler = get_handler_for_language('haskell')
         if not handler:
             pytest.skip("Haskell handler not available")
-        
+
         # Test that handler can process sample node types
         assert handler.can_handle('module'), "Should handle module declarations"
         assert handler.can_handle('import'), "Should handle import statements"
@@ -135,18 +135,18 @@ _helperFunction s = "Helper: " ++ s
         assert handler.can_handle('data_type'), "Should handle data type declarations"
         assert handler.can_handle('class'), "Should handle type class declarations"
         assert handler.can_handle('instance'), "Should handle instance declarations"
-        
+
         # Test summary functionality
         summary = handler.get_summary()
         assert isinstance(summary, dict), "Summary should be a dictionary"
-        
+
         expected_summary_keys = [
-            'module', 'functions', 'data_types', 'type_classes', 
+            'module', 'functions', 'data_types', 'type_classes',
             'instances', 'imports', 'complexity_score'
         ]
         for key in expected_summary_keys:
             assert key in summary, f"Summary should contain '{key}' key"
-    
+
     def test_analyze_code_convenience_function(self):
         """Test the convenience analyze_code function with Haskell."""
         metadata = analyze_code(
@@ -154,14 +154,14 @@ _helperFunction s = "Helper: " ++ s
             language='haskell',
             filename='test.hs'
         )
-        
+
         assert isinstance(metadata, dict), "Should return metadata dictionary"
         assert metadata['language'] == 'haskell'
-        
+
         # Should contain analysis results
         assert 'analysis_method' in metadata
         print(f"Convenience function analysis method: {metadata['analysis_method']}")
-    
+
     def test_haskell_file_extension_detection(self):
         """Test that Haskell files are properly detected by extension."""
         # Test .hs extension
@@ -170,47 +170,47 @@ _helperFunction s = "Helper: " ++ s
             filename='module.hs'
         )
         assert metadata_hs['language'] == 'haskell'
-        
+
         # Test .lhs extension (literate Haskell)
         metadata_lhs = self.analyzer.analyze_code(
             self.sample_haskell_code,
             filename='module.lhs'
         )
         assert metadata_lhs['language'] == 'haskell'
-    
+
     def test_fallback_behavior(self):
         """Test fallback behavior when tree-sitter parsing fails."""
         # Test with malformed Haskell code
         malformed_code = "module Broken where\n import [\n data Incomplete"
-        
+
         metadata = self.analyzer.analyze_code(
             malformed_code,
             language='haskell',
             filename='broken.hs'
         )
-        
+
         # Should still return metadata, possibly using fallback methods
         assert isinstance(metadata, dict)
         assert metadata['language'] == 'haskell'
         assert 'analysis_method' in metadata
-        
+
         print(f"Fallback analysis method: {metadata['analysis_method']}")
-    
+
     @pytest.mark.integration
     def test_real_haskell_file_analysis(self):
         """Test analysis of a real Haskell file if available."""
         # Look for the test fixture
         test_file_path = Path(__file__).parent.parent.parent / 'fixtures' / 'test_haskell.hs'
-        
+
         if test_file_path.exists():
             with open(test_file_path, 'r') as f:
                 haskell_code = f.read()
-            
+
             metadata = self.analyzer.analyze_code(
                 haskell_code,
                 filename=str(test_file_path)
             )
-            
+
             assert metadata['language'] == 'haskell'
             print(f"Real file analysis method: {metadata['analysis_method']}")
             print(f"Real file metadata keys: {list(metadata.keys())}")

@@ -330,31 +330,31 @@ class PythonAnalyzer(BaseAnalyzer):
 
 class TestChunkingLocationDuplicates:
     """Test to identify duplicate location generation within single files."""
-    
+
     def test_ast_chunking_location_uniqueness_detailed(self):
         """Test AST chunking with detailed location analysis for files that cause errors."""
         test_cases = [
             ("driver.rs", RUST_FILE_CONTENT, "Rust"),
-            ("README.md", MARKDOWN_CONTENT, "Markdown"), 
+            ("README.md", MARKDOWN_CONTENT, "Markdown"),
             ("base_analyzer.py", PYTHON_CONTENT, "Python")
         ]
-        
+
         for filename, content, expected_language in test_cases:
             print(f"\n=== Testing {filename} ({expected_language}) ===")
-            
+
             language = extract_language(filename)
             assert language == expected_language, f"Language detection failed: {language} != {expected_language}"
-            
+
             if not AST_CHUNKING_AVAILABLE:
                 print("AST chunking not available, skipping")
                 continue
-                
+
             # Test with different chunk sizes to see if duplicates occur
             chunk_sizes = [500, 1000, 1500]
-            
+
             for chunk_size in chunk_sizes:
                 print(f"\n--- Chunk size: {chunk_size} ---")
-                
+
                 try:
                     chunks = ASTChunkOperation(
                         content=content,
@@ -362,31 +362,32 @@ class TestChunkingLocationDuplicates:
                         max_chunk_size=chunk_size,
                         chunk_overlap=100
                     )
-                    
+
                     print(f"Generated {len(chunks)} chunks")
-                    
+
                     # Collect all locations and analyze for duplicates
                     locations = []
                     primary_keys = []
-                    
+
                     for i, chunk in enumerate(chunks):
                         location = chunk.location
                         primary_key = (filename, location, "files")
-                        
+
                         locations.append(location)
                         primary_keys.append(primary_key)
-                        
-                        print(f"  Chunk {i}: location='{location}', text_len={len(chunk.text)}, start={chunk.start}, end={chunk.end}")
+
+                        print(
+                            f"  Chunk {i}: location='{location}', text_len={len(chunk.text)}, start={chunk.start}, end={chunk.end}")
                         print(f"    Primary key: {primary_key}")
                         print(f"    Text preview: {chunk.text[:100].replace(chr(10), ' ')[:50]}...")
-                    
+
                     # Check for duplicate locations within this file
                     unique_locations = set(locations)
                     if len(locations) != len(unique_locations):
                         duplicates = [loc for loc in locations if locations.count(loc) > 1]
                         print(f"❌ DUPLICATE LOCATIONS FOUND: {set(duplicates)}")
                         print(f"This would cause PostgreSQL 'ON CONFLICT DO UPDATE' error!")
-                        
+
                         # Show which chunks have the same location
                         for dup_loc in set(duplicates):
                             dup_indices = [i for i, loc in enumerate(locations) if loc == dup_loc]
@@ -394,47 +395,47 @@ class TestChunkingLocationDuplicates:
                             for idx in dup_indices:
                                 chunk = chunks[idx]
                                 print(f"    Chunk {idx}: start={chunk.start}, end={chunk.end}, len={len(chunk.text)}")
-                        
+
                         # This should fail the test
                         assert False, f"Chunk size {chunk_size}: Duplicate locations found for {filename}: {set(duplicates)}"
                     else:
                         print(f"✅ All locations unique for chunk size {chunk_size}")
-                        
+
                 except Exception as e:
                     print(f"Chunking failed for {filename} with chunk size {chunk_size}: {e}")
                     # Don't fail on chunking errors, just report them
                     continue
-    
+
     def test_default_chunking_location_uniqueness(self):
         """Test default SplitRecursively chunking for location uniqueness."""
         print("\n=== Testing Default Chunking (SplitRecursively) ===")
-        
+
         # Test with a file that would use default chunking (Rust is not supported by AST chunking)
         filename = "test.rs"
         language = extract_language(filename)
-        
+
         print(f"Testing {filename} with language: {language}")
-        
+
         # Simulate the default chunking path from the flow
         try:
             params = get_chunking_params(language)
             print(f"Chunking params: {params}")
-            
+
             # Create the chunker as used in the flow
             chunker = cocoindex.functions.SplitRecursively(custom_languages=CUSTOM_LANGUAGES)
             print(f"Created chunker: {chunker}")
-            
+
             # NOTE: We can't easily test SplitRecursively directly due to DataSlice requirements
             # But we can verify the chunker is created correctly
             print("✅ Default chunker created successfully")
-            
+
             # The actual issue might be in how the location field is set by SplitRecursively
             # This would require running the full flow to test properly
-            
+
         except Exception as e:
             print(f"Default chunking setup failed: {e}")
             raise
-    
+
     def test_empty_or_minimal_content_chunking(self):
         """Test how chunking handles edge cases that might produce duplicate locations."""
         edge_cases = [
@@ -443,15 +444,15 @@ class TestChunkingLocationDuplicates:
             ("single_line.md", "# Title", "Markdown"),
             ("whitespace.py", "\n\n\n   \n\n", "Python"),
         ]
-        
+
         print("\n=== Testing Edge Cases ===")
-        
+
         for filename, content, expected_lang in edge_cases:
             print(f"\n--- Testing {filename} ---")
             print(f"Content: '{content.replace(chr(10), '\\n')}'")
-            
+
             language = extract_language(filename)
-            
+
             if AST_CHUNKING_AVAILABLE:
                 try:
                     chunks = ASTChunkOperation(
@@ -460,22 +461,23 @@ class TestChunkingLocationDuplicates:
                         max_chunk_size=1000,
                         chunk_overlap=0
                     )
-                    
+
                     print(f"Generated {len(chunks)} chunks")
-                    
+
                     locations = [chunk.location for chunk in chunks]
                     unique_locations = set(locations)
-                    
+
                     if len(locations) != len(unique_locations):
                         duplicates = [loc for loc in locations if locations.count(loc) > 1]
                         print(f"❌ Edge case produced duplicate locations: {set(duplicates)}")
                     else:
                         print(f"✅ Edge case handled correctly: {locations}")
-                        
+
                     # Show all chunks for edge cases
                     for i, chunk in enumerate(chunks):
-                        print(f"  Chunk {i}: location='{chunk.location}', len={len(chunk.text)}, text='{chunk.text.replace(chr(10), '\\n')}'")
-                        
+                        print(
+                            f"  Chunk {i}: location='{chunk.location}', len={len(chunk.text)}, text='{chunk.text.replace(chr(10), '\\n')}'")
+
                 except Exception as e:
                     print(f"Edge case chunking failed: {e}")
 

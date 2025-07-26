@@ -42,16 +42,16 @@ class TestMCPServerBasics:
     async def test_list_resources(self, main_mcp_server):
         """Test that resources are properly defined."""
         resources = await main_mcp_server.handle_list_resources()
-        
+
         assert isinstance(resources, list)
         assert len(resources) == 7
-        
+
         # Check specific resources exist
         resource_names = [r.name for r in resources]
         assert "Search Statistics" in resource_names
         assert "Search Configuration" in resource_names
         assert "Database Schema" in resource_names
-        
+
         # Check resource URIs are properly formatted
         for resource in resources:
             assert str(resource.uri).startswith("cocoindex://")
@@ -65,21 +65,21 @@ class TestMCPServerBasics:
     async def test_list_tools(self, main_mcp_server):
         """Test that tools are properly defined."""
         tools = await main_mcp_server.handle_list_tools()
-        
+
         assert isinstance(tools, list)
         assert len(tools) == 6
-        
+
         # Check specific tools exist
         tool_names = [t.name for t in tools]
         expected_tools = [
             "hybrid_search",
-            "vector_search", 
+            "vector_search",
             "keyword_search",
             "analyze_code",
             "get_embeddings",
             "get_keyword_syntax_help"
         ]
-        
+
         for expected_tool in expected_tools:
             assert expected_tool in tool_names
 
@@ -93,20 +93,20 @@ class TestToolSchemas:
     async def test_tool_schemas_valid(self, main_mcp_server):
         """Test that all tool schemas are valid JSON Schema."""
         tools = await main_mcp_server.handle_list_tools()
-        
+
         for tool in tools:
             schema = tool.inputSchema
-            
+
             # Basic schema structure
             assert isinstance(schema, dict)
             assert "type" in schema
             assert schema["type"] == "object"
             assert "properties" in schema
-            
+
             # Check required fields exist in properties
             required = schema.get("required", [])
             properties = schema.get("properties", {})
-            
+
             for req_field in required:
                 assert req_field in properties, f"Tool {tool.name}: Missing required property '{req_field}'"
 
@@ -115,15 +115,15 @@ class TestToolSchemas:
         """Test hybrid_search tool schema specifically."""
         tools = await main_mcp_server.handle_list_tools()
         hybrid_search = next(t for t in tools if t.name == "hybrid_search")
-        
+
         schema = hybrid_search.inputSchema
         properties = schema["properties"]
-        
+
         # Check required fields
         assert "vector_query" in properties
         assert "keyword_query" in properties
         assert set(schema["required"]) == {"vector_query", "keyword_query"}
-        
+
         # Check optional fields have defaults
         assert "top_k" in properties
         assert properties["top_k"]["default"] == 10
@@ -135,14 +135,14 @@ class TestToolSchemas:
         """Test vector_search tool schema specifically."""
         tools = await main_mcp_server.handle_list_tools()
         vector_search = next(t for t in tools if t.name == "vector_search")
-        
+
         schema = vector_search.inputSchema
         properties = schema["properties"]
-        
+
         # Check required fields
         assert "query" in properties
         assert schema["required"] == ["query"]
-        
+
         # Check optional fields
         assert "top_k" in properties
         assert properties["top_k"]["default"] == 10
@@ -152,15 +152,15 @@ class TestToolSchemas:
         """Test analyze_code tool schema specifically."""
         tools = await main_mcp_server.handle_list_tools()
         analyze_code = next(t for t in tools if t.name == "analyze_code")
-        
+
         schema = analyze_code.inputSchema
         properties = schema["properties"]
-        
+
         # Check required fields
         assert "code" in properties
         assert "file_path" in properties
         assert set(schema["required"]) == {"code", "file_path"}
-        
+
         # Check optional fields
         assert "language" in properties
 
@@ -174,20 +174,20 @@ class TestResourceHandling:
     async def test_search_config_resource(self, main_mcp_server):
         """Test reading the search configuration resource."""
         config_content = await main_mcp_server.get_search_config()
-        
+
         # Should be valid JSON
         config_data = json.loads(config_content)
         assert isinstance(config_data, dict)
-        
+
         # Check expected configuration keys
         expected_keys = [
             "table_name",
-            "embedding_model", 
+            "embedding_model",
             "parser_type",
             "supported_operators",
             "default_weights"
         ]
-        
+
         for key in expected_keys:
             assert key in config_data
 
@@ -196,10 +196,10 @@ class TestResourceHandling:
         """Test that search config includes expected operators."""
         config_content = await main_mcp_server.get_search_config()
         config_data = json.loads(config_content)
-        
+
         operators = config_data["supported_operators"]
         expected_operators = ["AND", "OR", "NOT", "value_contains", "==", "!=", "<", ">", "<=", ">="]
-        
+
         for op in expected_operators:
             assert op in operators
 
@@ -209,10 +209,10 @@ class TestResourceHandling:
         # Test valid resource
         config_result = await main_mcp_server.handle_read_resource("cocoindex://search/config")
         assert isinstance(config_result, str)
-        
+
         # Should be valid JSON
         json.loads(config_result)
-        
+
         # Test invalid resource
         with pytest.raises(ValueError, match="Unknown resource"):
             await main_mcp_server.handle_read_resource("cocoindex://invalid/resource")
@@ -235,10 +235,10 @@ class TestServerConfiguration:
         """Test that all required MCP handlers are defined."""
         # These should not raise AttributeError
         assert callable(main_mcp_server.handle_list_resources)
-        assert callable(main_mcp_server.handle_list_tools) 
+        assert callable(main_mcp_server.handle_list_tools)
         assert callable(main_mcp_server.handle_read_resource)
         assert callable(main_mcp_server.handle_call_tool)
-        
+
         # These should not raise errors when called
         await main_mcp_server.handle_list_resources()
         await main_mcp_server.handle_list_tools()
@@ -262,13 +262,13 @@ class TestIntegration:
     async def test_tool_argument_structure(self, main_mcp_server):
         """Test that tool arguments follow expected structure."""
         tools = await main_mcp_server.handle_list_tools()
-        
+
         for tool in tools:
             schema = tool.inputSchema
-            
+
             # All tools should accept arguments as objects
             assert schema["type"] == "object"
-            
+
             # Most tools should have at least one property, except help tools
             if tool.name != "get_keyword_syntax_help":
                 assert len(schema["properties"]) > 0

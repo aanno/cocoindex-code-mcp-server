@@ -7,8 +7,8 @@ Tests the new HaskellChunkConfig and EnhancedHaskellChunker classes.
 
 import pytest
 from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
-    HaskellChunkConfig, 
-    EnhancedHaskellChunker, 
+    HaskellChunkConfig,
+    EnhancedHaskellChunker,
     get_enhanced_haskell_separators,
     create_enhanced_regex_fallback_chunks
 )
@@ -53,7 +53,7 @@ class TestEnhancedHaskellSeparators:
         import haskell_tree_sitter
         base_separators = haskell_tree_sitter.get_haskell_separators()
         enhanced_separators = get_enhanced_haskell_separators()
-        
+
         # All base separators should be included
         for sep in base_separators:
             assert sep in enhanced_separators
@@ -61,7 +61,7 @@ class TestEnhancedHaskellSeparators:
     def test_separators_include_enhancements(self):
         """Test that enhanced separators include new patterns."""
         separators = get_enhanced_haskell_separators()
-        
+
         # Check for specific enhanced patterns
         expected_patterns = [
             r"\nmodule\s+[A-Z][a-zA-Z0-9_.']*",
@@ -70,7 +70,7 @@ class TestEnhancedHaskellSeparators:
             r"\nclass\s+[A-Z][a-zA-Z0-9_']*",
             r"\n[a-zA-Z][a-zA-Z0-9_']*\s*::",  # Type signatures
         ]
-        
+
         for pattern in expected_patterns:
             assert pattern in separators
 
@@ -79,7 +79,7 @@ class TestEnhancedHaskellSeparators:
         import haskell_tree_sitter
         base_separators = haskell_tree_sitter.get_haskell_separators()
         enhanced_separators = get_enhanced_haskell_separators()
-        
+
         assert len(enhanced_separators) > len(base_separators)
 
 
@@ -112,10 +112,10 @@ factorial n = n * factorial (n - 1)
 
 data Tree a = Leaf a | Node (Tree a) (Tree a)
 """
-        
+
         chunker = EnhancedHaskellChunker()
         chunks = chunker.chunk_code(haskell_code, "test.hs")
-        
+
         assert len(chunks) > 0
         assert all("content" in chunk for chunk in chunks)
         assert all("metadata" in chunk for chunk in chunks)
@@ -130,13 +130,13 @@ import Data.List
 factorial :: Integer -> Integer
 factorial n = product [1..n]
 """
-        
+
         chunker = EnhancedHaskellChunker()
         chunks = chunker.chunk_code(haskell_code, "test.hs")
-        
+
         for chunk in chunks:
             metadata = chunk["metadata"]
-            
+
             # Check required metadata fields
             assert "chunk_id" in metadata
             assert "chunk_method" in metadata
@@ -144,7 +144,7 @@ factorial n = product [1..n]
             assert "file_path" in metadata
             assert "chunk_size" in metadata
             assert "line_count" in metadata
-            
+
             # Check Haskell-specific metadata
             assert "has_imports" in metadata
             assert "has_type_signatures" in metadata
@@ -162,28 +162,29 @@ fibonacci n = fibonacci (n - 1) + fibonacci (n - 2)
 
 data Tree a = Leaf a | Node (Tree a) (Tree a)
 """
-        
+
         config = HaskellChunkConfig(metadata_template="repoeval")
         chunker = EnhancedHaskellChunker(config)
         chunks = chunker.chunk_code(haskell_code, "test.hs")
-        
+
         # Should have functions and types extracted
         found_functions = False
         found_types = False
-        
+
         for chunk in chunks:
             metadata = chunk["metadata"]
             if "functions" in metadata and metadata["functions"]:
                 found_functions = True
                 # Should find factorial and fibonacci
                 functions = metadata["functions"]
-                assert any("factorial" in str(func) for func in functions) or any("fibonacci" in str(func) for func in functions)
+                assert any("factorial" in str(func) for func in functions) or any(
+                    "fibonacci" in str(func) for func in functions)
             if "types" in metadata and metadata["types"]:
                 found_types = True
                 # Should find Tree
                 types = metadata["types"]
                 assert any("Tree" in str(type_name) for type_name in types)
-        
+
         # At least one chunk should have functions or types
         assert found_functions or found_types
 
@@ -204,15 +205,15 @@ processData input = do
   where
     process x = if x > 0 then Just (x * 2) else Nothing
 """
-        
+
         config = HaskellChunkConfig(metadata_template="swebench")
         chunker = EnhancedHaskellChunker(config)
         chunks = chunker.chunk_code(haskell_code, "test.hs")
-        
+
         # Should have complexity and dependencies
         found_complexity = False
         found_dependencies = False
-        
+
         for chunk in chunks:
             metadata = chunk["metadata"]
             if "complexity_score" in metadata:
@@ -224,7 +225,7 @@ processData input = do
                 # Should find Data.Map import
                 deps = metadata["dependencies"]
                 assert any("Data.Map" in str(dep) for dep in deps)
-        
+
         assert found_complexity or found_dependencies
 
     def test_chunk_expansion(self):
@@ -233,11 +234,11 @@ processData input = do
 factorial :: Integer -> Integer
 factorial n = product [1..n]
 """
-        
+
         config = HaskellChunkConfig(chunk_expansion=True)
         chunker = EnhancedHaskellChunker(config)
         chunks = chunker.chunk_code(haskell_code, "test.hs")
-        
+
         # Check that at least one chunk has expansion header
         for chunk in chunks:
             if chunk.get("has_expansion_header"):
@@ -246,7 +247,7 @@ factorial n = product [1..n]
                 assert chunk["content"].startswith("-- ")
                 assert "File: test.hs" in chunk["content"]
                 assert "Lines:" in chunk["content"]
-        
+
         # Note: This might not always trigger if AST chunking doesn't need expansion
         # so we just verify the functionality exists
 
@@ -269,18 +270,18 @@ fibonacci n = fibonacci (n - 1) + fibonacci (n - 2)
 helper :: Int -> Int
 helper x = x + 1
 """
-        
+
         config = HaskellChunkConfig(chunk_overlap=2, max_chunk_size=200)
         chunker = EnhancedHaskellChunker(config)
         chunks = chunker.chunk_code(haskell_code, "test.hs")
-        
+
         # Should create multiple chunks due to small max_chunk_size
         if len(chunks) > 1:
             # Check for overlap indicators
             for chunk in chunks:
                 if chunk.get("has_prev_overlap") or chunk.get("has_next_overlap"):
                     break
-            
+
             # Note: Overlap might not always be applied depending on AST structure
 
 
@@ -297,14 +298,14 @@ import Data.List
 factorial :: Integer -> Integer
 factorial n = product [1..n]
 """
-        
+
         config = HaskellChunkConfig()
         chunks = create_enhanced_regex_fallback_chunks(haskell_code, "test.hs", config)
-        
+
         assert len(chunks) > 0
         assert all("content" in chunk for chunk in chunks)
         assert all("metadata" in chunk for chunk in chunks)
-        
+
         # Check that metadata indicates regex fallback method
         for chunk in chunks:
             metadata = chunk["metadata"]
@@ -327,18 +328,18 @@ factorial n = product [1..n]
 class Functor f where
     fmap :: (a -> b) -> f a -> f b
 """
-        
+
         config = HaskellChunkConfig(max_chunk_size=100)  # Force small chunks
         chunks = create_enhanced_regex_fallback_chunks(haskell_code, "test.hs", config)
-        
+
         # Should create multiple chunks
         assert len(chunks) > 1
-        
+
         # Check for separator priority tracking
         for chunk in chunks:
             if chunk["metadata"].get("separator_priority", 0) > 0:
                 break
-        
+
         # At least some chunks should have been split on separators
 
 
@@ -348,14 +349,14 @@ class TestBackwardCompatibility:
     def test_legacy_function_exists(self):
         """Test that legacy function still exists."""
         from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import create_regex_fallback_chunks_python
-        
+
         haskell_code = """
 factorial :: Integer -> Integer
 factorial n = product [1..n]
 """
-        
+
         chunks = create_regex_fallback_chunks_python(haskell_code)
-        
+
         # Should return chunks in legacy format
         assert len(chunks) > 0
         assert all("text" in chunk for chunk in chunks)
@@ -367,15 +368,15 @@ factorial n = product [1..n]
     def test_cocoindex_operation_exists(self):
         """Test that CocoIndex operation function exists."""
         from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import extract_haskell_ast_chunks
-        
+
         # Function should exist and be callable
         assert callable(extract_haskell_ast_chunks)
-        
+
         haskell_code = """
 factorial :: Integer -> Integer
 factorial n = product [1..n]
 """
-        
+
         # Should work with just content parameter
         chunks = extract_haskell_ast_chunks(haskell_code)
         assert isinstance(chunks, list)
