@@ -15,7 +15,7 @@ def test_hybrid_search_lark_integration():
     
     try:
         # Test the imports work correctly
-        from db.pgvector.hybrid_search import HybridSearchEngine
+        from cocoindex_code_mcp_server.db.pgvector.hybrid_search import HybridSearchEngine
         from keyword_search_parser_lark import KeywordSearchParser, build_sql_where_clause
         
         print("✅ Successfully imported hybrid search with Lark parser")

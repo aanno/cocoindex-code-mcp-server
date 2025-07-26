@@ -14,10 +14,9 @@ import cocoindex
 from psycopg_pool import ConnectionPool
 from pgvector.psycopg import register_vector
 
-# Add src to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+# Package should be installed via maturin develop or pip install -e .
 
-from db.pgvector.hybrid_search import HybridSearchEngine
+from cocoindex_code_mcp_server.db.pgvector.hybrid_search import HybridSearchEngine
 from cocoindex_config import code_embedding_flow
 
 LOGGER = logging.getLogger(__name__)

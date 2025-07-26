@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src
 
 # Mock pgvector before importing hybrid_search
 with patch('pgvector.psycopg.register_vector'):
-    from db.pgvector.hybrid_search import (
+    from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
         HybridSearchEngine, 
         format_results_as_json, 
         format_results_readable

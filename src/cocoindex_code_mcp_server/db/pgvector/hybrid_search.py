@@ -10,9 +10,9 @@ from typing import Any, Dict, List, Optional
 from psycopg_pool import ConnectionPool
 from pgvector.psycopg import register_vector
 import cocoindex
-from cocoindex_config import code_embedding_flow, code_to_embedding
-from keyword_search_parser_lark import KeywordSearchParser, build_sql_where_clause
-from lang.python.python_code_analyzer import analyze_python_code
+from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow, code_to_embedding
+from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser, build_sql_where_clause
+from cocoindex_code_mcp_server.lang.python.python_code_analyzer import analyze_python_code
 from prompt_toolkit import PromptSession
 from prompt_toolkit.key_binding import KeyBindings
 
