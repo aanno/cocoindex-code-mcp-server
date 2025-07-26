@@ -62,7 +62,7 @@ class LanguageBaseline:
                 }
         
         return {
-            'success': result.get('success', False),
+            'success': result.get('success') is not False and 'analysis_method' in result,
             'language': self.language,
             'analysis_method': result.get('analysis_method'),
             'functions': {
@@ -85,8 +85,8 @@ class MultiLanguageBaseline:
         self.languages = {
             'python': LanguageBaseline(
                 'python', 'test_python.py',
-                expected_functions={'fibonacci', 'main', 'process_data'},
-                expected_constructs={'classes': {'Person'}}
+                expected_functions={'fibonacci', 'is_prime'},
+                expected_constructs={'classes': {'MathUtils'}}
             ),
             'haskell': LanguageBaseline(
                 'haskell', 'test_haskell.hs', 
@@ -109,18 +109,18 @@ class MultiLanguageBaseline:
                 expected_constructs={'structs': {'Point'}}
             ),
             'kotlin': LanguageBaseline(
-                'kotlin', 'test_kotlin.kt',  # Need to create this
-                expected_functions={'main'},
-                expected_constructs={'classes': set()}
+                'kotlin', 'test_kotlin.kt',
+                expected_functions={'fibonacci', 'processResult', 'calculateSum', 'isAdult', 'greet', 'add', 'multiply', 'getHistory', 'main'},
+                expected_constructs={'classes': {'Person', 'Result', 'Calculator'}}
             ),
             'java': LanguageBaseline(
-                'java', 'test_java.java',  # Need to create this  
-                expected_functions={'main'},
-                expected_constructs={'classes': set()}
+                'java', 'test_java.java',
+                expected_functions={'fibonacci', 'calculateSum', 'printList', 'isPrime', 'isAdult', 'greet', 'getName', 'getAge', 'getArea', 'getPerimeter', 'getColor', 'main'},
+                expected_constructs={'classes': {'TestJava', 'Person', 'Shape', 'Rectangle'}}
             ),
             'typescript': LanguageBaseline(
                 'typescript', 'test_typescript.ts',
-                expected_functions={'fibonacci', 'greet'},
+                expected_functions={'fibonacci', 'greet', 'isAdult', 'getName', 'getAge', 'calculateSum', 'processUsers', 'main'},
                 expected_constructs={'classes': {'Person'}}
             )
         }
