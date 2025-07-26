@@ -9,18 +9,16 @@ import sys
 import os
 from unittest.mock import Mock
 
-# Add src directory to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src', 'cocoindex_code_mcp_server'))
+# Package should be installed via maturin develop or pip install -e .
+# No need to manually add src to path
 
 
 @pytest.fixture(scope="session")
 def setup_test_environment():
     """Set up the test environment."""
-    # Ensure src directory is in path
-    src_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src', 'cocoindex_code_mcp_server')
-    if src_path not in sys.path:
-        sys.path.insert(0, src_path)
-    return src_path
+    # Package should be installed via maturin develop or pip install -e .
+    # Return current working directory instead
+    return os.getcwd()
 
 
 @pytest.fixture

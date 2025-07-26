@@ -9,8 +9,8 @@ import os
 import tempfile
 import shutil
 
-# Add src directory to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src/cocoindex_code_mcp_server'))
+# Package should be installed via maturin develop or pip install -e .
+# No need to manually add src to path
 
 
 @pytest.fixture(scope="session")
