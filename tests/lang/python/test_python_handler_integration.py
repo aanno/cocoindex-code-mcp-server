@@ -9,10 +9,6 @@ the PythonNodeHandler through the AST visitor framework.
 import sys
 import os
 import pytest
-
-# Add src to path to import modules
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src', 'cocoindex_code_mcp_server'))
-
 from lang.python.tree_sitter_python_analyzer import TreeSitterPythonAnalyzer
 from cocoindex_config import extract_code_metadata, PYTHON_HANDLER_AVAILABLE
 import json

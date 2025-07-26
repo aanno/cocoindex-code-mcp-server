@@ -8,15 +8,11 @@ Moved from src/python_code_analyzer.py to tests/
 import sys
 import os
 import logging
+from lang.python.python_code_analyzer import analyze_python_code
+
 
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)
-
-# Add src to path to import modules
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
-
-from lang.python.python_code_analyzer import analyze_python_code
-
 
 def test_python_analyzer_integration():
     """Test the Python code analyzer with comprehensive sample code."""

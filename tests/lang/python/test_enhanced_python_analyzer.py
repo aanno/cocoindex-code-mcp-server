@@ -11,9 +11,6 @@ import logging
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)
 
-# Add src to path to import modules
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
-
 def test_enhanced_analyzer():
     """Test the enhanced Python analyzer."""
     

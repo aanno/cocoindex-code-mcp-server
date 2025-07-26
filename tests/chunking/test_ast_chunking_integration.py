@@ -12,9 +12,6 @@ import logging
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)
 
-# Add src to path to import modules
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-
 try:
     import ast_chunking
     from ast_chunking import CocoIndexASTChunker

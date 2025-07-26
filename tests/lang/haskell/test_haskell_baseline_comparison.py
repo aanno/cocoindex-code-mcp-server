@@ -11,11 +11,6 @@ import os
 import pytest
 from pathlib import Path
 
-# Add src to path to import modules
-sys.path.append(os.path.join(
-    os.path.dirname(__file__), '..', '..', '..', 'src', 'cocoindex_code_mcp_server'
-))
-
 import_error = None
 try:
     from language_handlers.haskell_visitor import analyze_haskell_code

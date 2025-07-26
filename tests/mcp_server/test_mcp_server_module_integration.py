@@ -27,17 +27,7 @@ import shutil
 from pathlib import Path
 from unittest.mock import patch
 
-# Add src to path
-src_path = Path(__file__).parent.parent / "src" / "cocoindex_code_mcp_server"
-sys.path.insert(0, str(src_path))
-
-# Also add cocoindex to path if available
-cocoindex_path = Path(__file__).parent.parent / "cocoindex"
-if cocoindex_path.exists():
-    sys.path.insert(0, str(cocoindex_path))
-
 pytest_plugins = ["pytest_mock"]
-
 
 @pytest.fixture
 def test_corpus():

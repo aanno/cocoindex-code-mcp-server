@@ -7,11 +7,6 @@ Debug test to understand what AST nodes are being processed.
 import sys
 import os
 
-# Add src to path to import modules
-sys.path.append(os.path.join(
-    os.path.dirname(__file__), '..', 'src', 'cocoindex_code_mcp_server'
-))
-
 from lang.python.tree_sitter_python_analyzer import TreeSitterPythonAnalyzer
 from ast_visitor import GenericMetadataVisitor, TreeWalker, ASTParserFactory
 from language_handlers import get_handler_for_language

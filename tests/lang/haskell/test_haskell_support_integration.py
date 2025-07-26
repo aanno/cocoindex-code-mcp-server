@@ -11,10 +11,6 @@ import logging
 
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)
-
-# Add src to path to import modules
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
-
 try:
     from lang.haskell.haskell_ast_chunker import HaskellChunkConfig, EnhancedHaskellChunker
     haskell_ast_chunker_AVAILABLE = True

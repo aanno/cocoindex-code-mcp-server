@@ -7,10 +7,6 @@ Comprehensive tests for AST-based Haskell chunking functionality.
 import os
 import sys
 import pytest
-
-# Add the src directory to the path to import the main module
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-
 from lang.haskell.haskell_ast_chunker import extract_haskell_ast_chunks, get_enhanced_haskell_separators
 import haskell_tree_sitter
 

@@ -13,7 +13,7 @@ from pathlib import Path
 import logging
 from dataclasses import dataclass
 
-from __init__ import LOGGER
+from cocoindex_code_mcp_server import LOGGER
 
 
 @dataclass(frozen=True)

@@ -7,10 +7,6 @@ Test to verify the unique location post-processing fix works correctly.
 import pytest
 import sys
 import os
-
-# Add src directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..', 'src', 'cocoindex_code_mcp_server'))
-
 import cocoindex
 from cocoindex_config import ensure_unique_chunk_locations
 from ast_chunking import Chunk

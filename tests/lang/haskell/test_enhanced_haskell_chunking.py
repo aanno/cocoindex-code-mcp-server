@@ -8,10 +8,6 @@ Tests the new HaskellChunkConfig and EnhancedHaskellChunker classes.
 import os
 import sys
 import pytest
-
-# Add the src directory to the path to import the main module
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-
 from lang.haskell.haskell_ast_chunker import (
     HaskellChunkConfig, 
     EnhancedHaskellChunker, 

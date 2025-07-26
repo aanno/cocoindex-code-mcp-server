@@ -13,9 +13,6 @@ import logging
 
 LOGGER = logging.getLogger(__name__)
 
-# Add the src directory to the path to import the main module
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-
 # Import only the specific components we need, avoiding CocoIndex import
 import haskell_tree_sitter
 

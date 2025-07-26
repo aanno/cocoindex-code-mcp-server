@@ -15,11 +15,6 @@ import json
 from pathlib import Path
 from typing import Dict, Any, List, Set
 
-# Add src to path to import modules
-sys.path.append(os.path.join(
-    os.path.dirname(__file__), '..', '..', '..', 'src', 'cocoindex_code_mcp_server'
-))
-
 # Test imports with error tracking
 import_error = None
 try:

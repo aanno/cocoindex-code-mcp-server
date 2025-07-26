@@ -10,11 +10,6 @@ import os
 import pytest
 from pathlib import Path
 
-# Add src to path to import modules
-sys.path.append(os.path.join(
-    os.path.dirname(__file__), '..', '..', '..', 'src', 'cocoindex_code_mcp_server'
-))
-
 try:
     from ast_visitor import MultiLevelAnalyzer, analyze_code
     from language_handlers import get_handler_for_language, list_supported_languages

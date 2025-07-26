@@ -8,12 +8,6 @@ are not being properly merged with function decorators from tree-sitter analysis
 
 import sys
 import os
-
-# Add src to path to import modules
-sys.path.append(os.path.join(
-    os.path.dirname(__file__), '..', 'src', 'cocoindex_code_mcp_server'
-))
-
 from lang.python.python_code_analyzer import analyze_python_code
 
 

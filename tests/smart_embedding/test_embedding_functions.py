@@ -9,9 +9,6 @@ import sys
 import os
 import inspect
 
-# Add src directory to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src/cocoindex_code_mcp_server'))
-
 from cocoindex_config import (
     graphcodebert_embedding,
     unixcoder_embedding, 

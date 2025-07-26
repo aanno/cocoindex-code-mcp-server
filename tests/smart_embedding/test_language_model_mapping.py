@@ -8,9 +8,6 @@ import pytest
 import sys
 import os
 
-# Add src directory to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src/cocoindex_code_mcp_server'))
-
 from cocoindex_config import (
     LANGUAGE_MODEL_GROUPS, 
     get_embedding_model_group,

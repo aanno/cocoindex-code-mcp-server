@@ -14,9 +14,6 @@ import os
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)
 
-# Add src to path to import modules
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
-
 try:
     from lang.python.python_code_analyzer import analyze_python_code
 except ImportError as e:

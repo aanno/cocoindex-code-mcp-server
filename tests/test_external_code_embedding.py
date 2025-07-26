@@ -10,7 +10,7 @@ import sys
 import os
 from unittest.mock import Mock, patch
 
-from smart_code_embedding import (
+from cocoindex_code_mcp_server.smart_code_embedding import (
     LanguageModelSelector,
     create_smart_code_embedding,
     create_python_embedding,

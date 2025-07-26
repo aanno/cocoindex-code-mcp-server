@@ -10,9 +10,6 @@ import sys
 import pytest
 from unittest.mock import Mock, patch
 
-# Add the src directory to the path to import the main module
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-
 # Mock cocoindex to avoid circular import
 mock_cocoindex = Mock()
 mock_cocoindex.op = Mock()
