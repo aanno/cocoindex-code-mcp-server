@@ -5,8 +5,6 @@ Test suite for Haskell AST visitor implementation.
 Tests the integration of HaskellNodeHandler with the AST visitor framework.
 """
 
-import sys
-import os
 import pytest
 from pathlib import Path
 

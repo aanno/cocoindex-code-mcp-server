@@ -7,9 +7,7 @@ Tests the HTTP transport layer, JSON-RPC protocol compliance,
 and MCP tool functionality.
 """
 
-import asyncio
 import json
-import multiprocessing
 import os
 import subprocess
 import sys

@@ -5,7 +5,7 @@ Keyword search parser for metadata search with 'and', 'or', and 'exists' operato
 """
 
 import re
-from typing import List, Dict, Any, Union
+from typing import Any, List, Union
 from dataclasses import dataclass
 from enum import Enum
 

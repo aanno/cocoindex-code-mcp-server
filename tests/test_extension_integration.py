@@ -9,10 +9,6 @@ called during flow execution, see test_main_mcp_server_module_integration.py
 """
 
 import sys
-import os
-import tempfile
-import shutil
-from pathlib import Path
 
 def test_extension_integration():
     """Test that extensions are available and properly configured."""
@@ -69,7 +65,7 @@ def test_cli_args_integration():
     print("\n🔍 Testing CLI argument integration...")
     
     try:
-        from main_mcp_server import parse_mcp_args
+        pass
         
         # Test with default flags
         test_args = [
@@ -79,7 +75,7 @@ def test_cli_args_integration():
         ]
         
         import argparse
-        parser = argparse.ArgumentParser()
+        argparse.ArgumentParser()
         # Simulate the argument parser setup
         args = argparse.Namespace()
         args.default_embedding = True

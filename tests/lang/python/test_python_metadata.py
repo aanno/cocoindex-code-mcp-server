@@ -7,9 +7,7 @@ Comprehensive tests for Python metadata extraction functionality.
 import pytest
 import json
 import logging
-from typing import Dict, Any, List
 import sys
-import os
 
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)

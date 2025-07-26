@@ -7,7 +7,6 @@ Follows the same pattern as other language visitors by subclassing GenericMetada
 
 from typing import Dict, Any, Optional, List
 import logging
-from pathlib import Path
 
 from ..ast_visitor import GenericMetadataVisitor, NodeContext
 

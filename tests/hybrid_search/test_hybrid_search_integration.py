@@ -5,11 +5,8 @@ Integration tests for the hybrid search workflow.
 """
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock
-import sys
-import os
+from unittest.mock import Mock, patch
 import tempfile
-import subprocess
 
 # Package should be installed via maturin develop or pip install -e .
 

@@ -6,13 +6,11 @@ Tests both vector similarity and keyword search capabilities with real database.
 """
 
 import os
-import sys
 import pytest
 import logging
 from dotenv import load_dotenv
 import cocoindex
 from psycopg_pool import ConnectionPool
-from pgvector.psycopg import register_vector
 
 # Package should be installed via maturin develop or pip install -e .
 
@@ -40,7 +38,6 @@ def setup_cocoindex():
     yield
     
     # Cleanup if needed
-    pass
 
 @pytest.fixture
 def db_pool():

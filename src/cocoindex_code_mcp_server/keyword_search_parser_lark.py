@@ -5,14 +5,13 @@ Lark-based keyword search parser for metadata search with enhanced syntax suppor
 Supports field:value, exists(field), value_contains(field, string), and boolean operators.
 """
 
-import os
-from typing import List, Dict, Any, Union
+from typing import Any, List, Union
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
 try:
-    from lark import Lark, Transformer, Tree, Token
+    from lark import Lark, Token, Transformer
     from lark.exceptions import LarkError, ParseError
     LARK_AVAILABLE = True
 except ImportError:

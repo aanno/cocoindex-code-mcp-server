@@ -4,8 +4,6 @@
 Debug test to understand what AST nodes are being processed.
 """
 
-import sys
-import os
 
 from cocoindex_code_mcp_server.lang.python.tree_sitter_python_analyzer import TreeSitterPythonAnalyzer
 from cocoindex_code_mcp_server.ast_visitor import GenericMetadataVisitor, TreeWalker, ASTParserFactory

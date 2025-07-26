@@ -131,7 +131,7 @@ main = do
         
         # Check functions
         functions_found = set(result.get('functions', []))
-        data_types_found = set(result.get('data_types', []))
+        set(result.get('data_types', []))
         
         # Should find at least some functions and data types
         assert len(functions_found) > 0, f"Should find some functions, got {functions_found}"

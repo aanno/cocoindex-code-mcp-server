@@ -6,10 +6,8 @@ from the proposed-rag-metadata.md specification.
 """
 
 import sys
-import os
 import json
 import logging
-from typing import Dict, Any, List
 
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)
@@ -328,16 +326,13 @@ nested_structure = [
             sample_func = func_details[0]
             required_func_fields = ["name", "line", "end_line", "column", "end_column", "lines_of_code", "parameters", "return_type", "decorators", "docstring"]
             
-            func_fields_ok = True
             for func_field in required_func_fields:
                 if func_field in sample_func:
                     print(f"✅ function_details[0].{func_field}")
                 else:
                     print(f"❌ function_details[0].{func_field}: MISSING")
-                    func_fields_ok = True
         else:
             print(f"❌ No function details found")
-            func_fields_ok = False
         
         # Check JSON serialization
         print(f"\n📄 Checking JSON Serialization:")
@@ -346,7 +341,7 @@ nested_structure = [
         try:
             json_str = metadata.get('metadata_json', '')
             if json_str:
-                parsed = json.loads(json_str)
+                json.loads(json_str)
                 print(f"✅ metadata_json: valid JSON ({len(json_str)} chars)")
             else:
                 print(f"❌ metadata_json: empty or missing")

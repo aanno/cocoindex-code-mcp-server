@@ -6,10 +6,8 @@ This module provides a CocoIndex operation that leverages ASTChunk for
 structure-aware code chunking.
 """
 
-import sys
 import os
 from typing import List, Dict, Any, Optional
-from pathlib import Path
 import logging
 from dataclasses import dataclass
 

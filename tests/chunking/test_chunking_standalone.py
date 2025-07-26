@@ -4,7 +4,6 @@
 Test standalone chunking functionality without CocoIndex imports.
 """
 
-import pytest
 from typing import List, Dict, Any, Optional
 from astchunk import ASTChunkBuilder
 

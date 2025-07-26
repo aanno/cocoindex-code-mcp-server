@@ -4,7 +4,6 @@
 Simple test of ASTChunk functionality.
 """
 
-import pytest
 from astchunk import ASTChunkBuilder
 
 

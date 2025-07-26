@@ -6,8 +6,6 @@ Tests the smart_code_embedding module without modifying CocoIndex.
 """
 
 import pytest
-import sys
-import os
 from unittest.mock import Mock, patch
 
 from cocoindex_code_mcp_server.smart_code_embedding import (

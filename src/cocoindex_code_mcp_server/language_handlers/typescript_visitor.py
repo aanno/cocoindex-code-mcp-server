@@ -7,7 +7,6 @@ Inherits from JavaScript visitor since TypeScript is JavaScript + types.
 
 from typing import Dict, Any, Optional, List
 import logging
-from pathlib import Path
 
 from .javascript_visitor import JavaScriptASTVisitor
 from ..ast_visitor import NodeContext

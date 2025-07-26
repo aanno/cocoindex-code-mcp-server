@@ -2,11 +2,9 @@
 
 import unittest
 import pytest
-import sys
 import tempfile
-import os
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 class TestMultiplePaths(unittest.TestCase):
     """Test multiple path handling in the code embedding flow."""

@@ -6,7 +6,6 @@ Moved from src/python_code_analyzer.py to tests/
 """
 
 import sys
-import os
 import logging
 from cocoindex_code_mcp_server.lang.python.python_code_analyzer import analyze_python_code
 

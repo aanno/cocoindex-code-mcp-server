@@ -6,14 +6,12 @@ Moved from src/ast_chunking.py to tests/
 """
 
 import sys
-import os
 import logging
 
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)
 
 try:
-    import ast_chunking
     from ast_chunking import CocoIndexASTChunker
     AST_CHUNKING_AVAILABLE = True
 except ImportError as e:

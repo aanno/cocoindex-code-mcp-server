@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Test C++ visitor inheritance from C visitor."""
 
-import pytest
 from cocoindex_code_mcp_server.language_handlers.cpp_visitor import analyze_cpp_code
 
 

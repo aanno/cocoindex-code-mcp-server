@@ -2,8 +2,6 @@
 """Test cases for value_contains functionality in keyword search parsers."""
 
 import pytest
-import sys
-import os
 
 from cocoindex_code_mcp_server.keyword_search_parser import KeywordSearchParser as FallbackParser, build_sql_where_clause, SearchCondition, SearchGroup
 

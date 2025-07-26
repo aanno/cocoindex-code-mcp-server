@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
-import sys
 from unittest.mock import patch
-from pathlib import Path
 
 class TestCliArguments(unittest.TestCase):
     """Test command-line argument parsing for main_interactive_query.py."""

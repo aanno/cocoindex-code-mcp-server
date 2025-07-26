@@ -9,7 +9,6 @@ without modifying CocoIndex source code, using external wrapper functions.
 
 import sys
 import os
-from pathlib import Path
 
 # Add our source directory to path  
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
@@ -17,7 +16,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 # Import our external smart embedding functionality
 from smart_code_embedding import (
     create_smart_code_embedding,
-    create_smart_embedding_from_file_context,
     create_python_embedding,
     create_rust_embedding,
     get_supported_languages,
@@ -151,8 +149,8 @@ def demonstrate_api_patterns():
     
     # Pattern 4: Language-specific convenience functions
     print("4. Language-Specific Convenience Functions:")
-    python_func = create_python_embedding()
-    rust_func = create_rust_embedding()
+    create_python_embedding()
+    create_rust_embedding()
     print("   create_python_embedding() → GraphCodeBERT")
     print("   create_rust_embedding() → UniXcode")
     print()
@@ -200,7 +198,7 @@ def demonstrate_conditional_embedding():
     
     print("Custom conditional logic:")
     for ext in test_extensions:
-        func = get_embedding_function(ext)
+        get_embedding_function(ext)
         print(f"  {ext:6} → Custom logic applied")
     print()
 

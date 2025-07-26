@@ -8,7 +8,6 @@ import asyncio
 import json
 import subprocess
 import sys
-from typing import Optional
 
 
 async def test_claude_desktop_simulation():

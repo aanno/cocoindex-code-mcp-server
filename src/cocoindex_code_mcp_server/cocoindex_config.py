@@ -7,17 +7,13 @@ CocoIndex configuration and flow definitions.
 # Temporarily disabled due to cocoindex compatibility
 # from __future__ import annotations  
 import os
-import datetime
 import json
-import torch
-import traceback
 from dataclasses import dataclass
 
-from typing import List, Dict, Literal
+from typing import List
 from numpy.typing import NDArray
 import numpy as np
 import cocoindex
-from cocoindex.typing import Vector
 from .lang.haskell.haskell_ast_chunker import get_haskell_language_spec
 from .lang.python.python_code_analyzer import analyze_python_code
 from cocoindex_code_mcp_server import LOGGER

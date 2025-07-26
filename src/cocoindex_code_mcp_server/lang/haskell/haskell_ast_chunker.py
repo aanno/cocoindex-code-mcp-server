@@ -8,7 +8,6 @@ Incorporates techniques from ASTChunk for improved chunking quality.
 from typing import List, Dict, Any, Optional
 import haskell_tree_sitter
 import cocoindex
-import logging
 import re
 from . import LOGGER
 

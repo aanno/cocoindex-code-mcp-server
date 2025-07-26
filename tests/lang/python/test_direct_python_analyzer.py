@@ -5,7 +5,6 @@ Test the enhanced Python analyzer directly to see if the new metadata fields are
 """
 
 import sys
-import os
 
 def test_direct_python_analyzer():
     """Test the PythonCodeAnalyzer directly."""

@@ -5,8 +5,6 @@ Standalone tests for enhanced Haskell chunking components that don't require Coc
 Tests HaskellChunkConfig, enhanced separators, and regex fallback functionality.
 """
 
-import os
-import sys
 import pytest
 import re
 import logging
@@ -102,7 +100,7 @@ def test_safe_regex_matching():
                         pattern = pattern[2:] + '$'  # Make it end-of-line match for empty lines
             
             try:
-                result = re.match(pattern, line)
+                re.match(pattern, line)
                 # We don't care about the result, just that it doesn't crash
             except re.error as e:
                 problems_found.append(f"Pattern {repr(separator)} -> {repr(pattern)} failed on line {repr(line)}: {e}")

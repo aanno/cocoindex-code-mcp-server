@@ -6,8 +6,6 @@ This tests the specific issue where class decorators from Python AST analysis
 are not being properly merged with function decorators from tree-sitter analysis.
 """
 
-import sys
-import os
 from cocoindex_code_mcp_server.lang.python.python_code_analyzer import analyze_python_code
 
 

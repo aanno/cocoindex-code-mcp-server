@@ -5,9 +5,7 @@ Tests for the hybrid search engine.
 """
 
 import pytest
-from unittest.mock import Mock, MagicMock, patch, call
-import sys
-import os
+from unittest.mock import MagicMock, Mock, patch
 
 # Mock pgvector before importing hybrid_search
 with patch('pgvector.psycopg.register_vector'):
@@ -16,7 +14,7 @@ with patch('pgvector.psycopg.register_vector'):
         format_results_as_json, 
         format_results_readable
     )
-from cocoindex_code_mcp_server.keyword_search_parser import KeywordSearchParser, SearchCondition, SearchGroup, Operator
+from cocoindex_code_mcp_server.keyword_search_parser import SearchCondition, SearchGroup
 
 
 @pytest.fixture

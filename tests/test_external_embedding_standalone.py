@@ -7,7 +7,6 @@ Tests the logic without importing CocoIndex to avoid circular imports.
 
 import pytest
 import sys
-import os
 from unittest.mock import Mock
 
 # Create a mock CocoIndex module to avoid circular imports
@@ -15,7 +14,6 @@ class MockCocoIndex:
     @staticmethod
     def init():
         """Mock init method."""
-        pass
     
     class functions:
         @staticmethod

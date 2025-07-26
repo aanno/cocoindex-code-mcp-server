@@ -6,7 +6,6 @@ Moved from src/haskell_ast_chunker.py to tests/
 """
 
 import sys
-import os
 import logging
 
 # Set up logger for tests

@@ -5,8 +5,6 @@ Test to verify the unique location post-processing fix works correctly.
 """
 
 import pytest
-import sys
-import os
 import cocoindex
 from cocoindex_code_mcp_server.cocoindex_config import ensure_unique_chunk_locations
 from cocoindex_code_mcp_server.ast_chunking import Chunk

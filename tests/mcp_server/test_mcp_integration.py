@@ -7,9 +7,7 @@ as a real MCP client and testing the full protocol interaction.
 
 import json
 import pytest
-import asyncio
 from mcp.client.streamable_http import streamablehttp_client
-from mcp import types
 from mcp.client.session import ClientSession
 
 

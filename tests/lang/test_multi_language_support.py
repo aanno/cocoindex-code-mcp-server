@@ -182,7 +182,7 @@ if __name__ == "__main__":
         assert 'analysis_method' in result, "Analysis method should be reported"
         
         functions = result.get('functions', [])
-        classes = result.get('classes', [])
+        result.get('classes', [])
         
         # Python should definitely work well
         assert len(functions) > 0, f"Should find Python functions, got {functions}"

@@ -6,11 +6,8 @@ including tool schemas, resource handling, and basic server operations.
 """
 
 import json
-import sys
-from pathlib import Path
 
 import pytest
-import mcp.types as types
 
 # The path setup is handled by conftest.py
 

@@ -17,9 +17,8 @@ import signal
 import threading
 import json
 from collections.abc import AsyncIterator
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
-import anyio
 import click
 import mcp.types as types
 from mcp.server.lowlevel import Server
@@ -36,8 +35,7 @@ from .db.pgvector.hybrid_search import HybridSearchEngine
 from .keyword_search_parser_lark import KeywordSearchParser
 from .lang.python.python_code_analyzer import analyze_python_code
 import cocoindex
-from .cocoindex_config import code_embedding_flow, code_to_embedding, update_flow_config, run_flow_update
-from cocoindex_code_mcp_server import LOGGER
+from .cocoindex_config import code_to_embedding, run_flow_update, update_flow_config
 
 try:
     import coverage

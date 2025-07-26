@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Test Java language support."""
 
-import pytest
 from cocoindex_code_mcp_server.ast_visitor import analyze_code
 
 
@@ -71,7 +70,7 @@ public class Circle implements Drawable {
         assert result.get('success', False), "Java interface analysis should succeed"
         
         functions = result.get('functions', [])
-        classes = result.get('classes', [])
+        result.get('classes', [])
         
         # Should find methods
         assert len(functions) > 0, "Should find methods in interface and class"
@@ -115,7 +114,7 @@ public class Dog extends Animal {
         assert result.get('success', False), "Java inheritance analysis should succeed"
         
         functions = result.get('functions', [])
-        classes = result.get('classes', [])
+        result.get('classes', [])
         
         # Should find methods
         assert len(functions) > 0, "Should find methods in inheritance hierarchy"

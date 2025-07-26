@@ -8,23 +8,13 @@ with the server through the MCP protocol.
 
 import json
 import pytest
-import asyncio
-from typing import Dict, Any, List
 from contextlib import asynccontextmanager
 
 # Import MCP client library components
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
+from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 from mcp.types import (
-    Tool, 
-    Resource, 
-    TextContent, 
-    CallToolRequest, 
-    ReadResourceRequest,
-    InitializeRequest,
-    ListToolsRequest,
-    ListResourcesRequest
+    TextContent
 )
 
 
@@ -61,7 +51,6 @@ class TestMCPIntegrationE2E:
     async def test_mcp_client_initialization(self):
         """Test MCP client initialization through the library."""
         import requests
-        import asyncio
         
         # First verify server is accessible via basic HTTP
         response = requests.get("http://localhost:3033/health", timeout=5)
@@ -466,7 +455,7 @@ def hello_world():
                 )
                 # If we get here without an exception, check if error is in content
                 assert False, "Expected an error for non-existent tool"
-            except Exception as e:
+            except Exception:
                 # We expect some kind of error (either MCP exception or tool error)
                 assert True  # Test passes if we get any exception
     

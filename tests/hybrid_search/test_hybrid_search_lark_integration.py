@@ -5,14 +5,12 @@ Test that hybrid search works with the new Lark-based keyword parser.
 """
 
 import sys
-import os
 
 def test_hybrid_search_lark_integration():
     """Test that hybrid search imports and initializes with Lark parser."""
     
     try:
         # Test the imports work correctly
-        from cocoindex_code_mcp_server.db.pgvector.hybrid_search import HybridSearchEngine
         from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser, build_sql_where_clause
         
         print("✅ Successfully imported hybrid search with Lark parser")

@@ -7,12 +7,12 @@ This avoids the complexity of trying to wrap chunks in a generic tree-sitter int
 
 import sys
 import os
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict
 
 # Import from parent directory
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from ..ast_visitor import ASTVisitor, GenericMetadataVisitor, NodeContext
+from ..ast_visitor import GenericMetadataVisitor, NodeContext
 from ..language_handlers.haskell_handler import HaskellNodeHandler
 from . import LOGGER
 

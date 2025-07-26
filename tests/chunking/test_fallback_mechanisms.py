@@ -5,8 +5,6 @@ Test fallback mechanisms for different chunking scenarios.
 """
 
 import pytest
-import sys
-from pathlib import Path
 try:
     from ast_chunking import CocoIndexASTChunker, detect_language_from_filename
     COCOINDEX_AST_AVAILABLE = True

@@ -4,8 +4,6 @@
 Comprehensive tests for AST-based Haskell chunking functionality.
 """
 
-import os
-import sys
 import pytest
 from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import extract_haskell_ast_chunks, get_enhanced_haskell_separators
 import haskell_tree_sitter
@@ -211,7 +209,7 @@ processAll = map process
         
         # Check that we get various types of chunks
         node_types = [chunk['node_type'] for chunk in chunks]
-        categories = [chunk['metadata']['category'] for chunk in chunks]
+        [chunk['metadata']['category'] for chunk in chunks]
         
         assert 'import' in node_types
         assert 'data_type' in node_types

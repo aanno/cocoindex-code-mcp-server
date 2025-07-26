@@ -10,9 +10,8 @@ modifying the CocoIndex source code.
 Usage as external wrapper around CocoIndex's SentenceTransformerEmbed.
 """
 
-from typing import Dict, Any, Optional, List
+from typing import Any, Dict
 import cocoindex
-import logging
 from cocoindex_code_mcp_server import LOGGER
 
 class LanguageModelSelector:

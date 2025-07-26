@@ -6,7 +6,6 @@ These tests require a running database with indexed code.
 """
 
 import os
-import sys
 import pytest
 import logging
 from dotenv import load_dotenv
@@ -16,7 +15,7 @@ from psycopg_pool import ConnectionPool
 LOGGER = logging.getLogger(__name__)
 
 try:
-    from cocoindex_code_mcp_server.db.pgvector.hybrid_search import HybridSearchEngine, format_results_as_json, format_results_readable
+    from cocoindex_code_mcp_server.db.pgvector.hybrid_search import HybridSearchEngine, format_results_readable
 except ImportError as e:
     LOGGER.warning(f"Could not import hybrid_search module: {e}")
     print("⚠️  Warning: These are integration tests that require the full application setup.")
@@ -65,7 +64,7 @@ class TestMetadataSearch:
         assert len(results) > 0
         
         # At least one result should have async-related metadata
-        has_async_result = any(result.get('has_async', False) for result in results)
+        any(result.get('has_async', False) for result in results)
         # Note: This assertion might not always pass if the codebase doesn't have async code
         # assert has_async_result, "Expected to find at least one async function"
         

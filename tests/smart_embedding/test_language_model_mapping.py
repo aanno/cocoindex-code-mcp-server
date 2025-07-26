@@ -5,8 +5,6 @@ Tests that different programming languages are correctly mapped to appropriate e
 """
 
 import pytest
-import sys
-import os
 
 from cocoindex_code_mcp_server.cocoindex_config import (
     LANGUAGE_MODEL_GROUPS, 

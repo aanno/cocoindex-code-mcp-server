@@ -6,8 +6,6 @@ This test simulates the actual flow execution to see where duplicates are genera
 """
 
 import pytest
-import sys
-import os
 
 import cocoindex
 from cocoindex_code_mcp_server.cocoindex_config import (

@@ -8,11 +8,9 @@ against the default CocoIndex language handling to validate our improvements.
 """
 
 import pytest
-import json
 import ast
-from typing import Dict, Any, List
+from typing import Any, Dict
 from cocoindex_code_mcp_server.lang.python.tree_sitter_python_analyzer import TreeSitterPythonAnalyzer
-from cocoindex_code_mcp_server.lang.python.python_code_analyzer import analyze_python_code
 
 # Create a simple basic analyzer for true comparison
 def basic_analyze_python_code(code: str, filename: str = "") -> Dict[str, Any]:
@@ -287,7 +285,7 @@ class TestCustomVsDefaultHandlerComparison:
     def test_docstring_detection_comparison(self):
         """Compare docstring detection capabilities."""
         custom_result = self.custom_analyzer.analyze_code(SAMPLE_PYTHON_CODE, self.filename)
-        default_result = basic_analyze_python_code(SAMPLE_PYTHON_CODE, self.filename)
+        basic_analyze_python_code(SAMPLE_PYTHON_CODE, self.filename)
         
         # Custom handler should have enhanced docstring detection
         if 'has_docstrings' in custom_result:

@@ -5,7 +5,6 @@ Python-specific AST node handler for tree-sitter based analysis.
 Handles Python-specific constructs like decorators, async functions, comprehensions, etc.
 """
 
-import re
 from typing import Dict, List, Any, Optional, Set
 from dataclasses import dataclass, field
 

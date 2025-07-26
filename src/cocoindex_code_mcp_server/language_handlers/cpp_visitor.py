@@ -7,7 +7,6 @@ Inherits from C visitor since C is largely a subset of C++.
 
 from typing import Dict, Any, Optional, List
 import logging
-from pathlib import Path
 
 from .c_visitor import CASTVisitor
 from ..ast_visitor import NodeContext

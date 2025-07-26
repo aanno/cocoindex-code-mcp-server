@@ -6,7 +6,7 @@ Handles Haskell-specific constructs like data types, type classes, modules, etc.
 """
 
 import re
-from typing import Dict, List, Any, Optional, Set
+from typing import Any, Dict, List, Optional
 from dataclasses import dataclass, field
 
 # Import from parent directory

@@ -5,7 +5,6 @@ Shared pytest fixtures and configuration for hybrid search tests.
 """
 
 import pytest
-import sys
 import os
 from unittest.mock import Mock
 
@@ -96,7 +95,7 @@ def pytest_collection_modifyitems(config, items):
         if "external" in item.keywords:
             # Check if external dependencies are available
             try:
-                import cocoindex
+                pass
             except ImportError:
                 item.add_marker(pytest.mark.skip(reason="CocoIndex not available"))
 

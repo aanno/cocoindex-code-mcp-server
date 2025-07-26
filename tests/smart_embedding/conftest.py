@@ -4,7 +4,6 @@ Pytest configuration and fixtures for smart embedding tests.
 """
 
 import pytest
-import sys
 import os
 import tempfile
 import shutil

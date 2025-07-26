@@ -5,7 +5,6 @@ Test the enhanced Python analyzer with tree-sitter integration.
 """
 
 import sys
-import os
 import logging
 
 # Set up logger for tests

@@ -5,8 +5,6 @@ Standalone tests for enhanced Haskell chunking functionality.
 Tests the new HaskellChunkConfig and EnhancedHaskellChunker classes without CocoIndex imports.
 """
 
-import os
-import sys
 import pytest
 from unittest.mock import Mock, patch
 
@@ -18,8 +16,7 @@ mock_cocoindex.op.function = Mock(return_value=lambda f: f)
 with patch.dict('sys.modules', {'cocoindex': mock_cocoindex}):
     from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
         HaskellChunkConfig, 
-        EnhancedHaskellChunker, 
-        get_enhanced_haskell_separators,
+        get_enhanced_haskell_separators, 
         create_enhanced_regex_fallback_chunks
     )
     import haskell_tree_sitter
@@ -187,7 +184,7 @@ instance Functor Tree where
         chunks = create_enhanced_regex_fallback_chunks(haskell_code, "test.hs", config)
         
         # Combine all chunks to check overall content analysis
-        all_content = " ".join(chunk["content"] for chunk in chunks)
+        " ".join(chunk["content"] for chunk in chunks)
         all_metadata = {}
         for chunk in chunks:
             for key, value in chunk["metadata"].items():

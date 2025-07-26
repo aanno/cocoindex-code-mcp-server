@@ -6,18 +6,15 @@ Combines the generic AST visitor framework with Python-specific node handlers.
 """
 
 import ast
-import json
 from typing import Dict, List, Any, Optional
-from pathlib import Path
 
 from ...ast_visitor import (
     MultiLevelAnalyzer, 
     GenericMetadataVisitor, 
     TreeWalker, 
-    ASTParserFactory,
-    NodeContext
+    ASTParserFactory
 )
-from ...language_handlers import get_handler_for_language, PythonNodeHandler
+from ...language_handlers import get_handler_for_language
 from . import LOGGER
 
 

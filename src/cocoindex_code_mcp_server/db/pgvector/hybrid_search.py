@@ -6,7 +6,7 @@ Hybrid search implementation combining vector similarity and keyword metadata se
 
 import os
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from psycopg_pool import ConnectionPool
 from pgvector.psycopg import register_vector
 import cocoindex

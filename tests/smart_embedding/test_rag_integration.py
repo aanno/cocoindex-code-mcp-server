@@ -5,10 +5,7 @@ Tests that different languages are properly processed and embedded with correct 
 """
 
 import pytest
-import sys
 import os
-import tempfile
-import shutil
 
 from cocoindex_code_mcp_server.cocoindex_config import (
     extract_language,

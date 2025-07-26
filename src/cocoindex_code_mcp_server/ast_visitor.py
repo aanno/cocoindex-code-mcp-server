@@ -7,7 +7,7 @@ Provides language-agnostic interfaces for extracting metadata from source code.
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Dict, List, Any, Optional, Set, Union, Iterator, Tuple, Protocol
+from typing import Any, Dict, List, Optional, Protocol
 from dataclasses import dataclass, field
 from pathlib import Path
 import re
@@ -94,15 +94,12 @@ class ASTVisitor(ABC):
     @abstractmethod
     def visit_node(self, context: NodeContext) -> Optional[Dict[str, Any]]:
         """Visit a single AST node and extract metadata."""
-        pass
     
     def on_enter_node(self, context: NodeContext) -> None:
         """Called when entering a node (pre-order)."""
-        pass
     
     def on_exit_node(self, context: NodeContext) -> None:
         """Called when exiting a node (post-order)."""
-        pass
     
     def get_metadata(self) -> Dict[str, Any]:
         """Get the accumulated metadata."""

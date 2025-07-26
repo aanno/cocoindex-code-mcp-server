@@ -6,8 +6,6 @@ within the same file, causing PostgreSQL "ON CONFLICT DO UPDATE" errors.
 """
 
 import pytest
-import sys
-import os
 
 import cocoindex
 from cocoindex_code_mcp_server.cocoindex_config import (
@@ -413,7 +411,6 @@ class TestChunkingLocationDuplicates:
         
         # Test with a file that would use default chunking (Rust is not supported by AST chunking)
         filename = "test.rs"
-        content = RUST_FILE_CONTENT
         language = extract_language(filename)
         
         print(f"Testing {filename} with language: {language}")

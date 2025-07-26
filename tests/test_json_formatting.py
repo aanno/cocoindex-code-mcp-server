@@ -6,7 +6,6 @@ Tests the human-readable formatting of code and metadata_json fields.
 """
 
 import json
-import pytest
 from typing import Any, Dict, List
 
 def format_results_as_json(results: List[Dict[str, Any]], indent: int = 2) -> str:
@@ -211,7 +210,6 @@ def run_manual_test():
 if __name__ == "__main__":
     # Check if pytest is available for proper testing
     try:
-        import pytest
         print("✅ Use 'pytest test_json_formatting.py' to run the full test suite")
     except ImportError:
         print("📝 pytest not available, running manual test...")

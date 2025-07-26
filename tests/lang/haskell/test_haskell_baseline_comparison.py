@@ -6,8 +6,6 @@ Compares our specialized HaskellASTVisitor implementation against CocoIndex defa
 Similar to tests/lang/python/test_cocoindex_baseline_comparison.py
 """
 
-import sys
-import os
 import pytest
 from pathlib import Path
 
@@ -21,7 +19,6 @@ except ImportError as e:
     import_error = str(e)
 
 try:
-    import cocoindex
     COCOINDEX_AVAILABLE = True
 except ImportError:
     COCOINDEX_AVAILABLE = False

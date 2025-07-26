@@ -6,9 +6,6 @@ Tests the logic without requiring full CocoIndex imports.
 """
 
 import pytest
-from unittest.mock import Mock
-import sys
-import os
 
 # Test the core logic without importing the full module
 class MockCodeEmbeddingExecutor:

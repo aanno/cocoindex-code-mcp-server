@@ -5,7 +5,6 @@ Script to check what's actually in the database.
 """
 
 import os
-import sys
 from dotenv import load_dotenv
 from psycopg_pool import ConnectionPool
 from pgvector.psycopg import register_vector

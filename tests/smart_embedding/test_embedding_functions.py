@@ -5,8 +5,6 @@ Tests that embedding functions are properly defined and configured.
 """
 
 import pytest
-import sys
-import os
 import inspect
 
 from cocoindex_code_mcp_server.cocoindex_config import (
@@ -88,9 +86,6 @@ class TestEmbeddingFunctions:
     
     def test_function_parameter_types(self):
         """Test that embedding functions have correct parameter type hints."""
-        import cocoindex
-        from numpy.typing import NDArray
-        import numpy as np
         
         functions = [graphcodebert_embedding, unixcoder_embedding, fallback_embedding, code_to_embedding]
         

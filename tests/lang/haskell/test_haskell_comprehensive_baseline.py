@@ -8,12 +8,10 @@ Compares our specialized HaskellASTVisitor implementation against multiple basel
 3. RAG search results from indexed code
 """
 
-import sys
-import os
 import pytest
 import json
 from pathlib import Path
-from typing import Dict, Any, List, Set
+from typing import Any, Dict
 
 # Test imports with error tracking
 import_error = None
@@ -26,7 +24,6 @@ except ImportError as e:
     import_error = str(e)
 
 try:
-    import cocoindex
     COCOINDEX_AVAILABLE = True
 except ImportError:
     COCOINDEX_AVAILABLE = False

@@ -10,9 +10,7 @@ Based on the pytest example pattern suggested for testing extractors.
 
 import pytest
 import json
-import sys
-import os
-from typing import Dict, Any, List
+from typing import Any, Dict
 from cocoindex_code_mcp_server.cocoindex_config import extract_code_metadata, _global_flow_config
 
 class CocoIndexMetadataExtractor:

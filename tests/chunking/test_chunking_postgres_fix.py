@@ -11,13 +11,10 @@ These tests verify:
 """
 
 import pytest
-import sys
-import os
 
 import cocoindex
 from cocoindex_code_mcp_server.cocoindex_config import (
-    extract_language, get_chunking_params, ASTChunkOperation, AST_CHUNKING_AVAILABLE,
-    _global_flow_config
+    extract_language, get_chunking_params, ASTChunkOperation, AST_CHUNKING_AVAILABLE
 )
 
 # Sample code for testing

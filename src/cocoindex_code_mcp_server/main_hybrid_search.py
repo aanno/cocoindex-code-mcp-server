@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 import cocoindex
 
 # Import our modular components
-from .cocoindex_config import update_flow_config, run_flow_update
+from .cocoindex_config import update_flow_config
 from .db.pgvector.hybrid_search import run_interactive_hybrid_search
 
 

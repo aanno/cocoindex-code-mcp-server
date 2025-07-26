@@ -5,8 +5,6 @@ Tests for enhanced Haskell chunking functionality.
 Tests the new HaskellChunkConfig and EnhancedHaskellChunker classes.
 """
 
-import os
-import sys
 import pytest
 from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
     HaskellChunkConfig, 
@@ -241,10 +239,9 @@ factorial n = product [1..n]
         chunks = chunker.chunk_code(haskell_code, "test.hs")
         
         # Check that at least one chunk has expansion header
-        found_header = False
         for chunk in chunks:
             if chunk.get("has_expansion_header"):
-                found_header = True
+                pass
                 # Content should start with a comment header
                 assert chunk["content"].startswith("-- ")
                 assert "File: test.hs" in chunk["content"]
@@ -280,10 +277,8 @@ helper x = x + 1
         # Should create multiple chunks due to small max_chunk_size
         if len(chunks) > 1:
             # Check for overlap indicators
-            overlap_found = False
             for chunk in chunks:
                 if chunk.get("has_prev_overlap") or chunk.get("has_next_overlap"):
-                    overlap_found = True
                     break
             
             # Note: Overlap might not always be applied depending on AST structure
@@ -340,10 +335,8 @@ class Functor f where
         assert len(chunks) > 1
         
         # Check for separator priority tracking
-        priorities_found = False
         for chunk in chunks:
             if chunk["metadata"].get("separator_priority", 0) > 0:
-                priorities_found = True
                 break
         
         # At least some chunks should have been split on separators

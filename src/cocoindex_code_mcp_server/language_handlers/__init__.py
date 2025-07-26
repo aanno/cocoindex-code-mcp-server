@@ -5,7 +5,7 @@ Language-specific handlers for AST node processing.
 Each handler implements the NodeHandler protocol for a specific programming language.
 """
 
-from typing import Dict, Any, Optional
+from typing import Any, Optional
 import logging
 
 LOGGER = logging.getLogger(__name__)
