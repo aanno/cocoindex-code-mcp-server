@@ -17,7 +17,7 @@ from pgvector.psycopg import register_vector
 # Package should be installed via maturin develop or pip install -e .
 
 from cocoindex_code_mcp_server.db.pgvector.hybrid_search import HybridSearchEngine
-from cocoindex_config import code_embedding_flow
+from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow
 
 LOGGER = logging.getLogger(__name__)
 

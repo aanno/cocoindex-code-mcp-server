@@ -8,7 +8,7 @@ are not being properly merged with function decorators from tree-sitter analysis
 
 import sys
 import os
-from lang.python.python_code_analyzer import analyze_python_code
+from cocoindex_code_mcp_server.lang.python.python_code_analyzer import analyze_python_code
 
 
 def test_class_decorator_detection():

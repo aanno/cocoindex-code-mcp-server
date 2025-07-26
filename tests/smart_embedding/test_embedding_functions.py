@@ -9,7 +9,7 @@ import sys
 import os
 import inspect
 
-from cocoindex_config import (
+from cocoindex_code_mcp_server.cocoindex_config import (
     graphcodebert_embedding,
     unixcoder_embedding, 
     fallback_embedding,

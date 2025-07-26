@@ -10,7 +10,7 @@ import os
 import tempfile
 import shutil
 
-from cocoindex_config import (
+from cocoindex_code_mcp_server.cocoindex_config import (
     extract_language,
     get_embedding_model_group,
     LANGUAGE_MODEL_GROUPS,

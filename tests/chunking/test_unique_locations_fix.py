@@ -8,8 +8,8 @@ import pytest
 import sys
 import os
 import cocoindex
-from cocoindex_config import ensure_unique_chunk_locations
-from ast_chunking import Chunk
+from cocoindex_code_mcp_server.cocoindex_config import ensure_unique_chunk_locations
+from cocoindex_code_mcp_server.ast_chunking import Chunk
 
 class TestUniqueLocationsFix:
     """Test the ensure_unique_chunk_locations function."""

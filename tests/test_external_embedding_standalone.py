@@ -32,7 +32,7 @@ class MockCocoIndex:
 import sys
 sys.modules['cocoindex'] = MockCocoIndex()
 
-from smart_code_embedding import (
+from cocoindex_code_mcp_server.smart_code_embedding import (
     LanguageModelSelector,
     create_smart_code_embedding,
     get_supported_languages,

@@ -10,7 +10,7 @@ import sys
 import os
 
 import cocoindex
-from cocoindex_config import (
+from cocoindex_code_mcp_server.cocoindex_config import (
     extract_language, get_chunking_params, ASTChunkOperation, AST_CHUNKING_AVAILABLE,
     _global_flow_config, CUSTOM_LANGUAGES
 )

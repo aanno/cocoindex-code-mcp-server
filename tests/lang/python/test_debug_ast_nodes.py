@@ -7,9 +7,9 @@ Debug test to understand what AST nodes are being processed.
 import sys
 import os
 
-from lang.python.tree_sitter_python_analyzer import TreeSitterPythonAnalyzer
-from ast_visitor import GenericMetadataVisitor, TreeWalker, ASTParserFactory
-from language_handlers import get_handler_for_language
+from cocoindex_code_mcp_server.lang.python.tree_sitter_python_analyzer import TreeSitterPythonAnalyzer
+from cocoindex_code_mcp_server.ast_visitor import GenericMetadataVisitor, TreeWalker, ASTParserFactory
+from cocoindex_code_mcp_server.language_handlers import get_handler_for_language
 
 
 def test_debug_ast_node_processing():

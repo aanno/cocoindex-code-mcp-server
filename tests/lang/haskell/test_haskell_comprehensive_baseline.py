@@ -18,8 +18,8 @@ from typing import Dict, Any, List, Set
 # Test imports with error tracking
 import_error = None
 try:
-    from language_handlers.haskell_visitor import analyze_haskell_code
-    from ast_visitor import analyze_code as generic_analyze_code
+    from cocoindex_code_mcp_server.language_handlers.haskell_visitor import analyze_haskell_code
+    from cocoindex_code_mcp_server.ast_visitor import analyze_code as generic_analyze_code
     HASKELL_VISITOR_AVAILABLE = True
 except ImportError as e:
     HASKELL_VISITOR_AVAILABLE = False

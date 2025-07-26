@@ -11,7 +11,7 @@ def test_direct_python_analyzer():
     """Test the PythonCodeAnalyzer directly."""
     
     try:
-        from lang.python.python_code_analyzer import PythonCodeAnalyzer
+        from cocoindex_code_mcp_server.lang.python.python_code_analyzer import PythonCodeAnalyzer
     except ImportError as e:
         print(f"❌ Could not import analyzer: {e}")
         return False

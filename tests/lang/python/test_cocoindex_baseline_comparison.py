@@ -13,7 +13,7 @@ import json
 import sys
 import os
 from typing import Dict, Any, List
-from cocoindex_config import extract_code_metadata, _global_flow_config
+from cocoindex_code_mcp_server.cocoindex_config import extract_code_metadata, _global_flow_config
 
 class CocoIndexMetadataExtractor:
     """Wrapper for CocoIndex metadata extraction with configurable behavior."""

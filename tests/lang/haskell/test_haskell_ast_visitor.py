@@ -11,8 +11,8 @@ import pytest
 from pathlib import Path
 
 try:
-    from ast_visitor import MultiLevelAnalyzer, analyze_code
-    from language_handlers import get_handler_for_language, list_supported_languages
+    from cocoindex_code_mcp_server.ast_visitor import MultiLevelAnalyzer, analyze_code
+    from cocoindex_code_mcp_server.language_handlers import get_handler_for_language, list_supported_languages
     IMPORTS_AVAILABLE = True
     import_error = None
 except ImportError as e:

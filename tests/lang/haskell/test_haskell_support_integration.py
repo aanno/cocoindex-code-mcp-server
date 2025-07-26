@@ -12,7 +12,7 @@ import logging
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)
 try:
-    from lang.haskell.haskell_ast_chunker import HaskellChunkConfig, EnhancedHaskellChunker
+    from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import HaskellChunkConfig, EnhancedHaskellChunker
     haskell_ast_chunker_AVAILABLE = True
 except ImportError as e:
     LOGGER.warning(f"Haskell support not available: {e}")

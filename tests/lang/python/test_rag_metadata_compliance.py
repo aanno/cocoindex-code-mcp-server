@@ -18,7 +18,7 @@ def test_rag_metadata_compliance():
     """Test that Python analyzer generates all recommended RAG metadata fields."""
     
     try:
-        from lang.python.python_code_analyzer import analyze_python_code
+        from cocoindex_code_mcp_server.lang.python.python_code_analyzer import analyze_python_code
     except ImportError as e:
         LOGGER.error(f"Could not import analyzer: {e}")
         print(f"❌ Could not import analyzer: {e}")
@@ -388,7 +388,7 @@ def test_specific_metadata_features():
     """Test specific metadata features in detail."""
     
     try:
-        from lang.python.python_code_analyzer import analyze_python_code
+        from cocoindex_code_mcp_server.lang.python.python_code_analyzer import analyze_python_code
     except ImportError as e:
         print(f"❌ Could not import analyzer: {e}")
         return False

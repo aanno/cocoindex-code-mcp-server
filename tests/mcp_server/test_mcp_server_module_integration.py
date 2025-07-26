@@ -243,8 +243,8 @@ class TestMCPServerModuleIntegration:
             cocoindex.init()
             
             # Import required modules after cocoindex init
-            from language_handlers.python_handler import PythonNodeHandler
-            from cocoindex_config import update_flow_config, code_embedding_flow
+            from cocoindex_code_mcp_server.language_handlers.python_handler import PythonNodeHandler
+            from cocoindex_code_mcp_server.cocoindex_config import update_flow_config, code_embedding_flow
             
             # Spy on Python handler functions
             extract_metadata_spy = mocker.spy(PythonNodeHandler, "extract_metadata")
@@ -329,23 +329,23 @@ class TestMCPServerQueryIntegration:
             # Set up spies on all extension modules
             spies = {}
             try:
-                import smart_code_embedding
+                import cocoindex_code_mcp_server.smart_code_embedding
                 spies["create_smart_embedding"] = mocker.spy(
-                    smart_code_embedding, "create_smart_code_embedding"
+                    cocoindex_code_mcp_server.smart_code_embedding, "create_smart_code_embedding"
                 )
             except ImportError:
                 print("Smart code embedding not available for spying")
             
             try:
-                import ast_chunking
-                from ast_chunking import CocoIndexASTChunker
+                import cocoindex_code_mcp_server.ast_chunking
+                from cocoindex_code_mcp_server.ast_chunking import CocoIndexASTChunker
                 spies["ast_chunk_code"] = mocker.spy(CocoIndexASTChunker, "chunk_code")
                 spies["create_ast_operation"] = mocker.spy(ast_chunking, "create_ast_chunking_operation")
             except ImportError:
                 print("AST chunking not available for spying")
             
             try:
-                from language_handlers.python_handler import PythonNodeHandler
+                from cocoindex_code_mcp_server.language_handlers.python_handler import PythonNodeHandler
                 spies["python_extract_metadata"] = mocker.spy(PythonNodeHandler, "extract_metadata")
             except ImportError:
                 print("Python handler not available for spying")

@@ -15,7 +15,7 @@ import os
 LOGGER = logging.getLogger(__name__)
 
 try:
-    from lang.python.python_code_analyzer import analyze_python_code
+    from cocoindex_code_mcp_server.lang.python.python_code_analyzer import analyze_python_code
 except ImportError as e:
     LOGGER.warning(f"Could not import python_code_analyzer: {e}")
     print("⚠️  Warning: These tests require the full application setup.")

@@ -9,8 +9,8 @@ the PythonNodeHandler through the AST visitor framework.
 import sys
 import os
 import pytest
-from lang.python.tree_sitter_python_analyzer import TreeSitterPythonAnalyzer
-from cocoindex_config import extract_code_metadata, PYTHON_HANDLER_AVAILABLE
+from cocoindex_code_mcp_server.lang.python.tree_sitter_python_analyzer import TreeSitterPythonAnalyzer
+from cocoindex_code_mcp_server.cocoindex_config import extract_code_metadata, PYTHON_HANDLER_AVAILABLE
 import json
 
 

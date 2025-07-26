@@ -11,8 +11,8 @@ import pytest
 import json
 import ast
 from typing import Dict, Any, List
-from lang.python.tree_sitter_python_analyzer import TreeSitterPythonAnalyzer
-from lang.python.python_code_analyzer import analyze_python_code
+from cocoindex_code_mcp_server.lang.python.tree_sitter_python_analyzer import TreeSitterPythonAnalyzer
+from cocoindex_code_mcp_server.lang.python.python_code_analyzer import analyze_python_code
 
 # Create a simple basic analyzer for true comparison
 def basic_analyze_python_code(code: str, filename: str = "") -> Dict[str, Any]:

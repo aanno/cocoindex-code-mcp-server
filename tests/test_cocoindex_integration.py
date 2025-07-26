@@ -6,7 +6,7 @@ import unittest
 import pytest
 from pathlib import Path
 
-from cocoindex_config import extract_language, get_chunking_params, CUSTOM_LANGUAGES
+from cocoindex_code_mcp_server.cocoindex_config import extract_language, get_chunking_params, CUSTOM_LANGUAGES
 import cocoindex
 
 class TestCocoIndexIntegration(unittest.TestCase):

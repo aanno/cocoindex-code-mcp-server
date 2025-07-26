@@ -7,7 +7,7 @@ Comprehensive tests for AST-based Haskell chunking functionality.
 import os
 import sys
 import pytest
-from lang.haskell.haskell_ast_chunker import extract_haskell_ast_chunks, get_enhanced_haskell_separators
+from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import extract_haskell_ast_chunks, get_enhanced_haskell_separators
 import haskell_tree_sitter
 
 

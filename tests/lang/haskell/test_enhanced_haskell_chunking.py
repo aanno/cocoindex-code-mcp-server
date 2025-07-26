@@ -8,7 +8,7 @@ Tests the new HaskellChunkConfig and EnhancedHaskellChunker classes.
 import os
 import sys
 import pytest
-from lang.haskell.haskell_ast_chunker import (
+from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
     HaskellChunkConfig, 
     EnhancedHaskellChunker, 
     get_enhanced_haskell_separators,
@@ -354,7 +354,7 @@ class TestBackwardCompatibility:
 
     def test_legacy_function_exists(self):
         """Test that legacy function still exists."""
-        from lang.haskell.haskell_ast_chunker import create_regex_fallback_chunks_python
+        from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import create_regex_fallback_chunks_python
         
         haskell_code = """
 factorial :: Integer -> Integer
@@ -373,7 +373,7 @@ factorial n = product [1..n]
 
     def test_cocoindex_operation_exists(self):
         """Test that CocoIndex operation function exists."""
-        from lang.haskell.haskell_ast_chunker import extract_haskell_ast_chunks
+        from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import extract_haskell_ast_chunks
         
         # Function should exist and be callable
         assert callable(extract_haskell_ast_chunks)

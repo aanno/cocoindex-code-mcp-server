@@ -18,9 +18,9 @@ def setup_test_environment():
     """Set up the test environment."""
     
     # Add src to path
-    src_path = Path(__file__).parent / "src"
+    # src_path = Path(__file__).parent / "src"
     # / "cocoindex_code_mcp_server"
-    sys.path.insert(0, str(src_path))
+    # sys.path.insert(0, str(src_path))
     
     # Package should be installed via maturin develop or pip install -e .
     # Return current working directory instead
