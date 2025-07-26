@@ -39,6 +39,11 @@ import cocoindex
 from .cocoindex_config import code_embedding_flow, code_to_embedding, update_flow_config, run_flow_update
 from cocoindex_code_mcp_server import LOGGER
 
+try:
+    import coverage
+except ImportError:
+    coverage = None
+
 # Configure logging
 logger = logging.getLogger(__name__)
 
