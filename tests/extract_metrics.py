@@ -29,7 +29,7 @@ def run_baseline_test(test_type='all'):
     elif test_type == 'all':
         # Run comprehensive multi-language test
         result = subprocess.run([
-            sys.executable, 'tests/test_all_languages_baseline.py'
+            sys.executable, 'tests/all_languages_baseline.py'
         ], cwd=Path.cwd(), capture_output=True, text=True)
         
         if result.returncode != 0:
