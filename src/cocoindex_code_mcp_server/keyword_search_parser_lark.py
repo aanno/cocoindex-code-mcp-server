@@ -239,7 +239,7 @@ def build_sql_where_clause(search_group: SearchGroup, table_alias: str = "") -> 
         ValueError: If any field names are invalid or don't exist in the schema
     """
     # Import here to avoid circular imports
-    from schema_validator import schema_validator
+    from .schema_validator import schema_validator
     
     if not search_group.conditions:
         return "TRUE", []

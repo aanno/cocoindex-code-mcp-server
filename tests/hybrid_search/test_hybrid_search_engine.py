@@ -55,7 +55,7 @@ def hybrid_engine(mock_pool, mock_parser, mock_embedding_func):
 
 @pytest.mark.db_integration
 @pytest.mark.search_engine
-@patch('hybrid_search.register_vector')
+@patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.register_vector')
 class TestHybridSearchEngine:
     """Test HybridSearchEngine class."""
     
@@ -66,9 +66,9 @@ class TestHybridSearchEngine:
         assert hybrid_engine.table_name == "test_table"
         assert hybrid_engine.embedding_func == mock_embedding_func
     
-    @patch('hybrid_search.KeywordSearchParser')
-    @patch('hybrid_search.cocoindex.utils.get_target_default_name')
-    @patch('hybrid_search.code_to_embedding')
+    @patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.KeywordSearchParser')
+    @patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.cocoindex.utils.get_target_default_name')
+    @patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.code_to_embedding')
     def test_initialization_with_defaults(self, mock_embedding, mock_get_name, mock_parser_class, mock_pool):
         """Test engine initialization with default values."""
         mock_parser_instance = Mock()
@@ -383,7 +383,7 @@ class TestResultFormatting:
 class TestMockDatabase:
     """Test with mock database operations."""
     
-    @patch('hybrid_search.register_vector')
+    @patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.register_vector')
     def test_vector_search_sql_query(self, mock_register, mock_pool):
         """Test that vector search generates correct SQL."""
         mock_conn = MagicMock()
@@ -411,7 +411,7 @@ class TestMockDatabase:
         assert "ORDER BY distance" in sql_query
         assert "LIMIT %s" in sql_query
     
-    @patch('hybrid_search.register_vector')
+    @patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.register_vector')
     def test_keyword_search_sql_query(self, mock_register, mock_pool):
         """Test that keyword search generates correct SQL."""
         mock_conn = MagicMock()
@@ -447,7 +447,7 @@ class TestMockDatabase:
             assert "language = %s" in sql_query
         assert "LIMIT %s" in sql_query
     
-    @patch('hybrid_search.register_vector')
+    @patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.register_vector')
     def test_hybrid_search_sql_query(self, mock_register, mock_pool):
         """Test that hybrid search generates correct SQL."""
         mock_conn = MagicMock()
