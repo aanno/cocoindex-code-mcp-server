@@ -51,6 +51,7 @@ build = [
     "mypy>=1.10.0",
     "MonkeyType>=23.3.0",
     "pytest-monkeytype>=1.1.0",
+    "auto-type-annotate>=1.1.2",
     # code quality
     "isort>=6.0.1",
     "autoflake8>=1.7.0",

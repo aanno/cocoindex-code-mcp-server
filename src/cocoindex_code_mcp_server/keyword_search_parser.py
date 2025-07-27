@@ -116,7 +116,7 @@ class KeywordSearchParser:
         # Split by OR operators (lowest precedence)
         or_parts = self._split_by_operator(expr, 'or')
         if len(or_parts) > 1:
-            conditions = []
+            conditions: List[Union[SearchCondition, SearchGroup]] = []
             for part in or_parts:
                 conditions.append(self._parse_and_expression(part.strip()))
             return SearchGroup(conditions=conditions, operator=Operator.OR)
@@ -137,7 +137,7 @@ class KeywordSearchParser:
                     conditions.append(self._groups[part])
             else:
                 # Parse individual condition
-                condition = self._parse_condition(part)
+                condition: List[Union[SearchCondition, SearchGroup]] = self._parse_condition(part)
                 if condition:
                     conditions.append(condition)
 
