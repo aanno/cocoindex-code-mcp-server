@@ -151,25 +151,29 @@ class ChunkQuery(TypedDict):
 - Eventually: Add Qdrant backend support with abstraction layer
 - Testing approach: Multi-language comparison matrix for chunking quality, metadata extraction, AST support
 
-### Phase 1: Core Abstractions (High Priority)
-1. **Create `VectorStoreBackend` interface** - Abstract away database-specific code
-2. **Implement `PostgresBackend`** - Wrap existing pgvector functionality
-3. **Add `QdrantBackend` skeleton** - Prepare for alternative backend
+### Phase 1: Core Abstractions (High Priority) ✅ **COMPLETED**
+1. ✅ **Create `VectorStoreBackend` interface** - Abstract away database-specific code
+2. ✅ **Implement `PostgresBackend`** - Wrap existing pgvector functionality  
+3. ✅ **Add `QdrantBackend` skeleton** - Prepare for alternative backend
+4. ✅ **Update `HybridSearchEngine` to use backend abstraction** - Backward compatible constructor
+5. ✅ **Create comprehensive test suite** - 39 new/updated tests for backend functionality
+6. ✅ **Fix multi-language support tests** - Proper success detection and graceful JavaScript parser skipping
 
-### Phase 2: Schema & Query Standardization (Medium Priority)
-4. **Define `ChunkMetadata` schema** - Standardize metadata structure
-5. **Create `FieldMapper`** - Handle backend-specific payload formats
-6. **Implement `ChunkQuery` abstraction** - Database-agnostic query interface
+### Phase 2: Schema & Query Standardization (Medium Priority) - **READY TO START**
+1. **Define `ChunkMetadata` schema** - Standardize metadata structure across backends
+2. **Create `FieldMapper`** - Handle backend-specific payload formats (PostgreSQL JSONB vs Qdrant payload)
+3. **Implement `ChunkQuery` abstraction** - Database-agnostic query interface
 
 ### Phase 3: Advanced Features (Lower Priority)
-7. **Build Tree-sitter visitor framework** - Reusable AST processing (Rust crate)
-8. **Add chunking strategy system** - Configurable chunking approaches
-9. **Implement capability system** - Backend feature detection
+1. **Build Tree-sitter visitor framework** - Reusable AST processing (Rust crate)
+2. **Add chunking strategy system** - Configurable chunking approaches  
+3. **Implement capability system** - Backend feature detection
 
-### Phase 4: Integration & Testing
-10. **Create backend factory pattern** - Easy backend switching
-11. **Add comprehensive integration tests** - Test multiple backends
-12. **Performance optimization** - Backend-specific tuning
+### Phase 4: Integration & Testing ✅ **PARTIALLY COMPLETED**
+1. ✅ **Create backend factory pattern** - Easy backend switching with auto-registration
+2. ✅ **Add comprehensive unit tests** - 39 tests for backend functionality, all passing
+3. **Add integration tests** - Test multiple backends with real data flows
+4. **Performance optimization** - Backend-specific tuning and benchmarks
 
 ## Implementation Notes
 
@@ -179,19 +183,26 @@ class ChunkQuery(TypedDict):
 - **Testing**: Use adapter pattern to enable mock backends for testing
 - **Documentation**: Update API docs to reflect new abstraction layers
 
-## Files Requiring Changes
+## Files Status
 
-### Core Architecture
-- `src/cocoindex_code_mcp_server/hybrid_search.py` - Add backend abstraction
-- `src/cocoindex_code_mcp_server/main_mcp_server.py` - Update to use backend factory
+### Core Architecture ✅ **COMPLETED**
+- ✅ `src/cocoindex_code_mcp_server/db/pgvector/hybrid_search.py` - Backend abstraction added, backward compatible
+- `src/cocoindex_code_mcp_server/main_mcp_server.py` - **TODO**: Update to use backend factory
 
-### New Components
-- `src/cocoindex_code_mcp_server/backends/` - Backend implementations
-  - `__init__.py` - Backend factory and interface
-  - `postgres_backend.py` - Existing PostgreSQL functionality
-  - `qdrant_backend.py` - Future Qdrant support
-- `src/cocoindex_code_mcp_server/schemas.py` - Metadata and query schemas
-- `src/cocoindex_code_mcp_server/mappers.py` - Field mapping utilities
+### New Components ✅ **COMPLETED**
+- ✅ `src/cocoindex_code_mcp_server/backends/` - Backend implementations created
+  - ✅ `__init__.py` - Backend factory and VectorStoreBackend interface
+  - ✅ `postgres_backend.py` - PostgreSQL functionality with Python metadata integration
+  - ✅ `qdrant_backend.py` - Skeleton implementation ready for development
+- **TODO**: `src/cocoindex_code_mcp_server/schemas.py` - Metadata and query schemas
+- **TODO**: `src/cocoindex_code_mcp_server/mappers.py` - Field mapping utilities
+
+### Test Coverage ✅ **COMPLETED**
+- ✅ `tests/backends/test_postgres_backend.py` - 22 comprehensive tests
+- ✅ `tests/backends/test_backend_factory.py` - Factory pattern tests  
+- ✅ `tests/hybrid_search/test_hybrid_search_engine.py` - Updated for backend abstraction
+- ✅ `tests/lang/test_multi_language_support.py` - Fixed assertion logic and graceful parser skipping
+- ✅ `pytest.ini` - Added backend and timeout markers
 
 ### Configuration
 - Configuration files for backend selection and tuning
