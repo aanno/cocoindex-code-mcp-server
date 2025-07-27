@@ -2,41 +2,47 @@
 
 """
 Hybrid search implementation combining vector similarity and keyword metadata search.
+Updated to use the VectorStoreBackend abstraction layer.
 """
 
 import json
 import os
 from typing import Any, Dict, List
 
-from pgvector.psycopg import register_vector
 from prompt_toolkit import PromptSession
 from prompt_toolkit.key_binding import KeyBindings
 from psycopg_pool import ConnectionPool
 
 import cocoindex
+from cocoindex_code_mcp_server.backends import VectorStoreBackend, BackendFactory, QueryFilters, SearchResult
 from cocoindex_code_mcp_server.cocoindex_config import (
     code_embedding_flow,
     code_to_embedding,
 )
 from cocoindex_code_mcp_server.keyword_search_parser_lark import (
     KeywordSearchParser,
-    build_sql_where_clause,
-)
-from cocoindex_code_mcp_server.lang.python.python_code_analyzer import (
-    analyze_python_code,
 )
 
 
 class HybridSearchEngine:
     """Hybrid search engine combining vector and keyword search."""
 
-    def __init__(self, pool: ConnectionPool, table_name: str = None,
-                 parser: KeywordSearchParser = None, embedding_func=None):
-        self.pool = pool
+    def __init__(self, backend: VectorStoreBackend = None, pool: ConnectionPool = None,
+                 table_name: str = None, parser: KeywordSearchParser = None, 
+                 embedding_func=None):
+        # Support both new backend interface and legacy direct pool access
+        if backend is not None:
+            self.backend = backend
+        elif pool is not None:
+            # Create PostgreSQL backend from legacy pool
+            table_name = table_name or cocoindex.utils.get_target_default_name(
+                code_embedding_flow, "code_embeddings"
+            )
+            self.backend = BackendFactory.create_backend("postgres", pool=pool, table_name=table_name)
+        else:
+            raise ValueError("Either 'backend' or 'pool' parameter must be provided")
+        
         self.parser = parser or KeywordSearchParser()
-        self.table_name = table_name or cocoindex.utils.get_target_default_name(
-            code_embedding_flow, "code_embeddings"
-        )
         self.embedding_func = embedding_func or (lambda q: code_to_embedding.eval(q))
 
     def search(
@@ -62,152 +68,56 @@ class HybridSearchEngine:
         """
         # Parse keyword query
         search_group = self.parser.parse(keyword_query)
+        
+        # Convert search group to QueryFilters format
+        filters = None
+        if search_group and search_group.conditions:
+            filters = QueryFilters(conditions=search_group.conditions)
 
-        # Build the SQL query
-        if vector_query.strip() and search_group and search_group.conditions:
+        # Use backend abstraction for search operations
+        if vector_query.strip() and filters:
             # Both vector and keyword search
-            return self._hybrid_search(vector_query, search_group, top_k, vector_weight, keyword_weight)
+            query_vector = self.embedding_func(vector_query)
+            results = self.backend.hybrid_search(
+                query_vector=query_vector,
+                filters=filters,
+                top_k=top_k,
+                vector_weight=vector_weight,
+                keyword_weight=keyword_weight
+            )
         elif vector_query.strip():
             # Vector search only
-            return self._vector_search(vector_query, top_k)
-        elif search_group and search_group.conditions:
+            query_vector = self.embedding_func(vector_query)
+            results = self.backend.vector_search(query_vector=query_vector, top_k=top_k)
+        elif filters:
             # Keyword search only
-            return self._keyword_search(search_group, top_k)
+            results = self.backend.keyword_search(filters=filters, top_k=top_k)
         else:
             # No valid query
             return []
 
-    def _vector_search(self, query: str, top_k: int) -> List[Dict[str, Any]]:
-        """Perform pure vector similarity search."""
-        query_vector = self.embedding_func(query)
+        # Convert SearchResult objects to dict format for backward compatibility
+        return [self._search_result_to_dict(result) for result in results]
 
-        with self.pool.connection() as conn:
-            register_vector(conn)
-            with conn.cursor() as cur:
-                cur.execute(
-                    f"""
-                    SELECT filename, language, code, embedding <=> %s AS distance,
-                           start, "end", source_name
-                    FROM {self.table_name}
-                    ORDER BY distance
-                    LIMIT %s
-                    """,
-                    (query_vector, top_k),
-                )
-                return [self._format_result(row, score_type="vector") for row in cur.fetchall()]
-
-    def _keyword_search(self, search_group, top_k: int) -> List[Dict[str, Any]]:
-        """Perform pure keyword/metadata search."""
-        where_clause, params = build_sql_where_clause(search_group)
-
-        with self.pool.connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    f"""
-                    SELECT filename, language, code, 0.0 as distance,
-                           start, "end", source_name
-                    FROM {self.table_name}
-                    WHERE {where_clause}
-                    ORDER BY filename, start
-                    LIMIT %s
-                    """,
-                    params + [top_k],
-                )
-                return [self._format_result(row, score_type="keyword") for row in cur.fetchall()]
-
-    def _hybrid_search(
-        self,
-        vector_query: str,
-        search_group,
-        top_k: int,
-        vector_weight: float,
-        keyword_weight: float
-    ) -> List[Dict[str, Any]]:
-        """Perform hybrid search combining vector and keyword search."""
-        query_vector = self.embedding_func(vector_query)
-        where_clause, params = build_sql_where_clause(search_group)
-
-        with self.pool.connection() as conn:
-            register_vector(conn)
-            with conn.cursor() as cur:
-                # Hybrid search: vector similarity with keyword filtering
-                cur.execute(
-                    f"""
-                    WITH vector_scores AS (
-                        SELECT filename, language, code, embedding <=> %s AS vector_distance,
-                               start, "end", source_name,
-                               (1.0 - (embedding <=> %s)) AS vector_similarity
-                        FROM {self.table_name}
-                        WHERE {where_clause}
-                    ),
-                    ranked_results AS (
-                        SELECT *,
-                               (vector_similarity * %s) AS hybrid_score
-                        FROM vector_scores
-                    )
-                    SELECT filename, language, code, vector_distance, start, "end", source_name, hybrid_score
-                    FROM ranked_results
-                    ORDER BY hybrid_score DESC
-                    LIMIT %s
-                    """,
-                    [query_vector, query_vector] + params + [vector_weight, top_k],
-                )
-                return [self._format_result(row, score_type="hybrid") for row in cur.fetchall()]
-
-    def _format_result(self, row, score_type: str = "vector") -> Dict[str, Any]:
-        """Format database row into result dictionary."""
-        if score_type == "hybrid":
-            filename, language, code, vector_distance, start, end, source_name, hybrid_score = row
-            score = float(hybrid_score)
-        else:
-            filename, language, code, distance, start, end, source_name = row
-            score = 1.0 - float(distance) if score_type == "vector" else 1.0
-
-        # Build base result
-        result = {
-            "filename": filename,
-            "language": language,
-            "code": code,
-            "score": score,
-            "start": start,
-            "end": end,
-            "source": source_name or "default",
-            "score_type": score_type
+    def _search_result_to_dict(self, result: SearchResult) -> Dict[str, Any]:
+        """Convert SearchResult to dict format for backward compatibility."""
+        result_dict = {
+            "filename": result.filename,
+            "language": result.language,
+            "code": result.code,
+            "score": result.score,
+            "start": result.start,
+            "end": result.end,
+            "source": result.source,
+            "score_type": result.score_type
         }
+        
+        # Add metadata fields if available
+        if result.metadata:
+            result_dict.update(result.metadata)
+        
+        return result_dict
 
-        # Add rich metadata for Python code
-        if language == "Python":
-            try:
-                metadata = analyze_python_code(code, filename)
-                result.update({
-                    "functions": metadata.get("functions", []),
-                    "classes": metadata.get("classes", []),
-                    "imports": metadata.get("imports", []),
-                    "complexity_score": metadata.get("complexity_score", 0),
-                    "has_type_hints": metadata.get("has_type_hints", False),
-                    "has_async": metadata.get("has_async", False),
-                    "has_classes": metadata.get("has_classes", False),
-                    "private_methods": metadata.get("private_methods", []),
-                    "dunder_methods": metadata.get("dunder_methods", []),
-                    "decorators": metadata.get("decorators", []),
-                    "analysis_method": metadata.get("analysis_method", "python_ast"),
-                    "metadata_json": json.dumps(metadata, default=str)
-                })
-            except Exception as e:
-                # Fallback: add basic metadata fields even if analysis fails
-                result.update({
-                    "functions": [],
-                    "classes": [],
-                    "imports": [],
-                    "complexity_score": 0,
-                    "has_type_hints": False,
-                    "has_async": False,
-                    "has_classes": False,
-                    "analysis_method": "python_ast",
-                    "analysis_error": str(e)
-                })
-
-        return result
 
 
 def format_results_as_json(results: List[Dict[str, Any]], indent: int = 2) -> str:
@@ -326,7 +236,8 @@ def run_interactive_hybrid_search():
     """Run interactive hybrid search mode with dual prompts."""
     # Initialize the database connection pool
     pool = ConnectionPool(os.getenv("COCOINDEX_DATABASE_URL"))
-    search_engine = HybridSearchEngine(pool)
+    # Use legacy constructor for backward compatibility
+    search_engine = HybridSearchEngine(pool=pool)
 
     print("\n🔍 Interactive Hybrid Search Mode")
     print("Enter two types of queries:")
