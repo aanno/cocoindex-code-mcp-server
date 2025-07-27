@@ -4,6 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Instructions
 
+If you want to run something directly from `./src`, this is the pattern:
+For running `src/cocoindex_code_mcp_server/main_mcp_server.py` do:
+
+```bash
+python -m cocoindex_code_mcp_server.main_mcp_server
+```
+
+- We want to transform the codebase to mypy
+  - Use `mypy` for type annotations in code your write anew
 - If you are technically stuck or unsure about the next step, ask for help.
 - cocoindex is a complex beast, so don't hesitate to ask for clarification or guidance.
 - Test should be pytest at ./tests (NOT at ./src/cocoindex_code_mcp_server/tests).

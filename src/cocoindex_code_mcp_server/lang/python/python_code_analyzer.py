@@ -14,7 +14,7 @@ from . import LOGGER
 
 # Import the new tree-sitter based analyzer
 try:
-    from lang.python.tree_sitter_python_analyzer import create_python_analyzer
+    from .tree_sitter_python_analyzer import create_python_analyzer
     TREE_SITTER_ANALYZER_AVAILABLE = True
 except ImportError as e:
     LOGGER.warning(f"Tree-sitter Python analyzer not available: {e}")
