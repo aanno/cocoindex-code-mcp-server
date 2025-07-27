@@ -77,8 +77,8 @@ class ASTVisitor(ABC):
 
     def __init__(self, language: str = "unknown"):
         self.language = language
-        self.metadata = {}
-        self.errors = []
+        self.metadata: Dict[str, str] = {}
+        self.errors: List[str] = []
 
     @abstractmethod
     def visit_node(self, context: NodeContext) -> Optional[Dict[str, Any]]:
@@ -105,8 +105,8 @@ class GenericMetadataVisitor(ASTVisitor):
     def __init__(self, language: str = "unknown"):
         super().__init__(language)
         self.handlers: List[NodeHandler] = []
-        self.node_stats = {}
-        self.complexity_score = 0
+        self.node_stats: Dict[str, int] = {}
+        self.complexity_score: float = 0
 
     def add_handler(self, handler: NodeHandler):
         """Add a node handler to the visitor."""

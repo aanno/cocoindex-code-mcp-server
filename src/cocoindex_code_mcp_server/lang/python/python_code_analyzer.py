@@ -8,7 +8,9 @@ Enhanced with tree-sitter AST analysis and multi-level fallback strategies.
 import ast
 import json
 import re
-from typing import Any, Dict
+from typing import Any, Dict, List, Set
+
+from cocoindex_code_mcp_server.language_handlers.python_handler import PythonClass, PythonFunction, PythonImport
 
 from . import LOGGER
 
@@ -31,12 +33,12 @@ class PythonCodeAnalyzer:
 
     def reset(self):
         """Reset the analyzer state."""
-        self.functions = []
-        self.classes = []
-        self.imports = []
-        self.variables = []
-        self.decorators = []
-        self.complexity_score = 0
+        self.functions: List[PythonFunction] = []
+        self.classes: List[PythonClass] = []
+        self.imports: List[PythonImport] = []
+        self.variables: List[str] = []
+        self.decorators: Set[str] = set()
+        self.complexity_score: float = 0
         self.visited_nodes.clear()  # Clear visited nodes on reset
 
     def analyze_code(self, code: str, filename: str = "") -> Dict[str, Any]:
@@ -117,7 +119,7 @@ class PythonCodeAnalyzer:
 
     def _extract_function_info(self, node: ast.FunctionDef, class_context: str = None, is_async: bool = False):
         """Extract information about function definitions."""
-        func_info = {
+        func_info: Dict[str, Any] = {
             "name": node.name,
             "type": "async_function" if is_async else "method" if class_context else "function",
             "class": class_context,
@@ -321,8 +323,8 @@ class PythonCodeAnalyzer:
         ]))
 
         # Group functions by class
-        class_methods = {}
-        standalone_functions = []
+        class_methods: Dict[str, str] = {}
+        standalone_functions: List[str] = []
 
         for func in self.functions:
             if func['class']:
@@ -418,7 +420,7 @@ class PythonCodeAnalyzer:
 
     def _build_node_relationships(self) -> Dict[str, Any]:
         """Build node relationships mapping parent-child and scope relationships."""
-        relationships = {
+        relationships: Dict[str, Any] = {
             "parent": None,  # Module level has no parent
             "children": [],
             "scope": "module",

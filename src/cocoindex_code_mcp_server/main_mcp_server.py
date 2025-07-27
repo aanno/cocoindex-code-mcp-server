@@ -17,7 +17,10 @@ import signal
 import sys
 import threading
 from collections.abc import AsyncIterator
-from typing import Optional
+from types import ModuleType
+from typing import Optional, Union, List
+from pydantic import AnyUrl
+from pydantic import BaseModel
 
 import click
 import mcp.types as types
@@ -39,8 +42,11 @@ from .db.pgvector.hybrid_search import HybridSearchEngine
 from .keyword_search_parser_lark import KeywordSearchParser
 from .lang.python.python_code_analyzer import analyze_python_code
 
+coverage: Optional[ModuleType] = None
+
 try:
-    import coverage
+    import coverage as cov_module
+    coverage = cov_module
 except ImportError:
     coverage = None
 
@@ -224,43 +230,43 @@ def get_mcp_resources() -> list[types.Resource]:
     """Get the list of MCP resources."""
     return [
         types.Resource(
-            uri="cocoindex://search/stats",
+            uri=AnyUrl("cocoindex://search/stats"),
             name="Search Statistics",
             description="Database and search performance statistics",
             mimeType="application/json",
         ),
         types.Resource(
-            uri="cocoindex://search/config",
+            uri=AnyUrl("cocoindex://search/config"),
             name="Search Configuration",
             description="Current hybrid search configuration and settings",
             mimeType="application/json",
         ),
         types.Resource(
-            uri="cocoindex://database/schema",
+            uri=AnyUrl("cocoindex://database/schema"),
             name="Database Schema",
             description="Database table structure and schema information",
             mimeType="application/json",
         ),
         types.Resource(
-            uri="cocoindex://query/examples",
+            uri=AnyUrl("cocoindex://query/examples"),
             name="Query Examples",
             description="Categorized examples of keyword query syntax",
             mimeType="application/json",
         ),
         types.Resource(
-            uri="cocoindex://search/grammar",
+            uri=AnyUrl("cocoindex://search/grammar"),
             name="Search Grammar",
             description="Lark grammar for keyword search parsing",
             mimeType="text/x-lark",
         ),
         types.Resource(
-            uri="cocoindex://search/operators",
+            uri=AnyUrl("cocoindex://search/operators"),
             name="Search Operators",
             description="List of supported search operators and syntax",
             mimeType="application/json",
         ),
         types.Resource(
-            uri="cocoindex://test/simple",
+            uri=AnyUrl("cocoindex://test/simple"),
             name="Test Resource",
             description="Simple test resource for debugging",
             mimeType="application/json",
@@ -416,7 +422,7 @@ def main(
             raise ValueError(f"Unknown resource: {uri}")
 
         logger.info(f"✅ Successfully retrieved resource: '{uri}'")
-        return [types.TextResourceContents(uri=uri, text=content)]
+        return [types.TextResourceContents(uri=AnyUrl(uri), text=content)]
 
     # Tool implementation functions
     async def perform_hybrid_search(arguments: dict) -> dict:
@@ -860,7 +866,7 @@ QUOTED_VALUE: /"[^"]*"/
 # These are created when the module is imported for testing
 try:
     # Create a test server instance for module-level access using the same functions
-    server = Server("cocoindex-rag-test")
+    server = Server(AnyUrl("cocoindex-rag-test"))
 
     @server.list_tools()
     async def handle_list_tools() -> list[types.Tool]:
@@ -898,7 +904,7 @@ try:
             "message": "This is a test resource from the module-level server instance"
         }, indent=2)
 
-        return [types.TextResourceContents(uri=uri, text=test_content)]
+        return [types.TextResourceContents(uri=AnyUrl(uri), text=test_content)]
 
     # Export the test server and handlers for testing
     # Note: The actual handler functions are already defined above with @server decorators
@@ -907,7 +913,7 @@ try:
     # Create a simple wrapper for handle_read_resource that returns just text
     _original_handle_read_resource = handle_read_resource
 
-    async def handle_read_resource(uri: str) -> str:
+    async def handle_read_resource(uri: AnyUrl) -> str:
         """Test wrapper that returns just the text content."""
         # Handle test cases for valid/invalid resources
         valid_resources = [

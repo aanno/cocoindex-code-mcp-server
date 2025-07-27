@@ -127,7 +127,7 @@ class KeywordSearchParser:
     def _parse_and_expression(self, expr: str) -> SearchGroup:
         """Parse an AND expression."""
         and_parts = self._split_by_operator(expr, 'and')
-        conditions = []
+        conditions: List[Union[SearchCondition, SearchGroup]] = []
 
         for part in and_parts:
             part = part.strip()
@@ -137,7 +137,7 @@ class KeywordSearchParser:
                     conditions.append(self._groups[part])
             else:
                 # Parse individual condition
-                condition: List[Union[SearchCondition, SearchGroup]] = self._parse_condition(part)
+                condition: Union[SearchCondition, SearchGroup, None] = self._parse_condition(part)
                 if condition:
                     conditions.append(condition)
 
@@ -231,7 +231,7 @@ def build_sql_where_clause(search_group: SearchGroup, table_alias: str = "") -> 
         ValueError: If any field names are invalid or don't exist in the schema
     """
     # Import here to avoid circular imports
-    from schema_validator import schema_validator
+    from .schema_validator import schema_validator
 
     if not search_group.conditions:
         return "TRUE", []

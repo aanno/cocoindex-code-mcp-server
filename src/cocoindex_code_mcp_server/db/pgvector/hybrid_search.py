@@ -235,7 +235,11 @@ def get_multiline_input(prompt_text: str) -> str:
 def run_interactive_hybrid_search():
     """Run interactive hybrid search mode with dual prompts."""
     # Initialize the database connection pool
-    pool = ConnectionPool(os.getenv("COCOINDEX_DATABASE_URL"))
+    url = os.getenv("COCOINDEX_DATABASE_URL")
+    if url is None:
+        raise ValueError("COCOINDEX_DATABASE_URL environment variable must be set")
+
+    pool = ConnectionPool(url)
     # Use legacy constructor for backward compatibility
     search_engine = HybridSearchEngine(pool=pool)
 

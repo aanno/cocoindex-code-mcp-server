@@ -809,7 +809,7 @@ class HaskellNodeHandler:
 
     def _extract_constraint_list(self, constraints_node, source_text: str) -> List[str]:
         """Extract constraint list from type class/instance declarations."""
-        constraints = []
+        constraints: List[str] = []
 
         if not hasattr(constraints_node, 'children'):
             return constraints
@@ -823,7 +823,7 @@ class HaskellNodeHandler:
 
     def _extract_class_methods(self, where_node, source_text: str) -> List[str]:
         """Extract method names from type class where clause."""
-        methods = []
+        methods: List[str] = []
 
         if not hasattr(where_node, 'children'):
             return methods

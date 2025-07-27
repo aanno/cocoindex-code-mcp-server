@@ -31,7 +31,7 @@ STACKTRACE = False
 
 # Import our custom extensions
 try:
-    from smart_code_embedding import LanguageModelSelector
+    from .smart_code_embedding import LanguageModelSelector
     SMART_EMBEDDING_AVAILABLE = True
     LOGGER.info("Smart code embedding enabled and loaded successfully")
 except ImportError as e:
@@ -255,7 +255,7 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
         if language == "Python" and PYTHON_HANDLER_AVAILABLE and not use_default_handler:
             # Use our advanced Python handler through the tree-sitter analyzer
             try:
-                from lang.python.tree_sitter_python_analyzer import (
+                from .lang.python.tree_sitter_python_analyzer import (
                     TreeSitterPythonAnalyzer,
                 )
                 LOGGER.debug("Using TreeSitterPythonAnalyzer with integrated PythonNodeHandler")

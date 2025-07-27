@@ -348,7 +348,7 @@ class PythonNodeHandler:
 
     def _extract_parameters(self, node: Node, source_text: str) -> List[Dict[str, Any]]:
         """Extract function parameters with type annotations and defaults."""
-        parameters = []
+        parameters:List[Dict[str, Any]] = []
 
         if not hasattr(node, 'children'):
             return parameters
@@ -363,7 +363,7 @@ class PythonNodeHandler:
 
     def _parse_parameters_node(self, params_node: Node, source_text: str) -> List[Dict[str, Any]]:
         """Parse individual parameters from parameters node."""
-        parameters = []
+        parameters: List[Dict[str, Any]] = []
 
         if not hasattr(params_node, 'children'):
             return parameters
@@ -437,9 +437,9 @@ class PythonNodeHandler:
 
         return None
 
-    def _extract_decorators(self, node: Node, source_text: str) -> List[str]:
+    def _extract_decorators(self, node: Node, source_text: str) -> Set[str]:
         """Extract decorators from function or class definition."""
-        decorators = []
+        decorators: Set[str] = set()
 
         if not hasattr(node, 'children'):
             return decorators
@@ -512,7 +512,7 @@ class PythonNodeHandler:
 
     def _extract_base_classes(self, node: Node, source_text: str) -> List[str]:
         """Extract base classes from class definition."""
-        bases = []
+        bases: List[str] = []
 
         if not hasattr(node, 'children'):
             return bases
@@ -526,7 +526,7 @@ class PythonNodeHandler:
 
     def _extract_names_from_argument_list(self, arg_list_node: Node, source_text: str) -> List[str]:
         """Extract identifiers from argument list."""
-        names = []
+        names: List[str] = []
 
         if not hasattr(arg_list_node, 'children'):
             return names
@@ -562,8 +562,8 @@ class PythonNodeHandler:
 
     def _extract_from_import_parts(self, node: Node, source_text: str) -> tuple[Optional[str], List[str]]:
         """Extract module and imported names from from...import statement."""
-        module_name = None
-        imported_names = []
+        module_name: Optional[str] = None
+        imported_names: List[str] = []
 
         if not hasattr(node, 'children'):
             return module_name, imported_names
@@ -618,7 +618,7 @@ class PythonNodeHandler:
 
     def _extract_assignment_targets(self, node: Node, source_text: str) -> List[str]:
         """Extract variable names from assignment targets."""
-        targets = []
+        targets: List[str] = []
 
         if not hasattr(node, 'children'):
             return targets
@@ -635,7 +635,7 @@ class PythonNodeHandler:
 
     def _extract_pattern_names(self, pattern_node, source_text: str) -> List[str]:
         """Extract names from assignment patterns."""
-        names = []
+        names: List[str] = []
 
         if not hasattr(pattern_node, 'children'):
             return names

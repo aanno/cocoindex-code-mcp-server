@@ -9,6 +9,7 @@ structure-aware code chunking.
 import logging
 import os
 from dataclasses import dataclass
+from types import ModuleType
 from typing import Any, Dict, List, Optional
 
 from cocoindex_code_mcp_server import LOGGER
@@ -30,7 +31,7 @@ except ImportError as e:
     ASTChunkBuilder = None
 
 # Import CocoIndex conditionally to avoid circular imports
-cocoindex = None
+cocoindex: Optional[ModuleType] = None
 try:
     import cocoindex
 except ImportError:

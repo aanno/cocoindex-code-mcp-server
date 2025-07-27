@@ -101,3 +101,14 @@ expand-star-imports = true
 
 [tool.autopep8]
 max_line_length = 120
+
+[tool.mypy]
+# global config here, if any
+# strict = true
+# check-untyped-defs = true
+# local-partial-type = true
+
+[[tool.mypy.overrides]]
+module = "pgvector.*"
+ignore_missing_imports = true
+
