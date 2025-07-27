@@ -12,7 +12,7 @@ import sys
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set
 
-from ast_visitor import NodeContext
+from ..ast_visitor import NodeContext
 
 from . import LOGGER
 

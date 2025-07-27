@@ -120,12 +120,12 @@ class LanguageBaseline:
                             classes.add(class_match.group(1))
 
                 elif self.language in ['javascript', 'typescript']:
+                    import re
                     if line.startswith('function ') and '(' in line:
                         func_name = line.split('function ')[1].split('(')[0].strip()
                         if func_name.isidentifier():
                             functions.add(func_name)
                     elif 'class ' in line:
-                        import re
                         class_match = re.search(r'class\s+(\w+)', line)
                         if class_match:
                             classes.add(class_match.group(1))

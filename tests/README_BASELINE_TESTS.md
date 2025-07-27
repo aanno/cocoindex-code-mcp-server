@@ -341,16 +341,87 @@ The enhanced baseline tests now compare three approaches:
 2. **CocoIndex Baseline**: Simple regex-based text parsing
 3. **Expected Ground Truth**: Manually curated function lists
 
-**Comparison Results**:
+**Comparison Results** (after July 2025 fixes):
 
 ```text
-Language     Implementation     Baseline          Improvement    
-             Recall Prec  F1    Recall Prec  F1   (F1 Δ)         
-python       100.0% 100.0% 100.0%   100.0% 100.0% 100.0%   → Same         
-haskell      100.0% 58.3% 73.7%    100.0% 100.0% 100.0%   ↘ -26.3%       
-rust         100.0% 100.0% 100.0%   50.0% 100.0% 66.7%    ↗ +33.3%       
-java         100.0% 80.0% 88.9%    100.0% 66.7% 80.0%    ↗ +8.9%        
+Language     Implementation            Baseline                  Improvement    
+             Recall Prec  F1           Recall Prec  F1           (F1 Δ)         
+--------------------------------------------------------------------------------
+python       100.0% 100.0% 100.0%      100.0% 100.0% 100.0%      → Same         
+haskell      100.0% 58.3% 73.7%        100.0% 100.0% 100.0%      ↘ -26.3%       
+c            100.0% 100.0% 100.0%      100.0% 83.3% 90.9%        ↗ +9.1%        
+rust         100.0% 100.0% 100.0%      50.0% 100.0% 66.7%        ↗ +33.3%       
+cpp          100.0% 100.0% 100.0%      100.0% 83.3% 90.9%        ↗ +9.1%        
+kotlin       100.0% 100.0% 100.0%      100.0% 50.0% 66.7%        ↗ +33.3%       
+java         100.0% 80.0% 88.9%        100.0% 66.7% 80.0%        ↗ +8.9%        
+typescript   100.0% 88.9% 94.1%        100.0% 100.0% 100.0%      ↘ -5.9%        
+--------------------------------------------------------------------------------
+AVERAGE      100.0% 90.9% 94.6%       93.8% 85.4% 86.9%         +7.7%
 ```
+
+## Recent Fixes (July 2025)
+
+Two critical issues were identified and resolved:
+
+### 1. Python Implementation Complete Failure ❌ → ✅
+
+**Problem**: Python tree-sitter analysis was returning 0% recall, precision, and F1 score.
+
+**Root Cause**: Import error in `src/cocoindex_code_mcp_server/language_handlers/python_handler.py`:
+
+```python
+# Broken import (line 15):
+from ast_visitor import NodeContext
+
+# Fixed import:
+from ..ast_visitor import NodeContext
+```
+
+**Impact**: Python went from complete failure (0.0% F1) to perfect performance (100.0% F1).
+
+**Files Changed**:
+- `src/cocoindex_code_mcp_server/language_handlers/python_handler.py`
+
+### 2. TypeScript Missing Baseline ❌ → ✅  
+
+**Problem**: TypeScript showed "Not available" for baseline comparison due to runtime error.
+
+**Root Cause**: Scoping issue in `tests/all_languages_baseline.py` - `import re` was inside an `elif` block but used in a different `elif`:
+
+```python
+# Broken code:
+elif self.language in ['javascript', 'typescript']:
+    if line.startswith('function '):
+        # ... function detection ...
+    elif 'class ' in line:
+        import re  # ← Only available in this elif
+        # ... class detection ...
+    elif re.match(r'\s*\w+\s*\(.*\)\s*[:{]', line):  # ← Error: 're' not defined
+        # ... method detection ...
+
+# Fixed code:
+elif self.language in ['javascript', 'typescript']:
+    import re  # ← Moved to top of block
+    if line.startswith('function '):
+        # ... function detection ...
+    elif 'class ' in line:
+        # ... class detection ...  
+    elif re.match(r'\s*\w+\s*\(.*\)\s*[:{]', line):  # ← Now works
+        # ... method detection ...
+```
+
+**Impact**: TypeScript now has working baseline comparison, showing 94.1% F1 vs 100.0% baseline (5.9% regression due to extra `constructor` detection).
+
+**Files Changed**:
+- `tests/all_languages_baseline.py`
+
+### Before and After Summary
+
+| Language | Before Fix | After Fix | Status |
+|----------|------------|-----------|--------|
+| **Python** | 0.0% F1 (broken) | 100.0% F1 (perfect) | ✅ **Fixed** |
+| **TypeScript** | No baseline | 94.1% F1 vs 100.0% baseline | ✅ **Fixed** |
+| **Others** | Working | Working | ✅ **Unchanged** |
 
 ### Conclusions
 
@@ -359,6 +430,8 @@ java         100.0% 80.0% 88.9%    100.0% 66.7% 80.0%    ↗ +8.9%
 2. **Architecture diversity** is intentional - Haskell's custom implementation provides features not available in generic tree-sitter (like semantic chunking)
 
 3. **Performance vs accuracy trade-offs** are language-specific - functional languages may benefit from higher recall even at precision cost
+
+4. **Import discipline is critical** - Both fixes involved import path issues, highlighting the importance of proper module structure
 
 ## Best Practices
 
