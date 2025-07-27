@@ -1,15 +1,15 @@
 [package]
-name = "haskell-tree-sitter"
+name = "cocoindex_code_mcp_server"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "haskell_tree_sitter"
+name = "cocoindex_code_mcp_server"
 crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = { version = "0.25.1", features = ["extension-module"] }
-tree-sitter = "0.25"
+tree-sitter = "0.23"
 tree-sitter-haskell = "0.23.1"
 
 [build-dependencies]

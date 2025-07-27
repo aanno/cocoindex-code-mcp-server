@@ -93,19 +93,17 @@ class ChunkQuery(TypedDict):
 - AST node handlers for enhanced metadata
 - Tree-sitter visitor pattern framework
 
-**Disputed**:
-- We already have the AST visitor pattern at `src/cocoindex-code-mcp-server/ast_visitor.py` and in the language_handlers
-  + However, it is only used for python now
-  + And it is pure python, not a Rust crate as the architecture document suggests
-- We already have 'AST node handlers for enhanced metadata' but only for python at `src/cocoindex-code-mcp-server/language_handlers/python_handler.py`
-and `src/cocoindex-code-mcp-server/lang/python/python_code_analyzer.py`
-  + We have even 2 implementations (but why???); the other is `src/cocoindex-code-mcp-server/lang/python/tree_sitter_python_analyzer.py`
-  + We should careful review if both are needed, and document why
-- The vistor is there but only used for python language_handler, not for anything else. Perhaps change this first?
-- we have language-specific metadata fields, but only for python
-- We have enhanced metadata extraction for python, but not sure if through AST node handlers
-- We should double check if we don't register our python extractor
-  + How we managed to add support without using the API defined for that?
+**✅ COMPLETED**: 
+- Extended AST visitor pattern to support Haskell via specialized HaskellASTVisitor subclass
+- Implemented Haskell metadata extraction with direct haskell_tree_sitter chunk processing
+- Created HaskellNodeHandler with chunk-based text parsing for functions, data types, modules, imports
+- Achieved clean separation: generic visitor for standard tree-sitter, specialized visitor for Haskell chunks
+- Successfully extracts functions, data types, type signatures, complexity analysis from Haskell code
+- Integration tested and working through main analyze_code() function
+
+**Still Disputed**:
+- We have 2 Python implementations that should be reviewed: python_handler.py vs tree_sitter_python_analyzer.py
+- Need baseline comparison test for Haskell similar to Python's cocoindex_baseline_comparison.py
 
 ## 6. Chunking Strategy Abstraction (**MEDIUM PRIORITY**)
 
@@ -123,16 +121,18 @@ and `src/cocoindex-code-mcp-server/lang/python/python_code_analyzer.py`
   + there is a Chunking strategy selection (but perhaps not explicitly)
   + there is a hybrid chunking approach
   + there is AST-aware chunking for code structures
-- and ideas from ASTChunk into `src/cocoindex-code-mcp-server/lang/haskell/haskell_ast_chunker.py`
+- and ideas from ASTChunk into `src/cocoindex_code_mcp_server/lang/haskell/haskell_ast_chunker.py`
 - Custom chunk size/overlap configuration is already there based on the language
 
 ## Recommendations
 
 **Short-Term**:
 
-* for mcp server I expect 'Selected embedding model:' from `src/cocoindex-code-mcp-server/smart_code_embedding.py` in the logs, but it is not there.
-* for mcp server I expect 'AST chunking created' from `src/cocoindex-code-mcp-server/ast_chunking.py` in the logs, but it is not there.
-* for mcp server I expect 'Handled ... with result' from `src/cocoindex-code-mcp-server/language_handlers/python_handler.py` in the logs (with DEBUG), but it is not there.
+* ✅ **COMPLETED**: Haskell AST visitor implementation with specialized visitor pattern
+* **NEXT**: Create baseline comparison test for Haskell using fixtures/test_haskell.hs and RAG analysis
+* for mcp server I expect 'Selected embedding model:' from `src/cocoindex_code_mcp_server/smart_code_embedding.py` in the logs, but it is not there.
+* for mcp server I expect 'AST chunking created' from `src/cocoindex_code_mcp_server/ast_chunking.py` in the logs, but it is not there.
+* for mcp server I expect 'Handled ... with result' from `src/cocoindex_code_mcp_server/language_handlers/python_handler.py` in the logs (with DEBUG), but it is not there.
 * we should run integration tests on main_mcp_server.py in coverage mode to see what is covered
 * we should run integration tests on hybrid_search.py in coverage mode to see what is covered
 * we should run integration tests on the language handlers in coverage mode to see what is covered
@@ -144,22 +144,12 @@ and `src/cocoindex-code-mcp-server/lang/python/python_code_analyzer.py`
 * we should combine all above to see if it runs through the code we expect, not through the backups/fallbacks
 * where needed, we should add tests. That make further development easier.
 
-**Disputed**:
-- First, we should have some tests with multiple languages (i.e. python, c, c++, rust, haskell, java, typescript, kotlin) to see what we got out the box
-  + If possible, the tests output should be postprocessed to a table what is supported including:
-    - Chunking strategy (and quality)
-    - Metadata extraction (list of keywords supported)
-    - Metadata quality (e.g. is the function really a function, or is it a class, etc.)
-    - AST visitor support (easy for the moment)
-    - Language-specific features (if any)
-  + I wonder if same of this could be done generically, i.e. if we could have a generic test that runs on all languages
-  + The tests also makes it more easy to track the evolution of the language support
-- Next strategic step is to have haskell support on the same level as python
-- After that, we should also (in addition) support Qdrant
-- Our plan should be tailored to the above
-- Perhaps we should keep our current code specific to PostgreSQL
-  + and make the use of it or the new abstraction a configuration option
-  + however, we should the effected files better (something with pgvector in the name)
+**Strategic Direction**:
+- ✅ **COMPLETED**: Haskell support now at same level as Python for AST visitor-based metadata extraction
+- Next: Create comprehensive baseline test comparing our Haskell implementation vs CocoIndex defaults
+- After that: Support additional languages (C, C++, Rust, Java, TypeScript, Kotlin) 
+- Eventually: Add Qdrant backend support with abstraction layer
+- Testing approach: Multi-language comparison matrix for chunking quality, metadata extraction, AST support
 
 ### Phase 1: Core Abstractions (High Priority)
 1. **Create `VectorStoreBackend` interface** - Abstract away database-specific code
@@ -192,16 +182,16 @@ and `src/cocoindex-code-mcp-server/lang/python/python_code_analyzer.py`
 ## Files Requiring Changes
 
 ### Core Architecture
-- `src/cocoindex-code-mcp-server/hybrid_search.py` - Add backend abstraction
-- `src/cocoindex-code-mcp-server/main_mcp_server.py` - Update to use backend factory
+- `src/cocoindex_code_mcp_server/hybrid_search.py` - Add backend abstraction
+- `src/cocoindex_code_mcp_server/main_mcp_server.py` - Update to use backend factory
 
 ### New Components
-- `src/cocoindex-code-mcp-server/backends/` - Backend implementations
+- `src/cocoindex_code_mcp_server/backends/` - Backend implementations
   - `__init__.py` - Backend factory and interface
   - `postgres_backend.py` - Existing PostgreSQL functionality
   - `qdrant_backend.py` - Future Qdrant support
-- `src/cocoindex-code-mcp-server/schemas.py` - Metadata and query schemas
-- `src/cocoindex-code-mcp-server/mappers.py` - Field mapping utilities
+- `src/cocoindex_code_mcp_server/schemas.py` - Metadata and query schemas
+- `src/cocoindex_code_mcp_server/mappers.py` - Field mapping utilities
 
 ### Configuration
 - Configuration files for backend selection and tuning

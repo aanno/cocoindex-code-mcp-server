@@ -5,13 +5,9 @@ Standalone tests for enhanced Haskell chunking functionality.
 Tests the new HaskellChunkConfig and EnhancedHaskellChunker classes without CocoIndex imports.
 """
 
-import os
-import sys
-import pytest
 from unittest.mock import Mock, patch
 
-# Add the src directory to the path to import the main module
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+import pytest
 
 # Mock cocoindex to avoid circular import
 mock_cocoindex = Mock()
@@ -19,13 +15,13 @@ mock_cocoindex.op = Mock()
 mock_cocoindex.op.function = Mock(return_value=lambda f: f)
 
 with patch.dict('sys.modules', {'cocoindex': mock_cocoindex}):
-    from lang.haskell.haskell_ast_chunker import (
-        HaskellChunkConfig, 
-        EnhancedHaskellChunker, 
-        get_enhanced_haskell_separators,
-        create_enhanced_regex_fallback_chunks
-    )
     import haskell_tree_sitter
+
+    from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
+        HaskellChunkConfig,
+        create_enhanced_regex_fallback_chunks,
+        get_enhanced_haskell_separators,
+    )
 
 
 class TestHaskellChunkConfig:
@@ -66,7 +62,7 @@ class TestEnhancedHaskellSeparators:
         """Test that enhanced separators include base separators."""
         base_separators = haskell_tree_sitter.get_haskell_separators()
         enhanced_separators = get_enhanced_haskell_separators()
-        
+
         # All base separators should be included
         for sep in base_separators:
             assert sep in enhanced_separators
@@ -74,7 +70,7 @@ class TestEnhancedHaskellSeparators:
     def test_separators_include_enhancements(self):
         """Test that enhanced separators include new patterns."""
         separators = get_enhanced_haskell_separators()
-        
+
         # Check for specific enhanced patterns
         expected_patterns = [
             r"\nmodule\s+[A-Z][a-zA-Z0-9_.']*",
@@ -83,7 +79,7 @@ class TestEnhancedHaskellSeparators:
             r"\nclass\s+[A-Z][a-zA-Z0-9_']*",
             r"\n[a-zA-Z][a-zA-Z0-9_']*\s*::",  # Type signatures
         ]
-        
+
         for pattern in expected_patterns:
             assert pattern in separators
 
@@ -91,7 +87,7 @@ class TestEnhancedHaskellSeparators:
         """Test that enhanced separators are more than base separators."""
         base_separators = haskell_tree_sitter.get_haskell_separators()
         enhanced_separators = get_enhanced_haskell_separators()
-        
+
         assert len(enhanced_separators) > len(base_separators)
 
 
@@ -108,14 +104,14 @@ import Data.List
 factorial :: Integer -> Integer
 factorial n = product [1..n]
 """
-        
+
         config = HaskellChunkConfig()
         chunks = create_enhanced_regex_fallback_chunks(haskell_code, "test.hs", config)
-        
+
         assert len(chunks) > 0
         assert all("content" in chunk for chunk in chunks)
         assert all("metadata" in chunk for chunk in chunks)
-        
+
         # Check that metadata indicates regex fallback method
         for chunk in chunks:
             metadata = chunk["metadata"]
@@ -135,13 +131,13 @@ factorial n = product [1..n]
 
 data Tree a = Leaf a | Node (Tree a) (Tree a)
 """
-        
+
         config = HaskellChunkConfig()
         chunks = create_enhanced_regex_fallback_chunks(haskell_code, "test.hs", config)
-        
+
         for chunk in chunks:
             metadata = chunk["metadata"]
-            
+
             # Check required metadata fields
             assert "chunk_id" in metadata
             assert "chunk_method" in metadata
@@ -151,14 +147,14 @@ data Tree a = Leaf a | Node (Tree a) (Tree a)
             assert "line_count" in metadata
             assert "start_line" in metadata
             assert "end_line" in metadata
-            
+
             # Check Haskell-specific metadata
             assert "has_imports" in metadata
             assert "has_type_signatures" in metadata
             assert "has_data_types" in metadata
             assert "has_instances" in metadata
             assert "has_classes" in metadata
-            
+
             # Check boolean values
             assert isinstance(metadata["has_imports"], bool)
             assert isinstance(metadata["has_type_signatures"], bool)
@@ -185,18 +181,18 @@ instance Functor Tree where
     fmap f (Leaf x) = Leaf (f x)
     fmap f (Node l r) = Node (fmap f l) (fmap f r)
 """
-        
+
         config = HaskellChunkConfig()
         chunks = create_enhanced_regex_fallback_chunks(haskell_code, "test.hs", config)
-        
+
         # Combine all chunks to check overall content analysis
-        all_content = " ".join(chunk["content"] for chunk in chunks)
+        " ".join(chunk["content"] for chunk in chunks)
         all_metadata = {}
         for chunk in chunks:
             for key, value in chunk["metadata"].items():
                 if key.startswith("has_"):
                     all_metadata[key] = all_metadata.get(key, False) or value
-        
+
         # Verify content analysis
         assert all_metadata.get("has_imports", False) == True
         assert all_metadata.get("has_exports", False) == True  # module with exports
@@ -220,22 +216,22 @@ factorial n = product [1..n]
 class Functor f where
     fmap :: (a -> b) -> f a -> f b
 """
-        
+
         config = HaskellChunkConfig(max_chunk_size=100)  # Force small chunks
         chunks = create_enhanced_regex_fallback_chunks(haskell_code, "test.hs", config)
-        
+
         # Should create multiple chunks due to small max_chunk_size
         assert len(chunks) > 1
-        
+
         # Check for separator priority tracking
         priorities_found = []
         force_splits_found = []
-        
+
         for chunk in chunks:
             metadata = chunk["metadata"]
             priorities_found.append(metadata.get("separator_priority", 0))
             force_splits_found.append(metadata.get("was_force_split", False))
-        
+
         # At least some chunks should have been split on separators (priority > 0)
         assert max(priorities_found) > 0
 
@@ -255,10 +251,10 @@ import Control.Monad
 import System.IO
 
 """ + "\n".join([f"function{i} :: Int -> Int\nfunction{i} x = x + {i}" for i in range(20)])
-        
+
         config = HaskellChunkConfig(max_chunk_size=200)
         chunks = create_enhanced_regex_fallback_chunks(haskell_code, "test.hs", config)
-        
+
         # Check that chunks respect the size limit (non-whitespace chars)
         for chunk in chunks:
             non_whitespace_size = chunk["metadata"]["non_whitespace_size"]
@@ -271,16 +267,16 @@ import System.IO
 factorial :: Integer -> Integer
 factorial n = product [1..n]
 """
-        
+
         # Test default template
         config_default = HaskellChunkConfig(metadata_template="default")
-        
-        # Test repoeval template  
+
+        # Test repoeval template
         config_repoeval = HaskellChunkConfig(metadata_template="repoeval")
-        
+
         # Test swebench template
         config_swebench = HaskellChunkConfig(metadata_template="swebench")
-        
+
         # All should be valid configurations
         assert config_default.metadata_template == "default"
         assert config_repoeval.metadata_template == "repoeval"
@@ -292,12 +288,12 @@ factorial n = product [1..n]
             preserve_imports=True,
             preserve_exports=True
         )
-        
+
         config_no_preserve = HaskellChunkConfig(
             preserve_imports=False,
             preserve_exports=False
         )
-        
+
         assert config_preserve.preserve_imports == True
         assert config_preserve.preserve_exports == True
         assert config_no_preserve.preserve_imports == False
@@ -309,15 +305,17 @@ class TestBackwardCompatibility:
 
     def test_legacy_function_exists(self):
         """Test that legacy function still exists."""
-        from lang.haskell.haskell_ast_chunker import create_regex_fallback_chunks_python
-        
+        from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
+            create_regex_fallback_chunks_python,
+        )
+
         haskell_code = """
 factorial :: Integer -> Integer
 factorial n = product [1..n]
 """
-        
+
         chunks = create_regex_fallback_chunks_python(haskell_code)
-        
+
         # Should return chunks in legacy format
         assert len(chunks) > 0
         assert all("text" in chunk for chunk in chunks)
@@ -328,37 +326,39 @@ factorial n = product [1..n]
 
     def test_legacy_format_conversion(self):
         """Test that legacy format conversion works correctly."""
-        from lang.haskell.haskell_ast_chunker import create_regex_fallback_chunks_python
-        
+        from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
+            create_regex_fallback_chunks_python,
+        )
+
         haskell_code = """
 module Test where
 
 factorial :: Integer -> Integer
 factorial n = product [1..n]
 """
-        
+
         chunks = create_regex_fallback_chunks_python(haskell_code)
-        
+
         for chunk in chunks:
             # Legacy format should have specific fields
             assert "text" in chunk
             assert isinstance(chunk["text"], str)
-            
+
             assert "start" in chunk
             assert "line" in chunk["start"]
             assert "column" in chunk["start"]
-            
+
             assert "end" in chunk
             assert "line" in chunk["end"]
             assert "column" in chunk["end"]
-            
+
             assert "location" in chunk
             assert isinstance(chunk["location"], str)
             assert ":" in chunk["location"]  # Should be "start:end" format
-            
+
             assert "node_type" in chunk
             assert chunk["node_type"] == "regex_chunk"
-            
+
             assert "metadata" in chunk
             assert "category" in chunk["metadata"]
             assert chunk["metadata"]["category"] == "regex_fallback"

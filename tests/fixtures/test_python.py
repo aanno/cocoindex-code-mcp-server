@@ -4,15 +4,17 @@ Test Python file for GraphCodeBERT embedding verification.
 This should use microsoft/graphcodebert-base model.
 """
 
+
 def fibonacci(n: int) -> int:
     """Calculate the nth Fibonacci number."""
     if n <= 1:
         return n
     return fibonacci(n - 1) + fibonacci(n - 2)
 
+
 class MathUtils:
     """Utility class for mathematical operations."""
-    
+
     @staticmethod
     def is_prime(num: int) -> bool:
         """Check if a number is prime."""
@@ -22,6 +24,7 @@ class MathUtils:
             if num % i == 0:
                 return False
         return True
+
 
 if __name__ == "__main__":
     print(f"Fibonacci(10): {fibonacci(10)}")

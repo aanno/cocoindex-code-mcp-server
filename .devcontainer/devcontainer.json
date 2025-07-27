@@ -1,6 +1,6 @@
 {
     "$schema": "https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.schema.json",
-    "name": "cocoindex-code-mcp-server",
+    "name": "cocoindex_code_mcp_server",
     "image": "localhost/rust-python",
     "runArgs": [
         "--userns=keep-id:uid=${localEnv:CONTAINER_USERID},gid=${localEnv:CONTAINER_USERID}",

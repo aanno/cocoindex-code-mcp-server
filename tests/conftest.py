@@ -4,23 +4,27 @@
 Shared pytest fixtures and configuration for hybrid search tests.
 """
 
-import pytest
-import sys
 import os
 from unittest.mock import Mock
 
-# Add src directory to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src', 'cocoindex-code-mcp-server'))
+import pytest
+
+# Package should be installed via maturin develop or pip install -e .
+# No need to manually add src to path
 
 
 @pytest.fixture(scope="session")
 def setup_test_environment():
     """Set up the test environment."""
-    # Ensure src directory is in path
-    src_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src', 'cocoindex-code-mcp-server')
-    if src_path not in sys.path:
-        sys.path.insert(0, src_path)
-    return src_path
+
+    # Add src to path
+    # src_path = Path(__file__).parent / "src"
+    # / "cocoindex_code_mcp_server"
+    # sys.path.insert(0, str(src_path))
+
+    # Package should be installed via maturin develop or pip install -e .
+    # Return current working directory instead
+    return os.getcwd()
 
 
 @pytest.fixture
@@ -29,13 +33,13 @@ def mock_database_pool():
     mock_pool = Mock()
     mock_conn = Mock()
     mock_cursor = Mock()
-    
+
     # Set up context manager support
     mock_pool.connection.return_value.__enter__ = Mock(return_value=mock_conn)
     mock_pool.connection.return_value.__exit__ = Mock(return_value=None)
     mock_conn.cursor.return_value.__enter__ = Mock(return_value=mock_cursor)
     mock_conn.cursor.return_value.__exit__ = Mock(return_value=None)
-    
+
     return mock_pool, mock_conn, mock_cursor
 
 
@@ -75,7 +79,7 @@ def mock_embedding_function():
         # Slightly modify based on text to make it deterministic but different
         modifier = len(text) * 0.01
         return [x + modifier for x in base_vector]
-    
+
     return embedding_func
 
 
@@ -92,7 +96,7 @@ def pytest_collection_modifyitems(config, items):
         if "external" in item.keywords:
             # Check if external dependencies are available
             try:
-                import cocoindex
+                pass
             except ImportError:
                 item.add_marker(pytest.mark.skip(reason="CocoIndex not available"))
 

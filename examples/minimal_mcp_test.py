@@ -4,14 +4,14 @@ Minimal MCP server for testing what Claude Desktop expects.
 """
 
 import asyncio
-import mcp.types as types
-from mcp.server import Server
+
+import mcp.server.sse
 import mcp.server.stdio
+import mcp.types as types
+import uvicorn
+from mcp.server import Server
 from starlette.applications import Starlette
 from starlette.routing import Route
-import uvicorn
-import mcp.server.sse
-
 
 # Initialize the MCP server
 server = Server("minimal-test")
@@ -56,32 +56,32 @@ async def handle_call_tool(name: str, arguments: dict) -> list[types.TextContent
 async def run_http_server(port: int):
     """Run the MCP server over HTTP using Server-Sent Events (SSE)."""
     print(f"🌐 Starting minimal MCP server on http://127.0.0.1:{port}")
-    
+
     # Create SSE transport
     sse_transport = mcp.server.sse.SseServerTransport("/messages", "/sse")
-    
+
     # Create Starlette app with SSE endpoints
     async def handle_sse(request):
         """Handle SSE subscriptions."""
         return await sse_transport.handle_sse_request(request)
-    
+
     async def handle_messages(request):
         """Handle message requests."""
         return await sse_transport.handle_post_message(request, server)
-    
+
     # Create Starlette routes
     routes = [
         Route("/sse", handle_sse, methods=["GET"]),
         Route("/messages", handle_messages, methods=["POST"]),
         Route("/mcp", handle_messages, methods=["POST"]),  # Alternative endpoint
     ]
-    
+
     app = Starlette(routes=routes)
-    
+
     # Run the server
     config = uvicorn.Config(
         app=app,
-        host="127.0.0.1", 
+        host="127.0.0.1",
         port=port,
         log_level="info"
     )

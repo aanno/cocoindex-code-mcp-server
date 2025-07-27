@@ -5,68 +5,70 @@ interface User {
     id: number;
     name: string;
     email: string;
-    isActive: boolean;
+    age: number;
 }
 
-interface Repository<T> {
-    findById(id: number): T | null;
-    save(entity: T): void;
-    findAll(): T[];
+function fibonacci(n: number): number {
+    if (n <= 1) {
+        return n;
+    }
+    return fibonacci(n - 1) + fibonacci(n - 2);
 }
 
-/**
- * Generic repository implementation
- */
-class InMemoryRepository<T extends { id: number }> implements Repository<T> {
-    private items: Map<number, T> = new Map();
+class Person {
+    private name: string;
+    private age: number;
 
-    findById(id: number): T | null {
-        return this.items.get(id) || null;
+    constructor(name: string, age: number) {
+        this.name = name;
+        this.age = age;
     }
 
-    save(entity: T): void {
-        this.items.set(entity.id, entity);
+    greet(): string {
+        return `Hello, I'm ${this.name} and I'm ${this.age} years old`;
     }
 
-    findAll(): T[] {
-        return Array.from(this.items.values());
-    }
-}
-
-/**
- * User service with type safety  
- */
-class UserService {
-    private repository: Repository<User>;
-
-    constructor(repository: Repository<User>) {
-        this.repository = repository;
+    isAdult(): boolean {
+        return this.age >= 18;
     }
 
-    createUser(name: string, email: string): User {
-        const user: User = {
-            id: Date.now(),
-            name,
-            email,
-            isActive: true
-        };
-        
-        this.repository.save(user);
-        return user;
+    getName(): string {
+        return this.name;
     }
 
-    getActiveUsers(): User[] {
-        return this.repository.findAll()
-            .filter(user => user.isActive);
+    getAge(): number {
+        return this.age;
     }
 }
 
-// Usage example
-const userRepo = new InMemoryRepository<User>();
-const userService = new UserService(userRepo);
+function calculateSum(numbers: number[]): number {
+    return numbers.reduce((sum, num) => sum + num, 0);
+}
 
-const newUser = userService.createUser("Alice Johnson", "alice@example.com");
-console.log("Created user:", newUser);
+function processUsers(users: User[]): User[] {
+    return users.filter(user => user.age >= 18);
+}
 
-const activeUsers = userService.getActiveUsers();
-console.log("Active users:", activeUsers.length);
+function main(): void {
+    const person = new Person("Alice", 25);
+    console.log(person.greet());
+    console.log("Is adult:", person.isAdult());
+
+    console.log("Fibonacci 10:", fibonacci(10));
+
+    const numbers = [1, 2, 3, 4, 5];
+    console.log("Sum:", calculateSum(numbers));
+
+    const users: User[] = [
+        { id: 1, name: "Bob", email: "bob@example.com", age: 20 },
+        { id: 2, name: "Charlie", email: "charlie@example.com", age: 16 }
+    ];
+
+    const adults = processUsers(users);
+    console.log("Adult users:", adults.length);
+}
+
+// Call main if this is the entry point
+if (require.main === module) {
+    main();
+}

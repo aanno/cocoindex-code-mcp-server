@@ -4,15 +4,13 @@
 Comprehensive tests for AST-based Haskell chunking functionality.
 """
 
-import os
-import sys
+import haskell_tree_sitter
 import pytest
 
-# Add the src directory to the path to import the main module
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-
-from lang.haskell.haskell_ast_chunker import extract_haskell_ast_chunks, get_enhanced_haskell_separators
-import haskell_tree_sitter
+from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
+    extract_haskell_ast_chunks,
+    get_enhanced_haskell_separators,
+)
 
 
 class TestHaskellASTChunking:
@@ -29,10 +27,10 @@ factorial :: Integer -> Integer
 factorial 0 = 1
 factorial n = n * factorial (n - 1)
 """
-        
+
         chunks = haskell_tree_sitter.get_haskell_ast_chunks(sample_code)
         assert len(chunks) > 0
-        
+
         # Check that we get expected chunk types
         chunk_types = [chunk.node_type() for chunk in chunks]
         assert "import" in chunk_types
@@ -47,10 +45,10 @@ module Test where
 factorial :: Integer -> Integer
 factorial n = n * factorial (n - 1)
 """
-        
+
         chunks = haskell_tree_sitter.get_haskell_ast_chunks_with_fallback(sample_code)
         assert len(chunks) > 0
-        
+
         # Should use AST method for valid code
         methods = [chunk.metadata().get('method', 'ast') for chunk in chunks]
         assert all(method == 'ast' for method in methods)
@@ -65,10 +63,10 @@ data Person = Person String Int
 greet :: Person -> String
 greet (Person name _) = "Hello, " ++ name
 """
-        
+
         chunks = extract_haskell_ast_chunks(sample_code)
         assert len(chunks) > 0
-        
+
         # Check that chunks have required fields for CocoIndex
         for chunk in chunks:
             assert "text" in chunk
@@ -92,18 +90,18 @@ class Greetable a where
 instance Greetable Person where
     greet (Person name _) = "Hello, " ++ name
 """
-        
+
         chunks = extract_haskell_ast_chunks(sample_code)
-        
+
         # Find specific chunks and verify metadata
         data_chunks = [c for c in chunks if c['node_type'] == 'data_type']
         assert len(data_chunks) > 0
         assert data_chunks[0]['metadata']['category'] == 'data_type'
-        
+
         class_chunks = [c for c in chunks if c['node_type'] == 'class']
         assert len(class_chunks) > 0
         assert any(c['metadata']['category'] == 'class' for c in class_chunks)
-        
+
         instance_chunks = [c for c in chunks if c['node_type'] == 'instance']
         assert len(instance_chunks) > 0
         assert any(c['metadata']['category'] == 'instance' for c in instance_chunks)
@@ -112,19 +110,19 @@ instance Greetable Person where
         """Test enhanced separator generation."""
         separators = get_enhanced_haskell_separators()
         assert len(separators) > 10  # Should have base + enhanced separators
-        
+
         # Check that it includes base separators
         base_separators = haskell_tree_sitter.get_haskell_separators()
         for sep in base_separators:
             assert sep in separators
-        
+
         # Check that enhanced separators are included
         enhanced_patterns = [
             r"\n[a-zA-Z][a-zA-Z0-9_']*\s*::",  # Type signatures
             r"\ndata\s+[A-Z][a-zA-Z0-9_']*",   # Data types
             r"\nclass\s+[A-Z][a-zA-Z0-9_']*",  # Classes
         ]
-        
+
         for pattern in enhanced_patterns:
             assert pattern in separators
 
@@ -139,13 +137,13 @@ fibonacci :: Int -> Int
 fibonacci 0 = 0
 fibonacci n = fibonacci (n - 1) + fibonacci (n - 2)
 """
-        
+
         chunks = extract_haskell_ast_chunks(sample_code)
-        
+
         # Find function-related chunks
         function_chunks = [c for c in chunks if 'function_name' in c['metadata']]
         assert len(function_chunks) > 0
-        
+
         function_names = [c['metadata']['function_name'] for c in function_chunks]
         assert 'factorial' in function_names
         assert 'fibonacci' in function_names
@@ -165,13 +163,13 @@ factorial n = product [1..n]
 helper :: Int -> Int
 helper x = x + 1
 """
-        
+
         chunks = extract_haskell_ast_chunks(sample_code)
-        
+
         # Find documentation chunks
         doc_chunks = [c for c in chunks if c['node_type'] == 'haddock']
         assert len(doc_chunks) > 0
-        
+
         # Check that documentation is properly categorized
         for chunk in doc_chunks:
             assert chunk['metadata']['category'] == 'documentation'
@@ -187,7 +185,7 @@ import qualified Data.Map as Map
 import Control.Monad
 
 -- | A complex data type
-data ComplexType a b = ComplexType 
+data ComplexType a b = ComplexType
     { field1 :: a
     , field2 :: b
     , field3 :: Map.Map String Int
@@ -209,14 +207,14 @@ instance Processable (ComplexType String Int) where
 processAll :: [ComplexType String Int] -> [Maybe String]
 processAll = map process
 """
-        
+
         chunks = extract_haskell_ast_chunks(sample_code)
         assert len(chunks) > 5  # Should have multiple chunks
-        
+
         # Check that we get various types of chunks
         node_types = [chunk['node_type'] for chunk in chunks]
-        categories = [chunk['metadata']['category'] for chunk in chunks]
-        
+        [chunk['metadata']['category'] for chunk in chunks]
+
         assert 'import' in node_types
         assert 'data_type' in node_types
         assert 'class' in node_types

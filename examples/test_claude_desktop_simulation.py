@@ -8,23 +8,22 @@ import asyncio
 import json
 import subprocess
 import sys
-from typing import Optional
 
 
 async def test_claude_desktop_simulation():
     """Simulate Claude Desktop connecting through supergateway."""
-    
+
     print("🚀 Starting Claude Desktop simulation test...")
-    
+
     # Start supergateway as subprocess
     cmd = [
-        "pnpm", "dlx", "supergateway", 
+        "pnpm", "dlx", "supergateway",
         "--streamableHttp", "http://localhost:3033/mcp",
         "--logLevel", "debug"
     ]
-    
+
     print(f"📡 Starting supergateway: {' '.join(cmd)}")
-    
+
     try:
         # Start the process
         process = subprocess.Popen(
@@ -35,20 +34,20 @@ async def test_claude_desktop_simulation():
             text=True,
             bufsize=0  # Unbuffered
         )
-        
+
         print("⏳ Waiting for supergateway to start...")
         await asyncio.sleep(2)  # Give it time to start
-        
+
         # Check if process is still running
         if process.poll() is not None:
             stdout, stderr = process.communicate()
-            print(f"❌ Supergateway exited early!")
+            print("❌ Supergateway exited early!")
             print(f"STDOUT: {stdout}")
             print(f"STDERR: {stderr}")
             return False
-        
+
         print("✅ Supergateway started successfully")
-        
+
         # Send initialize message
         init_message = {
             "jsonrpc": "2.0",
@@ -63,18 +62,18 @@ async def test_claude_desktop_simulation():
                 }
             }
         }
-        
+
         print("📤 Sending initialize message...")
         process.stdin.write(json.dumps(init_message) + '\n')
         process.stdin.flush()
-        
+
         # Read response
         print("📥 Reading initialize response...")
         response_line = await asyncio.wait_for(
             asyncio.create_task(asyncio.to_thread(process.stdout.readline)),
             timeout=5.0
         )
-        
+
         if response_line:
             try:
                 response = json.loads(response_line.strip())
@@ -84,7 +83,7 @@ async def test_claude_desktop_simulation():
                 print(f"Error: {e}")
         else:
             print("❌ No response received for initialize")
-        
+
         # Send tools/list message
         tools_message = {
             "jsonrpc": "2.0",
@@ -92,23 +91,23 @@ async def test_claude_desktop_simulation():
             "method": "tools/list",
             "params": {}
         }
-        
+
         print("📤 Sending tools/list message...")
         process.stdin.write(json.dumps(tools_message) + '\n')
         process.stdin.flush()
-        
+
         # Read response
         print("📥 Reading tools/list response...")
         response_line = await asyncio.wait_for(
             asyncio.create_task(asyncio.to_thread(process.stdout.readline)),
             timeout=5.0
         )
-        
+
         if response_line:
             try:
                 response = json.loads(response_line.strip())
                 print(f"✅ Tools/list response: {json.dumps(response, indent=2)}")
-                
+
                 # Check if tools are present
                 if "result" in response and "tools" in response["result"]:
                     tools = response["result"]["tools"]
@@ -119,7 +118,7 @@ async def test_claude_desktop_simulation():
                 else:
                     print("❌ No tools found in response")
                     return False
-                    
+
             except json.JSONDecodeError as e:
                 print(f"❌ Failed to parse response: {response_line}")
                 print(f"Error: {e}")
@@ -127,7 +126,7 @@ async def test_claude_desktop_simulation():
         else:
             print("❌ No response received for tools/list")
             return False
-            
+
     except asyncio.TimeoutError:
         print("❌ Timeout waiting for response")
         return False

@@ -519,7 +519,7 @@ fn create_regex_fallback_chunks(source: &str) -> Vec<HaskellChunk> {
 }
 
 #[pymodule]
-fn haskell_tree_sitter(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn cocoindex_code_mcp_server(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<HaskellParser>()?;
     m.add_class::<HaskellTree>()?;
     m.add_class::<HaskellNode>()?;

@@ -11,18 +11,18 @@ import asyncio
 import json
 import logging
 import os
-import pytest
-import pytest_asyncio
 from contextlib import AsyncExitStack
 from typing import Any
 
+import pytest
+import pytest_asyncio
 from dotenv import load_dotenv
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO, 
+    level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
@@ -46,25 +46,25 @@ class MCPServer:
             args=self.args,
             env={**os.environ, **self.env}
         )
-        
+
         try:
             # Use proper MCP client to connect
             stdio_transport = await self.exit_stack.enter_async_context(
                 stdio_client(server_params)
             )
             read, write = stdio_transport
-            
+
             # Create MCP client session
             session = await self.exit_stack.enter_async_context(
                 ClientSession(read, write)
             )
-            
+
             # Initialize the MCP connection
             await session.initialize()
             self.session = session
-            
+
             logging.info(f"✅ MCP server '{self.name}' initialized successfully")
-            
+
         except Exception as e:
             logging.error(f"❌ Error initializing MCP server {self.name}: {e}")
             await self.cleanup()
@@ -149,28 +149,28 @@ class MCPServer:
                 logging.error(f"❌ Error during cleanup of MCP server {self.name}: {e}")
 
 
-@pytest_asyncio.fixture  
+@pytest_asyncio.fixture
 async def mcp_server():
     """MCP HTTP client that connects to server running on port 3033."""
     # Load environment variables
     load_dotenv()
-    
+
     import httpx
-    
+
     class MCPHTTPClient:
         def __init__(self):
             self.base_url = "http://127.0.0.1:3033/mcp/"
             self.client = httpx.AsyncClient(timeout=30.0)
             self.session = self  # For compatibility with existing tests
             self.name = "cocoindex-rag"  # For test compatibility
-        
+
         def _parse_mcp_response(self, response):
             """Parse MCP response (either JSON or SSE format)."""
             if response.status_code != 200:
                 raise Exception(f"HTTP {response.status_code}: {response.text}")
-            
+
             response_text = response.text
-            
+
             # Handle Server-Sent Events format
             if response.headers.get("content-type", "").startswith("text/event-stream"):
                 # Parse SSE format
@@ -186,7 +186,7 @@ async def mcp_server():
             else:
                 # Regular JSON response
                 return response.json()
-            
+
         async def check_server_running(self):
             """Check if MCP server is running by calling list_tools."""
             try:
@@ -204,16 +204,16 @@ async def mcp_server():
                         "Accept": "application/json, text/event-stream"
                     }
                 )
-                
+
                 result = self._parse_mcp_response(response)
                 if "error" in result:
                     raise Exception(f"MCP Error: {result['error']}")
-                    
+
                 return "result" in result
             except Exception as e:
                 print(f"Server check error: {e}")
                 return False
-                
+
         async def execute_tool(self, tool_name: str, arguments: dict):
             """Execute MCP tool via HTTP JSON-RPC."""
             response = await self.client.post(
@@ -232,15 +232,15 @@ async def mcp_server():
                     "Accept": "application/json, text/event-stream"
                 }
             )
-            
+
             result = self._parse_mcp_response(response)
             if "error" in result:
                 raise Exception(f"MCP Error: {result['error']}")
-            
+
             # Convert MCP result format to expected test format
             from types import SimpleNamespace
             mcp_result = result["result"]
-            
+
             # MCP returns {"content": [{"type": "text", "text": "..."}]}
             if isinstance(mcp_result, dict) and "content" in mcp_result:
                 content_items = []
@@ -252,7 +252,7 @@ async def mcp_server():
                             raise Exception(f"MCP Tool Error: {content_data['error']['message']}")
                     except json.JSONDecodeError:
                         pass  # Not JSON, continue normally
-                    
+
                     content_items.append(
                         SimpleNamespace(type=item["type"], text=item["text"])
                     )
@@ -261,7 +261,7 @@ async def mcp_server():
                 # Fallback format
                 content = SimpleNamespace(type="text", text=str(mcp_result))
                 return ["content", [content]]
-            
+
         async def list_tools(self):
             """List MCP tools via HTTP JSON-RPC."""
             response = await self.client.post(
@@ -277,11 +277,11 @@ async def mcp_server():
                     "Accept": "application/json, text/event-stream"
                 }
             )
-            
+
             result = self._parse_mcp_response(response)
             if "error" in result:
                 raise Exception(f"MCP Error: {result['error']}")
-            
+
             # Convert MCP result to expected test format
             from types import SimpleNamespace
             tools = []
@@ -292,7 +292,7 @@ async def mcp_server():
                     inputSchema=tool["inputSchema"]
                 ))
             return tools
-            
+
         async def list_resources(self):
             """List MCP resources via HTTP JSON-RPC."""
             response = await self.client.post(
@@ -308,11 +308,11 @@ async def mcp_server():
                     "Accept": "application/json, text/event-stream"
                 }
             )
-            
+
             result = self._parse_mcp_response(response)
             if "error" in result:
                 raise Exception(f"MCP Error: {result['error']}")
-            
+
             # Convert MCP result to expected test format
             from types import SimpleNamespace
             resources = []
@@ -323,7 +323,7 @@ async def mcp_server():
                     description=resource["description"]
                 ))
             return resources  # Return just the resources list, not tuple
-            
+
         async def read_resource(self, uri: str):
             """Read MCP resource via HTTP JSON-RPC."""
             response = await self.client.post(
@@ -341,11 +341,11 @@ async def mcp_server():
                     "Accept": "application/json, text/event-stream"
                 }
             )
-            
+
             result = self._parse_mcp_response(response)
             if "error" in result:
                 raise Exception(f"MCP Error: {result['error']}")
-            
+
             # Convert MCP result to expected test format
             from types import SimpleNamespace
             contents = []
@@ -355,16 +355,16 @@ async def mcp_server():
                     text=content.get("text", "")
                 ))
             return ("contents", contents)
-            
+
         async def cleanup(self):
             await self.client.aclose()
-    
+
     client = MCPHTTPClient()
-    
+
     # Verify server is running
     if not await client.check_server_running():
         pytest.skip("MCP server not running on port 3033")
-    
+
     yield client
     await client.cleanup()
 
@@ -373,46 +373,46 @@ async def mcp_server():
 @pytest.mark.asyncio
 class TestMCPIntegrationHTTP:
     """Integration tests using proper MCP client connection."""
-    
+
     async def test_server_initialization(self, mcp_server):
         """Test that MCP server initializes correctly."""
         assert mcp_server.session is not None, "MCP session should be initialized"
         assert mcp_server.name == "cocoindex-rag"
-    
+
     async def test_list_tools(self, mcp_server):
         """Test listing tools via proper MCP client."""
         tools = await mcp_server.list_tools()
-        
+
         # Should have expected tools
         assert len(tools) >= 6, f"Expected at least 6 tools, got {len(tools)}"
-        
+
         # Check specific tools exist
         tool_names = [tool.name for tool in tools]
         expected_tools = [
             "hybrid_search",
-            "vector_search", 
+            "vector_search",
             "keyword_search",
             "analyze_code",
             "get_embeddings",
             "get_keyword_syntax_help"
         ]
-        
+
         for expected_tool in expected_tools:
             assert expected_tool in tool_names, f"Expected tool '{expected_tool}' not found"
-        
+
         # Check tool structure
         for tool in tools:
             assert hasattr(tool, 'name'), "Tool should have name attribute"
             assert hasattr(tool, 'description'), "Tool should have description attribute"
             assert hasattr(tool, 'inputSchema'), "Tool should have inputSchema attribute"
-    
+
     async def test_list_resources(self, mcp_server):
         """Test listing resources via proper MCP client."""
         resources = await mcp_server.list_resources()
-        
+
         # Should have expected resources
         assert len(resources) >= 4, f"Expected at least 4 resources, got {len(resources)}"
-        
+
         # Check specific resources exist
         resource_names = [resource.name for resource in resources]
         expected_resources = [
@@ -421,72 +421,73 @@ class TestMCPIntegrationHTTP:
             "Database Schema",
             "Query Examples"
         ]
-        
+
         for expected_resource in expected_resources:
             assert expected_resource in resource_names, f"Expected resource '{expected_resource}' not found"
-        
+
         # Check resource structure
         for resource in resources:
             assert hasattr(resource, 'name'), "Resource should have name attribute"
             assert hasattr(resource, 'uri'), "Resource should have uri attribute"
             assert hasattr(resource, 'description'), "Resource should have description attribute"
-            assert str(resource.uri).startswith("cocoindex://"), f"Resource URI should start with cocoindex://, got {resource.uri}"
-    
+            assert str(resource.uri).startswith(
+                "cocoindex://"), f"Resource URI should start with cocoindex://, got {resource.uri}"
+
     @pytest.mark.skip(reason="Resource handler registration issue - see docs/claude/Mcp_Server_Development.md#12")
     async def test_read_resource(self, mcp_server):
         """Test reading a resource via proper MCP client."""
         result = await mcp_server.read_resource("cocoindex://search/config")
-        
+
         # Should get proper MCP response format (tuple format)
         assert isinstance(result, tuple), "Resource read should return a tuple"
         assert len(result) == 2, "Resource read should return tuple format"
         assert result[0] == "contents", "First element should be 'contents'"
-        
+
         contents = result[1]
         assert len(contents) >= 1, "Should have at least one content item"
-        
+
         # Check content structure
         content = contents[0]
         assert hasattr(content, 'uri'), "Content should have uri attribute"
         assert hasattr(content, 'text'), "Content should have text attribute"
         assert content.uri == "cocoindex://search/config"
-        
+
         # Content should be valid JSON
         config_data = json.loads(content.text)
         assert isinstance(config_data, dict), "Config should be a dictionary"
-        
+
         # Check expected configuration keys
         expected_keys = [
             "table_name",
-            "embedding_model", 
+            "embedding_model",
             "parser_type",
             "default_weights"
         ]
-        
+
         for key in expected_keys:
             assert key in config_data, f"Expected config key '{key}' not found"
-    
+
     async def test_execute_tool_get_embeddings(self, mcp_server):
         """Test executing the get_embeddings tool via proper MCP client."""
         result = await mcp_server.execute_tool(
             "get_embeddings",
             {"text": "test text for embedding"}
         )
-        
+
         # Should get proper MCP response format
         assert isinstance(result, list), "Tool result should return a list"
         assert len(result) == 2, "Tool result should return tuple format"
         assert result[0] == "content", "First element should be 'content'"
-        
+
         content_list = result[1]
         assert len(content_list) >= 1, "Should have at least one content item"
-        
+
         # Check content structure
         content = content_list[0]
         assert hasattr(content, 'type'), "Content should have type attribute"
         assert hasattr(content, 'text'), "Content should have text attribute"
         assert content.type == "text"
-        
+
         # Parse the JSON response to check embedding format
         embedding_data = json.loads(content.text)
         assert "embedding" in embedding_data, "Should contain embedding data"
@@ -494,7 +495,7 @@ class TestMCPIntegrationHTTP:
         assert isinstance(embedding_data["embedding"], list), "Embedding should be a list"
         assert len(embedding_data["embedding"]) > 0, "Embedding should not be empty"
         assert embedding_data["dimensions"] > 0, "Dimensions should be positive"
-    
+
     async def test_execute_tool_vector_search(self, mcp_server):
         """Test executing the vector_search tool via proper MCP client."""
         result = await mcp_server.execute_tool(
@@ -504,36 +505,36 @@ class TestMCPIntegrationHTTP:
                 "top_k": 3
             }
         )
-        
+
         # Should get proper MCP response format
         assert isinstance(result, list), "Tool result should return a list"
-        assert len(result) == 2, "Tool result should return tuple format" 
+        assert len(result) == 2, "Tool result should return tuple format"
         assert result[0] == "content", "First element should be 'content'"
-        
+
         content_list = result[1]
         assert len(content_list) >= 1, "Should have at least one content item"
-        
+
         # Check content structure
         content = content_list[0]
         assert content.type == "text"
-        
+
         # Parse the JSON response to check search results
         search_data = json.loads(content.text)
         assert "query" in search_data, "Should contain query info"
         assert "results" in search_data, "Should contain results"
         assert "total_results" in search_data, "Should contain total results count"
-        
+
         # Should have search results (assuming database has data)
         if search_data["total_results"] > 0:
             results = search_data["results"]
             assert isinstance(results, list), "Results should be a list"
-            
+
             # Check first result structure
             first_result = results[0]
             expected_fields = ["filename", "language", "code", "score"]
             for field in expected_fields:
                 assert field in first_result, f"Result should contain '{field}' field"
-    
+
     async def test_execute_tool_analyze_code(self, mcp_server):
         """Test executing the analyze_code tool via proper MCP client."""
         test_code = '''
@@ -543,15 +544,15 @@ async def process_data(items: list[str]) -> list[str]:
 
 class DataProcessor:
     """A data processor class."""
-    
+
     def __init__(self, name: str):
         self.name = name
-    
+
     @property
     def status(self) -> str:
         return "active"
 '''
-        
+
         result = await mcp_server.execute_tool(
             "analyze_code",
             {
@@ -560,37 +561,37 @@ class DataProcessor:
                 "language": "python"
             }
         )
-        
+
         # Should get proper MCP response format
         assert isinstance(result, list), "Tool result should return a list"
         assert len(result) == 2, "Tool result should return tuple format"
         assert result[0] == "content", "First element should be 'content'"
-        
+
         content_list = result[1]
         assert len(content_list) >= 1, "Should have at least one content item"
-        
+
         # Check content structure
         content = content_list[0]
         assert content.type == "text"
-        
+
         # Parse the JSON response to check analysis results
         analysis_data = json.loads(content.text)
         assert "file_path" in analysis_data, "Should contain file path"
         assert "language" in analysis_data, "Should contain language"
         assert "metadata" in analysis_data, "Should contain metadata"
-        
+
         # Check metadata structure
         metadata = analysis_data["metadata"]
         expected_fields = ["functions", "classes", "has_async", "has_type_hints"]
         for field in expected_fields:
             assert field in metadata, f"Metadata should contain '{field}' field"
-        
+
         # Should detect the function and class we defined
         assert "process_data" in str(metadata["functions"]), "Should detect process_data function"
         assert "DataProcessor" in str(metadata["classes"]), "Should detect DataProcessor class"
         assert metadata["has_async"] is True, "Should detect async code"
         assert metadata["has_type_hints"] is True, "Should detect type hints"
-    
+
     async def test_execute_tool_keyword_search_basic(self, mcp_server):
         """Test executing the keyword_search tool with basic queries."""
         result = await mcp_server.execute_tool(
@@ -600,53 +601,53 @@ class DataProcessor:
                 "top_k": 5
             }
         )
-        
+
         # Should get proper MCP response format without errors
         assert isinstance(result, list), "Tool result should return a list"
         assert len(result) == 2, "Tool result should return tuple format"
         assert result[0] == "content", "First element should be 'content'"
-        
+
         content_list = result[1]
         assert len(content_list) >= 1, "Should have at least one content item"
-        
+
         # Check content structure
         content = content_list[0]
         assert content.type == "text"
-        
+
         # Parse the JSON response
         search_data = json.loads(content.text)
         assert "query" in search_data, "Should contain query info"
         assert "results" in search_data, "Should contain results"
         assert "total_results" in search_data, "Should contain total results count"
-    
+
     async def test_execute_tool_get_keyword_syntax_help(self, mcp_server):
         """Test executing the get_keyword_syntax_help tool."""
         result = await mcp_server.execute_tool(
             "get_keyword_syntax_help",
             {}
         )
-        
+
         # Should get proper MCP response format
         assert isinstance(result, list), "Tool result should return a list"
         assert len(result) == 2, "Tool result should return tuple format"
         assert result[0] == "content", "First element should be 'content'"
-        
+
         content_list = result[1]
         assert len(content_list) >= 1, "Should have at least one content item"
-        
+
         # Check content structure
         content = content_list[0]
         assert content.type == "text"
-        
+
         # Parse the JSON response to check help content
         help_data = json.loads(content.text)
         assert "keyword_query_syntax" in help_data, "Should contain syntax help"
-        
+
         syntax_help = help_data["keyword_query_syntax"]
         assert "basic_operators" in syntax_help, "Should contain basic operators help"
         assert "boolean_logic" in syntax_help, "Should contain boolean logic help"
         assert "available_fields" in syntax_help, "Should contain available fields help"
-    
+
     async def test_error_handling_invalid_tool(self, mcp_server):
         """Test error handling for invalid tool calls."""
         with pytest.raises(Exception):  # Should raise an exception for unknown tool
@@ -654,12 +655,12 @@ class DataProcessor:
                 "nonexistent_tool",
                 {}
             )
-    
+
     async def test_error_handling_invalid_resource(self, mcp_server):
         """Test error handling for invalid resource URIs."""
         with pytest.raises(Exception):  # Should raise an exception for unknown resource
             await mcp_server.read_resource("cocoindex://invalid/resource")
-    
+
     async def test_smart_embedding_functionality(self, mcp_server):
         """Test that smart embedding is working with language-aware model selection."""
         # Test Python code - should use GraphCodeBERT
@@ -670,25 +671,25 @@ class DataProcessor:
                 "top_k": 3
             }
         )
-        
+
         # Parse result
         content_list = python_result[1]
         content = content_list[0]
         search_data = json.loads(content.text)
-        
+
         # Should find Python-related results
         if search_data["total_results"] > 0:
             results = search_data["results"]
             # At least some results should be Python
             python_results = [r for r in results if r.get("language") == "Python"]
             assert len(python_results) > 0, "Should find Python results when searching for Python concepts"
-            
+
             # Should have rich metadata for Python results
             for result in python_results:
                 assert "has_async" in result, "Python results should have async detection"
                 assert "has_type_hints" in result, "Python results should have type hints detection"
                 assert "analysis_method" in result, "Python results should have analysis method info"
-                
+
                 # Should use enhanced analysis method
                 analysis_method = result.get("analysis_method", "")
                 assert "tree_sitter" in analysis_method or "python_ast" in analysis_method, \

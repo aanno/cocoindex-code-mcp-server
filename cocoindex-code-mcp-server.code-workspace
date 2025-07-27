@@ -11,11 +11,58 @@
 		"python.testing.pytestArgs": [
 			"tests"
 		],
-		"python.formatting.provider": "black"
+		"python.formatting.provider": "autopep8",
+		"editor.formatOnSave": false,
+		"python.linting.flake8Enabled": true,
+		"python.linting.enabled": true
 	},
 	"tasks": {
 		"version": "2.0.0",
 		"tasks": [
+			{
+				"label": "Format Python Code",
+				"type": "shell",
+				"command": "${workspaceFolder}/scripts/format-python.sh",
+				"args": [
+					"${workspaceFolder}/examples",
+					"${workspaceFolder}/src",
+					"${workspaceFolder}/tests"
+				],
+				"group": {
+					"kind": "build",
+					"isDefault": false
+				},
+				"problemMatcher": [],
+				"presentation": {
+					"echo": true,
+					"reveal": "always",
+					"focus": false,
+					"panel": "shared"
+				}
+			},
+			{
+				"label": "Format Python isort",
+				"type": "shell",
+				"command": "${config:python.pythonPath}",
+				"args": [
+					"-m",
+					"isort",
+					"${workspaceFolder}",
+					"--profile",
+					"black"
+				],
+				"group": {
+					"kind": "build",
+					"isDefault": false
+				},
+				"problemMatcher": [],
+				"presentation": {
+					"echo": true,
+					"reveal": "always",
+					"focus": false,
+					"panel": "shared"
+				}
+			},
 			{
 				"label": "My Task",
 				"command": "echo hello",
@@ -38,6 +85,7 @@
 			"ms-python.isort",
 			"ms-python.vscode-pylance",
 			"ms-python.flake8",
+			"ms-python.autopep8",
 			"dustypomerleau.rust-syntax",
 			"rust-lang.rust-analyzer",
 			"fill-labs.dependi",
@@ -65,7 +113,7 @@
 				"name": "debugpy: MCP RAG Server (IT)",
 				"type": "debugpy",
 				"request": "launch",
-				"program": "${workspaceFolder}/src/cocoindex-code-mcp-server/main_mcp_server.py",
+				"program": "${workspaceFolder}/src/cocoindex_code_mcp_server/main_mcp_server.py",
 				"args": [
 					"--port",
 					"3033",
@@ -77,14 +125,13 @@
 				"name": "debugpy: Interactive Hybrid Search (Integrated Terminal)",
 				"type": "debugpy",
 				"request": "launch",
-				"program": "${workspaceFolder}/src/cocoindex-code-mcp-server/main_hybrid_search.py",
+				"program": "${workspaceFolder}/src/cocoindex_code_mcp_server/main_hybrid_search.py",
 				"args": [
 					"/workspaces/rust",
 				],
 				"console": "integratedTerminal"
 			}
 		],
-		"compounds": [
-		]
+		"compounds": []
 	}
 }

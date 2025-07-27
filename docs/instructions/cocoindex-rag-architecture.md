@@ -2124,7 +2124,7 @@ Would you like:
 Let me know and I’ll scaffold it for you!undefined
 
 ## User
-Do you have access to the public github repo at https://github.com/aanno/cocoindex-code-mcp-server ?
+Do you have access to the public github repo at https://github.com/aanno/cocoindex_code_mcp_server ?
 
 ## ChatGPT
 I don’t have direct access to that specific GitHub repository (likely private), but I can still help! Here’s how you can proceed:
@@ -2137,10 +2137,10 @@ I don’t have direct access to that specific GitHub repository (likely private)
 Make sure you have the repo cloned locally. Then search for key CocoIndex + MCP patterns:
 
 ```bash
-grep -R "EXTRACTORS" -n cocoindex-code-mcp-server/
-grep -R "Qdrant" -n cocoindex-code-mcp-server/
-grep -R "Parser(" -n cocoindex-code-mcp-server/
-grep -R "export(" -n cocoindex-code-mcp-server/
+grep -R "EXTRACTORS" -n cocoindex_code_mcp_server/
+grep -R "Qdrant" -n cocoindex_code_mcp_server/
+grep -R "Parser(" -n cocoindex_code_mcp_server/
+grep -R "export(" -n cocoindex_code_mcp_server/
 ```
 
 These commands help locate where vector DB integration and extractors are configured.

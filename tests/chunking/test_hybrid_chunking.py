@@ -5,12 +5,6 @@ Test hybrid chunking functionality with different languages and CocoIndex integr
 """
 
 import pytest
-import sys
-from pathlib import Path
-
-# Add src to path for our modules
-src_path = Path(__file__).parent.parent / "src"
-sys.path.insert(0, str(src_path))
 
 try:
     from ast_chunking import CocoIndexASTChunker, detect_language_from_filename
@@ -40,7 +34,7 @@ def test_language_detection_integration():
         ("test.rs", "Rust"),
         ("unknown.xyz", "Unknown")
     ]
-    
+
     for filename, expected_lang in test_files:
         detected = detect_language_from_filename(filename)
         assert detected == expected_lang
@@ -53,13 +47,13 @@ def test_python_chunking_with_cocoindex():
 def hello_world():
     """A simple hello world function."""
     print("Hello, World!")
-    
+
 class Calculator:
     """A simple calculator class."""
-    
+
     def add(self, a, b):
         return a + b
-    
+
     def multiply(self, a, b):
         return a * b
 
@@ -69,15 +63,15 @@ if __name__ == "__main__":
     print(f"5 + 3 = {result}")
     hello_world()
 '''
-    
+
     chunker = CocoIndexASTChunker(max_chunk_size=300)
     chunks = chunker.chunk_code(python_code, "Python", "test.py")
-    
+
     assert len(chunks) > 0
     assert all(isinstance(chunk, dict) for chunk in chunks)
     assert all('content' in chunk for chunk in chunks)
     assert all('metadata' in chunk for chunk in chunks)
-    
+
     # Verify we're using AST chunking for Python
     for chunk in chunks:
         metadata = chunk['metadata']
@@ -95,20 +89,20 @@ public class Calculator {
         int result = calc.add(5, 3);
         System.out.println("5 + 3 = " + result);
     }
-    
+
     public int add(int a, int b) {
         return a + b;
     }
-    
+
     public int multiply(int a, int b) {
         return a * b;
     }
 }
 '''
-    
+
     chunker = CocoIndexASTChunker(max_chunk_size=300)
     chunks = chunker.chunk_code(java_code, "Java", "Calculator.java")
-    
+
     assert len(chunks) > 0
     for chunk in chunks:
         metadata = chunk['metadata']
@@ -130,22 +124,22 @@ public class Calculator
         int result = calc.Add(5, 3);
         Console.WriteLine($"5 + 3 = {result}");
     }
-    
+
     public int Add(int a, int b)
     {
         return a + b;
     }
-    
+
     public int Multiply(int a, int b)
     {
         return a * b;
     }
 }
 '''
-    
+
     chunker = CocoIndexASTChunker(max_chunk_size=300)
     chunks = chunker.chunk_code(csharp_code, "C#", "Calculator.cs")
-    
+
     assert len(chunks) > 0
     for chunk in chunks:
         metadata = chunk['metadata']
@@ -161,7 +155,7 @@ class Calculator {
     add(a: number, b: number): number {
         return a + b;
     }
-    
+
     multiply(a: number, b: number): number {
         return a * b;
     }
@@ -175,10 +169,10 @@ function main(): void {
 
 main();
 '''
-    
+
     chunker = CocoIndexASTChunker(max_chunk_size=300)
     chunks = chunker.chunk_code(typescript_code, "TypeScript", "calculator.ts")
-    
+
     assert len(chunks) > 0
     for chunk in chunks:
         metadata = chunk['metadata']
@@ -200,10 +194,10 @@ factorial :: Integer -> Integer
 factorial 0 = 1
 factorial n = n * factorial (n - 1)
 '''
-    
+
     chunker = CocoIndexASTChunker(max_chunk_size=300)
     chunks = chunker.chunk_code(haskell_code, "Haskell", "test.hs")
-    
+
     assert len(chunks) > 0
     for chunk in chunks:
         metadata = chunk['metadata']
@@ -220,10 +214,10 @@ that doesn't belong to any
 recognized programming language
 but should still be chunked
 '''
-    
+
     chunker = CocoIndexASTChunker(max_chunk_size=100)
     chunks = chunker.chunk_code(code, "Unknown", "test.xyz")
-    
+
     assert len(chunks) > 0
     for chunk in chunks:
         metadata = chunk['metadata']
@@ -236,11 +230,11 @@ def test_chunker_initialization():
     # Default initialization
     chunker1 = CocoIndexASTChunker()
     assert chunker1 is not None
-    
+
     # Custom chunk size
     chunker2 = CocoIndexASTChunker(max_chunk_size=500)
     assert chunker2.max_chunk_size == 500
-    
+
     # Very small chunk size
     chunker3 = CocoIndexASTChunker(max_chunk_size=50)
     assert chunker3.max_chunk_size == 50

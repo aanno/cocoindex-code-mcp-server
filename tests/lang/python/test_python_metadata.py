@@ -4,21 +4,19 @@
 Comprehensive tests for Python metadata extraction functionality.
 """
 
-import pytest
 import json
 import logging
-from typing import Dict, Any, List
 import sys
-import os
+
+import pytest
 
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)
 
-# Add src to path to import modules
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
-
 try:
-    from lang.python.python_code_analyzer import analyze_python_code
+    from cocoindex_code_mcp_server.lang.python.python_code_analyzer import (
+        analyze_python_code,
+    )
 except ImportError as e:
     LOGGER.warning(f"Could not import python_code_analyzer: {e}")
     print("⚠️  Warning: These tests require the full application setup.")
@@ -27,42 +25,42 @@ except ImportError as e:
 
 class TestPythonMetadataAnalysis:
     """Test suite for Python code metadata analysis."""
-    
+
     def test_simple_function_detection(self):
         """Test detection of simple functions."""
         if analyze_python_code is None:
             pytest.skip("python_code_analyzer not available")
-            
+
         code = """
 def hello_world():
     print("Hello, World!")
-    
+
 def calculate(x, y):
     return x + y
 """
-        
+
         metadata = analyze_python_code(code, "test.py")
-        
+
         assert "functions" in metadata
         assert len(metadata["functions"]) == 2
         assert "hello_world" in metadata["functions"]
         assert "calculate" in metadata["functions"]
         assert metadata["has_classes"] is False
         assert metadata["has_async"] is False
-    
+
     def test_class_detection(self):
         """Test detection of classes and methods."""
         code = """
 class User:
     def __init__(self, name):
         self.name = name
-    
+
     def get_name(self):
         return self.name
-    
+
     def _private_method(self):
         pass
-        
+
     def __str__(self):
         return f"User({self.name})"
 
@@ -70,16 +68,16 @@ class Manager(User):
     def manage(self):
         pass
 """
-        
+
         metadata = analyze_python_code(code, "test.py")
-        
+
         assert "classes" in metadata
         assert len(metadata["classes"]) == 2
         assert "User" in metadata["classes"]
         assert "Manager" in metadata["classes"]
         assert metadata["has_classes"] is True
-        
-        # Check method detection - methods are in function_details 
+
+        # Check method detection - methods are in function_details
         assert "function_details" in metadata
         method_names = [f["name"] for f in metadata["function_details"]]
         assert "__init__" in method_names
@@ -87,50 +85,50 @@ class Manager(User):
         assert "_private_method" in method_names
         assert "__str__" in method_names
         assert "manage" in method_names
-        
+
         # Check private and dunder method categorization
         assert "_private_method" in metadata.get("private_methods", [])
         assert "__str__" in metadata.get("dunder_methods", [])
-    
+
     def test_async_function_detection(self):
         """Test detection of async functions."""
         code = """
 async def fetch_data():
     await some_operation()
-    
+
 def sync_function():
     pass
-    
+
 async def process_data():
     async with some_context():
         pass
 """
-        
+
         metadata = analyze_python_code(code, "test.py")
-        
+
         assert metadata["has_async"] is True
         assert "fetch_data" in metadata["functions"]
-        assert "sync_function" in metadata["functions"] 
+        assert "sync_function" in metadata["functions"]
         assert "process_data" in metadata["functions"]
-    
+
     def test_type_hints_detection(self):
         """Test detection of type hints."""
         code = """
 def add(x: int, y: int) -> int:
     return x + y
-    
+
 def process_data(data: List[str]) -> Dict[str, Any]:
     return {}
-    
+
 def no_hints(x, y):
     return x + y
 """
-        
+
         metadata = analyze_python_code(code, "test.py")
-        
+
         assert metadata["has_type_hints"] is True
         assert len(metadata["functions"]) == 3
-    
+
     def test_import_detection(self):
         """Test detection of imports."""
         code = """
@@ -141,9 +139,9 @@ from pathlib import Path
 import json as js
 from collections import defaultdict
 """
-        
+
         metadata = analyze_python_code(code, "test.py")
-        
+
         assert "imports" in metadata
         imports = metadata["imports"]
         assert "os" in imports
@@ -152,7 +150,7 @@ from collections import defaultdict
         assert "typing" in imports
         assert "pathlib" in imports
         assert "collections" in imports
-    
+
     def test_decorator_detection(self):
         """Test detection of decorators."""
         code = """
@@ -177,9 +175,9 @@ def decorated_function():
 class DataExample:
     name: str
 """
-        
+
         metadata = analyze_python_code(code, "test.py")
-        
+
         assert "decorators" in metadata
         decorators = metadata["decorators"]
         assert "property" in decorators
@@ -188,16 +186,16 @@ class DataExample:
         assert "custom_decorator" in decorators
         assert "another_decorator" in decorators
         assert "dataclass" in decorators
-        
+
         assert metadata["has_decorators"] is True
-    
+
     def test_complexity_score(self):
         """Test complexity score calculation."""
         simple_code = """
 def simple():
     return 1
 """
-        
+
         complex_code = """
 def complex_function(x, y, z):
     if x > 0:
@@ -215,38 +213,38 @@ def complex_function(x, y, z):
     else:
         return None
 """
-        
+
         simple_metadata = analyze_python_code(simple_code, "simple.py")
         complex_metadata = analyze_python_code(complex_code, "complex.py")
-        
+
         assert simple_metadata["complexity_score"] < complex_metadata["complexity_score"]
         assert complex_metadata["complexity_score"] > 5  # Should be reasonably high (adjusted for enhanced analyzer)
-    
+
     def test_docstring_detection(self):
         """Test detection of docstrings."""
         code = """
 def documented_function():
     \"\"\"This function has a docstring.\"\"\"
     pass
-    
+
 def undocumented_function():
     pass
-    
+
 class DocumentedClass:
     \"\"\"This class has a docstring.\"\"\"
-    
+
     def method_with_docs(self):
         \"\"\"This method has docs.\"\"\"
         pass
-        
+
     def method_without_docs(self):
         pass
 """
-        
+
         metadata = analyze_python_code(code, "test.py")
-        
+
         assert metadata["has_docstrings"] is True
-    
+
     @pytest.mark.skip(reason="Variable detection format changed in enhanced analyzer")
     def test_variable_detection(self):
         """Test detection of module-level variables."""
@@ -257,24 +255,24 @@ _private_var = "secret"
 
 def function():
     local_var = 1  # This shouldn't be detected as module variable
-    
+
 class MyClass:
     class_var = "class level"  # This should be detected
 """
-        
+
         metadata = analyze_python_code(code, "test.py")
-        
+
         assert "variables" in metadata
         variables = metadata["variables"]
         assert "MODULE_CONSTANT" in variables
         assert "global_var" in variables
         assert "_private_var" in variables
-        
+
         # Class variables should be separate
         assert "class_variables" in metadata
         class_vars = metadata["class_variables"]
         assert "class_var" in class_vars
-    
+
     @pytest.mark.skip(reason="Output format validation changed in enhanced analyzer")
     def test_comprehensive_real_world_example(self):
         """Test with a more realistic code example."""
@@ -303,21 +301,21 @@ class Config:
 
 class DataProcessor:
     """Main data processing class."""
-    
+
     def __init__(self, config: Config):
         self.config = config
         self._cache = {}
-    
+
     @property
     def name(self) -> str:
         """Get the processor name."""
         return self.config.name
-    
+
     @staticmethod
     def validate_input(data: Union[str, int]) -> bool:
         """Validate input data."""
         return isinstance(data, (str, int))
-    
+
     async def process_async(self, items: List[str]) -> Dict[str, Any]:
         """Process items asynchronously."""
         results = {}
@@ -330,11 +328,11 @@ class DataProcessor:
                     self._log_error(e)
                     continue
         return results
-    
+
     def _process_single(self, item: str) -> str:
         """Private method to process single item."""
         return item.upper()
-    
+
     def __str__(self) -> str:
         return f"DataProcessor({self.name})"
 
@@ -352,42 +350,42 @@ if __name__ == "__main__":
     config = load_config()
     processor = DataProcessor(config)
 '''
-        
+
         metadata = analyze_python_code(code, "real_example.py")
-        
+
         # Verify comprehensive analysis
         assert metadata["has_classes"] is True
         assert metadata["has_async"] is True
         assert metadata["has_type_hints"] is True
         assert metadata["has_decorators"] is True
         assert metadata["has_docstrings"] is True
-        
+
         # Check specific elements
         assert "Config" in metadata["classes"]
         assert "DataProcessor" in metadata["classes"]
         assert "ProcessingError" in metadata["classes"]
-        
+
         assert "load_config" in metadata["functions"]
         assert "process_async" in metadata["functions"]
         assert "_process_single" in metadata["private_methods"]
         assert "__str__" in metadata["dunder_methods"]
-        
+
         assert "dataclass" in metadata["decorators"]
         assert "property" in metadata["decorators"]
         assert "staticmethod" in metadata["decorators"]
-        
+
         assert "os" in metadata["imports"]
         assert "json" in metadata["imports"]
         assert "typing" in metadata["imports"]
         assert "dataclasses" in metadata["imports"]
         assert "pathlib" in metadata["imports"]
-        
+
         assert "DEFAULT_CONFIG" in metadata["variables"]
         assert "MAX_RETRIES" in metadata["variables"]
-        
+
         # Should have reasonable complexity
         assert metadata["complexity_score"] > 15
-    
+
     def test_metadata_json_serialization(self):
         """Test that metadata can be properly serialized to JSON."""
         code = """
@@ -397,9 +395,9 @@ class Example:
     def method(self) -> str:
         return "test"
 """
-        
+
         metadata = analyze_python_code(code, "test.py")
-        
+
         # Ensure all metadata can be JSON serialized
         try:
             json_str = json.dumps(metadata, default=str)
@@ -410,23 +408,23 @@ class Example:
             assert "datetime" in parsed["imports"]
         except (TypeError, ValueError) as e:
             pytest.fail(f"Metadata is not JSON serializable: {e}")
-    
+
     @pytest.mark.skip(reason="Edge case handling changed in enhanced analyzer")
     def test_edge_cases(self):
         """Test edge cases and error handling."""
-        
+
         # Empty code
         metadata = analyze_python_code("", "empty.py")
         assert metadata["line_count"] == 0
         assert metadata["char_count"] == 0
         assert len(metadata["functions"]) == 0
         assert len(metadata["classes"]) == 0
-        
+
         # Only comments
         metadata = analyze_python_code("# Just a comment\n# Another comment", "comments.py")
         assert metadata["line_count"] == 2
         assert len(metadata["functions"]) == 0
-        
+
         # Syntax error handling
         try:
             metadata = analyze_python_code("def broken(:\n    pass", "broken.py")
@@ -443,18 +441,18 @@ if __name__ == "__main__":
         print("❌ Cannot run tests: python_code_analyzer module not available")
         print("These tests require the full application setup with proper imports.")
         sys.exit(1)
-    
+
     # Run tests manually if pytest is not available
     test_instance = TestPythonMetadataAnalysis()
-    
+
     print("🧪 Running Python Metadata Tests")
     print("=" * 50)
-    
+
     test_methods = [method for method in dir(test_instance) if method.startswith('test_')]
-    
+
     passed = 0
     failed = 0
-    
+
     for test_method in test_methods:
         try:
             print(f"Running {test_method}...", end=" ")
@@ -464,6 +462,6 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"❌ FAILED: {e}")
             failed += 1
-    
+
     print(f"\n📊 Results: {passed} passed, {failed} failed")
     print("✅ Python metadata tests completed!")

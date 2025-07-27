@@ -1,0 +1,18 @@
+name: cocoindex-qdrant
+services:
+  qdrant:
+    image: docker.io/qdrant/qdrant:latest
+    # container_name: cocoindex-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      - QDRANT__STORAGE__PERFORMANCE__MAX_SEARCH_THREADS=4
+      - QDRANT__STORAGE__OPTIMIZERS__MEMMAP_THRESHOLD_KB=50000
+      - QDRANT__SERVICE__GRPC_PORT=6334
+    restart: unless-stopped
+
+volumes:
+  qdrant_data:

@@ -3,10 +3,11 @@ requires = ["maturin>=1.0,<2.0"]
 build-backend = "maturin"
 
 [project]
-name = "haskell-tree-sitter"
+name = "cocoindex_code_mcp_server"
 version = "0.1.0"
-description = "Haskell tree-sitter support for CocoIndex"
+description = "RAG based on cocoindex as MCP server (streamingHttp), with Haskell support"
 requires-python = ">=3.11"
+package = { include = ["src/cocoindex_code_mcp_server/**/*.py"] }
 dependencies = [
     "cocoindex[embeddings]>=0.1.63", 
     "python-dotenv>=1.0.1",
@@ -18,15 +19,20 @@ dependencies = [
     "astchunk @ git+https://github.com/yilinjz/astchunk.git",
     "lark-parser>=0.12.0",
     "prompt-toolkit>=3.0.0",
-    "tree-sitter>=0.24.0",
+    "tree-sitter>=0.23.0,<0.24.0",
     "tree-sitter-python>=0.23.6",
     "tree-sitter-c-sharp>=0.23.1",
     "tree-sitter-java>=0.23.5",
     "tree-sitter-typescript>=0.23.2",
+    "tree-sitter-c>=0.21.4,<0.23.0",
+    "tree-sitter-cpp>=0.22.3,<0.23.0",
+    "tree-sitter-rust>=0.21.2,<0.23.0",
+    "tree-sitter-kotlin>=1.0.0",
 ]
 
 [project.optional-dependencies]
 test = [
+    # testing
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
     "pytest-asyncio>=1.1.0",
@@ -38,8 +44,56 @@ test = [
 mcp-server = [
     "mcp>=1.12.0",
 ]
+build = [
+    "maturin>=1.0,<2.0",
+    # typing
+    "mypy>=1.10.0",
+    # code quality
+    "isort>=6.0.1",
+    "autoflake8>=1.7.0",
+    "autopep8>=2.0.0",
+    "flake8>=7.3.0",
+    "autopep8>=2.0.0",
+    "isort>=6.0.1",
+    # dependency management
+    "pipdeptree>=2.8.0",
+    "deptry>=0.14.0",
+    # linting
+    "pydocstyle>=6.3.0",
+    "ruff>=0.4.0",
+]
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
-module-name = "haskell_tree_sitter"
+module-name = "cocoindex_code_mcp_server"
 manifest-path = "rust/Cargo.toml"
+bindings = "pyo3"
+compatibility = "linux"  # or linux, macos, etc.
+python-source = "src"
+include = ["src/cocoindex_code_mcp_server/**/*.py"]
+
+[tool.isort]
+# profile = "pep8"
+profile = "black"
+
+[tool.ruff]
+line-length = 120
+exclude = [".git", "__pycache__", ".venv", "build", "dist", "docs"]
+# extend-ignore = ["E203", "W503"]  # common ignores for some formatters like black
+
+[tool.pydocstyle]
+line-length = 120
+
+[tool.flake8]
+max-line-length = 120
+exclude = [".git", "__pycache__", ".venv", "build", "dist", "docs"]
+extend-ignore = ["E203", "W503"]
+
+[tool.autoflake8]
+max-line-length = 120
+remove-unused-variables = true
+# remove-all-unused-imports = true
+expand-star-imports = true
+
+[tool.autopep8]
+max_line_length = 120

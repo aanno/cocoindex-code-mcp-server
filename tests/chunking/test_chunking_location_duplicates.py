@@ -6,16 +6,14 @@ within the same file, causing PostgreSQL "ON CONFLICT DO UPDATE" errors.
 """
 
 import pytest
-import sys
-import os
-
-# Add src directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..', 'src', 'cocoindex-code-mcp-server'))
 
 import cocoindex
-from cocoindex_config import (
-    extract_language, get_chunking_params, ASTChunkOperation, AST_CHUNKING_AVAILABLE,
-    CUSTOM_LANGUAGES
+from cocoindex_code_mcp_server.cocoindex_config import (
+    AST_CHUNKING_AVAILABLE,
+    CUSTOM_LANGUAGES,
+    ASTChunkOperation,
+    extract_language,
+    get_chunking_params,
 )
 
 # Test files based on the actual error cases
@@ -33,7 +31,7 @@ impl User {
     pub fn new(id: u32, name: String, email: String) -> Self {
         User { id, name, email }
     }
-    
+
     pub fn validate_email(&self) -> bool {
         self.email.contains('@')
     }
@@ -51,14 +49,14 @@ impl UserService {
             next_id: 1,
         }
     }
-    
+
     pub fn create_user(&mut self, name: String, email: String) -> User {
         let user = User::new(self.next_id, name, email);
         self.users.insert(self.next_id, user.clone());
         self.next_id += 1;
         user
     }
-    
+
     pub fn get_user(&self, id: u32) -> Option<&User> {
         self.users.get(&id)
     }
@@ -72,7 +70,7 @@ A Model Context Protocol (MCP) server that provides code indexing and search cap
 ## Features
 
 - **Code Indexing**: Index code files with language-aware chunking
-- **Semantic Search**: Find code using natural language queries  
+- **Semantic Search**: Find code using natural language queries
 - **Metadata Extraction**: Extract functions, classes, imports, and complexity metrics
 - **Hybrid Search**: Combine keyword and semantic search
 - **Multiple Languages**: Support for Python, Rust, TypeScript, Java, and more
@@ -80,8 +78,8 @@ A Model Context Protocol (MCP) server that provides code indexing and search cap
 ## Installation
 
 ```bash
-git clone https://github.com/user/cocoindex-code-mcp-server.git
-cd cocoindex-code-mcp-server
+git clone https://github.com/user/cocoindex_code_mcp_server.git
+cd cocoindex_code_mcp_server
 pip install -e .
 ```
 
@@ -165,55 +163,55 @@ class AnalysisResult:
 
 class BaseAnalyzer(ABC):
     """Base class for all code analyzers."""
-    
+
     def __init__(self, language: str):
         self.language = language
         self.supported_extensions = []
-    
+
     @abstractmethod
     def analyze(self, code: str, filename: str = "") -> AnalysisResult:
         """
         Analyze the given code and return structured information.
-        
+
         Args:
             code: The source code to analyze
             filename: Optional filename for context
-            
+
         Returns:
             AnalysisResult containing extracted information
         """
         pass
-    
+
     def is_supported_file(self, filename: str) -> bool:
         """Check if this analyzer supports the given file."""
         return any(filename.endswith(ext) for ext in self.supported_extensions)
-    
+
     def extract_functions(self, code: str) -> List[str]:
         """Extract function names from code. Override in subclasses."""
         return []
-    
+
     def extract_classes(self, code: str) -> List[str]:
         """Extract class names from code. Override in subclasses."""
         return []
-    
+
     def extract_imports(self, code: str) -> List[str]:
         """Extract import statements from code. Override in subclasses."""
         return []
-    
+
     def calculate_complexity(self, code: str) -> int:
         """Calculate code complexity score. Override in subclasses."""
         # Simple line-based complexity as fallback
         lines = [line.strip() for line in code.split('\\n') if line.strip()]
         return len(lines)
-    
+
     def has_type_annotations(self, code: str) -> bool:
         """Check if code has type annotations. Override in subclasses."""
         return False
-    
+
     def has_async_code(self, code: str) -> bool:
         """Check if code uses async/await. Override in subclasses."""
         return 'async ' in code or 'await ' in code
-    
+
     def extract_decorators(self, code: str) -> List[str]:
         """Extract decorator names. Override in subclasses."""
         return []
@@ -221,21 +219,21 @@ class BaseAnalyzer(ABC):
 
 class PythonAnalyzer(BaseAnalyzer):
     """Analyzer specifically for Python code."""
-    
+
     def __init__(self):
         super().__init__("Python")
         self.supported_extensions = [".py", ".pyi", ".pyx"]
-    
+
     def analyze(self, code: str, filename: str = "") -> AnalysisResult:
         """Analyze Python code using AST parsing."""
         try:
             tree = ast.parse(code)
-            
+
             functions = self._extract_functions_ast(tree)
             classes = self._extract_classes_ast(tree)
             imports = self._extract_imports_ast(tree)
             decorators = self._extract_decorators_ast(tree)
-            
+
             return AnalysisResult(
                 functions=functions,
                 classes=classes,
@@ -247,11 +245,11 @@ class PythonAnalyzer(BaseAnalyzer):
                 decorators_used=decorators,
                 analysis_method="ast_parsing"
             )
-            
+
         except SyntaxError:
             # Fallback to regex-based analysis for invalid Python
             return self._fallback_analysis(code)
-    
+
     def _extract_functions_ast(self, tree: ast.AST) -> List[str]:
         """Extract function names using AST."""
         functions = []
@@ -259,15 +257,15 @@ class PythonAnalyzer(BaseAnalyzer):
             if isinstance(node, ast.FunctionDef):
                 functions.append(node.name)
         return functions
-    
+
     def _extract_classes_ast(self, tree: ast.AST) -> List[str]:
-        """Extract class names using AST.""" 
+        """Extract class names using AST."""
         classes = []
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef):
                 classes.append(node.name)
         return classes
-    
+
     def _extract_imports_ast(self, tree: ast.AST) -> List[str]:
         """Extract import names using AST."""
         imports = []
@@ -279,7 +277,7 @@ class PythonAnalyzer(BaseAnalyzer):
                 if node.module:
                     imports.append(node.module)
         return imports
-    
+
     def _extract_decorators_ast(self, tree: ast.AST) -> List[str]:
         """Extract decorator names using AST."""
         decorators = []
@@ -289,7 +287,7 @@ class PythonAnalyzer(BaseAnalyzer):
                     if isinstance(decorator, ast.Name):
                         decorators.append(decorator.id)
         return decorators
-    
+
     def _calculate_ast_complexity(self, tree: ast.AST) -> int:
         """Calculate complexity based on AST nodes."""
         complexity = 0
@@ -297,7 +295,7 @@ class PythonAnalyzer(BaseAnalyzer):
             if isinstance(node, (ast.If, ast.While, ast.For, ast.With, ast.Try)):
                 complexity += 1
         return complexity
-    
+
     def _has_type_hints_ast(self, tree: ast.AST) -> bool:
         """Check for type hints in AST."""
         for node in ast.walk(tree):
@@ -305,20 +303,20 @@ class PythonAnalyzer(BaseAnalyzer):
                 if node.returns or any(arg.annotation for arg in node.args.args):
                     return True
         return False
-    
+
     def _has_async_ast(self, tree: ast.AST) -> bool:
         """Check for async functions in AST."""
         for node in ast.walk(tree):
             if isinstance(node, ast.AsyncFunctionDef):
                 return True
         return False
-    
+
     def _fallback_analysis(self, code: str) -> AnalysisResult:
         """Fallback regex-based analysis for invalid Python."""
         functions = re.findall(r'^\\s*def\\s+(\\w+)', code, re.MULTILINE)
         classes = re.findall(r'^\\s*class\\s+(\\w+)', code, re.MULTILINE)
         imports = re.findall(r'^\\s*(?:from\\s+\\w+\\s+)?import\\s+(\\w+)', code, re.MULTILINE)
-        
+
         return AnalysisResult(
             functions=functions,
             classes=classes,
@@ -335,31 +333,31 @@ class PythonAnalyzer(BaseAnalyzer):
 
 class TestChunkingLocationDuplicates:
     """Test to identify duplicate location generation within single files."""
-    
+
     def test_ast_chunking_location_uniqueness_detailed(self):
         """Test AST chunking with detailed location analysis for files that cause errors."""
         test_cases = [
             ("driver.rs", RUST_FILE_CONTENT, "Rust"),
-            ("README.md", MARKDOWN_CONTENT, "Markdown"), 
+            ("README.md", MARKDOWN_CONTENT, "Markdown"),
             ("base_analyzer.py", PYTHON_CONTENT, "Python")
         ]
-        
+
         for filename, content, expected_language in test_cases:
             print(f"\n=== Testing {filename} ({expected_language}) ===")
-            
+
             language = extract_language(filename)
             assert language == expected_language, f"Language detection failed: {language} != {expected_language}"
-            
+
             if not AST_CHUNKING_AVAILABLE:
                 print("AST chunking not available, skipping")
                 continue
-                
+
             # Test with different chunk sizes to see if duplicates occur
             chunk_sizes = [500, 1000, 1500]
-            
+
             for chunk_size in chunk_sizes:
                 print(f"\n--- Chunk size: {chunk_size} ---")
-                
+
                 try:
                     chunks = ASTChunkOperation(
                         content=content,
@@ -367,31 +365,32 @@ class TestChunkingLocationDuplicates:
                         max_chunk_size=chunk_size,
                         chunk_overlap=100
                     )
-                    
+
                     print(f"Generated {len(chunks)} chunks")
-                    
+
                     # Collect all locations and analyze for duplicates
                     locations = []
                     primary_keys = []
-                    
+
                     for i, chunk in enumerate(chunks):
                         location = chunk.location
                         primary_key = (filename, location, "files")
-                        
+
                         locations.append(location)
                         primary_keys.append(primary_key)
-                        
-                        print(f"  Chunk {i}: location='{location}', text_len={len(chunk.text)}, start={chunk.start}, end={chunk.end}")
+
+                        print(
+                            f"  Chunk {i}: location='{location}', text_len={len(chunk.text)}, start={chunk.start}, end={chunk.end}")
                         print(f"    Primary key: {primary_key}")
                         print(f"    Text preview: {chunk.text[:100].replace(chr(10), ' ')[:50]}...")
-                    
+
                     # Check for duplicate locations within this file
                     unique_locations = set(locations)
                     if len(locations) != len(unique_locations):
                         duplicates = [loc for loc in locations if locations.count(loc) > 1]
                         print(f"❌ DUPLICATE LOCATIONS FOUND: {set(duplicates)}")
-                        print(f"This would cause PostgreSQL 'ON CONFLICT DO UPDATE' error!")
-                        
+                        print("This would cause PostgreSQL 'ON CONFLICT DO UPDATE' error!")
+
                         # Show which chunks have the same location
                         for dup_loc in set(duplicates):
                             dup_indices = [i for i, loc in enumerate(locations) if loc == dup_loc]
@@ -399,48 +398,48 @@ class TestChunkingLocationDuplicates:
                             for idx in dup_indices:
                                 chunk = chunks[idx]
                                 print(f"    Chunk {idx}: start={chunk.start}, end={chunk.end}, len={len(chunk.text)}")
-                        
+
                         # This should fail the test
-                        assert False, f"Chunk size {chunk_size}: Duplicate locations found for {filename}: {set(duplicates)}"
+                        assert False, f"Chunk size {chunk_size}: Duplicate locations found for {filename}: {
+                            set(duplicates)}"
                     else:
                         print(f"✅ All locations unique for chunk size {chunk_size}")
-                        
+
                 except Exception as e:
                     print(f"Chunking failed for {filename} with chunk size {chunk_size}: {e}")
                     # Don't fail on chunking errors, just report them
                     continue
-    
+
     def test_default_chunking_location_uniqueness(self):
         """Test default SplitRecursively chunking for location uniqueness."""
         print("\n=== Testing Default Chunking (SplitRecursively) ===")
-        
+
         # Test with a file that would use default chunking (Rust is not supported by AST chunking)
         filename = "test.rs"
-        content = RUST_FILE_CONTENT
         language = extract_language(filename)
-        
+
         print(f"Testing {filename} with language: {language}")
-        
+
         # Simulate the default chunking path from the flow
         try:
             params = get_chunking_params(language)
             print(f"Chunking params: {params}")
-            
+
             # Create the chunker as used in the flow
             chunker = cocoindex.functions.SplitRecursively(custom_languages=CUSTOM_LANGUAGES)
             print(f"Created chunker: {chunker}")
-            
+
             # NOTE: We can't easily test SplitRecursively directly due to DataSlice requirements
             # But we can verify the chunker is created correctly
             print("✅ Default chunker created successfully")
-            
+
             # The actual issue might be in how the location field is set by SplitRecursively
             # This would require running the full flow to test properly
-            
+
         except Exception as e:
             print(f"Default chunking setup failed: {e}")
             raise
-    
+
     def test_empty_or_minimal_content_chunking(self):
         """Test how chunking handles edge cases that might produce duplicate locations."""
         edge_cases = [
@@ -449,15 +448,15 @@ class TestChunkingLocationDuplicates:
             ("single_line.md", "# Title", "Markdown"),
             ("whitespace.py", "\n\n\n   \n\n", "Python"),
         ]
-        
+
         print("\n=== Testing Edge Cases ===")
-        
+
         for filename, content, expected_lang in edge_cases:
             print(f"\n--- Testing {filename} ---")
             print(f"Content: '{content.replace(chr(10), '\\n')}'")
-            
+
             language = extract_language(filename)
-            
+
             if AST_CHUNKING_AVAILABLE:
                 try:
                     chunks = ASTChunkOperation(
@@ -466,22 +465,23 @@ class TestChunkingLocationDuplicates:
                         max_chunk_size=1000,
                         chunk_overlap=0
                     )
-                    
+
                     print(f"Generated {len(chunks)} chunks")
-                    
+
                     locations = [chunk.location for chunk in chunks]
                     unique_locations = set(locations)
-                    
+
                     if len(locations) != len(unique_locations):
                         duplicates = [loc for loc in locations if locations.count(loc) > 1]
                         print(f"❌ Edge case produced duplicate locations: {set(duplicates)}")
                     else:
                         print(f"✅ Edge case handled correctly: {locations}")
-                        
+
                     # Show all chunks for edge cases
                     for i, chunk in enumerate(chunks):
-                        print(f"  Chunk {i}: location='{chunk.location}', len={len(chunk.text)}, text='{chunk.text.replace(chr(10), '\\n')}'")
-                        
+                        print(
+                            f"  Chunk {i}: location='{chunk.location}', len={len(chunk.text)}, text='{chunk.text.replace(chr(10), '\\n')}'")
+
                 except Exception as e:
                     print(f"Edge case chunking failed: {e}")
 
