@@ -10,7 +10,7 @@ import json
 # from __future__ import annotations
 import os
 from dataclasses import dataclass
-from typing import List
+from typing import List, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -825,7 +825,7 @@ def code_embedding_flow(
     )
 
 
-def update_flow_config(paths: List[str] = None, enable_polling: bool = False, poll_interval: int = 30,
+def update_flow_config(paths: Union[List[str], None] = None, enable_polling: bool = False, poll_interval: int = 30,
                        use_default_embedding: bool = False, use_default_chunking: bool = False,
                        use_default_language_handler: bool = False):
     """Update the global flow configuration."""

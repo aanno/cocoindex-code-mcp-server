@@ -11,30 +11,11 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Protocol
+import tree_sitter
+from tree_sitter import Language, Node, Parser, Tree
 
-try:
-    import tree_sitter
-    from tree_sitter import Language, Node, Parser, Tree
-    TREE_SITTER_AVAILABLE = True
-except ImportError:
-    TREE_SITTER_AVAILABLE = False
-    # Mock classes for when tree-sitter is not available
-
-    class Language:
-        pass
-
-    class Parser:
-        pass
-
-    class Tree:
-        pass
-
-    class Node:
-        pass
-
-
+TREE_SITTER_AVAILABLE = True
 LOGGER = logging.getLogger(__name__)
-
 
 @dataclass
 class Position:
