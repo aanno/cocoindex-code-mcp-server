@@ -6,15 +6,15 @@ Provides language-agnostic interfaces for extracting metadata from source code.
 """
 
 import logging
+import re
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Protocol
 from dataclasses import dataclass, field
 from pathlib import Path
-import re
+from typing import Any, Dict, List, Optional, Protocol
 
 try:
     import tree_sitter
-    from tree_sitter import Language, Parser, Tree, Node
+    from tree_sitter import Language, Node, Parser, Tree
     TREE_SITTER_AVAILABLE = True
 except ImportError:
     TREE_SITTER_AVAILABLE = False
@@ -32,7 +32,7 @@ except ImportError:
     class Node:
         pass
 
-import logging
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -344,7 +344,7 @@ class ASTParserFactory:
                     import tree_sitter_python
                     language_obj = tree_sitter.Language(tree_sitter_python.language())
                 except ImportError:
-                    LOGGER.warning(f"tree-sitter-python not available")
+                    LOGGER.warning("tree-sitter-python not available")
                     return None
 
             elif language == 'c_sharp':
@@ -352,7 +352,7 @@ class ASTParserFactory:
                     import tree_sitter_c_sharp
                     language_obj = tree_sitter.Language(tree_sitter_c_sharp.language())
                 except ImportError:
-                    LOGGER.warning(f"tree-sitter-c-sharp not available")
+                    LOGGER.warning("tree-sitter-c-sharp not available")
                     return None
 
             elif language == 'java':
@@ -360,7 +360,7 @@ class ASTParserFactory:
                     import tree_sitter_java
                     language_obj = tree_sitter.Language(tree_sitter_java.language())
                 except ImportError:
-                    LOGGER.warning(f"tree-sitter-java not available")
+                    LOGGER.warning("tree-sitter-java not available")
                     return None
 
             elif language in ['typescript', 'tsx']:
@@ -371,7 +371,7 @@ class ASTParserFactory:
                     else:
                         language_obj = tree_sitter.Language(tree_sitter_typescript.language_typescript())
                 except ImportError:
-                    LOGGER.warning(f"tree-sitter-typescript not available")
+                    LOGGER.warning("tree-sitter-typescript not available")
                     return None
 
             elif language == 'c':
@@ -379,7 +379,7 @@ class ASTParserFactory:
                     import tree_sitter_c
                     language_obj = tree_sitter.Language(tree_sitter_c.language())
                 except ImportError:
-                    LOGGER.warning(f"tree-sitter-c not available")
+                    LOGGER.warning("tree-sitter-c not available")
                     return None
 
             elif language in ['cpp', 'cc', 'cxx']:
@@ -387,7 +387,7 @@ class ASTParserFactory:
                     import tree_sitter_cpp
                     language_obj = tree_sitter.Language(tree_sitter_cpp.language())
                 except ImportError:
-                    LOGGER.warning(f"tree-sitter-cpp not available")
+                    LOGGER.warning("tree-sitter-cpp not available")
                     return None
 
             elif language == 'rust':
@@ -395,7 +395,7 @@ class ASTParserFactory:
                     import tree_sitter_rust
                     language_obj = tree_sitter.Language(tree_sitter_rust.language())
                 except ImportError:
-                    LOGGER.warning(f"tree-sitter-rust not available")
+                    LOGGER.warning("tree-sitter-rust not available")
                     return None
 
             elif language == 'kotlin':
@@ -403,7 +403,7 @@ class ASTParserFactory:
                     import tree_sitter_kotlin
                     language_obj = tree_sitter.Language(tree_sitter_kotlin.language())
                 except ImportError:
-                    LOGGER.warning(f"tree-sitter-kotlin not available")
+                    LOGGER.warning("tree-sitter-kotlin not available")
                     return None
 
             elif language == 'haskell':
@@ -508,7 +508,7 @@ class MultiLevelAnalyzer:
             try:
                 from .language_handlers.haskell_visitor import analyze_haskell_code
                 metadata = analyze_haskell_code(code, "")
-                LOGGER.debug(f"Used specialized Haskell visitor")
+                LOGGER.debug("Used specialized Haskell visitor")
                 return metadata
             except ImportError:
                 LOGGER.debug("Haskell visitor not available, falling back to generic")
@@ -519,7 +519,7 @@ class MultiLevelAnalyzer:
             try:
                 from .language_handlers.c_visitor import analyze_c_code
                 metadata = analyze_c_code(code, filename)
-                LOGGER.debug(f"Used specialized C visitor")
+                LOGGER.debug("Used specialized C visitor")
                 return metadata
             except ImportError:
                 LOGGER.debug("C visitor not available, falling back to generic")
@@ -530,7 +530,7 @@ class MultiLevelAnalyzer:
             try:
                 from .language_handlers.cpp_visitor import analyze_cpp_code
                 metadata = analyze_cpp_code(code, language, filename)
-                LOGGER.debug(f"Used specialized C++ visitor")
+                LOGGER.debug("Used specialized C++ visitor")
                 return metadata
             except ImportError:
                 LOGGER.debug("C++ visitor not available, falling back to generic")
@@ -541,7 +541,7 @@ class MultiLevelAnalyzer:
             try:
                 from .language_handlers.rust_visitor import analyze_rust_code
                 metadata = analyze_rust_code(code, filename)
-                LOGGER.debug(f"Used specialized Rust visitor")
+                LOGGER.debug("Used specialized Rust visitor")
                 return metadata
             except ImportError:
                 LOGGER.debug("Rust visitor not available, falling back to generic")
@@ -552,7 +552,7 @@ class MultiLevelAnalyzer:
             try:
                 from .language_handlers.kotlin_visitor import analyze_kotlin_code
                 metadata = analyze_kotlin_code(code, filename)
-                LOGGER.debug(f"Used specialized Kotlin visitor")
+                LOGGER.debug("Used specialized Kotlin visitor")
                 return metadata
             except ImportError:
                 LOGGER.debug("Kotlin visitor not available, falling back to generic")
@@ -563,7 +563,7 @@ class MultiLevelAnalyzer:
             try:
                 from .language_handlers.java_visitor import analyze_java_code
                 metadata = analyze_java_code(code, filename)
-                LOGGER.debug(f"Used specialized Java visitor")
+                LOGGER.debug("Used specialized Java visitor")
                 return metadata
             except ImportError:
                 LOGGER.debug("Java visitor not available, falling back to generic")
@@ -572,9 +572,11 @@ class MultiLevelAnalyzer:
 
         elif language in ['javascript', 'js']:
             try:
-                from .language_handlers.javascript_visitor import analyze_javascript_code
+                from .language_handlers.javascript_visitor import (
+                    analyze_javascript_code,
+                )
                 metadata = analyze_javascript_code(code, language, filename)
-                LOGGER.debug(f"Used specialized JavaScript visitor")
+                LOGGER.debug("Used specialized JavaScript visitor")
                 return metadata
             except ImportError:
                 LOGGER.debug("JavaScript visitor not available, falling back to generic")
@@ -583,9 +585,11 @@ class MultiLevelAnalyzer:
 
         elif language in ['typescript', 'tsx']:
             try:
-                from .language_handlers.typescript_visitor import analyze_typescript_code
+                from .language_handlers.typescript_visitor import (
+                    analyze_typescript_code,
+                )
                 metadata = analyze_typescript_code(code, language, filename)
-                LOGGER.debug(f"Used specialized TypeScript visitor")
+                LOGGER.debug("Used specialized TypeScript visitor")
                 return metadata
             except ImportError:
                 LOGGER.debug("TypeScript visitor not available, falling back to generic")

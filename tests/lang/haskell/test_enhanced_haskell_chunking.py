@@ -6,11 +6,12 @@ Tests the new HaskellChunkConfig and EnhancedHaskellChunker classes.
 """
 
 import pytest
+
 from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
-    HaskellChunkConfig,
     EnhancedHaskellChunker,
+    HaskellChunkConfig,
+    create_enhanced_regex_fallback_chunks,
     get_enhanced_haskell_separators,
-    create_enhanced_regex_fallback_chunks
 )
 
 
@@ -199,7 +200,7 @@ processData :: String -> IO (Maybe Int)
 processData input = do
     case parse input of
         Left err -> return Nothing
-        Right val -> 
+        Right val ->
             let result = val >>= process
             in return $ Just result
   where
@@ -348,7 +349,9 @@ class TestBackwardCompatibility:
 
     def test_legacy_function_exists(self):
         """Test that legacy function still exists."""
-        from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import create_regex_fallback_chunks_python
+        from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
+            create_regex_fallback_chunks_python,
+        )
 
         haskell_code = """
 factorial :: Integer -> Integer
@@ -367,7 +370,9 @@ factorial n = product [1..n]
 
     def test_cocoindex_operation_exists(self):
         """Test that CocoIndex operation function exists."""
-        from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import extract_haskell_ast_chunks
+        from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
+            extract_haskell_ast_chunks,
+        )
 
         # Function should exist and be callable
         assert callable(extract_haskell_ast_chunks)

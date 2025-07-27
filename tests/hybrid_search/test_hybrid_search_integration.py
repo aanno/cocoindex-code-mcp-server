@@ -4,9 +4,10 @@
 Integration tests for the hybrid search workflow.
 """
 
-import pytest
-from unittest.mock import Mock, patch
 import tempfile
+from unittest.mock import Mock, patch
+
+import pytest
 
 # Package should be installed via maturin develop or pip install -e .
 
@@ -33,7 +34,10 @@ class TestMainHybridSearchIntegration:
     def test_argument_parsing_basic(self, mock_load_dotenv, mock_cocoindex_init):
         """Test basic argument parsing."""
         try:
-            from cocoindex_code_mcp_server.main_hybrid_search import parse_hybrid_search_args, determine_paths
+            from cocoindex_code_mcp_server.main_hybrid_search import (
+                determine_paths,
+                parse_hybrid_search_args,
+            )
 
             # Test default arguments
             with patch('sys.argv', ['main_hybrid_search.py']):
@@ -51,7 +55,10 @@ class TestMainHybridSearchIntegration:
     def test_argument_parsing_custom_paths(self, mock_load_dotenv, mock_cocoindex_init):
         """Test argument parsing with custom paths."""
         try:
-            from cocoindex_code_mcp_server.main_hybrid_search import parse_hybrid_search_args, determine_paths
+            from cocoindex_code_mcp_server.main_hybrid_search import (
+                determine_paths,
+                parse_hybrid_search_args,
+            )
 
             # Test with positional paths
             with patch('sys.argv', ['main_hybrid_search.py', '/path1', '/path2']):
@@ -67,7 +74,9 @@ class TestMainHybridSearchIntegration:
     def test_argument_parsing_no_live(self, mock_load_dotenv, mock_cocoindex_init):
         """Test argument parsing with live updates disabled."""
         try:
-            from cocoindex_code_mcp_server.main_hybrid_search import parse_hybrid_search_args
+            from cocoindex_code_mcp_server.main_hybrid_search import (
+                parse_hybrid_search_args,
+            )
 
             with patch('sys.argv', ['main_hybrid_search.py', '--no-live']):
                 args = parse_hybrid_search_args()
@@ -81,7 +90,9 @@ class TestMainHybridSearchIntegration:
     def test_argument_parsing_custom_poll(self, mock_load_dotenv, mock_cocoindex_init):
         """Test argument parsing with custom polling interval."""
         try:
-            from cocoindex_code_mcp_server.main_hybrid_search import parse_hybrid_search_args
+            from cocoindex_code_mcp_server.main_hybrid_search import (
+                parse_hybrid_search_args,
+            )
 
             with patch('sys.argv', ['main_hybrid_search.py', '--poll', '30']):
                 args = parse_hybrid_search_args()
@@ -165,7 +176,9 @@ class TestWorkflowIntegration:
                     "",                         # empty query to quit
                 ]
 
-                from cocoindex_code_mcp_server.db.pgvector.hybrid_search import run_interactive_hybrid_search
+                from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
+                    run_interactive_hybrid_search,
+                )
 
                 # Should not raise any exceptions
                 run_interactive_hybrid_search()
@@ -179,8 +192,12 @@ class TestWorkflowIntegration:
     def test_end_to_end_search_pipeline(self, mock_database_setup):
         """Test the end-to-end search pipeline with mocked components."""
         try:
-            from cocoindex_code_mcp_server.db.pgvector.hybrid_search import HybridSearchEngine
-            from cocoindex_code_mcp_server.keyword_search_parser import KeywordSearchParser
+            from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
+                HybridSearchEngine,
+            )
+            from cocoindex_code_mcp_server.keyword_search_parser import (
+                KeywordSearchParser,
+            )
 
             mock_pool, mock_conn, mock_cursor = mock_database_setup
 
@@ -231,8 +248,12 @@ class TestWorkflowIntegration:
     def test_complex_query_parsing_and_execution(self, mock_database_setup):
         """Test complex query parsing and execution."""
         try:
-            from cocoindex_code_mcp_server.db.pgvector.hybrid_search import HybridSearchEngine
-            from cocoindex_code_mcp_server.keyword_search_parser import KeywordSearchParser
+            from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
+                HybridSearchEngine,
+            )
+            from cocoindex_code_mcp_server.keyword_search_parser import (
+                KeywordSearchParser,
+            )
 
             mock_pool, mock_conn, mock_cursor = mock_database_setup
 
@@ -325,7 +346,9 @@ class TestErrorHandling:
     def test_search_with_database_error(self):
         """Test search behavior when database errors occur."""
         try:
-            from cocoindex_code_mcp_server.db.pgvector.hybrid_search import HybridSearchEngine
+            from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
+                HybridSearchEngine,
+            )
 
             # Mock database to raise an exception
             mock_pool = Mock()
@@ -347,8 +370,12 @@ class TestErrorHandling:
     def test_search_with_invalid_keyword_syntax(self):
         """Test search with invalid keyword syntax."""
         try:
-            from cocoindex_code_mcp_server.db.pgvector.cocoindex_code_mcp_server.hybrid_search import HybridSearchEngine
-            from cocoindex_code_mcp_server.keyword_search_parser import KeywordSearchParser
+            from cocoindex_code_mcp_server.db.pgvector.cocoindex_code_mcp_server.hybrid_search import (
+                HybridSearchEngine,
+            )
+            from cocoindex_code_mcp_server.keyword_search_parser import (
+                KeywordSearchParser,
+            )
 
             # Use real parser to test actual parsing behavior
             parser = KeywordSearchParser()
@@ -373,7 +400,9 @@ class TestErrorHandling:
     def test_embedding_function_error(self):
         """Test behavior when embedding function fails."""
         try:
-            from cocoindex_code_mcp_server.db.pgvector.hybrid_search import HybridSearchEngine
+            from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
+                HybridSearchEngine,
+            )
 
             # Mock embedding function that raises an error
             def failing_embedding_func(query):
@@ -404,7 +433,10 @@ class TestPerformanceCharacteristics:
     def test_large_result_set_handling(self):
         """Test handling of large result sets."""
         try:
-            from cocoindex_code_mcp_server.db.pgvector.hybrid_search import format_results_readable, format_results_as_json
+            from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
+                format_results_as_json,
+                format_results_readable,
+            )
 
             # Create a large number of mock results
             large_results = []

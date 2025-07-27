@@ -6,10 +6,12 @@ Interactive query functionality for the code embedding pipeline.
 
 import os
 from typing import Any, Dict, List
-from psycopg_pool import ConnectionPool
-from pgvector.psycopg import register_vector
-import cocoindex
+
 from cocoindex_config import code_embedding_flow, code_to_embedding
+from pgvector.psycopg import register_vector
+from psycopg_pool import ConnectionPool
+
+import cocoindex
 
 
 def search(pool: ConnectionPool, query: str, top_k: int = 5) -> List[Dict[str, Any]]:

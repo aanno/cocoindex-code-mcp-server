@@ -5,16 +5,17 @@ Tests for external language-aware code embedding functionality.
 Tests the smart_code_embedding module without modifying CocoIndex.
 """
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
 
 from cocoindex_code_mcp_server.smart_code_embedding import (
     LanguageModelSelector,
-    create_smart_code_embedding,
     create_python_embedding,
     create_rust_embedding,
+    create_smart_code_embedding,
+    get_supported_extensions,
     get_supported_languages,
-    get_supported_extensions
 )
 
 
@@ -318,7 +319,9 @@ class TestIntegrationScenarios:
     @patch('cocoindex_code_mcp_server.smart_code_embedding.cocoindex')
     def test_file_context_integration(self, mock_cocoindex):
         """Test integration with file context from CocoIndex flows."""
-        from cocoindex_code_mcp_server.smart_code_embedding import create_smart_embedding_from_file_context
+        from cocoindex_code_mcp_server.smart_code_embedding import (
+            create_smart_embedding_from_file_context,
+        )
 
         mock_embed_func = Mock()
         mock_cocoindex.functions.SentenceTransformerEmbed.return_value = mock_embed_func

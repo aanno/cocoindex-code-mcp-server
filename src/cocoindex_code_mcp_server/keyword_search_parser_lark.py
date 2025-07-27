@@ -5,10 +5,10 @@ Lark-based keyword search parser for metadata search with enhanced syntax suppor
 Supports field:value, exists(field), value_contains(field, string), and boolean operators.
 """
 
-from typing import Any, List, Union
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+from typing import Any, List, Union
 
 try:
     from lark import Lark, Token, Transformer
@@ -20,7 +20,9 @@ except ImportError:
 # Import the fallback parser components
 try:
     from .keyword_search_parser import KeywordSearchParser as FallbackParser
-    from .keyword_search_parser import build_sql_where_clause as fallback_build_sql_where_clause
+    from .keyword_search_parser import (
+        build_sql_where_clause as fallback_build_sql_where_clause,
+    )
     FALLBACK_AVAILABLE = True
 except ImportError:
     FALLBACK_AVAILABLE = False

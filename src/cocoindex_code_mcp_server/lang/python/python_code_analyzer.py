@@ -6,9 +6,10 @@ Enhanced with tree-sitter AST analysis and multi-level fallback strategies.
 """
 
 import ast
-import re
 import json
+import re
 from typing import Any, Dict
+
 from . import LOGGER
 
 # Import the new tree-sitter based analyzer
@@ -511,7 +512,7 @@ def analyze_python_code(code: str, filename: str = "") -> Dict[str, Any]:
 
     This function now uses the TreeSitterPythonAnalyzer which provides:
     - Tree-sitter AST analysis for better structure understanding
-    - Python AST analysis for detailed semantic information  
+    - Python AST analysis for detailed semantic information
     - Multi-level fallback strategies for robustness
     - Enhanced metadata extraction with position information
 

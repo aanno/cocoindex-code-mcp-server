@@ -121,7 +121,16 @@ def print_metrics(data):
                                       for r in baseline_results) / len(baseline_results)
                 avg_improvement = avg_ts_f1 - avg_baseline_f1
 
-                print(f"{'AVERAGE':<12} {avg_ts_recall:.1%} {avg_ts_precision:.1%} {avg_ts_f1:.1%}     {avg_baseline_recall:.1%} {avg_baseline_precision:.1%} {avg_baseline_f1:.1%}     {avg_improvement:+.1%}")
+                print(
+                    f"{
+                        'AVERAGE':<12} {
+                        avg_ts_recall:.1%} {
+                        avg_ts_precision:.1%} {
+                        avg_ts_f1:.1%}     {
+                        avg_baseline_recall:.1%} {
+                            avg_baseline_precision:.1%} {
+                                avg_baseline_f1:.1%}     {
+                                    avg_improvement:+.1%}")
             else:
                 print(f"{'AVERAGE':<12} {avg_ts_recall:.1%} {avg_ts_precision:.1%} {avg_ts_f1:.1%}     {'N/A':17}     {'N/A':15}")
 
@@ -175,7 +184,7 @@ if __name__ == '__main__':
                 if value is not None:
                     print(f"{value:.3f}")
                 else:
-                    print(f"Metric not found")
+                    print("Metric not found")
                     sys.exit(1)
             else:
                 print(f"Results file {results_file} not found. Run the test first.")

@@ -6,9 +6,10 @@ as a real MCP client and testing the full protocol interaction.
 """
 
 import json
+
 import pytest
-from mcp.client.streamable_http import streamablehttp_client
 from mcp.client.session import ClientSession
+from mcp.client.streamable_http import streamablehttp_client
 
 
 @pytest.mark.mcp_integration

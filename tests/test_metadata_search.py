@@ -5,9 +5,10 @@ Integration tests for hybrid search with Python metadata extraction.
 These tests require a running database with indexed code.
 """
 
-import os
-import pytest
 import logging
+import os
+
+import pytest
 from dotenv import load_dotenv
 from psycopg_pool import ConnectionPool
 
@@ -15,7 +16,10 @@ from psycopg_pool import ConnectionPool
 LOGGER = logging.getLogger(__name__)
 
 try:
-    from cocoindex_code_mcp_server.db.pgvector.hybrid_search import HybridSearchEngine, format_results_readable
+    from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
+        HybridSearchEngine,
+        format_results_readable,
+    )
 except ImportError as e:
     LOGGER.warning(f"Could not import hybrid_search module: {e}")
     print("⚠️  Warning: These are integration tests that require the full application setup.")
@@ -43,7 +47,7 @@ class TestMetadataSearch:
                 with conn.cursor() as cur:
                     cur.execute("""
                         SELECT EXISTS (
-                            SELECT FROM information_schema.tables 
+                            SELECT FROM information_schema.tables
                             WHERE table_name = 'code_embeddings'
                         );
                     """)
@@ -226,7 +230,7 @@ def run_manual_metadata_search():
             if result.get('imports'):
                 imports_found.update(result['imports'])
 
-        print(f"\n📊 Metadata Summary:")
+        print("\n📊 Metadata Summary:")
         print(
             f"  Functions found: {len(functions_found)} ({', '.join(functions_found[:5])}{'...' if len(functions_found) > 5 else ''})")
         print(

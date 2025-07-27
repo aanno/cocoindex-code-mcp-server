@@ -5,12 +5,13 @@ Tests for the keyword search parser in hybrid search functionality.
 """
 
 import pytest
+
 from cocoindex_code_mcp_server.keyword_search_parser_lark import (
     KeywordSearchParser,
+    Operator,
     SearchCondition,
     SearchGroup,
-    Operator,
-    build_sql_where_clause
+    build_sql_where_clause,
 )
 
 

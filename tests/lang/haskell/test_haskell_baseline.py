@@ -2,8 +2,11 @@
 """Haskell baseline comparison test to verify implementation works."""
 
 import pytest
-from cocoindex_code_mcp_server.language_handlers.haskell_visitor import analyze_haskell_code
+
 from cocoindex_code_mcp_server.ast_visitor import analyze_code
+from cocoindex_code_mcp_server.language_handlers.haskell_visitor import (
+    analyze_haskell_code,
+)
 
 
 class TestHaskellBaseline:
@@ -57,18 +60,18 @@ main :: IO ()
 main = do
     let person = Person "Alice" 30
     putStrLn $ "Person: " ++ show person
-    
+
     let numbers = [1, 2, 3, 4, 5]
     putStrLn $ "Sum of " ++ show numbers ++ " = " ++ show (sumList numbers)
-    
+
     let tree = Branch (Leaf 1) (Branch (Leaf 2) (Leaf 3))
     let doubledTree = treeMap multiplyByTwo tree
     putStrLn $ "Original tree: " ++ show tree
     putStrLn $ "Doubled tree: " ++ show doubledTree
-    
+
     let processNumber = compose addTen multiplyByTwo
     putStrLn $ "Process 5: " ++ show (processNumber 5)
-    
+
     putStrLn $ "Fibonacci 10: " ++ show (fibonacci 10)'''
 
     @pytest.fixture

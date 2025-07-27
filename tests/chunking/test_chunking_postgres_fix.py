@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 """
-Pytest tests to systematically diagnose and verify fixes for chunking failures 
+Pytest tests to systematically diagnose and verify fixes for chunking failures
 that were causing PostgreSQL duplicate key errors.
 
 These tests verify:
 1. CocoIndex SplitRecursively usage is correct
-2. AST chunking produces unique location identifiers 
+2. AST chunking produces unique location identifiers
 3. No duplicate primary keys (filename, location) are generated
 """
 
@@ -14,7 +14,10 @@ import pytest
 
 import cocoindex
 from cocoindex_code_mcp_server.cocoindex_config import (
-    extract_language, get_chunking_params, ASTChunkOperation, AST_CHUNKING_AVAILABLE
+    AST_CHUNKING_AVAILABLE,
+    ASTChunkOperation,
+    extract_language,
+    get_chunking_params,
 )
 
 # Sample code for testing
@@ -35,13 +38,13 @@ def hello_world():
 
 class SampleClass:
     """A sample class for testing."""
-    
+
     def __init__(self, name: str):
         self.name = name
-    
+
     def greet(self) -> str:
         return f"Hello, {self.name}!"
-    
+
     def process_data(self, data: List[Dict]) -> List[str]:
         results = []
         for item in data:
@@ -92,7 +95,7 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func createUser(w http.ResponseWriter, r *http.Request) {
-    // Implementation here  
+    // Implementation here
     fmt.Fprintf(w, "Creating user")
 }
 '''
@@ -350,7 +353,7 @@ class TestChunkingIntegration:
 
             if duplicates:
                 print(f"  ❌ DUPLICATE LOCATIONS FOUND: {set(duplicates)}")
-                print(f"  This would cause PostgreSQL 'ON CONFLICT DO UPDATE' error!")
+                print("  This would cause PostgreSQL 'ON CONFLICT DO UPDATE' error!")
                 assert False, f"{method_name} produced duplicate locations: {duplicates}"
             else:
                 print(f"  ✅ All locations unique ({len(unique_locations)} unique locations)")

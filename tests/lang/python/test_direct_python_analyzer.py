@@ -11,7 +11,9 @@ def test_direct_python_analyzer():
     """Test the PythonCodeAnalyzer directly."""
 
     try:
-        from cocoindex_code_mcp_server.lang.python.python_code_analyzer import PythonCodeAnalyzer
+        from cocoindex_code_mcp_server.lang.python.python_code_analyzer import (
+            PythonCodeAnalyzer,
+        )
     except ImportError as e:
         print(f"❌ Could not import analyzer: {e}")
         return False
@@ -23,7 +25,7 @@ from typing import List
 
 class TestClass:
     '''A test class.'''
-    
+
     def method(self, x: int) -> str:
         '''A test method.'''
         return str(x)
@@ -40,7 +42,7 @@ def function() -> bool:
         analyzer = PythonCodeAnalyzer()
         metadata = analyzer.analyze_code(test_code, "test_direct.py")
 
-        print(f"✅ Analysis completed successfully!")
+        print("✅ Analysis completed successfully!")
         print(f"📊 Analysis Method: {metadata.get('analysis_method', 'unknown')}")
 
         # Check for enhanced fields
@@ -49,7 +51,7 @@ def function() -> bool:
             'node_relationships', 'additional_metadata', 'start_line', 'end_line'
         ]
 
-        print(f"\n📋 Enhanced Fields Check:")
+        print("\n📋 Enhanced Fields Check:")
         print("-" * 30)
 
         for field in enhanced_fields:
@@ -62,7 +64,7 @@ def function() -> bool:
         if 'function_details' in metadata:
             func_details = metadata['function_details']
             if func_details:
-                print(f"\n🔍 Function Details Check:")
+                print("\n🔍 Function Details Check:")
                 print("-" * 30)
                 sample_func = func_details[0]
                 enhanced_func_fields = ['end_line', 'column', 'end_column', 'lines_of_code']
@@ -84,7 +86,7 @@ def function() -> bool:
 if __name__ == "__main__":
     success = test_direct_python_analyzer()
     if success:
-        print(f"\n✅ Direct Python analyzer test completed!")
+        print("\n✅ Direct Python analyzer test completed!")
     else:
-        print(f"\n❌ Direct Python analyzer test failed!")
+        print("\n❌ Direct Python analyzer test failed!")
         sys.exit(1)

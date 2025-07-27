@@ -4,14 +4,15 @@ Integration tests for smart embedding with RAG system.
 Tests that different languages are properly processed and embedded with correct models.
 """
 
-import pytest
 import os
 
+import pytest
+
 from cocoindex_code_mcp_server.cocoindex_config import (
+    LANGUAGE_MODEL_GROUPS,
+    SMART_EMBEDDING_AVAILABLE,
     extract_language,
     get_embedding_model_group,
-    LANGUAGE_MODEL_GROUPS,
-    SMART_EMBEDDING_AVAILABLE
 )
 
 

@@ -4,21 +4,24 @@
 CocoIndex configuration and flow definitions.
 """
 
+import json
+
 # Temporarily disabled due to cocoindex compatibility
 # from __future__ import annotations
 import os
-import json
 from dataclasses import dataclass
-
 from typing import List
-from numpy.typing import NDArray
+
 import numpy as np
+from numpy.typing import NDArray
+
 import cocoindex
+from cocoindex_code_mcp_server import LOGGER
+
+# from sentence_transformers import SentenceTransformer  # Use cocoindex.functions.SentenceTransformerEmbed instead
+from .ast_chunking import ASTChunkOperation, Chunk
 from .lang.haskell.haskell_ast_chunker import get_haskell_language_spec
 from .lang.python.python_code_analyzer import analyze_python_code
-from cocoindex_code_mcp_server import LOGGER
-# from sentence_transformers import SentenceTransformer  # Use cocoindex.functions.SentenceTransformerEmbed instead
-from .ast_chunking import Chunk, ASTChunkOperation
 from .smart_code_embedding import LanguageModelSelector
 
 # Models will be instantiated directly (HuggingFace handles caching)
@@ -252,7 +255,9 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
         if language == "Python" and PYTHON_HANDLER_AVAILABLE and not use_default_handler:
             # Use our advanced Python handler through the tree-sitter analyzer
             try:
-                from lang.python.tree_sitter_python_analyzer import TreeSitterPythonAnalyzer
+                from lang.python.tree_sitter_python_analyzer import (
+                    TreeSitterPythonAnalyzer,
+                )
                 LOGGER.debug("Using TreeSitterPythonAnalyzer with integrated PythonNodeHandler")
                 analyzer = TreeSitterPythonAnalyzer(prefer_tree_sitter=True)
                 metadata = analyzer.analyze_code(text, filename)

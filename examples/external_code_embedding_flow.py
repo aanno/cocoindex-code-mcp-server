@@ -7,16 +7,18 @@ This demonstrates how to use intelligent code embedding functionality
 without modifying CocoIndex source code, using external wrapper functions.
 """
 
-import cocoindex
+import os
+import sys
+
 from smart_code_embedding import (
-    create_smart_code_embedding,
     create_python_embedding,
     create_rust_embedding,
+    create_smart_code_embedding,
+    get_supported_extensions,
     get_supported_languages,
-    get_supported_extensions
 )
-import sys
-import os
+
+import cocoindex
 
 # Add our source directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
@@ -127,14 +129,14 @@ def demonstrate_api_patterns():
     # Pattern 1: Automatic detection from file extension
     print("1. Automatic Detection from File Extension:")
     embedding_func = create_smart_code_embedding(file_extension=".py")
-    print(f"   File: .py → Model: GraphCodeBERT")
+    print("   File: .py → Model: GraphCodeBERT")
     print("   Usage: create_smart_code_embedding(file_extension='.py')")
     print()
 
     # Pattern 2: Manual language specification
     print("2. Manual Language Specification:")
     embedding_func = create_smart_code_embedding(language="rust")
-    print(f"   Language: rust → Model: UniXcode")
+    print("   Language: rust → Model: UniXcode")
     print("   Usage: create_smart_code_embedding(language='rust')")
     print()
 
@@ -225,7 +227,7 @@ chunk["embedding"] = chunk["text"].transform(
 
 # The result: automatic language-aware model selection!
 # - Python files → GraphCodeBERT
-# - Rust files → UniXcode  
+# - Rust files → UniXcode
 # - Other files → appropriate fallback
 '''
 

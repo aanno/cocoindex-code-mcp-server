@@ -7,10 +7,14 @@ This test compares the results of our custom TreeSitterPythonAnalyzer (with Pyth
 against the default CocoIndex language handling to validate our improvements.
 """
 
-import pytest
 import ast
 from typing import Any, Dict
-from cocoindex_code_mcp_server.lang.python.tree_sitter_python_analyzer import TreeSitterPythonAnalyzer
+
+import pytest
+
+from cocoindex_code_mcp_server.lang.python.tree_sitter_python_analyzer import (
+    TreeSitterPythonAnalyzer,
+)
 
 # Create a simple basic analyzer for true comparison
 
@@ -40,7 +44,8 @@ def basic_analyze_python_code(code: str, filename: str = "") -> Dict[str, Any]:
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef):
             functions.append(node.name)
-            if any(isinstance(d, ast.Name) and d.id in ['staticmethod', 'classmethod', 'property'] for d in node.decorator_list):
+            if any(isinstance(d, ast.Name) and d.id in ['staticmethod',
+                   'classmethod', 'property'] for d in node.decorator_list):
                 decorators.extend([d.id for d in node.decorator_list if isinstance(d, ast.Name)])
         elif isinstance(node, ast.AsyncFunctionDef):
             functions.append(node.name)
@@ -82,32 +87,32 @@ from functools import wraps, lru_cache
 @dataclass
 class DataProcessor:
     """A sample data processing class with various method types."""
-    
+
     name: str
     config: Dict[str, Any]
-    
+
     def __init__(self, name: str, config: Dict[str, Any]):
         self.name = name
         self.config = config
         self._internal_state = {}
-    
+
     @property
     def status(self) -> str:
         """Get the current processing status."""
         return self._internal_state.get('status', 'idle')
-    
+
     @staticmethod
     def validate_config(config: Dict[str, Any]) -> bool:
         """Validate configuration dictionary."""
         return isinstance(config, dict) and 'version' in config
-    
+
     @classmethod
     def from_file(cls, filename: str) -> 'DataProcessor':
         """Create instance from configuration file."""
         with open(filename, 'r') as f:
             config = json.load(f)
         return cls(config.get('name', 'default'), config)
-    
+
     async def process_async(self, items: List[str]) -> List[str]:
         """Process items asynchronously."""
         processed = []
@@ -115,15 +120,15 @@ class DataProcessor:
             await asyncio.sleep(0.1)
             processed.append(self._transform_item(item))
         return processed
-    
+
     def _transform_item(self, item: str) -> str:
         """Private method to transform individual items."""
         return f"processed_{item}"
-    
+
     def __str__(self) -> str:
         """String representation of the processor."""
         return f"DataProcessor(name={self.name})"
-    
+
     def __repr__(self) -> str:
         """Developer representation of the processor."""
         return f"DataProcessor(name='{self.name}', config={self.config})"
@@ -142,11 +147,11 @@ def cached_function(cache_size: int = 128):
 def complex_calculation(x: int, y: int) -> float:
     """
     Perform a complex calculation with caching.
-    
+
     Args:
         x: First input value
         y: Second input value
-        
+
     Returns:
         The calculated result as a float
     """
@@ -415,7 +420,7 @@ class TestCustomVsDefaultHandlerComparison:
         malformed_code = '''
         def broken_function(
             missing_closing_paren
-        
+
         class IncompleteClass:
             def method_without_body(self):
         '''

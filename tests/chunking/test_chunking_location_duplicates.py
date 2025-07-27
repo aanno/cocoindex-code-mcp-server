@@ -9,8 +9,11 @@ import pytest
 
 import cocoindex
 from cocoindex_code_mcp_server.cocoindex_config import (
-    extract_language, get_chunking_params, ASTChunkOperation, AST_CHUNKING_AVAILABLE,
-    CUSTOM_LANGUAGES
+    AST_CHUNKING_AVAILABLE,
+    CUSTOM_LANGUAGES,
+    ASTChunkOperation,
+    extract_language,
+    get_chunking_params,
 )
 
 # Test files based on the actual error cases
@@ -28,7 +31,7 @@ impl User {
     pub fn new(id: u32, name: String, email: String) -> Self {
         User { id, name, email }
     }
-    
+
     pub fn validate_email(&self) -> bool {
         self.email.contains('@')
     }
@@ -46,14 +49,14 @@ impl UserService {
             next_id: 1,
         }
     }
-    
+
     pub fn create_user(&mut self, name: String, email: String) -> User {
         let user = User::new(self.next_id, name, email);
         self.users.insert(self.next_id, user.clone());
         self.next_id += 1;
         user
     }
-    
+
     pub fn get_user(&self, id: u32) -> Option<&User> {
         self.users.get(&id)
     }
@@ -67,7 +70,7 @@ A Model Context Protocol (MCP) server that provides code indexing and search cap
 ## Features
 
 - **Code Indexing**: Index code files with language-aware chunking
-- **Semantic Search**: Find code using natural language queries  
+- **Semantic Search**: Find code using natural language queries
 - **Metadata Extraction**: Extract functions, classes, imports, and complexity metrics
 - **Hybrid Search**: Combine keyword and semantic search
 - **Multiple Languages**: Support for Python, Rust, TypeScript, Java, and more
@@ -160,55 +163,55 @@ class AnalysisResult:
 
 class BaseAnalyzer(ABC):
     """Base class for all code analyzers."""
-    
+
     def __init__(self, language: str):
         self.language = language
         self.supported_extensions = []
-    
+
     @abstractmethod
     def analyze(self, code: str, filename: str = "") -> AnalysisResult:
         """
         Analyze the given code and return structured information.
-        
+
         Args:
             code: The source code to analyze
             filename: Optional filename for context
-            
+
         Returns:
             AnalysisResult containing extracted information
         """
         pass
-    
+
     def is_supported_file(self, filename: str) -> bool:
         """Check if this analyzer supports the given file."""
         return any(filename.endswith(ext) for ext in self.supported_extensions)
-    
+
     def extract_functions(self, code: str) -> List[str]:
         """Extract function names from code. Override in subclasses."""
         return []
-    
+
     def extract_classes(self, code: str) -> List[str]:
         """Extract class names from code. Override in subclasses."""
         return []
-    
+
     def extract_imports(self, code: str) -> List[str]:
         """Extract import statements from code. Override in subclasses."""
         return []
-    
+
     def calculate_complexity(self, code: str) -> int:
         """Calculate code complexity score. Override in subclasses."""
         # Simple line-based complexity as fallback
         lines = [line.strip() for line in code.split('\\n') if line.strip()]
         return len(lines)
-    
+
     def has_type_annotations(self, code: str) -> bool:
         """Check if code has type annotations. Override in subclasses."""
         return False
-    
+
     def has_async_code(self, code: str) -> bool:
         """Check if code uses async/await. Override in subclasses."""
         return 'async ' in code or 'await ' in code
-    
+
     def extract_decorators(self, code: str) -> List[str]:
         """Extract decorator names. Override in subclasses."""
         return []
@@ -216,21 +219,21 @@ class BaseAnalyzer(ABC):
 
 class PythonAnalyzer(BaseAnalyzer):
     """Analyzer specifically for Python code."""
-    
+
     def __init__(self):
         super().__init__("Python")
         self.supported_extensions = [".py", ".pyi", ".pyx"]
-    
+
     def analyze(self, code: str, filename: str = "") -> AnalysisResult:
         """Analyze Python code using AST parsing."""
         try:
             tree = ast.parse(code)
-            
+
             functions = self._extract_functions_ast(tree)
             classes = self._extract_classes_ast(tree)
             imports = self._extract_imports_ast(tree)
             decorators = self._extract_decorators_ast(tree)
-            
+
             return AnalysisResult(
                 functions=functions,
                 classes=classes,
@@ -242,11 +245,11 @@ class PythonAnalyzer(BaseAnalyzer):
                 decorators_used=decorators,
                 analysis_method="ast_parsing"
             )
-            
+
         except SyntaxError:
             # Fallback to regex-based analysis for invalid Python
             return self._fallback_analysis(code)
-    
+
     def _extract_functions_ast(self, tree: ast.AST) -> List[str]:
         """Extract function names using AST."""
         functions = []
@@ -254,15 +257,15 @@ class PythonAnalyzer(BaseAnalyzer):
             if isinstance(node, ast.FunctionDef):
                 functions.append(node.name)
         return functions
-    
+
     def _extract_classes_ast(self, tree: ast.AST) -> List[str]:
-        """Extract class names using AST.""" 
+        """Extract class names using AST."""
         classes = []
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef):
                 classes.append(node.name)
         return classes
-    
+
     def _extract_imports_ast(self, tree: ast.AST) -> List[str]:
         """Extract import names using AST."""
         imports = []
@@ -274,7 +277,7 @@ class PythonAnalyzer(BaseAnalyzer):
                 if node.module:
                     imports.append(node.module)
         return imports
-    
+
     def _extract_decorators_ast(self, tree: ast.AST) -> List[str]:
         """Extract decorator names using AST."""
         decorators = []
@@ -284,7 +287,7 @@ class PythonAnalyzer(BaseAnalyzer):
                     if isinstance(decorator, ast.Name):
                         decorators.append(decorator.id)
         return decorators
-    
+
     def _calculate_ast_complexity(self, tree: ast.AST) -> int:
         """Calculate complexity based on AST nodes."""
         complexity = 0
@@ -292,7 +295,7 @@ class PythonAnalyzer(BaseAnalyzer):
             if isinstance(node, (ast.If, ast.While, ast.For, ast.With, ast.Try)):
                 complexity += 1
         return complexity
-    
+
     def _has_type_hints_ast(self, tree: ast.AST) -> bool:
         """Check for type hints in AST."""
         for node in ast.walk(tree):
@@ -300,20 +303,20 @@ class PythonAnalyzer(BaseAnalyzer):
                 if node.returns or any(arg.annotation for arg in node.args.args):
                     return True
         return False
-    
+
     def _has_async_ast(self, tree: ast.AST) -> bool:
         """Check for async functions in AST."""
         for node in ast.walk(tree):
             if isinstance(node, ast.AsyncFunctionDef):
                 return True
         return False
-    
+
     def _fallback_analysis(self, code: str) -> AnalysisResult:
         """Fallback regex-based analysis for invalid Python."""
         functions = re.findall(r'^\\s*def\\s+(\\w+)', code, re.MULTILINE)
         classes = re.findall(r'^\\s*class\\s+(\\w+)', code, re.MULTILINE)
         imports = re.findall(r'^\\s*(?:from\\s+\\w+\\s+)?import\\s+(\\w+)', code, re.MULTILINE)
-        
+
         return AnalysisResult(
             functions=functions,
             classes=classes,
@@ -386,7 +389,7 @@ class TestChunkingLocationDuplicates:
                     if len(locations) != len(unique_locations):
                         duplicates = [loc for loc in locations if locations.count(loc) > 1]
                         print(f"❌ DUPLICATE LOCATIONS FOUND: {set(duplicates)}")
-                        print(f"This would cause PostgreSQL 'ON CONFLICT DO UPDATE' error!")
+                        print("This would cause PostgreSQL 'ON CONFLICT DO UPDATE' error!")
 
                         # Show which chunks have the same location
                         for dup_loc in set(duplicates):
@@ -397,7 +400,8 @@ class TestChunkingLocationDuplicates:
                                 print(f"    Chunk {idx}: start={chunk.start}, end={chunk.end}, len={len(chunk.text)}")
 
                         # This should fail the test
-                        assert False, f"Chunk size {chunk_size}: Duplicate locations found for {filename}: {set(duplicates)}"
+                        assert False, f"Chunk size {chunk_size}: Duplicate locations found for {filename}: {
+                            set(duplicates)}"
                     else:
                         print(f"✅ All locations unique for chunk size {chunk_size}")
 

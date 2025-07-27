@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 """Debug AST parsing for new languages."""
 
-from cocoindex_code_mcp_server.ast_visitor import GenericMetadataVisitor, TreeWalker, ASTParserFactory
 import sys
+
+from cocoindex_code_mcp_server.ast_visitor import (
+    ASTParserFactory,
+    GenericMetadataVisitor,
+    TreeWalker,
+)
+
 sys.path.append('src')
 
 
@@ -22,7 +28,7 @@ def debug_language(code: str, language: str, filename: str):
         print(f"❌ Failed to parse {language} code")
         return
 
-    print(f"✅ Parsed successfully with tree-sitter")
+    print("✅ Parsed successfully with tree-sitter")
 
     # Debug what nodes we find
     visitor = GenericMetadataVisitor(language)

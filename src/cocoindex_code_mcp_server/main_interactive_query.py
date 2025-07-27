@@ -5,12 +5,13 @@ Main entry point for the code embedding pipeline with Haskell tree-sitter suppor
 """
 
 from dotenv import load_dotenv
+
 import cocoindex
 
 # Import our modular components
-from .arg_parser import parse_args, determine_paths, display_configuration
+from .arg_parser import determine_paths, display_configuration, parse_args
+from .cocoindex_config import run_flow_update, update_flow_config
 from .query_interactive import run_interactive_query_mode
-from .cocoindex_config import update_flow_config, run_flow_update
 
 
 def main():

@@ -7,9 +7,10 @@ This example demonstrates how to use the enhanced Python code analyzer
 to extract metadata from Python source code.
 """
 
-from lang.python.python_code_analyzer import analyze_python_code
 import os
 import sys
+
+from lang.python.python_code_analyzer import analyze_python_code
 
 # Add src to path (examples is one level down from root)
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
@@ -23,13 +24,13 @@ from typing import List, Optional
 @dataclass
 class ExampleClass:
     """An example class."""
-    
+
     def __init__(self, name: str):
         self.name = name
-    
+
     async def async_method(self) -> str:
         return f"Hello {self.name}"
-    
+
     def _private_method(self):
         pass
 

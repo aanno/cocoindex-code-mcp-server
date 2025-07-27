@@ -4,7 +4,8 @@
 Test standalone chunking functionality without CocoIndex imports.
 """
 
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
+
 from astchunk import ASTChunkBuilder
 
 
@@ -194,13 +195,13 @@ def test_python_code_chunking():
 def hello_world():
     """A simple hello world function."""
     print("Hello, World!")
-    
+
 class Calculator:
     """A simple calculator class."""
-    
+
     def add(self, a, b):
         return a + b
-    
+
     def multiply(self, a, b):
         return a * b
 '''
@@ -229,11 +230,11 @@ public class Calculator {
         int result = calc.add(5, 3);
         System.out.println("5 + 3 = " + result);
     }
-    
+
     public int add(int a, int b) {
         return a + b;
     }
-    
+
     public int multiply(int a, int b) {
         return a * b;
     }

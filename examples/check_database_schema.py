@@ -5,9 +5,10 @@ Script to check what's actually in the database.
 """
 
 import os
+
 from dotenv import load_dotenv
-from psycopg_pool import ConnectionPool
 from pgvector.psycopg import register_vector
+from psycopg_pool import ConnectionPool
 
 
 def check_database():
@@ -20,9 +21,9 @@ def check_database():
         with conn.cursor() as cur:
             # Get table name
             cur.execute("""
-                SELECT table_name 
-                FROM information_schema.tables 
-                WHERE table_schema = 'public' 
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
                 AND table_name LIKE '%code_embeddings%'
             """)
             tables = cur.fetchall()
@@ -39,8 +40,8 @@ def check_database():
 
             # Get column names
             cur.execute(f"""
-                SELECT column_name, data_type 
-                FROM information_schema.columns 
+                SELECT column_name, data_type
+                FROM information_schema.columns
                 WHERE table_name = '{table_name}'
                 ORDER BY ordinal_position
             """)
@@ -53,7 +54,7 @@ def check_database():
             cur.execute(f"SELECT * FROM {table_name} LIMIT 1")
             sample = cur.fetchone()
             if sample:
-                print(f"\n📝 Sample row:")
+                print("\n📝 Sample row:")
                 column_names = [desc[0] for desc in cur.description]
                 for i, (col_name, value) in enumerate(zip(column_names, sample)):
                     if isinstance(value, str) and len(value) > 100:
@@ -62,18 +63,18 @@ def check_database():
 
             # Check for language field specifically
             cur.execute(f"""
-                SELECT DISTINCT language 
-                FROM {table_name} 
-                WHERE language IS NOT NULL 
+                SELECT DISTINCT language
+                FROM {table_name}
+                WHERE language IS NOT NULL
                 LIMIT 10
             """)
             languages = cur.fetchall()
             if languages:
-                print(f"\n🗣️ Languages found:")
+                print("\n🗣️ Languages found:")
                 for lang in languages:
                     print(f"  - {lang[0]}")
             else:
-                print(f"\n❌ No language field data found")
+                print("\n❌ No language field data found")
 
             # Count total rows
             cur.execute(f"SELECT COUNT(*) FROM {table_name}")

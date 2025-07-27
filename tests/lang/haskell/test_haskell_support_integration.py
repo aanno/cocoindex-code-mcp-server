@@ -5,13 +5,16 @@ Integration test for Haskell support functionality.
 Moved from src/haskell_ast_chunker.py to tests/
 """
 
-import sys
 import logging
+import sys
 
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)
 try:
-    from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import HaskellChunkConfig, EnhancedHaskellChunker
+    from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
+        EnhancedHaskellChunker,
+        HaskellChunkConfig,
+    )
     haskell_ast_chunker_AVAILABLE = True
 except ImportError as e:
     LOGGER.warning(f"Haskell support not available: {e}")
@@ -67,7 +70,7 @@ main = do
     all_results = []
 
     for i, config in enumerate(configs):
-        LOGGER.info(f"\n--- Configuration {i+1} ---")
+        LOGGER.info(f"\n--- Configuration {i + 1} ---")
         LOGGER.info(f"Max size: {config.max_chunk_size}, Overlap: {config.chunk_overlap}")
         LOGGER.info(f"Expansion: {config.chunk_expansion}, Template: {config.metadata_template}")
 
@@ -78,7 +81,7 @@ main = do
         LOGGER.info(f"Created {len(chunks)} chunks:")
         for j, chunk in enumerate(chunks):
             metadata = chunk['metadata']
-            LOGGER.info(f"  Chunk {j+1}: {metadata['chunk_method']} method")
+            LOGGER.info(f"  Chunk {j + 1}: {metadata['chunk_method']} method")
             LOGGER.info(f"    Size: {metadata['chunk_size']} chars, Lines: {metadata['line_count']}")
             LOGGER.info(f"    Has types: {metadata.get('has_data_types', False)}")
             LOGGER.info(f"    Has functions: {metadata.get('has_type_signatures', False)}")
@@ -90,7 +93,7 @@ main = do
                 LOGGER.info(f"    Dependencies: {metadata.get('dependencies', [])}")
 
         # Basic assertions
-        assert len(chunks) > 0, f"No chunks created for config {i+1}"
+        assert len(chunks) > 0, f"No chunks created for config {i + 1}"
         for chunk in chunks:
             assert 'content' in chunk
             assert 'metadata' in chunk

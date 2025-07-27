@@ -20,7 +20,7 @@ Examples:
   python src/main_interactive_query.py /path/to/code             # Index single directory
   python src/main_interactive_query.py /path/to/code1 /path/to/code2  # Index multiple directories
   python src/main_interactive_query.py --paths /path/to/code     # Explicit paths argument
-  
+
   # Live update mode
   python src/main_interactive_query.py --live                    # Live updates with event monitoring
   python src/main_interactive_query.py --live --poll 10         # Live updates with 10s polling

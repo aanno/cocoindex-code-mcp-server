@@ -4,23 +4,34 @@
 Hybrid search implementation combining vector similarity and keyword metadata search.
 """
 
-import os
 import json
+import os
 from typing import Any, Dict, List
-from psycopg_pool import ConnectionPool
+
 from pgvector.psycopg import register_vector
-import cocoindex
-from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow, code_to_embedding
-from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser, build_sql_where_clause
-from cocoindex_code_mcp_server.lang.python.python_code_analyzer import analyze_python_code
 from prompt_toolkit import PromptSession
 from prompt_toolkit.key_binding import KeyBindings
+from psycopg_pool import ConnectionPool
+
+import cocoindex
+from cocoindex_code_mcp_server.cocoindex_config import (
+    code_embedding_flow,
+    code_to_embedding,
+)
+from cocoindex_code_mcp_server.keyword_search_parser_lark import (
+    KeywordSearchParser,
+    build_sql_where_clause,
+)
+from cocoindex_code_mcp_server.lang.python.python_code_analyzer import (
+    analyze_python_code,
+)
 
 
 class HybridSearchEngine:
     """Hybrid search engine combining vector and keyword search."""
 
-    def __init__(self, pool: ConnectionPool, table_name: str = None, parser: KeywordSearchParser = None, embedding_func=None):
+    def __init__(self, pool: ConnectionPool, table_name: str = None,
+                 parser: KeywordSearchParser = None, embedding_func=None):
         self.pool = pool
         self.parser = parser or KeywordSearchParser()
         self.table_name = table_name or cocoindex.utils.get_target_default_name(
@@ -75,10 +86,10 @@ class HybridSearchEngine:
             with conn.cursor() as cur:
                 cur.execute(
                     f"""
-                    SELECT filename, language, code, embedding <=> %s AS distance, 
+                    SELECT filename, language, code, embedding <=> %s AS distance,
                            start, "end", source_name
-                    FROM {self.table_name} 
-                    ORDER BY distance 
+                    FROM {self.table_name}
+                    ORDER BY distance
                     LIMIT %s
                     """,
                     (query_vector, top_k),
@@ -95,7 +106,7 @@ class HybridSearchEngine:
                     f"""
                     SELECT filename, language, code, 0.0 as distance,
                            start, "end", source_name
-                    FROM {self.table_name} 
+                    FROM {self.table_name}
                     WHERE {where_clause}
                     ORDER BY filename, start
                     LIMIT %s

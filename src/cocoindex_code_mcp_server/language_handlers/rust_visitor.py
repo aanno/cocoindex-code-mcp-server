@@ -5,8 +5,8 @@ Rust-specific AST visitor for metadata extraction.
 Follows the same pattern as haskell_visitor.py by subclassing GenericMetadataVisitor.
 """
 
-from typing import Dict, Any, Optional, List
 import logging
+from typing import Any, Dict, List, Optional
 
 from ..ast_visitor import GenericMetadataVisitor, NodeContext
 

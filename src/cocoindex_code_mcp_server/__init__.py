@@ -12,7 +12,7 @@ log_file_path = os.path.join(workspace_dir, 'cocoindex_code_mcp_server-test.log'
 # Create a rotating file handler
 rotating_handler = RotatingFileHandler(
     log_file_path,
-    maxBytes=2*1024*1024,    # 2 MB
+    maxBytes=2 * 1024 * 1024,    # 2 MB
     backupCount=3
 )
 rotating_handler.setLevel(logging.DEBUG)

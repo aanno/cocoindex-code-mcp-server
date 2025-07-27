@@ -5,6 +5,7 @@ Test fallback mechanisms for different chunking scenarios.
 """
 
 import pytest
+
 try:
     from ast_chunking import CocoIndexASTChunker, detect_language_from_filename
     COCOINDEX_AST_AVAILABLE = True
@@ -19,7 +20,7 @@ def test_supported_language_chunking():
     python_code = '''
 def hello():
     print("Hello, World!")
-    
+
 class Test:
     def method(self):
         return 42
@@ -64,10 +65,10 @@ def test_malformed_code_handling():
     malformed_python = '''
 def incomplete_function(
     # missing closing parenthesis and body
-    
+
 class IncompleteClass
     # missing colon and body
-    
+
 # Indentation errors
 def another_function():
 print("This has wrong indentation")
@@ -116,21 +117,21 @@ def test_very_large_chunk_size():
     large_code = '''
 def function_1():
     print("Function 1")
-    
+
 def function_2():
     print("Function 2")
-    
+
 class Class1:
     def method1(self):
         return 1
-    
+
     def method2(self):
         return 2
-        
+
 class Class2:
     def method1(self):
         return 3
-    
+
     def method2(self):
         return 4
 '''
@@ -186,7 +187,7 @@ CONSTANT = 42
 def main():
     """Main function."""
     print(f"Constant value: {CONSTANT}")
-    
+
     # Inline comment
     result = process_data()
     return result
@@ -218,7 +219,7 @@ def test_unknown_file_extension():
     python_like_content = '''
 def hello():
     print("Hello from unknown extension!")
-    
+
 class TestClass:
     pass
 '''

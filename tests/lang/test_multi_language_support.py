@@ -2,6 +2,7 @@
 """Test multi-language support across different programming languages."""
 
 import pytest
+
 from cocoindex_code_mcp_server.ast_visitor import analyze_code
 
 

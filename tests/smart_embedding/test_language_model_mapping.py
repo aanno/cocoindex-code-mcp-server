@@ -8,8 +8,8 @@ import pytest
 
 from cocoindex_code_mcp_server.cocoindex_config import (
     LANGUAGE_MODEL_GROUPS,
+    SMART_EMBEDDING_AVAILABLE,
     get_embedding_model_group,
-    SMART_EMBEDDING_AVAILABLE
 )
 
 

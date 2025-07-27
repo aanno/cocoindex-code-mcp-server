@@ -4,9 +4,13 @@
 Comprehensive tests for AST-based Haskell chunking functionality.
 """
 
-import pytest
-from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import extract_haskell_ast_chunks, get_enhanced_haskell_separators
 import haskell_tree_sitter
+import pytest
+
+from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
+    extract_haskell_ast_chunks,
+    get_enhanced_haskell_separators,
+)
 
 
 class TestHaskellASTChunking:
@@ -181,7 +185,7 @@ import qualified Data.Map as Map
 import Control.Monad
 
 -- | A complex data type
-data ComplexType a b = ComplexType 
+data ComplexType a b = ComplexType
     { field1 :: a
     , field2 :: b
     , field3 :: Map.Map String Int

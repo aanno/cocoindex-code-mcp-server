@@ -5,10 +5,11 @@ Standalone tests for enhanced Haskell chunking components that don't require Coc
 Tests HaskellChunkConfig, enhanced separators, and regex fallback functionality.
 """
 
+import logging
+import re
+
 import haskell_tree_sitter
 import pytest
-import re
-import logging
 
 LOGGER = logging.getLogger(__name__)
 

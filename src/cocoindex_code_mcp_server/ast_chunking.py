@@ -2,14 +2,14 @@
 
 """
 AST-based code chunking integration for CocoIndex using ASTChunk library.
-This module provides a CocoIndex operation that leverages ASTChunk for 
+This module provides a CocoIndex operation that leverages ASTChunk for
 structure-aware code chunking.
 """
 
-import os
-from typing import List, Dict, Any, Optional
 import logging
+import os
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 from cocoindex_code_mcp_server import LOGGER
 
@@ -306,7 +306,7 @@ def create_ast_chunking_operation():
 
         Args:
             content: Text content to chunk
-            language: Programming language 
+            language: Programming language
             max_chunk_size: Maximum non-whitespace characters per chunk
             chunk_overlap: Number of AST nodes to overlap between chunks
             chunk_expansion: Whether to add metadata headers to chunks

@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 
 import unittest
-import pytest
 from pathlib import Path
 
-from cocoindex_code_mcp_server.cocoindex_config import extract_language, get_chunking_params, CUSTOM_LANGUAGES
+import pytest
+
 import cocoindex
+from cocoindex_code_mcp_server.cocoindex_config import (
+    CUSTOM_LANGUAGES,
+    extract_language,
+    get_chunking_params,
+)
 
 
 class TestCocoIndexIntegration(unittest.TestCase):

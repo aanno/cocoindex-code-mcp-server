@@ -5,8 +5,14 @@ Debug test to understand what AST nodes are being processed.
 """
 
 
-from cocoindex_code_mcp_server.lang.python.tree_sitter_python_analyzer import TreeSitterPythonAnalyzer
-from cocoindex_code_mcp_server.ast_visitor import GenericMetadataVisitor, TreeWalker, ASTParserFactory
+from cocoindex_code_mcp_server.ast_visitor import (
+    ASTParserFactory,
+    GenericMetadataVisitor,
+    TreeWalker,
+)
+from cocoindex_code_mcp_server.lang.python.tree_sitter_python_analyzer import (
+    TreeSitterPythonAnalyzer,
+)
 from cocoindex_code_mcp_server.language_handlers import get_handler_for_language
 
 
@@ -15,10 +21,10 @@ def test_debug_ast_node_processing():
     sample_code = '''
 class Config:
     """A config class."""
-    
+
     def __init__(self, name: str):
         self.name = name
-    
+
     @classmethod
     def from_dict(cls, data: dict) -> 'Config':
         """Create from dict."""
@@ -100,14 +106,14 @@ def utility_function() -> str:
             # Get handler summary
             if hasattr(python_handler, 'get_summary'):
                 handler_summary = python_handler.get_summary()
-                print(f"\n3. Handler Summary:")
+                print("\n3. Handler Summary:")
                 print(f"  Functions: {handler_summary.get('functions', [])}")
                 print(f"  Classes: {handler_summary.get('classes', [])}")
                 print(f"  Function details: {len(handler_summary.get('function_details', []))}")
                 print(f"  Class details: {len(handler_summary.get('class_details', []))}")
                 metadata.update(handler_summary)
 
-            print(f"\n4. Final metadata:")
+            print("\n4. Final metadata:")
             print(f"  Functions: {metadata.get('functions', [])}")
             print(f"  Classes: {metadata.get('classes', [])}")
 

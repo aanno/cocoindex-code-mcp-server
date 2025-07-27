@@ -5,17 +5,19 @@ End-to-end test for hybrid search functionality.
 Tests both vector similarity and keyword search capabilities with real database.
 """
 
-import os
-import pytest
 import logging
+import os
+
+import pytest
 from dotenv import load_dotenv
-import cocoindex
 from psycopg_pool import ConnectionPool
+
+import cocoindex
+from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow
+from cocoindex_code_mcp_server.db.pgvector.hybrid_search import HybridSearchEngine
 
 # Package should be installed via maturin develop or pip install -e .
 
-from cocoindex_code_mcp_server.db.pgvector.hybrid_search import HybridSearchEngine
-from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow
 
 LOGGER = logging.getLogger(__name__)
 

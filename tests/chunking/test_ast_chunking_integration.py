@@ -5,8 +5,8 @@ Integration test for AST chunking functionality.
 Moved from src/ast_chunking.py to tests/
 """
 
-import sys
 import logging
+import sys
 
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)
@@ -30,13 +30,13 @@ def test_ast_chunking():
 def hello_world():
     """A simple hello world function."""
     print("Hello, World!")
-    
+
 class Calculator:
     """A simple calculator class."""
-    
+
     def add(self, a, b):
         return a + b
-    
+
     def multiply(self, a, b):
         return a * b
 

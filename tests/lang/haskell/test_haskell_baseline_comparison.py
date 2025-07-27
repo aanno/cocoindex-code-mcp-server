@@ -6,13 +6,18 @@ Compares our specialized HaskellASTVisitor implementation against CocoIndex defa
 Similar to tests/lang/python/test_cocoindex_baseline_comparison.py
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 import_error = None
 try:
-    from cocoindex_code_mcp_server.language_handlers.haskell_visitor import analyze_haskell_code
-    from cocoindex_code_mcp_server.ast_visitor import analyze_code as generic_analyze_code
+    from cocoindex_code_mcp_server.ast_visitor import (
+        analyze_code as generic_analyze_code,
+    )
+    from cocoindex_code_mcp_server.language_handlers.haskell_visitor import (
+        analyze_haskell_code,
+    )
     HASKELL_VISITOR_AVAILABLE = True
 except ImportError as e:
     HASKELL_VISITOR_AVAILABLE = False
@@ -169,12 +174,12 @@ class TestHaskellBaselineComparison:
 
         try:
             baseline_metrics = self.test_cocoindex_baseline_analysis()
-        except:
+        except BaseException:
             baseline_metrics = None
 
-        print("\\n" + "="*60)
+        print("\\n" + "=" * 60)
         print("HASKELL ANALYSIS COMPARISON")
-        print("="*60)
+        print("=" * 60)
 
         # Compare our implementation vs generic visitor
         print("\\n--- Our Specialized Visitor vs Generic Visitor ---")
@@ -190,7 +195,7 @@ class TestHaskellBaselineComparison:
         if our_funcs == generic_funcs:
             print(f"function_names: ✅ SAME ({len(our_funcs)} functions)")
         else:
-            print(f"function_names: ⚠️  DIFF")
+            print("function_names: ⚠️  DIFF")
             print(f"  Our: {sorted(our_funcs)}")
             print(f"  Generic: {sorted(generic_funcs)}")
             print(f"  Only in ours: {sorted(our_funcs - generic_funcs)}")
@@ -202,7 +207,7 @@ class TestHaskellBaselineComparison:
         if our_types == generic_types:
             print(f"data_type_names: ✅ SAME ({len(our_types)} types)")
         else:
-            print(f"data_type_names: ⚠️  DIFF")
+            print("data_type_names: ⚠️  DIFF")
             print(f"  Our: {sorted(our_types)}")
             print(f"  Generic: {sorted(generic_types)}")
 

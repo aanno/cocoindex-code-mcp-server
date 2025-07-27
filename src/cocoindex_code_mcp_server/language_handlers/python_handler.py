@@ -5,14 +5,17 @@ Python-specific AST node handler for tree-sitter based analysis.
 Handles Python-specific constructs like decorators, async functions, comprehensions, etc.
 """
 
-from . import LOGGER
-from ast_visitor import NodeContext
-from typing import Dict, List, Any, Optional, Set
-from dataclasses import dataclass, field
+import os
 
 # Import from parent directory
 import sys
-import os
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Set
+
+from ast_visitor import NodeContext
+
+from . import LOGGER
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 

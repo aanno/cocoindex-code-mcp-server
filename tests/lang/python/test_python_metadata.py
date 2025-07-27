@@ -4,16 +4,19 @@
 Comprehensive tests for Python metadata extraction functionality.
 """
 
-import pytest
 import json
 import logging
 import sys
+
+import pytest
 
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)
 
 try:
-    from cocoindex_code_mcp_server.lang.python.python_code_analyzer import analyze_python_code
+    from cocoindex_code_mcp_server.lang.python.python_code_analyzer import (
+        analyze_python_code,
+    )
 except ImportError as e:
     LOGGER.warning(f"Could not import python_code_analyzer: {e}")
     print("⚠️  Warning: These tests require the full application setup.")
@@ -31,7 +34,7 @@ class TestPythonMetadataAnalysis:
         code = """
 def hello_world():
     print("Hello, World!")
-    
+
 def calculate(x, y):
     return x + y
 """
@@ -51,13 +54,13 @@ def calculate(x, y):
 class User:
     def __init__(self, name):
         self.name = name
-    
+
     def get_name(self):
         return self.name
-    
+
     def _private_method(self):
         pass
-        
+
     def __str__(self):
         return f"User({self.name})"
 
@@ -92,10 +95,10 @@ class Manager(User):
         code = """
 async def fetch_data():
     await some_operation()
-    
+
 def sync_function():
     pass
-    
+
 async def process_data():
     async with some_context():
         pass
@@ -113,10 +116,10 @@ async def process_data():
         code = """
 def add(x: int, y: int) -> int:
     return x + y
-    
+
 def process_data(data: List[str]) -> Dict[str, Any]:
     return {}
-    
+
 def no_hints(x, y):
     return x + y
 """
@@ -223,17 +226,17 @@ def complex_function(x, y, z):
 def documented_function():
     \"\"\"This function has a docstring.\"\"\"
     pass
-    
+
 def undocumented_function():
     pass
-    
+
 class DocumentedClass:
     \"\"\"This class has a docstring.\"\"\"
-    
+
     def method_with_docs(self):
         \"\"\"This method has docs.\"\"\"
         pass
-        
+
     def method_without_docs(self):
         pass
 """
@@ -252,7 +255,7 @@ _private_var = "secret"
 
 def function():
     local_var = 1  # This shouldn't be detected as module variable
-    
+
 class MyClass:
     class_var = "class level"  # This should be detected
 """
@@ -298,21 +301,21 @@ class Config:
 
 class DataProcessor:
     """Main data processing class."""
-    
+
     def __init__(self, config: Config):
         self.config = config
         self._cache = {}
-    
+
     @property
     def name(self) -> str:
         """Get the processor name."""
         return self.config.name
-    
+
     @staticmethod
     def validate_input(data: Union[str, int]) -> bool:
         """Validate input data."""
         return isinstance(data, (str, int))
-    
+
     async def process_async(self, items: List[str]) -> Dict[str, Any]:
         """Process items asynchronously."""
         results = {}
@@ -325,11 +328,11 @@ class DataProcessor:
                     self._log_error(e)
                     continue
         return results
-    
+
     def _process_single(self, item: str) -> str:
         """Private method to process single item."""
         return item.upper()
-    
+
     def __str__(self) -> str:
         return f"DataProcessor({self.name})"
 

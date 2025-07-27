@@ -9,8 +9,12 @@ import pytest
 
 import cocoindex
 from cocoindex_code_mcp_server.cocoindex_config import (
-    extract_language, get_chunking_params, ASTChunkOperation, AST_CHUNKING_AVAILABLE,
-    _global_flow_config, CUSTOM_LANGUAGES
+    AST_CHUNKING_AVAILABLE,
+    CUSTOM_LANGUAGES,
+    ASTChunkOperation,
+    _global_flow_config,
+    extract_language,
+    get_chunking_params,
 )
 
 # Sample files that are causing errors
@@ -30,7 +34,7 @@ router.get('/users', async (req: Request, res: Response) => {
     }
 });
 
-// Create user  
+// Create user
 router.post('/users', async (req: Request, res: Response) => {
     try {
         const { name, email } = req.body;
@@ -58,7 +62,7 @@ impl User {
     pub fn new(id: u32, name: String, email: String) -> Self {
         User { id, name, email }
     }
-    
+
     pub fn validate_email(&self) -> bool {
         self.email.contains('@')
     }
@@ -76,14 +80,14 @@ impl UserService {
             next_id: 1,
         }
     }
-    
+
     pub fn create_user(&mut self, name: String, email: String) -> User {
         let user = User::new(self.next_id, name, email);
         self.users.insert(self.next_id, user.clone());
         self.next_id += 1;
         user
     }
-    
+
     pub fn get_user(&self, id: u32) -> Option<&User> {
         self.users.get(&id)
     }
@@ -150,7 +154,7 @@ class TestDuplicateKeyDebug:
                     print(f"❌ DUPLICATE LOCATIONS: {set(duplicates)}")
                     assert False, f"AST chunking produced duplicates: {duplicates}"
                 else:
-                    print(f"✅ All locations unique")
+                    print("✅ All locations unique")
 
             except Exception as e:
                 print(f"AST chunking failed: {e}")
@@ -198,7 +202,7 @@ class TestDuplicateKeyDebug:
                         duplicates = [loc for loc in locations if locations.count(loc) > 1]
                         print(f"❌ DUPLICATE LOCATIONS: {set(duplicates)}")
                     else:
-                        print(f"✅ All locations unique")
+                        print("✅ All locations unique")
 
                 except Exception as e:
                     print(f"AST chunking with Rust failed: {e}")
@@ -266,7 +270,7 @@ class TestDuplicateKeyDebug:
                     for i, chunk in enumerate(chunks):
                         print(f"  Chunk {i}: location='{chunk.location}', text_len={len(chunk.text)}")
                         if chunk.location == "line:0" and len(chunk.text) == 0:
-                            print(f"  ⚠️  Empty chunk with default location - potential duplicate risk!")
+                            print("  ⚠️  Empty chunk with default location - potential duplicate risk!")
 
                 except Exception as e:
                     print(f"Chunking failed: {e}")

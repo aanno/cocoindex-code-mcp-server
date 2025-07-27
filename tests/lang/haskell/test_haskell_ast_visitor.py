@@ -5,12 +5,16 @@ Test suite for Haskell AST visitor implementation.
 Tests the integration of HaskellNodeHandler with the AST visitor framework.
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 try:
     from cocoindex_code_mcp_server.ast_visitor import MultiLevelAnalyzer, analyze_code
-    from cocoindex_code_mcp_server.language_handlers import get_handler_for_language, list_supported_languages
+    from cocoindex_code_mcp_server.language_handlers import (
+        get_handler_for_language,
+        list_supported_languages,
+    )
     IMPORTS_AVAILABLE = True
     import_error = None
 except ImportError as e:
@@ -29,9 +33,9 @@ class TestHaskellASTVisitor:
         # Sample Haskell code for testing
         self.sample_haskell_code = '''-- Test Haskell module
 module TestModule (
-    Person(..), 
-    TreeType(..), 
-    fibonacci, 
+    Person(..),
+    TreeType(..),
+    fibonacci,
     processData
 ) where
 

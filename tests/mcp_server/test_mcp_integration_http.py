@@ -11,11 +11,11 @@ import asyncio
 import json
 import logging
 import os
-import pytest
-import pytest_asyncio
 from contextlib import AsyncExitStack
 from typing import Any
 
+import pytest
+import pytest_asyncio
 from dotenv import load_dotenv
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
@@ -544,10 +544,10 @@ async def process_data(items: list[str]) -> list[str]:
 
 class DataProcessor:
     """A data processor class."""
-    
+
     def __init__(self, name: str):
         self.name = name
-    
+
     @property
     def status(self) -> str:
         return "active"

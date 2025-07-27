@@ -5,9 +5,9 @@ Test RAG metadata compliance - ensures Python analyzer generates all recommended
 from the proposed-rag-metadata.md specification.
 """
 
-import sys
 import json
 import logging
+import sys
 
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)
@@ -17,7 +17,9 @@ def test_rag_metadata_compliance():
     """Test that Python analyzer generates all recommended RAG metadata fields."""
 
     try:
-        from cocoindex_code_mcp_server.lang.python.python_code_analyzer import analyze_python_code
+        from cocoindex_code_mcp_server.lang.python.python_code_analyzer import (
+            analyze_python_code,
+        )
     except ImportError as e:
         LOGGER.error(f"Could not import analyzer: {e}")
         print(f"❌ Could not import analyzer: {e}")
@@ -42,7 +44,7 @@ class BaseClass:
     '''Base class with docstring.'''
     name: str
     value: int = 0
-    
+
     def base_method(self) -> str:
         '''Base method with docstring.'''
         return f"base_{self.name}"
@@ -50,30 +52,30 @@ class BaseClass:
 @dataclass
 class AdvancedClass(BaseClass):
     '''Advanced class inheriting from BaseClass.'''
-    
+
     items: List[str] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
     _private_attr: Optional[str] = None
-    
+
     def __init__(self, name: str, value: int = 10):
         super().__init__(name, value)
         self._private_attr = f"private_{name}"
-    
+
     @property
     def name_upper(self) -> str:
         '''Property returning uppercase name.'''
         return self.name.upper()
-    
+
     @staticmethod
     def create_empty() -> 'AdvancedClass':
         '''Static method factory.'''
         return AdvancedClass("empty", 0)
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'AdvancedClass':
         '''Class method factory from dictionary.'''
         return cls(data["name"], data.get("value", 0))
-    
+
     async def async_process(self, items: List[str]) -> Dict[str, Any]:
         '''Async method processing items.'''
         results = {}
@@ -85,19 +87,19 @@ class AdvancedClass(BaseClass):
                 except Exception as e:
                     results[item] = f"error: {e}"
         return results
-    
+
     async def _async_helper(self, item: str) -> str:
         '''Private async helper method.'''
         await asyncio.sleep(0.001)  # Simulate async work
         return f"processed_{item}"
-    
+
     def complex_method(self, data: Union[str, List[str]], threshold: int = 5) -> Optional[Dict[str, Any]]:
         '''Complex method with multiple control flows.'''
         result = {}
-        
+
         if isinstance(data, str):
             data = [data]
-        
+
         for item in data:
             if len(item) > threshold:
                 for i, char in enumerate(item):
@@ -109,17 +111,17 @@ class AdvancedClass(BaseClass):
                 while len(item) < threshold:
                     item += "_pad"
                 result[item] = "padded"
-        
+
         return result if result else None
-    
+
     def _private_method(self, x: int, y: int = 1) -> int:
         '''Private method with default parameters.'''
         return x * y
-    
+
     def __str__(self) -> str:
         '''String representation dunder method.'''
         return f"AdvancedClass(name={self.name}, value={self.value})"
-    
+
     def __len__(self) -> int:
         '''Length dunder method.'''
         return len(self.items)
@@ -127,7 +129,7 @@ class AdvancedClass(BaseClass):
 def standalone_function(x: int, y: int = 10, *args, **kwargs) -> int:
     '''Standalone function with various parameter types.'''
     result = x + y
-    
+
     # Complex control flow for testing
     if x > 0:
         for i in range(min(y, 10)):
@@ -139,28 +141,28 @@ def standalone_function(x: int, y: int = 10, *args, **kwargs) -> int:
         while result > 0 and y > 0:
             result -= 1
             y -= 1
-    
+
     # List comprehension
     multipliers = [i * 2 for i in args if isinstance(i, int)]
     result += sum(multipliers)
-    
+
     return result
 
 async def async_standalone_function(data: List[Dict[str, Any]]) -> List[str]:
     '''Async standalone function.'''
     results = []
-    
+
     async def process_item(item: Dict[str, Any]) -> str:
         await asyncio.sleep(0.001)
         return json.dumps(item)
-    
+
     for item in data:
         try:
             result = await process_item(item)
             results.append(result)
         except Exception:
             results.append("error")
-    
+
     return results
 
 def generator_function(n: int):
@@ -192,7 +194,7 @@ nested_structure = [
     try:
         metadata = analyze_python_code(test_code, "test_rag_compliance.py")
 
-        print(f"✅ Analysis completed successfully!")
+        print("✅ Analysis completed successfully!")
         print(f"📊 Analysis Method: {metadata.get('analysis_method', 'unknown')}")
 
         # Check all required RAG metadata fields
@@ -242,7 +244,7 @@ nested_structure = [
             "metadata_json": str
         }
 
-        print(f"\n📋 Checking Required RAG Metadata Fields:")
+        print("\n📋 Checking Required RAG Metadata Fields:")
         print("-" * 40)
 
         all_fields_present = True
@@ -259,7 +261,7 @@ nested_structure = [
                 all_fields_present = False
 
         # Check node_relationships structure
-        print(f"\n🔗 Checking Node Relationships Structure:")
+        print("\n🔗 Checking Node Relationships Structure:")
         print("-" * 40)
 
         node_rel = metadata.get('node_relationships', {})
@@ -273,7 +275,7 @@ nested_structure = [
                 all_fields_present = False
 
         # Check additional_metadata structure
-        print(f"\n📊 Checking Additional Metadata Structure:")
+        print("\n📊 Checking Additional Metadata Structure:")
         print("-" * 40)
 
         add_meta = metadata.get('additional_metadata', {})
@@ -288,7 +290,7 @@ nested_structure = [
                 all_fields_present = False
 
         # Test content accuracy
-        print(f"\n🎯 Checking Content Accuracy:")
+        print("\n🎯 Checking Content Accuracy:")
         print("-" * 40)
 
         expected_content = {
@@ -320,7 +322,7 @@ nested_structure = [
                     content_accurate = False
 
         # Check detailed function information
-        print(f"\n🔍 Checking Detailed Function Information:")
+        print("\n🔍 Checking Detailed Function Information:")
         print("-" * 40)
 
         func_details = metadata.get('function_details', [])
@@ -335,10 +337,10 @@ nested_structure = [
                 else:
                     print(f"❌ function_details[0].{func_field}: MISSING")
         else:
-            print(f"❌ No function details found")
+            print("❌ No function details found")
 
         # Check JSON serialization
-        print(f"\n📄 Checking JSON Serialization:")
+        print("\n📄 Checking JSON Serialization:")
         print("-" * 40)
 
         try:
@@ -347,14 +349,14 @@ nested_structure = [
                 json.loads(json_str)
                 print(f"✅ metadata_json: valid JSON ({len(json_str)} chars)")
             else:
-                print(f"❌ metadata_json: empty or missing")
+                print("❌ metadata_json: empty or missing")
                 all_fields_present = False
         except json.JSONDecodeError as e:
             print(f"❌ metadata_json: invalid JSON - {e}")
             all_fields_present = False
 
         # Summary
-        print(f"\n📊 Summary:")
+        print("\n📊 Summary:")
         print("=" * 60)
         print(f"📁 File: {metadata.get('filename', 'unknown')}")
         print(f"🏷️  Node Type: {metadata.get('node_type', 'unknown')}")
@@ -366,11 +368,11 @@ nested_structure = [
         print(f"🔑 Hash: {metadata.get('hash', 'missing')[:8]}...")
 
         if all_fields_present and content_accurate:
-            print(f"\n🎉 ALL RAG METADATA COMPLIANCE TESTS PASSED!")
-            print(f"✅ Python analyzer generates complete RAG-compliant metadata")
+            print("\n🎉 ALL RAG METADATA COMPLIANCE TESTS PASSED!")
+            print("✅ Python analyzer generates complete RAG-compliant metadata")
             return True
         else:
-            print(f"\n⚠️  Some RAG metadata compliance issues found")
+            print("\n⚠️  Some RAG metadata compliance issues found")
             print(f"📋 Fields Present: {'✅' if all_fields_present else '❌'}")
             print(f"🎯 Content Accurate: {'✅' if content_accurate else '❌'}")
             return False
@@ -386,12 +388,14 @@ def test_specific_metadata_features():
     """Test specific metadata features in detail."""
 
     try:
-        from cocoindex_code_mcp_server.lang.python.python_code_analyzer import analyze_python_code
+        from cocoindex_code_mcp_server.lang.python.python_code_analyzer import (
+            analyze_python_code,
+        )
     except ImportError as e:
         print(f"❌ Could not import analyzer: {e}")
         return False
 
-    print(f"\n🔬 Testing Specific Metadata Features:")
+    print("\n🔬 Testing Specific Metadata Features:")
     print("=" * 60)
 
     # Test position information accuracy
@@ -401,7 +405,7 @@ def test_specific_metadata_features():
 class TestClass:
     def method(self):
         return True
-        
+
 def last_function(x: int) -> str:
     return str(x)
 """
@@ -409,7 +413,7 @@ def last_function(x: int) -> str:
     try:
         metadata = analyze_python_code(position_test_code, "position_test.py")
 
-        print(f"📍 Position Information Test:")
+        print("📍 Position Information Test:")
         print("-" * 30)
 
         func_details = metadata.get('function_details', [])
@@ -430,7 +434,7 @@ def last_function(x: int) -> str:
                 print(f"❌ {func['name']} lines_of_code format invalid: {lines_of_code}")
 
         # Test hash uniqueness
-        print(f"\n🔑 Hash Uniqueness Test:")
+        print("\n🔑 Hash Uniqueness Test:")
         print("-" * 30)
 
         hash1 = metadata.get('hash', '')
@@ -441,11 +445,11 @@ def last_function(x: int) -> str:
         hash2 = metadata2.get('hash', '')
 
         if hash1 and hash2 and hash1 != hash2:
-            print(f"✅ Hashes are unique for different content")
+            print("✅ Hashes are unique for different content")
             print(f"   Original: {hash1}")
             print(f"   Modified: {hash2}")
         else:
-            print(f"❌ Hash uniqueness test failed")
+            print("❌ Hash uniqueness test failed")
             print(f"   Original: {hash1}")
             print(f"   Modified: {hash2}")
 
@@ -464,8 +468,8 @@ if __name__ == "__main__":
     success2 = test_specific_metadata_features()
 
     if success1 and success2:
-        print(f"\n🎉 ALL RAG METADATA COMPLIANCE TESTS PASSED!")
-        print(f"✅ Python analyzer fully compliant with RAG metadata recommendations")
+        print("\n🎉 ALL RAG METADATA COMPLIANCE TESTS PASSED!")
+        print("✅ Python analyzer fully compliant with RAG metadata recommendations")
     else:
-        print(f"\n⚠️  Some RAG metadata compliance tests failed")
+        print("\n⚠️  Some RAG metadata compliance tests failed")
         sys.exit(1)

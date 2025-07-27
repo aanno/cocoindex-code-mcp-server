@@ -31,13 +31,13 @@ def test_python_code_chunking():
 def hello_world():
     """A simple hello world function."""
     print("Hello, World!")
-    
+
 class Calculator:
     """A simple calculator class."""
-    
+
     def add(self, a, b):
         return a + b
-    
+
     def multiply(self, a, b):
         return a * b
 

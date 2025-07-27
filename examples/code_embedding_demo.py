@@ -7,8 +7,8 @@ This example shows how to use the new CodeEmbedding and SmartCodeEmbedding
 functions to automatically select the best embedding model based on programming language.
 """
 
-import tempfile
 import os
+import tempfile
 from pathlib import Path
 
 # Note: This is a demonstration script showing the API
@@ -27,10 +27,10 @@ def fibonacci(n):
 
 class Calculator:
     """A simple calculator class."""
-    
+
     def add(self, a, b):
         return a + b
-    
+
     def multiply(self, a, b):
         return a * b
 
@@ -58,7 +58,7 @@ impl Calculator {
     pub fn add(&self, a: i32, b: i32) -> i32 {
         a + b
     }
-    
+
     /// Multiply two numbers
     pub fn multiply(&self, a: i32, b: i32) -> i32 {
         a * b
@@ -93,7 +93,7 @@ class Calculator {
     add(a, b) {
         return a + b;
     }
-    
+
     /**
      * Multiply two numbers
      */
@@ -137,7 +137,7 @@ class Calculator implements ICalculator {
     add(a: number, b: number): number {
         return a + b;
     }
-    
+
     /**
      * Multiply two numbers
      */
@@ -269,13 +269,13 @@ def demonstrate_complete_flow():
 @cocoindex.flow_def
 def code_embedding_flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope):
     """Complete flow for language-aware code embedding."""
-    
+
     with flow_builder.read_files(data_scope.input_directory) as file:
         # Skip non-code files
         file = file.filter(lambda f: f["extension"] in [
             ".py", ".rs", ".js", ".ts", ".java", ".kt", ".go", ".cpp"
         ])
-        
+
         # Chunk code using Tree-sitter (language-aware)
         file["chunks"] = file["content"].transform(
             cocoindex.functions.SplitRecursively(),
@@ -283,7 +283,7 @@ def code_embedding_flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoind
             chunk_size=1000,
             chunk_overlap=200,
         )
-        
+
         with file["chunks"].row() as chunk:
             # Language-aware embedding
             chunk["embedding"] = chunk["text"].transform(
@@ -291,13 +291,13 @@ def code_embedding_flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoind
                     file_extension=file["extension"]
                 )
             )
-            
+
             # Add metadata about the embedding model used
             chunk["embedding_info"] = {
                 "language": file["extension"],
                 "model_type": "auto-selected",
             }
-        
+
         # Store in vector database with metadata
         file["chunks"].save(cocoindex.targets.QdrantTarget(
             collection_name="code_embeddings",
@@ -321,14 +321,14 @@ with file["chunks"].row() as chunk:
             model="sentence-transformers/all-MiniLM-L6-v2"
         )
     )
-    
+
     # Code-specific embedding for precise code search
     chunk["embedding_code"] = chunk["text"].transform(
         cocoindex.functions.SmartCodeEmbedding(
             file_extension=file["extension"]
         )
     )
-    
+
     # Store both embeddings for hybrid search
 '''
     print(multi_model_code)

@@ -41,7 +41,7 @@ async def test_claude_desktop_simulation():
         # Check if process is still running
         if process.poll() is not None:
             stdout, stderr = process.communicate()
-            print(f"❌ Supergateway exited early!")
+            print("❌ Supergateway exited early!")
             print(f"STDOUT: {stdout}")
             print(f"STDERR: {stderr}")
             return False

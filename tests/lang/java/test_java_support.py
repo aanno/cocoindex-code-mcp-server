@@ -11,15 +11,15 @@ class TestJavaSupport:
         """Test basic Java code analysis."""
         java_code = '''public class Calculator {
     private int value;
-    
+
     public Calculator(int initialValue) {
         this.value = initialValue;
     }
-    
+
     public int add(int x) {
         return value + x;
     }
-    
+
     public static void main(String[] args) {
         Calculator calc = new Calculator(10);
         System.out.println(calc.add(5));
@@ -83,13 +83,13 @@ public class Circle implements Drawable {
         """Test Java inheritance analysis."""
         java_code = '''public abstract class Animal {
     protected String name;
-    
+
     public Animal(String name) {
         this.name = name;
     }
-    
+
     public abstract void makeSound();
-    
+
     public void sleep() {
         System.out.println(name + " is sleeping");
     }
@@ -99,12 +99,12 @@ public class Dog extends Animal {
     public Dog(String name) {
         super(name);
     }
-    
+
     @Override
     public void makeSound() {
         System.out.println(name + " barks");
     }
-    
+
     public void fetch() {
         System.out.println(name + " fetches");
     }
@@ -134,19 +134,19 @@ import java.util.ArrayList;
 
 public class GenericContainer<T> {
     private List<T> items;
-    
+
     public GenericContainer() {
         this.items = new ArrayList<>();
     }
-    
+
     public void add(T item) {
         items.add(item);
     }
-    
+
     public T get(int index) {
         return items.get(index);
     }
-    
+
     public static <U> void process(U item) {
         System.out.println(item.toString());
     }

@@ -5,11 +5,11 @@ C++-specific AST visitor for metadata extraction.
 Inherits from C visitor since C is largely a subset of C++.
 """
 
-from typing import Dict, Any, Optional, List
 import logging
+from typing import Any, Dict, List, Optional
 
-from .c_visitor import CASTVisitor
 from ..ast_visitor import NodeContext
+from .c_visitor import CASTVisitor
 
 LOGGER = logging.getLogger(__name__)
 

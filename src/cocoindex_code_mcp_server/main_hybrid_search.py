@@ -6,7 +6,9 @@ Combines vector similarity search with keyword metadata filtering.
 """
 
 import argparse
+
 from dotenv import load_dotenv
+
 import cocoindex
 
 # Import our modular components
@@ -25,19 +27,19 @@ Examples:
   python src/main_hybrid_search.py /path/to/code       # Index single directory
   python src/main_hybrid_search.py /path/to/code1 /path/to/code2  # Index multiple directories
   python src/main_hybrid_search.py --paths /path/to/code   # Explicit paths argument
-  
+
   # Live update is enabled by default
   python src/main_hybrid_search.py --no-live           # Disable live updates
   python src/main_hybrid_search.py --poll 30           # Custom polling interval (default: 60s)
 
 Hybrid Search Queries:
   The tool will prompt for two types of queries:
-  
+
   1. Vector Query (semantic search):
      - "find authentication functions"
      - "error handling patterns"
      - "database connection setup"
-  
+
   2. Keyword Query (metadata filtering):
      - language:python
      - language:python and filename:main_interactive_query.py

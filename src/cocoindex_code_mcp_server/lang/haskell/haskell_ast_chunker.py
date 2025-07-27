@@ -5,10 +5,13 @@ Enhanced Haskell-specific functionality for AST-based code chunking.
 Incorporates techniques from ASTChunk for improved chunking quality.
 """
 
-from typing import List, Dict, Any, Optional
-import haskell_tree_sitter
-import cocoindex
 import re
+from typing import Any, Dict, List, Optional
+
+import haskell_tree_sitter
+
+import cocoindex
+
 from . import LOGGER
 
 
@@ -265,7 +268,7 @@ class EnhancedHaskellChunker:
 
             # Add lines from previous chunk
             if i > 0:
-                prev_end = chunks[i-1]["end_line"]
+                prev_end = chunks[i - 1]["end_line"]
                 overlap_start = max(0, prev_end - overlap_lines)
                 prev_lines = lines[overlap_start:prev_end]
 
@@ -276,7 +279,7 @@ class EnhancedHaskellChunker:
 
             # Add lines from next chunk
             if i < len(chunks) - 1:
-                next_start = chunks[i+1]["start_line"]
+                next_start = chunks[i + 1]["start_line"]
                 overlap_end = min(len(lines), next_start + overlap_lines)
                 next_lines = lines[next_start:overlap_end]
 
@@ -466,7 +469,8 @@ def extract_haskell_ast_chunks(content: str, config: Optional[Dict[str, Any]] = 
     return legacy_chunks
 
 
-def create_enhanced_regex_fallback_chunks(content: str, file_path: str, config: HaskellChunkConfig) -> List[Dict[str, Any]]:
+def create_enhanced_regex_fallback_chunks(content: str, file_path: str,
+                                          config: HaskellChunkConfig) -> List[Dict[str, Any]]:
     """
     Enhanced fallback chunking using regex patterns when AST parsing fails.
     Incorporates ASTChunk-inspired improvements for better chunk quality.

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
 Simple verification test for MCP server extension loading and configuration.
-This is a lightweight test that checks if extensions load properly and 
+This is a lightweight test that checks if extensions load properly and
 configuration flags work correctly, without running actual CocoIndex flows.
 
-For comprehensive integration testing that verifies extensions are actually 
+For comprehensive integration testing that verifies extensions are actually
 called during flow execution, see test_main_mcp_server_module_integration.py
 """
 
@@ -18,14 +18,14 @@ def test_extension_integration():
     try:
         # Import the configuration
         from cocoindex_config import (
-            SMART_EMBEDDING_AVAILABLE,
             AST_CHUNKING_AVAILABLE,
             PYTHON_HANDLER_AVAILABLE,
+            SMART_EMBEDDING_AVAILABLE,
+            _global_flow_config,
             update_flow_config,
-            _global_flow_config
         )
 
-        print(f"✅ Extensions loaded:")
+        print("✅ Extensions loaded:")
         print(f"   Smart Embedding: {SMART_EMBEDDING_AVAILABLE}")
         print(f"   AST Chunking: {AST_CHUNKING_AVAILABLE}")
         print(f"   Python Handler: {PYTHON_HANDLER_AVAILABLE}")

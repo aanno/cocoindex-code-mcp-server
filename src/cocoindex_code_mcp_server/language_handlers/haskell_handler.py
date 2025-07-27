@@ -5,15 +5,17 @@ Haskell-specific AST node handler for tree-sitter based analysis.
 Handles Haskell-specific constructs like data types, type classes, modules, etc.
 """
 
-from . import LOGGER
-from ..ast_visitor import NodeContext
+import os
 import re
-from typing import Any, Dict, List, Optional
-from dataclasses import dataclass, field
 
 # Import from parent directory
 import sys
-import os
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
+
+from ..ast_visitor import NodeContext
+from . import LOGGER
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 

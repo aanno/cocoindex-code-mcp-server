@@ -5,11 +5,11 @@ TypeScript-specific AST visitor for metadata extraction.
 Inherits from JavaScript visitor since TypeScript is JavaScript + types.
 """
 
-from typing import Dict, Any, Optional, List
 import logging
+from typing import Any, Dict, List, Optional
 
-from .javascript_visitor import JavaScriptASTVisitor
 from ..ast_visitor import NodeContext
+from .javascript_visitor import JavaScriptASTVisitor
 
 LOGGER = logging.getLogger(__name__)
 

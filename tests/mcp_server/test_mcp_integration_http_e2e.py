@@ -7,15 +7,14 @@ with the server through the MCP protocol.
 """
 
 import json
-import pytest
 from contextlib import asynccontextmanager
+
+import pytest
 
 # Import MCP client library components
 from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
-from mcp.types import (
-    TextContent
-)
+from mcp.types import TextContent
 
 
 @pytest.mark.timeout(20)
@@ -428,7 +427,9 @@ def hello_world():
             }
 
             advertised_tools = {tool.name for tool in tools}
-            assert advertised_tools == expected_tools, f"Missing tools: {expected_tools - advertised_tools}, Extra tools: {advertised_tools - expected_tools}"
+            assert advertised_tools == expected_tools, f"Missing tools: {
+                expected_tools - advertised_tools}, Extra tools: {
+                advertised_tools - expected_tools}"
 
             # Verify each tool has required properties
             for tool in tools:

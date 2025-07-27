@@ -5,15 +5,17 @@ Standalone tests for external language-aware code embedding.
 Tests the logic without importing CocoIndex to avoid circular imports.
 """
 
+import sys
+from unittest.mock import Mock
+
+import pytest
+
 from cocoindex_code_mcp_server.smart_code_embedding import (
     LanguageModelSelector,
     create_smart_code_embedding,
+    get_supported_extensions,
     get_supported_languages,
-    get_supported_extensions
 )
-import pytest
-import sys
-from unittest.mock import Mock
 
 # Create a mock CocoIndex module to avoid circular imports
 

@@ -4,15 +4,16 @@ Test suite for smart embedding functions.
 Tests that embedding functions are properly defined and configured.
 """
 
-import pytest
 import inspect
 
+import pytest
+
 from cocoindex_code_mcp_server.cocoindex_config import (
+    SMART_EMBEDDING_AVAILABLE,
+    code_to_embedding,
+    fallback_embedding,
     graphcodebert_embedding,
     unixcoder_embedding,
-    fallback_embedding,
-    code_to_embedding,
-    SMART_EMBEDDING_AVAILABLE
 )
 
 
@@ -131,7 +132,7 @@ class TestEmbeddingFunctionIntegration:
         for i, func1 in enumerate(functions):
             for j, func2 in enumerate(functions):
                 if i != j:
-                    assert func1 is not func2, f"Embedding functions should be distinct objects"
+                    assert func1 is not func2, "Embedding functions should be distinct objects"
 
     def test_model_configuration_consistency(self):
         """Test that embedding functions are consistent with model group configuration."""

@@ -8,16 +8,21 @@ Compares our specialized HaskellASTVisitor implementation against multiple basel
 3. RAG search results from indexed code
 """
 
-import pytest
 import json
 from pathlib import Path
 from typing import Any, Dict
 
+import pytest
+
 # Test imports with error tracking
 import_error = None
 try:
-    from cocoindex_code_mcp_server.language_handlers.haskell_visitor import analyze_haskell_code
-    from cocoindex_code_mcp_server.ast_visitor import analyze_code as generic_analyze_code
+    from cocoindex_code_mcp_server.ast_visitor import (
+        analyze_code as generic_analyze_code,
+    )
+    from cocoindex_code_mcp_server.language_handlers.haskell_visitor import (
+        analyze_haskell_code,
+    )
     HASKELL_VISITOR_AVAILABLE = True
 except ImportError as e:
     HASKELL_VISITOR_AVAILABLE = False

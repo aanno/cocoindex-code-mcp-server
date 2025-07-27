@@ -6,11 +6,11 @@ Tests both tree-sitter visitors and CocoIndex baseline analysis.
 
 import json
 from pathlib import Path
-from typing import Dict, Any, Set
-
-# Package should be installed via maturin develop or pip install -e .
+from typing import Any, Dict, Set
 
 from cocoindex_code_mcp_server.ast_visitor import analyze_code
+
+# Package should be installed via maturin develop or pip install -e .
 
 
 class LanguageBaseline:
@@ -340,27 +340,33 @@ class MultiLanguageBaseline:
 
     def print_summary(self, data: Dict[str, Any]):
         """Print formatted summary of all language tests."""
-        print("\n" + "="*80)
+        print("\n" + "=" * 80)
         print("🔍 MULTI-LANGUAGE BASELINE TEST RESULTS")
-        print("="*80)
+        print("=" * 80)
 
         summary = data['summary']
-        print(f"📊 Overall Statistics:")
+        print("📊 Overall Statistics:")
         print(f"  • Total languages tested: {summary['total_languages']}")
         print(f"  • Successful: {summary['successful_languages']}")
         print(f"  • Failed: {summary['failed_languages']}")
         print(f"  • Average function recall: {summary['average_function_recall']:.1%}")
         print(f"  • Average function precision: {summary['average_function_precision']:.1%}")
 
-        print(f"\n🏆 Language Performance Ranking (Tree-Sitter Implementation):")
+        print("\n🏆 Language Performance Ranking (Tree-Sitter Implementation):")
         print(f"{'Language':<12} {'F1 Score':<10} {'Recall':<8} {'Precision':<10} {'Method':<20}")
         print("-" * 70)
 
         for lang_perf in summary['languages_by_performance']:
             status = "✅" if lang_perf['f1_score'] > 0 else "❌"
-            print(f"{lang_perf['language']:<12} {lang_perf['f1_score']:.3f}     {lang_perf['recall']:.1%}   {lang_perf['precision']:.1%}      {lang_perf['analysis_method']:<20} {status}")
+            print(
+                f"{
+                    lang_perf['language']:<12} {
+                    lang_perf['f1_score']:.3f}     {
+                    lang_perf['recall']:.1%}   {
+                    lang_perf['precision']:.1%}      {
+                        lang_perf['analysis_method']:<20} {status}")
 
-        print(f"\n📋 Detailed Results by Language:")
+        print("\n📋 Detailed Results by Language:")
         for lang_name, result in data['results'].items():
             if result['success']:
                 # Tree-sitter results
@@ -386,9 +392,9 @@ class MultiLanguageBaseline:
                     elif improvement < 0:
                         print(f"  ⬇️ Regression: Tree-sitter is {abs(improvement):.1%} worse (F1 score)")
                     else:
-                        print(f"  ➡️ Same performance")
+                        print("  ➡️ Same performance")
                 else:
-                    print(f"  📝 Baseline - Not available")
+                    print("  📝 Baseline - Not available")
 
                 print(f"  Expected: {sorted(ts_functions['expected'])}")
                 if ts_functions['missing']:

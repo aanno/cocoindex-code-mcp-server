@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 import unittest
-import pytest
 from unittest.mock import patch
+
+import pytest
 
 
 class TestLiveUpdates(unittest.TestCase):
@@ -43,8 +44,8 @@ class TestLiveUpdates(unittest.TestCase):
     @pytest.mark.skip(reason="Config update logic changed")
     def test_global_config_updates(self):
         """Test that global flow configuration is updated correctly."""
-        from main import main
         from cocoindex_config import _global_flow_config
+        from main import main
 
         # Mock the flow to prevent actual execution
         with patch('cocoindex_config.code_embedding_flow') as mock_flow:
@@ -62,8 +63,8 @@ class TestLiveUpdates(unittest.TestCase):
     @pytest.mark.skip(reason="Polling logic implementation changed")
     def test_polling_enable_logic(self):
         """Test the logic for enabling polling based on interval."""
-        from main import main
         from cocoindex_config import _global_flow_config
+        from main import main
 
         with patch('cocoindex_config.code_embedding_flow') as mock_flow:
             with patch('query_interactive.ConnectionPool'):

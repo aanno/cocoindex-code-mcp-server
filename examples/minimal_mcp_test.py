@@ -4,14 +4,14 @@ Minimal MCP server for testing what Claude Desktop expects.
 """
 
 import asyncio
-import mcp.types as types
-from mcp.server import Server
+
+import mcp.server.sse
 import mcp.server.stdio
+import mcp.types as types
+import uvicorn
+from mcp.server import Server
 from starlette.applications import Starlette
 from starlette.routing import Route
-import uvicorn
-import mcp.server.sse
-
 
 # Initialize the MCP server
 server = Server("minimal-test")

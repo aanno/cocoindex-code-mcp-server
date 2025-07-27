@@ -11,6 +11,7 @@ Usage as external wrapper around CocoIndex's SentenceTransformerEmbed.
 """
 
 from typing import Any, Dict
+
 import cocoindex
 from cocoindex_code_mcp_server import LOGGER
 
@@ -269,12 +270,14 @@ def create_rust_embedding(model_args: Dict[str, Any] | None = None) -> cocoindex
     return create_smart_code_embedding(language="rust", model_args=model_args)
 
 
-def create_javascript_embedding(model_args: Dict[str, Any] | None = None) -> cocoindex.functions.SentenceTransformerEmbed:
+def create_javascript_embedding(model_args: Dict[str, Any] |
+                                None = None) -> cocoindex.functions.SentenceTransformerEmbed:
     """Create embedding function optimized for JavaScript code."""
     return create_smart_code_embedding(language="javascript", model_args=model_args)
 
 
-def create_typescript_embedding(model_args: Dict[str, Any] | None = None) -> cocoindex.functions.SentenceTransformerEmbed:
+def create_typescript_embedding(model_args: Dict[str, Any] |
+                                None = None) -> cocoindex.functions.SentenceTransformerEmbed:
     """Create embedding function optimized for TypeScript code."""
     return create_smart_code_embedding(language="typescript", model_args=model_args)
 
@@ -330,11 +333,11 @@ if __name__ == "__main__":
     print("""
     # In your CocoIndex flow:
     from src.smart_code_embedding import create_smart_code_embedding
-    
+
     # Automatic model selection
     embedding_func = create_smart_code_embedding(file_extension=".py")
     chunk["embedding"] = chunk["text"].transform(embedding_func)
-    
+
     # Manual language selection
     embedding_func = create_smart_code_embedding(language="rust")
     chunk["embedding"] = chunk["text"].transform(embedding_func)

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
+
 import haskell_tree_sitter
 
 

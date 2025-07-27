@@ -5,8 +5,9 @@ Standalone tests for enhanced Haskell chunking functionality.
 Tests the new HaskellChunkConfig and EnhancedHaskellChunker classes without CocoIndex imports.
 """
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
 
 # Mock cocoindex to avoid circular import
 mock_cocoindex = Mock()
@@ -14,12 +15,13 @@ mock_cocoindex.op = Mock()
 mock_cocoindex.op.function = Mock(return_value=lambda f: f)
 
 with patch.dict('sys.modules', {'cocoindex': mock_cocoindex}):
+    import haskell_tree_sitter
+
     from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
         HaskellChunkConfig,
+        create_enhanced_regex_fallback_chunks,
         get_enhanced_haskell_separators,
-        create_enhanced_regex_fallback_chunks
     )
-    import haskell_tree_sitter
 
 
 class TestHaskellChunkConfig:
@@ -303,7 +305,9 @@ class TestBackwardCompatibility:
 
     def test_legacy_function_exists(self):
         """Test that legacy function still exists."""
-        from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import create_regex_fallback_chunks_python
+        from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
+            create_regex_fallback_chunks_python,
+        )
 
         haskell_code = """
 factorial :: Integer -> Integer
@@ -322,7 +326,9 @@ factorial n = product [1..n]
 
     def test_legacy_format_conversion(self):
         """Test that legacy format conversion works correctly."""
-        from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import create_regex_fallback_chunks_python
+        from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
+            create_regex_fallback_chunks_python,
+        )
 
         haskell_code = """
 module Test where

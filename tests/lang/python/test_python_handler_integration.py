@@ -6,11 +6,18 @@ This test verifies that the TreeSitterPythonAnalyzer properly integrates
 the PythonNodeHandler through the AST visitor framework.
 """
 
-import sys
-import pytest
-from cocoindex_code_mcp_server.lang.python.tree_sitter_python_analyzer import TreeSitterPythonAnalyzer
-from cocoindex_code_mcp_server.cocoindex_config import extract_code_metadata, PYTHON_HANDLER_AVAILABLE
 import json
+import sys
+
+import pytest
+
+from cocoindex_code_mcp_server.cocoindex_config import (
+    PYTHON_HANDLER_AVAILABLE,
+    extract_code_metadata,
+)
+from cocoindex_code_mcp_server.lang.python.tree_sitter_python_analyzer import (
+    TreeSitterPythonAnalyzer,
+)
 
 
 def test_tree_sitter_python_analyzer_integration():
@@ -29,16 +36,16 @@ class Config:
 
 class Processor:
     """A sample processor class."""
-    
+
     def __init__(self, config: Config):
         self.config = config
         self._cache = {}
-    
+
     @classmethod
     def from_config(cls, config_path: str) -> 'Processor':
         """Create processor from config file."""
         return cls(Config("default"))
-    
+
     async def process_data(self, items: List[str]) -> Dict[str, Any]:
         """Process data asynchronously."""
         results = {}
@@ -46,11 +53,11 @@ class Processor:
             result = await self._process_single(item)
             results[item] = result
         return results
-    
+
     def _process_single(self, item: str) -> str:
         """Process single item (private method)."""
         return f"processed_{item}"
-    
+
     def __str__(self) -> str:
         """String representation (dunder method)."""
         return f"Processor({self.config.name})"
@@ -120,15 +127,15 @@ def test_cocoindex_config_python_handler_integration():
     sample_code = '''
 class TestClass:
     """A test class."""
-    
+
     def __init__(self):
         self.value = 42
-    
+
     @property
     def doubled(self) -> int:
         """Double the value."""
         return self.value * 2
-    
+
     async def async_method(self) -> str:
         """An async method."""
         return "async_result"

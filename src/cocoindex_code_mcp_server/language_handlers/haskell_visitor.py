@@ -5,12 +5,13 @@ Specialized Haskell AST visitor that works directly with haskell_tree_sitter chu
 This avoids the complexity of trying to wrap chunks in a generic tree-sitter interface.
 """
 
-from . import LOGGER
-from ..language_handlers.haskell_handler import HaskellNodeHandler
-from ..ast_visitor import GenericMetadataVisitor, NodeContext
-import sys
 import os
+import sys
 from typing import Any, Dict
+
+from ..ast_visitor import GenericMetadataVisitor, NodeContext
+from ..language_handlers.haskell_handler import HaskellNodeHandler
+from . import LOGGER
 
 # Import from parent directory
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))

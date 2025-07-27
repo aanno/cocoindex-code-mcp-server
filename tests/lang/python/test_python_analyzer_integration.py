@@ -5,10 +5,12 @@ Integration test for the Python analyzer functionality.
 Moved from src/python_code_analyzer.py to tests/
 """
 
-import sys
 import logging
-from cocoindex_code_mcp_server.lang.python.python_code_analyzer import analyze_python_code
+import sys
 
+from cocoindex_code_mcp_server.lang.python.python_code_analyzer import (
+    analyze_python_code,
+)
 
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)
@@ -23,16 +25,16 @@ import numpy as np
 
 class DataProcessor:
     """A class for processing data."""
-    
+
     def __init__(self, config: Dict[str, Any]):
         self.config = config
         self._cache = {}
-    
+
     @property
     def cache_size(self) -> int:
         """Get the cache size."""
         return len(self._cache)
-    
+
     async def process_data(self, data: List[str], batch_size: int = 10) -> List[Dict[str, Any]]:
         """Process data asynchronously."""
         results = []
@@ -40,7 +42,7 @@ class DataProcessor:
             result = await self._process_item(item)
             results.append(result)
         return results
-    
+
     def _process_item(self, item: str) -> Dict[str, Any]:
         """Process a single item."""
         return {"item": item, "processed": True}
@@ -145,21 +147,21 @@ class Processor(Protocol):
 
 class GenericProcessor(Generic[T]):
     """Generic processor class."""
-    
+
     def __init__(self, config: Config):
         self.config = config
         self._buffer: List[T] = []
-    
+
     @classmethod
     def from_config(cls, config_path: Path) -> 'GenericProcessor':
         """Create from config file."""
         return cls(Config("default"))
-    
+
     @staticmethod
     def validate_input(data: str) -> bool:
         """Validate input data."""
         return len(data) > 0
-    
+
     async def async_process(self, items: List[T]) -> Dict[str, Any]:
         """Process items asynchronously."""
         results = {}
@@ -168,17 +170,17 @@ class GenericProcessor(Generic[T]):
                 task = tg.create_task(self._process_single(item))
                 results[str(item)] = await task
         return results
-    
+
     def _process_single(self, item: T) -> str:
         """Process single item."""
         return f"processed_{item}"
-    
+
     def __str__(self) -> str:
         return f"GenericProcessor({self.config.name})"
-    
+
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._buffer.clear()
 

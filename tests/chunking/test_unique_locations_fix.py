@@ -5,9 +5,10 @@ Test to verify the unique location post-processing fix works correctly.
 """
 
 import pytest
+
 import cocoindex
-from cocoindex_code_mcp_server.cocoindex_config import ensure_unique_chunk_locations
 from cocoindex_code_mcp_server.ast_chunking import Chunk
+from cocoindex_code_mcp_server.cocoindex_config import ensure_unique_chunk_locations
 
 
 class TestUniqueLocationsFix:
@@ -24,14 +25,14 @@ class TestUniqueLocationsFix:
             {"text": "chunk 5 content", "location": "line:5", "start": 60, "end": 70},
         ]
 
-        print(f"Input chunks with duplicate locations:")
+        print("Input chunks with duplicate locations:")
         for i, chunk in enumerate(duplicate_chunks):
             print(f"  Chunk {i}: location='{chunk['location']}'")
 
         # Apply the fix
         unique_chunks = ensure_unique_chunk_locations(duplicate_chunks)
 
-        print(f"\nOutput chunks with unique locations:")
+        print("\nOutput chunks with unique locations:")
         locations = []
         for i, chunk in enumerate(unique_chunks):
             location = chunk.location  # Now returns Chunk dataclass objects
@@ -58,14 +59,14 @@ class TestUniqueLocationsFix:
             Chunk(text="chunk 4", location="line:0#1", start=30, end=40),  # duplicate location
         ]
 
-        print(f"Input Chunk objects with duplicate locations:")
+        print("Input Chunk objects with duplicate locations:")
         for i, chunk in enumerate(duplicate_chunks):
             print(f"  Chunk {i}: location='{chunk.location}'")
 
         # Apply the fix
         unique_chunks = ensure_unique_chunk_locations(duplicate_chunks)
 
-        print(f"\nOutput Chunk objects with unique locations:")
+        print("\nOutput Chunk objects with unique locations:")
         locations = []
         for i, chunk in enumerate(unique_chunks):
             location = chunk.location

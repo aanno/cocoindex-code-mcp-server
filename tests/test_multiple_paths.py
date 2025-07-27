@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-import unittest
-import pytest
 import tempfile
+import unittest
 from pathlib import Path
 from unittest.mock import patch
+
+import pytest
 
 
 class TestMultiplePaths(unittest.TestCase):

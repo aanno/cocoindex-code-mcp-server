@@ -8,10 +8,15 @@ default baseline by using the configuration flags to control which extractor is 
 Based on the pytest example pattern suggested for testing extractors.
 """
 
-import pytest
 import json
 from typing import Any, Dict
-from cocoindex_code_mcp_server.cocoindex_config import extract_code_metadata, _global_flow_config
+
+import pytest
+
+from cocoindex_code_mcp_server.cocoindex_config import (
+    _global_flow_config,
+    extract_code_metadata,
+)
 
 
 class CocoIndexMetadataExtractor:
@@ -97,29 +102,29 @@ from dataclasses import dataclass
 @dataclass
 class TestProcessor:
     """A test processor class with various method types."""
-    
+
     name: str
     config: Dict[str, Any] = None
-    
+
     def __init__(self, name: str):
         self.name = name
         self._internal_state = {}
-    
+
     @property
     def status(self) -> str:
         """Get the current status."""
         return self._internal_state.get('status', 'idle')
-    
+
     @staticmethod
     def validate_input(data: Dict) -> bool:
         """Validate input data."""
         return isinstance(data, dict) and len(data) > 0
-    
+
     @classmethod
     def create_default(cls) -> 'TestProcessor':
         """Create a default processor instance."""
         return cls("default")
-    
+
     async def process_async(self, items: List[str]) -> List[str]:
         """Process items asynchronously."""
         processed = []
@@ -127,11 +132,11 @@ class TestProcessor:
             await asyncio.sleep(0.01)
             processed.append(self._transform_item(item))
         return processed
-    
+
     def _transform_item(self, item: str) -> str:
         """Private method to transform items."""
         return f"processed_{item}"
-    
+
     def __str__(self) -> str:
         """String representation."""
         return f"TestProcessor(name={self.name})"
@@ -317,8 +322,12 @@ class TestCocoIndexBaselineComparison:
         custom_has_decorators = (len(custom_decorators) > 0 or
                                  custom_metadata.get("has_decorators", False))
 
-        assert default_has_decorators, f"Default extractor should detect decorators. Decorators: {default_decorators}, has_decorators: {default_metadata.get('has_decorators', False)}"
-        assert custom_has_decorators, f"Custom extractor should detect decorators. Decorators: {custom_decorators}, has_decorators: {custom_metadata.get('has_decorators', False)}"
+        assert default_has_decorators, f"Default extractor should detect decorators. Decorators: {default_decorators}, has_decorators: {
+            default_metadata.get(
+                'has_decorators', False)}"
+        assert custom_has_decorators, f"Custom extractor should detect decorators. Decorators: {custom_decorators}, has_decorators: {
+            custom_metadata.get(
+                'has_decorators', False)}"
 
         # Check for expected decorators
         expected_decorators = ["dataclass", "property", "staticmethod", "classmethod"]

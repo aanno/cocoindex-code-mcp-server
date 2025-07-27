@@ -3,10 +3,11 @@
 Pytest configuration and fixtures for smart embedding tests.
 """
 
-import pytest
 import os
-import tempfile
 import shutil
+import tempfile
+
+import pytest
 
 # Package should be installed via maturin develop or pip install -e .
 # No need to manually add src to path
@@ -45,7 +46,7 @@ impl Person {
     pub fn new(name: String, age: u32) -> Self {
         Self { name, age }
     }
-    
+
     pub fn is_adult(&self) -> bool {
         self.age >= 18
     }
@@ -70,7 +71,7 @@ class Calculator {
     constructor() {
         this.history = [];
     }
-    
+
     add(a, b) {
         const result = a + b;
         this.history.push(`${a} + ${b} = ${result}`);

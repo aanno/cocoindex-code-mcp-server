@@ -3,11 +3,11 @@
 """
 Comprehensive integration tests for MCP server extension modules.
 
-This test suite verifies that the MCP server extension modules (smart_code_embedding.py, 
-ast_chunking.py, python_handler.py) are actually called during real CocoIndex flow 
-execution. 
+This test suite verifies that the MCP server extension modules (smart_code_embedding.py,
+ast_chunking.py, python_handler.py) are actually called during real CocoIndex flow
+execution.
 
-It uses mocker.spy() to monitor function calls and runs actual CocoIndex flows on a 
+It uses mocker.spy() to monitor function calls and runs actual CocoIndex flows on a
 test corpus to ensure the extensions are properly integrated and working.
 
 For simple extension loading verification, see test_extension_integration.py
@@ -19,10 +19,11 @@ Test Strategy:
 4. Verifies that the correct extensions are called based on CLI flags
 """
 
-import pytest
-import tempfile
 import shutil
+import tempfile
 from pathlib import Path
+
+import pytest
 
 pytest_plugins = ["pytest_mock"]
 
@@ -41,22 +42,22 @@ from typing import List, Dict
 
 class TestProcessor:
     """A sample class for testing AST processing."""
-    
+
     def __init__(self, name: str):
         self.name = name
         self._private_data = []
-    
+
     @property
     def data_count(self) -> int:
         return len(self._private_data)
-    
+
     def process_data(self, items: List[str]) -> Dict[str, int]:
         """Process a list of items and return counts."""
         result = {}
         for item in items:
             result[item] = len(item)
         return result
-    
+
     async def async_method(self) -> str:
         """An async method for testing."""
         return f"Processed: {self.name}"
@@ -79,14 +80,14 @@ def helper_function(value: Optional[str] = None) -> bool:
     """Helper function for testing."""
     if value is None:
         return False
-    
+
     logger.info(f"Processing: {value}")
     return len(value) > 0
 
 class UtilityClass:
     def __init__(self):
         self.counter = 0
-    
+
     def increment(self) -> int:
         self.counter += 1
         return self.counter
@@ -123,7 +124,7 @@ class TestMCPServerModuleIntegration:
 
             # Import required modules after cocoindex init
             import smart_code_embedding
-            from cocoindex_config import update_flow_config, code_embedding_flow
+            from cocoindex_config import code_embedding_flow, update_flow_config
 
             # Spy on the smart embedding function
             create_spy = mocker.spy(smart_code_embedding, "create_smart_code_embedding")
@@ -184,7 +185,7 @@ class TestMCPServerModuleIntegration:
             # Import required modules after cocoindex init
             import ast_chunking
             from ast_chunking import CocoIndexASTChunker
-            from cocoindex_config import update_flow_config, code_embedding_flow
+            from cocoindex_config import code_embedding_flow, update_flow_config
 
             # Spy on AST chunking functions
             chunk_code_spy = mocker.spy(CocoIndexASTChunker, "chunk_code")
@@ -241,8 +242,13 @@ class TestMCPServerModuleIntegration:
             cocoindex.init()
 
             # Import required modules after cocoindex init
-            from cocoindex_code_mcp_server.language_handlers.python_handler import PythonNodeHandler
-            from cocoindex_code_mcp_server.cocoindex_config import update_flow_config, code_embedding_flow
+            from cocoindex_code_mcp_server.cocoindex_config import (
+                code_embedding_flow,
+                update_flow_config,
+            )
+            from cocoindex_code_mcp_server.language_handlers.python_handler import (
+                PythonNodeHandler,
+            )
 
             # Spy on Python handler functions
             extract_metadata_spy = mocker.spy(PythonNodeHandler, "extract_metadata")
@@ -300,10 +306,13 @@ class TestMCPServerQueryIntegration:
         """Test that extensions are used during hybrid search queries."""
         try:
             # Import required modules
-            import cocoindex
-            from cocoindex_config import update_flow_config, code_embedding_flow
-            from cocoindex_code_mcp_server.db.pgvector.hybrid_search import HybridSearchEngine
+            from cocoindex_config import code_embedding_flow, update_flow_config
             from psycopg_pool import ConnectionPool
+
+            import cocoindex
+            from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
+                HybridSearchEngine,
+            )
 
             # Skip if database not available
             try:
@@ -343,7 +352,9 @@ class TestMCPServerQueryIntegration:
                 print("AST chunking not available for spying")
 
             try:
-                from cocoindex_code_mcp_server.language_handlers.python_handler import PythonNodeHandler
+                from cocoindex_code_mcp_server.language_handlers.python_handler import (
+                    PythonNodeHandler,
+                )
                 spies["python_extract_metadata"] = mocker.spy(PythonNodeHandler, "extract_metadata")
             except ImportError:
                 print("Python handler not available for spying")

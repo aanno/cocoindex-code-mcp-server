@@ -6,7 +6,9 @@ This tests the specific issue where class decorators from Python AST analysis
 are not being properly merged with function decorators from tree-sitter analysis.
 """
 
-from cocoindex_code_mcp_server.lang.python.python_code_analyzer import analyze_python_code
+from cocoindex_code_mcp_server.lang.python.python_code_analyzer import (
+    analyze_python_code,
+)
 
 
 def test_class_decorator_detection():
@@ -127,7 +129,7 @@ class OuterClass:
     @dataclass
     class InnerDataClass:
         value: str
-    
+
     @attr.s
     class InnerAttrClass:
         count = attr.ib(default=0)

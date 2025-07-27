@@ -5,8 +5,8 @@ Verification script for language-aware embedding implementation.
 Tests that the classes can be instantiated without triggering the circular import.
 """
 
-import sys
 import os
+import sys
 
 # Add the cocoindex python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'cocoindex', 'python'))
@@ -35,7 +35,7 @@ def verify_implementation():
         sys.path.insert(0, 'tests')
         from test_code_embedding_standalone import (
             MockCodeEmbeddingExecutor,
-            MockSmartCodeEmbeddingExecutor
+            MockSmartCodeEmbeddingExecutor,
         )
 
         print("2. Testing CodeEmbedding logic...")

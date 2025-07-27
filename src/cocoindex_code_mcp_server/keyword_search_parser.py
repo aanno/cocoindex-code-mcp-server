@@ -5,9 +5,9 @@ Keyword search parser for metadata search with 'and', 'or', and 'exists' operato
 """
 
 import re
-from typing import Any, List, Union
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, List, Union
 
 
 class Operator(Enum):
@@ -85,13 +85,13 @@ class KeywordSearchParser:
 
             # Check for value_contains() function call
             if start_pos >= 14:  # "value_contains".length
-                before_paren = expr[max(0, start_pos-14):start_pos].lower()
+                before_paren = expr[max(0, start_pos - 14):start_pos].lower()
                 if before_paren.endswith('value_contains'):
                     is_function_call = True
 
             # Check for exists() function call
             if not is_function_call and start_pos >= 6:  # "exists".length
-                before_paren = expr[max(0, start_pos-6):start_pos].lower()
+                before_paren = expr[max(0, start_pos - 6):start_pos].lower()
                 if before_paren.endswith('exists'):
                     is_function_call = True
 
@@ -155,7 +155,7 @@ class KeywordSearchParser:
         while i < len(expr):
             char = expr[i]
 
-            if char in ['"', "'"] and (i == 0 or expr[i-1] != '\\'):
+            if char in ['"', "'"] and (i == 0 or expr[i - 1] != '\\'):
                 if not in_quotes:
                     in_quotes = True
                     quote_char = char

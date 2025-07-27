@@ -4,8 +4,8 @@
 Test the enhanced Python analyzer with tree-sitter integration.
 """
 
-import sys
 import logging
+import sys
 
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)
@@ -15,7 +15,9 @@ def test_enhanced_analyzer():
     """Test the enhanced Python analyzer."""
 
     try:
-        from cocoindex_code_mcp_server.lang.python.python_code_analyzer import analyze_python_code
+        from cocoindex_code_mcp_server.lang.python.python_code_analyzer import (
+            analyze_python_code,
+        )
     except ImportError as e:
         LOGGER.error(f"Could not import analyzer: {e}")
         print(f"❌ Could not import analyzer: {e}")
@@ -30,20 +32,20 @@ import asyncio
 @dataclass
 class TestClass:
     '''A test class with various features.'''
-    
+
     def __init__(self, name: str):
         self.name = name
         self._private_attr = None
-    
-    @property 
+
+    @property
     def name_upper(self) -> str:
         '''Get uppercase name.'''
         return self.name.upper()
-    
+
     @staticmethod
     def static_method() -> bool:
         return True
-    
+
     async def async_method(self, items: List[str]) -> Dict[str, Any]:
         '''Process items asynchronously.'''
         results = {}
@@ -51,10 +53,10 @@ class TestClass:
             if item:
                 results[item] = await self._process_item(item)
         return results
-    
+
     def _process_item(self, item: str) -> str:
         return f"processed_{item}"
-    
+
     def __str__(self) -> str:
         return f"TestClass({self.name})"
 
@@ -75,7 +77,7 @@ MODULE_VAR = "test_value"
     try:
         metadata = analyze_python_code(test_code, "test_enhanced.py")
 
-        print(f"✅ Analysis completed successfully!")
+        print("✅ Analysis completed successfully!")
         print(f"📊 Analysis Method: {metadata.get('analysis_method', 'unknown')}")
         print(f"📁 Language: {metadata.get('language', 'unknown')}")
         print(f"📏 Lines: {metadata.get('line_count', 0)}")
@@ -144,10 +146,10 @@ MODULE_VAR = "test_value"
             print(f"🔮 Dunder methods found: {metadata['dunder_methods']}")
 
         if all_good:
-            print(f"\n🎉 All tests passed! Enhanced analyzer working correctly.")
+            print("\n🎉 All tests passed! Enhanced analyzer working correctly.")
             return True
         else:
-            print(f"\n⚠️  Some tests failed, but basic functionality works.")
+            print("\n⚠️  Some tests failed, but basic functionality works.")
             return True
 
     except Exception as e:

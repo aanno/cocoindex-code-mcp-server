@@ -1,6 +1,7 @@
 """Test MCP Tool serialization behavior."""
 
 import json
+
 import mcp.types as types
 
 

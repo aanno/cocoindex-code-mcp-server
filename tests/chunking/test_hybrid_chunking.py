@@ -5,6 +5,7 @@ Test hybrid chunking functionality with different languages and CocoIndex integr
 """
 
 import pytest
+
 try:
     from ast_chunking import CocoIndexASTChunker, detect_language_from_filename
     COCOINDEX_AST_AVAILABLE = True
@@ -46,13 +47,13 @@ def test_python_chunking_with_cocoindex():
 def hello_world():
     """A simple hello world function."""
     print("Hello, World!")
-    
+
 class Calculator:
     """A simple calculator class."""
-    
+
     def add(self, a, b):
         return a + b
-    
+
     def multiply(self, a, b):
         return a * b
 
@@ -88,11 +89,11 @@ public class Calculator {
         int result = calc.add(5, 3);
         System.out.println("5 + 3 = " + result);
     }
-    
+
     public int add(int a, int b) {
         return a + b;
     }
-    
+
     public int multiply(int a, int b) {
         return a * b;
     }
@@ -123,12 +124,12 @@ public class Calculator
         int result = calc.Add(5, 3);
         Console.WriteLine($"5 + 3 = {result}");
     }
-    
+
     public int Add(int a, int b)
     {
         return a + b;
     }
-    
+
     public int Multiply(int a, int b)
     {
         return a * b;
@@ -154,7 +155,7 @@ class Calculator {
     add(a: number, b: number): number {
         return a + b;
     }
-    
+
     multiply(a: number, b: number): number {
         return a * b;
     }

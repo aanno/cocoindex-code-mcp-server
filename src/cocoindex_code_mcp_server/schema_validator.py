@@ -5,8 +5,8 @@ Database schema validation and field mapping for safe SQL query generation.
 Prevents SQL injection and unknown column errors.
 """
 
-from typing import Dict, Set, List, Any, Optional
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Set
 
 # Valid database columns based on hybrid_search.py queries
 VALID_COLUMNS: Set[str] = {
@@ -115,7 +115,7 @@ class SchemaValidator:
 
         Args:
             field: Field name to query
-            operator: SQL operator 
+            operator: SQL operator
             value: Value to compare against
 
         Returns:

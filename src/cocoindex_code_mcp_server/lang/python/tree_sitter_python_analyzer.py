@@ -6,13 +6,13 @@ Combines the generic AST visitor framework with Python-specific node handlers.
 """
 
 import ast
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
 
 from ...ast_visitor import (
-    MultiLevelAnalyzer,
+    ASTParserFactory,
     GenericMetadataVisitor,
+    MultiLevelAnalyzer,
     TreeWalker,
-    ASTParserFactory
 )
 from ...language_handlers import get_handler_for_language
 from . import LOGGER
@@ -528,14 +528,14 @@ class PythonASTVisitor(ast.NodeVisitor):
 
         try:
             return ast.unparse(annotation)
-        except:
+        except BaseException:
             return str(annotation)
 
     def _get_default_value(self, default) -> str:
         """Extract default parameter value."""
         try:
             return ast.unparse(default)
-        except:
+        except BaseException:
             return str(default)
 
     def get_metadata(self) -> Dict[str, Any]:

@@ -10,32 +10,34 @@ This implementation follows the official MCP SDK patterns using StreamableHTTPSe
 """
 
 import contextlib
+import json
 import logging
 import os
-import sys
 import signal
+import sys
 import threading
-import json
 from collections.abc import AsyncIterator
 from typing import Optional
 
 import click
 import mcp.types as types
+from dotenv import load_dotenv
 from mcp.server.lowlevel import Server
 from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
+from pgvector.psycopg import register_vector
+from psycopg_pool import ConnectionPool
 from starlette.applications import Starlette
 from starlette.routing import Mount
 from starlette.types import Receive, Scope, Send
-from psycopg_pool import ConnectionPool
-from pgvector.psycopg import register_vector
-from dotenv import load_dotenv
+
+import cocoindex
+
+from .cocoindex_config import code_to_embedding, run_flow_update, update_flow_config
 
 # Local imports
 from .db.pgvector.hybrid_search import HybridSearchEngine
 from .keyword_search_parser_lark import KeywordSearchParser
 from .lang.python.python_code_analyzer import analyze_python_code
-import cocoindex
-from .cocoindex_config import code_to_embedding, run_flow_update, update_flow_config
 
 try:
     import coverage
@@ -623,7 +625,7 @@ def main(
                     table_name = hybrid_search_engine.table_name
                     cur.execute(f"""
                         SELECT column_name, data_type, is_nullable
-                        FROM information_schema.columns 
+                        FROM information_schema.columns
                         WHERE table_name = '{table_name}'
                         ORDER BY ordinal_position
                     """)
