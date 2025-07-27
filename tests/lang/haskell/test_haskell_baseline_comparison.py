@@ -9,6 +9,7 @@ Similar to tests/lang/python/test_cocoindex_baseline_comparison.py
 from pathlib import Path
 
 import pytest
+from typing import Dict, List, Union
 
 import_error = None
 try:
@@ -44,7 +45,7 @@ class TestHaskellBaselineComparison:
         with open(self.fixture_path, 'r') as f:
             self.haskell_code = f.read()
 
-    def test_our_haskell_visitor_analysis(self):
+    def test_our_haskell_visitor_analysis(self) -> Dict[str, Union[str, int, List[str], bool, Dict[str, int]]]:
         """Test our specialized Haskell visitor implementation."""
         result = analyze_haskell_code(self.haskell_code, str(self.fixture_path))
 
@@ -78,7 +79,7 @@ class TestHaskellBaselineComparison:
 
         return metrics
 
-    def test_generic_visitor_analysis(self):
+    def test_generic_visitor_analysis(self) -> Dict[str, Union[str, int, List[str], bool, Dict[str, int]]]:
         """Test generic AST visitor with Haskell (should use our specialized visitor)."""
         result = generic_analyze_code(self.haskell_code, 'haskell', str(self.fixture_path))
 
@@ -111,7 +112,7 @@ class TestHaskellBaselineComparison:
         return metrics
 
     @pytest.mark.skipif(not COCOINDEX_AVAILABLE, reason="CocoIndex not available")
-    def test_cocoindex_baseline_analysis(self):
+    def test_cocoindex_baseline_analysis(self) -> Dict[str, Union[str, int, bool]]:
         """Test CocoIndex's built-in analysis for comparison."""
         try:
             # Use CocoIndex's basic text analysis

@@ -9,6 +9,8 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from ..ast_visitor import GenericMetadataVisitor, NodeContext
+from cocoindex_code_mcp_server.ast_visitor import NodeContext
+from tree_sitter import Node
 
 LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +45,7 @@ class CASTVisitor(GenericMetadataVisitor):
 
         return None
 
-    def _extract_function(self, node):
+    def _extract_function(self, node: Node):
         """Extract function name from function_definition node."""
         try:
             # C function structure: function_definition -> function_declarator -> identifier
@@ -57,7 +59,7 @@ class CASTVisitor(GenericMetadataVisitor):
         except Exception as e:
             LOGGER.warning(f"Error extracting C function: {e}")
 
-    def _extract_struct(self, node):
+    def _extract_struct(self, node: Node):
         """Extract struct name from struct_specifier node."""
         try:
             # Look for struct name (identifier after 'struct' keyword)
@@ -96,7 +98,7 @@ class CASTVisitor(GenericMetadataVisitor):
         except Exception as e:
             LOGGER.warning(f"Error extracting C typedef: {e}")
 
-    def _find_child_by_type(self, node, target_type: str):
+    def _find_child_by_type(self, node: Node, target_type: str) -> Node:
         """Find first child node of specified type."""
         for child in node.children:
             if child.type == target_type:

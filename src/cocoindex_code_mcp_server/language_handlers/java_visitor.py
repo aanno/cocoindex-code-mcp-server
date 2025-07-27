@@ -9,6 +9,8 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from ..ast_visitor import GenericMetadataVisitor, NodeContext
+from cocoindex_code_mcp_server.ast_visitor import NodeContext
+from tree_sitter import Node
 
 LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +53,7 @@ class JavaASTVisitor(GenericMetadataVisitor):
 
         return None
 
-    def _extract_method(self, node):
+    def _extract_method(self, node: Node):
         """Extract method name from method_declaration node."""
         try:
             # Java method structure: method_declaration -> identifier
@@ -64,7 +66,7 @@ class JavaASTVisitor(GenericMetadataVisitor):
         except Exception as e:
             LOGGER.warning(f"Error extracting Java method: {e}")
 
-    def _extract_constructor(self, node):
+    def _extract_constructor(self, node: Node):
         """Extract constructor name from constructor_declaration node."""
         try:
             # Java constructor structure: constructor_declaration -> identifier
@@ -77,7 +79,7 @@ class JavaASTVisitor(GenericMetadataVisitor):
         except Exception as e:
             LOGGER.warning(f"Error extracting Java constructor: {e}")
 
-    def _extract_class(self, node):
+    def _extract_class(self, node: Node):
         """Extract class name from class_declaration node."""
         try:
             # Look for class name (identifier after 'class' keyword)
@@ -90,7 +92,7 @@ class JavaASTVisitor(GenericMetadataVisitor):
         except Exception as e:
             LOGGER.warning(f"Error extracting Java class: {e}")
 
-    def _extract_interface(self, node):
+    def _extract_interface(self, node: Node):
         """Extract interface name from interface_declaration node."""
         try:
             # Look for interface name

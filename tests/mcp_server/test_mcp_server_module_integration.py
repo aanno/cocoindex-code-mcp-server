@@ -24,6 +24,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+from pytest_mock.plugin import MockerFixture
 
 pytest_plugins = ["pytest_mock"]
 
@@ -115,7 +116,7 @@ def nested_function():
 class TestMCPServerModuleIntegration:
     """Test that MCP server modules are used during real CocoIndex execution."""
 
-    def test_smart_code_embedding_integration(self, mocker, test_corpus):
+    def test_smart_code_embedding_integration(self, mocker: MockerFixture, test_corpus: str):
         """Test that smart code embedding is used during real flow execution."""
         try:
             # Initialize CocoIndex first
@@ -175,7 +176,7 @@ class TestMCPServerModuleIntegration:
         except Exception as e:
             pytest.skip(f"CocoIndex flow execution failed: {e}")
 
-    def test_ast_chunking_integration(self, mocker, test_corpus):
+    def test_ast_chunking_integration(self, mocker: MockerFixture, test_corpus: str):
         """Test that AST chunking is used during real flow execution."""
         try:
             # Initialize CocoIndex first
@@ -234,7 +235,7 @@ class TestMCPServerModuleIntegration:
         except Exception as e:
             pytest.skip(f"CocoIndex flow execution failed: {e}")
 
-    def test_python_handler_integration(self, mocker, test_corpus):
+    def test_python_handler_integration(self, mocker: MockerFixture, test_corpus: str):
         """Test that Python language handlers are used during real flow execution."""
         try:
             # Initialize CocoIndex first
@@ -302,7 +303,7 @@ class TestMCPServerModuleIntegration:
 class TestMCPServerQueryIntegration:
     """Test extension module usage during actual search queries."""
 
-    def test_hybrid_search_with_extensions(self, mocker, test_corpus):
+    def test_hybrid_search_with_extensions(self, mocker: MockerFixture, test_corpus: str):
         """Test that extensions are used during hybrid search queries."""
         try:
             # Import required modules

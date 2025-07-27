@@ -14,8 +14,10 @@ from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
     format_results_as_json,
     format_results_readable
 )
-from cocoindex_code_mcp_server.backends import VectorStoreBackend, SearchResult
+from cocoindex_code_mcp_server.backends import QueryFilters, VectorStoreBackend, SearchResult
 from cocoindex_code_mcp_server.keyword_search_parser import SearchCondition, SearchGroup
+from numpy import ndarray
+from typing import List
 
 
 class MockVectorStoreBackend(VectorStoreBackend):
@@ -26,7 +28,7 @@ class MockVectorStoreBackend(VectorStoreBackend):
         self.keyword_search_calls = []
         self.hybrid_search_calls = []
     
-    def vector_search(self, query_vector, top_k=10):
+    def vector_search(self, query_vector: ndarray, top_k: int=10) -> List[SearchResult]:
         self.vector_search_calls.append((query_vector, top_k))
         return [
             SearchResult(
@@ -41,7 +43,7 @@ class MockVectorStoreBackend(VectorStoreBackend):
             )
         ]
     
-    def keyword_search(self, filters, top_k=10):
+    def keyword_search(self, filters: QueryFilters, top_k: int=10) -> List[SearchResult]:
         self.keyword_search_calls.append((filters, top_k))
         return [
             SearchResult(
@@ -56,7 +58,7 @@ class MockVectorStoreBackend(VectorStoreBackend):
             )
         ]
     
-    def hybrid_search(self, query_vector, filters, top_k=10, vector_weight=0.7, keyword_weight=0.3):
+    def hybrid_search(self, query_vector: ndarray, filters: QueryFilters, top_k: int=10, vector_weight: float=0.7, keyword_weight: float=0.3) -> List[SearchResult]:
         self.hybrid_search_calls.append((query_vector, filters, top_k, vector_weight, keyword_weight))
         return [
             SearchResult(
@@ -137,7 +139,7 @@ def hybrid_engine_legacy(mock_pool, mock_parser, mock_embedding_func):
 class TestHybridSearchEngine:
     """Test HybridSearchEngine class with backend abstraction."""
 
-    def test_initialization_with_backend(self, mock_backend, mock_parser, mock_embedding_func):
+    def test_initialization_with_backend(self, mock_backend: MockVectorStoreBackend, mock_parser: Mock, mock_embedding_func: Mock):
         """Test engine initialization with backend."""
         engine = HybridSearchEngine(
             backend=mock_backend,
@@ -150,7 +152,7 @@ class TestHybridSearchEngine:
         assert engine.embedding_func == mock_embedding_func
 
     @patch('cocoindex_code_mcp_server.backends.BackendFactory.create_backend')
-    def test_initialization_legacy_pool(self, mock_factory, mock_pool, mock_parser, mock_embedding_func):
+    def test_initialization_legacy_pool(self, mock_factory: MagicMock, mock_pool: MagicMock, mock_parser: Mock, mock_embedding_func: Mock):
         """Test engine initialization with legacy pool parameter."""
         mock_backend = MockVectorStoreBackend()
         mock_factory.return_value = mock_backend
@@ -166,7 +168,7 @@ class TestHybridSearchEngine:
         mock_factory.assert_called_once_with("postgres", pool=mock_pool, table_name="test_table")
         assert engine.backend == mock_backend
 
-    def test_initialization_error_no_backend_or_pool(self, mock_parser, mock_embedding_func):
+    def test_initialization_error_no_backend_or_pool(self, mock_parser: Mock, mock_embedding_func: Mock):
         """Test engine initialization error when neither backend nor pool provided."""
         with pytest.raises(ValueError, match="Either 'backend' or 'pool' parameter must be provided"):
             HybridSearchEngine(
@@ -178,7 +180,7 @@ class TestHybridSearchEngine:
     @patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.cocoindex.utils.get_target_default_name')
     @patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.code_to_embedding')
     @patch('cocoindex_code_mcp_server.backends.BackendFactory.create_backend')
-    def test_initialization_with_defaults(self, mock_factory, mock_embedding, mock_get_name, mock_parser_class, mock_pool):
+    def test_initialization_with_defaults(self, mock_factory: MagicMock, mock_embedding: MagicMock, mock_get_name: MagicMock, mock_parser_class: MagicMock, mock_pool: MagicMock):
         """Test engine initialization with default values."""
         mock_backend = MockVectorStoreBackend()
         mock_factory.return_value = mock_backend
@@ -192,7 +194,7 @@ class TestHybridSearchEngine:
         assert engine.backend == mock_backend
         assert engine.parser == mock_parser_instance
 
-    def test_search_vector_only(self, hybrid_engine_with_backend, mock_backend, mock_parser, mock_embedding_func):
+    def test_search_vector_only(self, hybrid_engine_with_backend: HybridSearchEngine, mock_backend: MockVectorStoreBackend, mock_parser: Mock, mock_embedding_func: Mock):
         """Test search with vector query only."""
         # Mock parser to return empty search group
         empty_group = SearchGroup(conditions=[])
@@ -222,7 +224,7 @@ class TestHybridSearchEngine:
         assert result["score"] == 0.8
         assert result["score_type"] == "vector"
 
-    def test_search_keyword_only(self, hybrid_engine_with_backend, mock_backend, mock_parser, mock_embedding_func):
+    def test_search_keyword_only(self, hybrid_engine_with_backend: HybridSearchEngine, mock_backend: MockVectorStoreBackend, mock_parser: Mock, mock_embedding_func: Mock):
         """Test search with keyword query only."""
         # Mock parser to return a search group with conditions
         condition = SearchCondition(field="language", value="python")
@@ -249,7 +251,7 @@ class TestHybridSearchEngine:
         result = results[0]
         assert result["score_type"] == "keyword"
 
-    def test_search_hybrid(self, hybrid_engine_with_backend, mock_backend, mock_parser, mock_embedding_func):
+    def test_search_hybrid(self, hybrid_engine_with_backend: HybridSearchEngine, mock_backend: MockVectorStoreBackend, mock_parser: Mock, mock_embedding_func: Mock):
         """Test hybrid search with both vector and keyword queries."""
         # Mock parser to return a search group with conditions
         condition = SearchCondition(field="language", value="python")
@@ -280,7 +282,7 @@ class TestHybridSearchEngine:
         assert result["score_type"] == "hybrid"
         assert result["score"] == 0.75
 
-    def test_search_empty_queries(self, hybrid_engine_with_backend, mock_parser):
+    def test_search_empty_queries(self, hybrid_engine_with_backend: HybridSearchEngine, mock_parser: Mock):
         """Test search with empty queries."""
         # Mock parser to return empty search group for empty string
         empty_group = SearchGroup(conditions=[])
@@ -292,7 +294,7 @@ class TestHybridSearchEngine:
         # Should return empty results
         assert results == []
 
-    def test_search_result_to_dict_conversion(self, hybrid_engine_with_backend):
+    def test_search_result_to_dict_conversion(self, hybrid_engine_with_backend: HybridSearchEngine):
         """Test SearchResult to dict conversion."""
         search_result = SearchResult(
             filename="test.py",
@@ -446,7 +448,7 @@ class TestBackendIntegration:
     """Test backend integration scenarios."""
 
     @patch('cocoindex_code_mcp_server.backends.BackendFactory.create_backend')
-    def test_legacy_constructor_creates_postgres_backend(self, mock_factory, mock_pool):
+    def test_legacy_constructor_creates_postgres_backend(self, mock_factory: MagicMock, mock_pool: MagicMock):
         """Test that legacy constructor creates PostgreSQL backend."""
         mock_backend = MockVectorStoreBackend()
         mock_factory.return_value = mock_backend
@@ -456,13 +458,13 @@ class TestBackendIntegration:
         mock_factory.assert_called_once_with("postgres", pool=mock_pool, table_name="custom_table")
         assert engine.backend == mock_backend
 
-    def test_backend_constructor_uses_provided_backend(self, mock_backend):
+    def test_backend_constructor_uses_provided_backend(self, mock_backend: MockVectorStoreBackend):
         """Test that backend constructor uses provided backend directly."""
         engine = HybridSearchEngine(backend=mock_backend)
         
         assert engine.backend == mock_backend
 
-    def test_backend_method_delegation(self, hybrid_engine_with_backend, mock_backend, mock_parser):
+    def test_backend_method_delegation(self, hybrid_engine_with_backend: HybridSearchEngine, mock_backend: MockVectorStoreBackend, mock_parser: Mock):
         """Test that search methods properly delegate to backend."""
         # Set up parser mock
         empty_group = SearchGroup(conditions=[])

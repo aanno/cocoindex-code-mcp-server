@@ -12,6 +12,7 @@ from typing import Any, Dict
 from ..ast_visitor import GenericMetadataVisitor, NodeContext
 from ..language_handlers.haskell_handler import HaskellNodeHandler
 from . import LOGGER
+from cocoindex_code_mcp_server.ast_visitor import Position
 
 # Import from parent directory
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
@@ -149,7 +150,7 @@ class HaskellChunkContext(NodeContext):
         """Get text from the chunk."""
         return self.node.text()
 
-    def get_position(self):
+    def get_position(self) -> Position:
         """Get position from the chunk."""
         from ..ast_visitor import Position
         return Position(

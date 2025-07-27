@@ -208,7 +208,7 @@ if __name__ == "__main__":
         ('python', '.py', 'def test(): return 0'),
         ('javascript', '.js', 'function test() { return 0; }'),
     ])
-    def test_language_analysis_succeeds(self, language, extension, code_snippet):
+    def test_language_analysis_succeeds(self, language: str, extension: str, code_snippet: str):
         """Test that basic analysis succeeds for all supported languages."""
         result = analyze_code(code_snippet, language, f'test{extension}')
 

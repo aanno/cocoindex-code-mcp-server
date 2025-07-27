@@ -7,6 +7,7 @@ from cocoindex_code_mcp_server.ast_visitor import analyze_code
 from cocoindex_code_mcp_server.language_handlers.haskell_visitor import (
     analyze_haskell_code,
 )
+from typing import Set
 
 
 class TestHaskellBaseline:
@@ -84,7 +85,7 @@ main = do
         """Expected data types to find."""
         return {'Person', 'Tree'}
 
-    def test_text_baseline(self, haskell_code, expected_functions, expected_data_types):
+    def test_text_baseline(self, haskell_code: str, expected_functions: Set[str], expected_data_types: Set[str]):
         """Test simple text-based baseline parsing."""
         lines = haskell_code.split('\n')
 
@@ -125,7 +126,7 @@ main = do
         assert len(found_data_types) >= 1, f"Expected at least 1 data type, found {found_data_types}"
         assert 'TestHaskell' in modules, f"Expected TestHaskell module, found {modules}"
 
-    def test_specialized_haskell_visitor(self, haskell_code, expected_functions, expected_data_types):
+    def test_specialized_haskell_visitor(self, haskell_code: str, expected_functions: Set[str], expected_data_types: Set[str]):
         """Test our specialized Haskell visitor."""
         result = analyze_haskell_code(haskell_code, "test_haskell.hs")
 
@@ -144,7 +145,7 @@ main = do
         assert len(
             found_expected_functions) >= 2, f"Should find at least 2 expected functions, got {found_expected_functions}"
 
-    def test_generic_ast_visitor(self, haskell_code):
+    def test_generic_ast_visitor(self, haskell_code: str):
         """Test generic AST visitor fallback."""
         result = analyze_code(haskell_code, 'haskell', "test_haskell.hs")
 
@@ -155,7 +156,7 @@ main = do
         functions = result.get('functions', [])
         assert isinstance(functions, list), "Functions should be a list"
 
-    def test_visitor_comparison(self, haskell_code):
+    def test_visitor_comparison(self, haskell_code: str):
         """Compare different analysis methods."""
         # Test both visitors
         specialized_result = analyze_haskell_code(haskell_code, "test.hs")

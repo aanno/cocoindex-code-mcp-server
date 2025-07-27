@@ -5,7 +5,7 @@ Integration tests for the hybrid search workflow.
 """
 
 import tempfile
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -31,7 +31,7 @@ class TestMainHybridSearchIntegration:
 
     @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
     @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
-    def test_argument_parsing_basic(self, mock_load_dotenv, mock_cocoindex_init):
+    def test_argument_parsing_basic(self, mock_load_dotenv: MagicMock, mock_cocoindex_init: MagicMock):
         """Test basic argument parsing."""
         try:
             from cocoindex_code_mcp_server.main_hybrid_search import (
@@ -52,7 +52,7 @@ class TestMainHybridSearchIntegration:
 
     @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
     @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
-    def test_argument_parsing_custom_paths(self, mock_load_dotenv, mock_cocoindex_init):
+    def test_argument_parsing_custom_paths(self, mock_load_dotenv: MagicMock, mock_cocoindex_init: MagicMock):
         """Test argument parsing with custom paths."""
         try:
             from cocoindex_code_mcp_server.main_hybrid_search import (
@@ -71,7 +71,7 @@ class TestMainHybridSearchIntegration:
 
     @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
     @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
-    def test_argument_parsing_no_live(self, mock_load_dotenv, mock_cocoindex_init):
+    def test_argument_parsing_no_live(self, mock_load_dotenv: MagicMock, mock_cocoindex_init: MagicMock):
         """Test argument parsing with live updates disabled."""
         try:
             from cocoindex_code_mcp_server.main_hybrid_search import (
@@ -87,7 +87,7 @@ class TestMainHybridSearchIntegration:
 
     @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
     @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
-    def test_argument_parsing_custom_poll(self, mock_load_dotenv, mock_cocoindex_init):
+    def test_argument_parsing_custom_poll(self, mock_load_dotenv: MagicMock, mock_cocoindex_init: MagicMock):
         """Test argument parsing with custom polling interval."""
         try:
             from cocoindex_code_mcp_server.main_hybrid_search import (
@@ -298,7 +298,7 @@ class TestConfigurationIntegration:
     """Test configuration and setup integration."""
 
     @patch('cocoindex_code_mcp_server.cocoindex_config.code_embedding_flow')
-    def test_flow_configuration_update(self, mock_flow):
+    def test_flow_configuration_update(self, mock_flow: MagicMock):
         """Test that flow configuration is properly updated."""
         try:
             from cocoindex_code_mcp_server.cocoindex_config import update_flow_config
@@ -320,7 +320,7 @@ class TestConfigurationIntegration:
             pytest.skip("CocoIndex not available in test environment")
 
     @patch('cocoindex_code_mcp_server.cocoindex_config.code_embedding_flow')
-    def test_flow_configuration_defaults(self, mock_flow):
+    def test_flow_configuration_defaults(self, mock_flow: MagicMock):
         """Test flow configuration with default values."""
         try:
             from cocoindex_code_mcp_server.cocoindex_config import update_flow_config

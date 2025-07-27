@@ -10,6 +10,7 @@ import pytest
 
 from cocoindex_code_mcp_server.backends.postgres_backend import PostgresBackend
 from cocoindex_code_mcp_server.backends import SearchResult, QueryFilters
+from typing import Tuple
 
 
 @pytest.fixture
@@ -42,7 +43,7 @@ def postgres_backend(mock_pool):
 class TestPostgresBackend:
     """Test PostgreSQL backend implementation."""
 
-    def test_initialization(self, mock_pool):
+    def test_initialization(self, mock_pool: Tuple[MagicMock, MagicMock, MagicMock]):
         """Test backend initialization."""
         pool, _, _ = mock_pool
         backend = PostgresBackend(pool=pool, table_name="custom_table")
@@ -51,7 +52,7 @@ class TestPostgresBackend:
         assert backend.table_name == "custom_table"
 
     @patch('cocoindex_code_mcp_server.backends.postgres_backend.register_vector')
-    def test_vector_search(self, mock_register, postgres_backend):
+    def test_vector_search(self, mock_register: MagicMock, postgres_backend: Tuple[PostgresBackend, MagicMock, MagicMock]):
         """Test vector similarity search."""
         backend, mock_conn, mock_cursor = postgres_backend
         
@@ -92,7 +93,7 @@ class TestPostgresBackend:
         assert result.score_type == "vector"
 
     @patch('cocoindex_code_mcp_server.backends.postgres_backend.build_sql_where_clause')
-    def test_keyword_search(self, mock_build_where, postgres_backend):
+    def test_keyword_search(self, mock_build_where: MagicMock, postgres_backend: Tuple[PostgresBackend, MagicMock, MagicMock]):
         """Test keyword/metadata search."""
         backend, mock_conn, mock_cursor = postgres_backend
         
@@ -134,7 +135,7 @@ class TestPostgresBackend:
 
     @patch('cocoindex_code_mcp_server.backends.postgres_backend.register_vector')
     @patch('cocoindex_code_mcp_server.backends.postgres_backend.build_sql_where_clause')
-    def test_hybrid_search(self, mock_build_where, mock_register, postgres_backend):
+    def test_hybrid_search(self, mock_build_where: MagicMock, mock_register: MagicMock, postgres_backend: Tuple[PostgresBackend, MagicMock, MagicMock]):
         """Test hybrid search combining vector and keyword."""
         backend, mock_conn, mock_cursor = postgres_backend
         
@@ -190,7 +191,7 @@ class TestPostgresBackend:
         assert result.score_type == "hybrid"
         assert result.score == 0.75
 
-    def test_get_table_info(self, postgres_backend):
+    def test_get_table_info(self, postgres_backend: Tuple[PostgresBackend, MagicMock, MagicMock]):
         """Test table information retrieval."""
         backend, mock_conn, mock_cursor = postgres_backend
         
@@ -231,7 +232,7 @@ class TestPostgresBackend:
         assert len(info["indexes"]) == 2
         assert info["indexes"][0]["name"] == "idx_embedding_cosine"
 
-    def test_close(self, postgres_backend):
+    def test_close(self, postgres_backend: Tuple[PostgresBackend, MagicMock, MagicMock]):
         """Test backend cleanup."""
         backend, _, _ = postgres_backend
         
@@ -244,7 +245,7 @@ class TestPostgresBackend:
         # Verify pool close was called
         backend.pool.close.assert_called_once()
 
-    def test_close_no_close_method(self, postgres_backend):
+    def test_close_no_close_method(self, postgres_backend: Tuple[PostgresBackend, MagicMock, MagicMock]):
         """Test backend cleanup when pool has no close method."""
         backend, _, _ = postgres_backend
         
@@ -256,7 +257,7 @@ class TestPostgresBackend:
         backend.close()
 
     @patch('cocoindex_code_mcp_server.backends.postgres_backend.analyze_python_code')
-    def test_format_result_with_python_metadata(self, mock_analyze, postgres_backend):
+    def test_format_result_with_python_metadata(self, mock_analyze: MagicMock, postgres_backend: Tuple[PostgresBackend, MagicMock, MagicMock]):
         """Test result formatting with Python metadata extraction."""
         backend, _, _ = postgres_backend
         
@@ -292,7 +293,7 @@ class TestPostgresBackend:
         assert result.metadata["complexity_score"] == 5
 
     @patch('cocoindex_code_mcp_server.backends.postgres_backend.analyze_python_code')
-    def test_format_result_python_analysis_error(self, mock_analyze, postgres_backend):
+    def test_format_result_python_analysis_error(self, mock_analyze: MagicMock, postgres_backend: Tuple[PostgresBackend, MagicMock, MagicMock]):
         """Test result formatting when Python analysis fails."""
         backend, _, _ = postgres_backend
         
@@ -309,7 +310,7 @@ class TestPostgresBackend:
         assert result.metadata["functions"] == []
         assert result.metadata["analysis_error"] == "Analysis failed"
 
-    def test_format_result_non_python(self, postgres_backend):
+    def test_format_result_non_python(self, postgres_backend: Tuple[PostgresBackend, MagicMock, MagicMock]):
         """Test result formatting for non-Python code."""
         backend, _, _ = postgres_backend
         
@@ -323,7 +324,7 @@ class TestPostgresBackend:
         assert result.language == "JavaScript"
         assert result.metadata is None
 
-    def test_build_where_clause(self, postgres_backend):
+    def test_build_where_clause(self, postgres_backend: Tuple[PostgresBackend, MagicMock, MagicMock]):
         """Test QueryFilters to SQL WHERE clause conversion."""
         backend, _, _ = postgres_backend
         

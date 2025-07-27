@@ -10,6 +10,8 @@ from typing import Any, Dict, List, Optional
 
 from ..ast_visitor import NodeContext
 from .c_visitor import CASTVisitor
+from cocoindex_code_mcp_server.ast_visitor import NodeContext
+from tree_sitter import Node
 
 LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +49,7 @@ class CppASTVisitor(CASTVisitor):
 
         return None
 
-    def _extract_class(self, node):
+    def _extract_class(self, node: Node):
         """Extract class name from class_specifier node."""
         try:
             # Look for class name (identifier after 'class' keyword)
@@ -60,7 +62,7 @@ class CppASTVisitor(CASTVisitor):
         except Exception as e:
             LOGGER.warning(f"Error extracting C++ class: {e}")
 
-    def _extract_namespace(self, node):
+    def _extract_namespace(self, node: Node):
         """Extract namespace name from namespace_definition node."""
         try:
             # Look for namespace name

@@ -10,6 +10,7 @@ import re
 
 import haskell_tree_sitter
 import pytest
+from typing import Dict, List, Union
 
 LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ class HaskellChunkConfig:
         self.preserve_exports = preserve_exports
 
 
-def get_enhanced_haskell_separators():
+def get_enhanced_haskell_separators() -> List[str]:
     """Standalone version of enhanced separators."""
     base_separators = haskell_tree_sitter.get_haskell_separators()
 
@@ -113,7 +114,7 @@ def test_safe_regex_matching():
     assert len(problems_found) == 0, f"Found {len(problems_found)} regex problems"
 
 
-def create_test_regex_fallback_chunks(content: str, file_path: str, config: HaskellChunkConfig):
+def create_test_regex_fallback_chunks(content: str, file_path: str, config: HaskellChunkConfig) -> List[Dict[str, Union[str, Dict[str, Union[int, str, bool]]]]]:
     """Standalone test version of regex fallback chunking."""
     separators = get_enhanced_haskell_separators()
     lines = content.split('\n')

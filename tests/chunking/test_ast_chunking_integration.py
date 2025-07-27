@@ -7,6 +7,7 @@ Moved from src/ast_chunking.py to tests/
 
 import logging
 import sys
+from typing import Dict, List, Union
 
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)
@@ -19,7 +20,7 @@ except ImportError as e:
     AST_CHUNKING_AVAILABLE = False
 
 
-def test_ast_chunking():
+def test_ast_chunking() -> List[Dict[str, Union[str, Dict[str, Union[str, int]]]]]:
     """Test the AST chunking functionality."""
     if not AST_CHUNKING_AVAILABLE:
         print("⚠️ Skipping AST chunking test - ast_chunking not available")

@@ -9,6 +9,8 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from ..ast_visitor import GenericMetadataVisitor, NodeContext
+from cocoindex_code_mcp_server.ast_visitor import NodeContext
+from tree_sitter import Node
 
 LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +49,7 @@ class KotlinASTVisitor(GenericMetadataVisitor):
 
         return None
 
-    def _extract_function(self, node):
+    def _extract_function(self, node: Node):
         """Extract function name from function_declaration node."""
         try:
             # Kotlin function structure: function_declaration -> identifier (after 'fun' keyword)

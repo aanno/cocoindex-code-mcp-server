@@ -4,7 +4,7 @@
 Tests for Backend Factory functionality.
 """
 
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 import pytest
 
 from cocoindex_code_mcp_server.backends import BackendFactory, VectorStoreBackend, SearchResult, QueryFilters
@@ -13,7 +13,7 @@ from cocoindex_code_mcp_server.backends import BackendFactory, VectorStoreBacken
 class MockBackend(VectorStoreBackend):
     """Mock backend for testing factory."""
     
-    def __init__(self, config_param="default"):
+    def __init__(self, config_param: str="default"):
         self.config_param = config_param
     
     def vector_search(self, query_vector, top_k=10):
@@ -127,7 +127,7 @@ class TestBackendFactory:
             BackendFactory._backends = original_backends
 
     @patch('cocoindex_code_mcp_server.backends.postgres_backend.PostgresBackend')
-    def test_auto_registration_postgres(self, mock_postgres_class):
+    def test_auto_registration_postgres(self, mock_postgres_class: MagicMock):
         """Test that PostgreSQL backend is auto-registered."""
         # Import should trigger auto-registration
         from cocoindex_code_mcp_server.backends import BackendFactory

@@ -14,9 +14,10 @@ import cocoindex
 # Import our modular components
 from .cocoindex_config import update_flow_config
 from .db.pgvector.hybrid_search import run_interactive_hybrid_search
+from typing import List, Optional
 
 
-def parse_hybrid_search_args():
+def parse_hybrid_search_args() -> argparse.Namespace:
     """Parse command line arguments for hybrid search mode."""
     parser = argparse.ArgumentParser(
         description="Code embedding hybrid search with vector similarity and keyword filtering",
@@ -79,7 +80,7 @@ Hybrid Search Queries:
     return parser.parse_args()
 
 
-def determine_paths(args):
+def determine_paths(args: argparse.Namespace) -> Optional[List[str]]:
     """Determine which paths to use based on parsed arguments."""
     paths = None
     if args.explicit_paths:

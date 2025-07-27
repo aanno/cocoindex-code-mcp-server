@@ -7,6 +7,8 @@ Moved from src/haskell_ast_chunker.py to tests/
 
 import logging
 import sys
+from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import HaskellChunkConfig
+from typing import Dict, List, Tuple, Union
 
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)
@@ -21,7 +23,7 @@ except ImportError as e:
     haskell_ast_chunker_AVAILABLE = False
 
 
-def test_enhanced_haskell_chunking():
+def test_enhanced_haskell_chunking() -> List[Union[Tuple[HaskellChunkConfig, List[Dict[str, Union[str, Dict[str, Union[int, str, bool]]]]]], Tuple[HaskellChunkConfig, List[Union[Dict[str, Union[str, Dict[str, Union[int, str, bool]]]], Dict[str, Union[str, Dict[str, Union[int, str, bool, List[str]]]]]]]]]]:
     """Test the enhanced Haskell chunking functionality."""
     if not haskell_ast_chunker_AVAILABLE:
         print("⚠️ Skipping Haskell test - haskell_ast_chunker not available")
