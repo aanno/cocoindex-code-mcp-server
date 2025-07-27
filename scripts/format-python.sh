@@ -19,13 +19,19 @@ for target in "$@"; do
     echo "Processing: $target"
 
     # Run isort recursively on all Python files in target
-    isort "$target" --profile black
+    isort "$target"
+    # --profile black
+
+    ruff check --fix "$target"
+
+    pydocstyle "$target"
 
     # Run autoflake8 recursively - remove unused imports and variables, in-place
-    autoflake8 --in-place --remove-unused-variables --remove-all-unused-imports --recursive "$target"
+    autoflake8 --in-place --recursive "$target"
+    # --remove-unused-variables --remove-all-unused-imports
 
     # Run autopep8 recursively - in-place with aggressive fixes
-    autopep8 --in-place --recursive --aggressive --aggressive "$target"
+    autopep8 --in-place --recursive --aggressive "$target"
 done
 
 echo "Done formatting."

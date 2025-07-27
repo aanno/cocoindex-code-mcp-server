@@ -20,3 +20,4 @@
 * bug report against python mcp library for the resource bug
 * use click for all arguments parsing
 * unify command line argument parsing (in arg_parser.py)
+* add hypothesis property testing: https://hypothesis.readthedocs.io/en/latest/

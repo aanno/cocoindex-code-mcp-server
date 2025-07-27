@@ -20,6 +20,50 @@
 		"version": "2.0.0",
 		"tasks": [
 			{
+				"label": "Format Python Code",
+				"type": "shell",
+				"command": "${workspaceFolder}/scripts/format-python.sh",
+				"args": [
+					"${workspaceFolder}/examples",
+					"${workspaceFolder}/src",
+					"${workspaceFolder}/tests"
+				],
+				"group": {
+					"kind": "build",
+					"isDefault": false
+				},
+				"problemMatcher": [],
+				"presentation": {
+					"echo": true,
+					"reveal": "always",
+					"focus": false,
+					"panel": "shared"
+				}
+			},
+			{
+				"label": "Format Python isort",
+				"type": "shell",
+				"command": "${config:python.pythonPath}",
+				"args": [
+					"-m",
+					"isort",
+					"${workspaceFolder}",
+					"--profile",
+					"black"
+				],
+				"group": {
+					"kind": "build",
+					"isDefault": false
+				},
+				"problemMatcher": [],
+				"presentation": {
+					"echo": true,
+					"reveal": "always",
+					"focus": false,
+					"panel": "shared"
+				}
+			},
+			{
 				"label": "My Task",
 				"command": "echo hello",
 				"type": "shell",
