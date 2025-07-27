@@ -39,6 +39,7 @@ test = [
     "pytest-mock>=3.10.0",
     "pytest-timeout>=2.1.0",
     "pytest-xdist>=3.4.0",
+    "pytest-mypy>=1.0.1",
     "coverage>=7.9.2",
 ]
 mcp-server = [
@@ -48,6 +49,8 @@ build = [
     "maturin>=1.0,<2.0",
     # typing
     "mypy>=1.10.0",
+    "MonkeyType>=23.3.0",
+    "pytest-monkeytype>=1.1.0",
     # code quality
     "isort>=6.0.1",
     "autoflake8>=1.7.0",

@@ -1,6 +1,7 @@
 __pycache__/
 /quickstart/
 /rust/target/
+/monkeytype.sqlite3
 *.pyc
 *.log
 *.pyo
