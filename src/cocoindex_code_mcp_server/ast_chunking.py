@@ -453,12 +453,13 @@ def create_hybrid_chunking_operation():
                 # Convert to CocoIndex format
                 result = []
                 for chunk in chunks:
+                    metadata = chunk["metadata"]
                     chunk_record = {
                         "text": chunk["content"],
-                        "location": f"{file_path}:{chunk['metadata'].get('start_line', 0)}",
-                        "start": chunk["metadata"].get("start_line", 0),
-                        "end": chunk["metadata"].get("end_line", 0),
-                        "metadata": chunk["metadata"]
+                        "location": f"{file_path}:{metadata.get('start_line', 0) if metadata is not None else None}",
+                        "start": metadata.get("start_line", 0) if metadata is not None else None,
+                        "end": metadata.get("end_line", 0) if metadata is not None else None,
+                        "metadata": metadata
                     }
                     result.append(chunk_record)
 
@@ -500,12 +501,13 @@ def create_hybrid_chunking_operation():
                     # Convert to CocoIndex format
                     result = []
                     for chunk in chunks:
+                        metadata = chunk["metadata"]
                         chunk_record = {
                             "text": chunk["content"],
-                            "location": f"{file_path}:{chunk['metadata'].get('start_line', 0)}",
-                            "start": chunk["metadata"].get("start_line", 0),
-                            "end": chunk["metadata"].get("end_line", 0),
-                            "metadata": chunk["metadata"]
+                            "location": f"{file_path}:{metadata.get('start_line', 0) if metadata is not None else None}",
+                            "start": metadata.get("start_line", 0) if metadata is not None else None,
+                            "end": metadata.get("end_line", 0) if metadata is not None else None,
+                            "metadata": metadata
                         }
                         result.append(chunk_record)
 
