@@ -17,7 +17,9 @@ from psycopg_pool import ConnectionPool
 
 from cocoindex_code_mcp_server.keyword_search_parser import SearchCondition, SearchGroup
 
-from . import VectorStoreBackend, SearchResult, QueryFilters
+from . import VectorStoreBackend, QueryFilters
+from ..schemas import ChunkMetadata, SearchResult, SearchResultType, validate_chunk_metadata
+from ..mappers import PostgresFieldMapper, ResultMapper
 from ..keyword_search_parser_lark import build_sql_where_clause
 from ..lang.python.python_code_analyzer import analyze_python_code
 
@@ -35,6 +37,7 @@ class PostgresBackend(VectorStoreBackend):
         """
         self.pool = pool
         self.table_name = table_name
+        self.mapper = PostgresFieldMapper()
     
     def vector_search(
         self, 
@@ -208,7 +211,8 @@ class PostgresBackend(VectorStoreBackend):
         return build_sql_where_clause(search_group)  # type: ignore
     
     def _format_result(self, row: Tuple[Any, ...], score_type: str = "vector") -> SearchResult:
-        """Format PostgreSQL database row into SearchResult."""
+        """Format PostgreSQL database row into SearchResult using new schema system."""
+        # Handle different row formats based on score type
         if score_type == "hybrid":
             filename, language, code, vector_distance, start, end, source_name, hybrid_score = row
             score = float(hybrid_score)
@@ -216,40 +220,36 @@ class PostgresBackend(VectorStoreBackend):
             filename, language, code, distance, start, end, source_name = row
             score = 1.0 - float(distance) if score_type == "vector" else 1.0
         
-        # Build base result
-        result = SearchResult(
-            filename=filename,
-            language=language,
-            code=code,
-            score=score,
-            start=start,
-            end=end,
-            source=source_name or "default",
-            score_type=score_type
-        )
+        # Create PostgreSQL row dict compatible with our mapper
+        pg_row = {
+            "filename": filename,
+            "language": language,
+            "code": code,
+            "start": start,
+            "end": end,
+            "source_name": source_name or "default",
+            "location": f"{filename}:{start}-{end}" if start and end else filename,
+        }
         
-        # Add rich metadata for Python code
+        # Add rich metadata for Python code using existing analysis
         if language == "Python":
             try:
-                metadata = analyze_python_code(code, filename)
-                if metadata is not None:
-                    result.metadata = {
-                        "functions": metadata.get("functions", []),
-                        "classes": metadata.get("classes", []),
-                        "imports": metadata.get("imports", []),
-                        "complexity_score": metadata.get("complexity_score", 0),
-                        "has_type_hints": metadata.get("has_type_hints", False),
-                        "has_async": metadata.get("has_async", False),
-                        "has_classes": metadata.get("has_classes", False),
-                        "private_methods": metadata.get("private_methods", []),
-                        "dunder_methods": metadata.get("dunder_methods", []),
-                        "decorators": metadata.get("decorators", []),
-                        "analysis_method": metadata.get("analysis_method", "python_ast"),
-                        "metadata_json": json.dumps(metadata, default=str)
-                    }
+                analysis_metadata = analyze_python_code(code, filename)
+                if analysis_metadata is not None:
+                    # Add analyzed metadata to the row
+                    pg_row.update({
+                        "functions": analysis_metadata.get("functions", []),
+                        "classes": analysis_metadata.get("classes", []),
+                        "imports": analysis_metadata.get("imports", []),
+                        "complexity_score": analysis_metadata.get("complexity_score", 0),
+                        "has_type_hints": analysis_metadata.get("has_type_hints", False),
+                        "has_async": analysis_metadata.get("has_async", False),
+                        "has_classes": analysis_metadata.get("has_classes", False),
+                        "metadata_json": json.dumps(analysis_metadata, default=str)
+                    })
                 else:
-                # Fallback: add basic metadata fields even if analysis fails
-                    result.metadata = {
+                    # Add default metadata fields
+                    pg_row.update({
                         "functions": [],
                         "classes": [],
                         "imports": [],
@@ -257,12 +257,11 @@ class PostgresBackend(VectorStoreBackend):
                         "has_type_hints": False,
                         "has_async": False,
                         "has_classes": False,
-                        "analysis_method": "python_ast",
-                        "analysis_error": "metadata was None"
-                    }
+                        "metadata_json": json.dumps({"analysis_error": "metadata was None"})
+                    })
             except Exception as e:
-                # Fallback: add basic metadata fields even if analysis fails
-                result.metadata = {
+                # Add error metadata
+                pg_row.update({
                     "functions": [],
                     "classes": [],
                     "imports": [],
@@ -270,8 +269,30 @@ class PostgresBackend(VectorStoreBackend):
                     "has_type_hints": False,
                     "has_async": False,
                     "has_classes": False,
-                    "analysis_method": "python_ast",
-                    "analysis_error": str(e)
-                }
+                    "metadata_json": json.dumps({"analysis_error": str(e)})
+                })
+        else:
+            # Add default metadata for non-Python code
+            pg_row.update({
+                "functions": [],
+                "classes": [],
+                "imports": [],
+                "complexity_score": 0,
+                "has_type_hints": False,
+                "has_async": False,
+                "has_classes": False,
+                "metadata_json": json.dumps({"analysis_method": "none"})
+            })
         
-        return result
+        # Convert score_type string to SearchResultType enum
+        if score_type == "vector":
+            result_type = SearchResultType.VECTOR_SIMILARITY
+        elif score_type == "keyword":
+            result_type = SearchResultType.KEYWORD_MATCH
+        elif score_type == "hybrid":
+            result_type = SearchResultType.HYBRID_COMBINED
+        else:
+            result_type = SearchResultType.VECTOR_SIMILARITY
+        
+        # Use ResultMapper to convert to standardized SearchResult
+        return ResultMapper.from_postgres_result(pg_row, score, result_type)

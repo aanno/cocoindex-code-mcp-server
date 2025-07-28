@@ -17,19 +17,8 @@ from numpy.typing import NDArray
 
 from cocoindex_code_mcp_server.keyword_search_parser_lark import SearchCondition, SearchGroup
 
-
-@dataclass
-class SearchResult:
-    """Standardized search result format."""
-    filename: str
-    language: str
-    code: str
-    score: float
-    start: Union[int, Dict[str, Any]]
-    end: Union[int, Dict[str, Any]]
-    source: str
-    score_type: str
-    metadata: Optional[Dict[str, Any]] = None
+# Import our standardized SearchResult from Phase 2 schemas
+from ..schemas import SearchResult
 
 
 @dataclass

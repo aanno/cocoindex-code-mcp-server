@@ -11,8 +11,12 @@ For running `src/cocoindex_code_mcp_server/main_mcp_server.py` do:
 python -m cocoindex_code_mcp_server.main_mcp_server
 ```
 
-- We want to transform the codebase to mypy
-  - Use `mypy` for type annotations in code your write anew
+Our code is mypy compatible! Use the type checking script:
+
+```bash
+./scripts/mypy-check.sh
+```
+
 - If you are technically stuck or unsure about the next step, ask for help.
 - cocoindex is a complex beast, so don't hesitate to ask for clarification or guidance.
 - Test should be pytest at ./tests (NOT at ./src/cocoindex_code_mcp_server/tests).

@@ -159,15 +159,25 @@ class ChunkQuery(TypedDict):
 5. ✅ **Create comprehensive test suite** - 39 new/updated tests for backend functionality
 6. ✅ **Fix multi-language support tests** - Proper success detection and graceful JavaScript parser skipping
 
-### Phase 2: Schema & Query Standardization (Medium Priority) - **READY TO START**
-1. **Define `ChunkMetadata` schema** - Standardize metadata structure across backends
-2. **Create `FieldMapper`** - Handle backend-specific payload formats (PostgreSQL JSONB vs Qdrant payload)
-3. **Implement `ChunkQuery` abstraction** - Database-agnostic query interface
+### Phase 2: Schema & Query Standardization (Medium Priority) ✅ **COMPLETED**
+1. ✅ **Define `ChunkMetadata` schema** - Standardize metadata structure across backends
+2. ✅ **Create `FieldMapper`** - Handle backend-specific payload formats (PostgreSQL JSONB vs Qdrant payload)
+3. ✅ **Implement `ChunkQuery` abstraction** - Database-agnostic query interface
 
-### Phase 3: Advanced Features (Lower Priority)
-1. **Build Tree-sitter visitor framework** - Reusable AST processing (Rust crate)
-2. **Add chunking strategy system** - Configurable chunking approaches  
-3. **Implement capability system** - Backend feature detection
+### Phase 2.5: Backend Integration (High Priority) - **IN PROGRESS**
+1. **Update existing PostgresBackend to use new schema/mapping system** - Replace direct SQL with mappers
+2. **Integrate QueryExecutor with HybridSearchEngine** - Database-agnostic query execution
+3. **Update main_mcp_server.py to use new abstractions** - Clean integration with existing flows
+4. **Create integration tests** - Test complete flow with real CocoIndex data
+5. **Performance validation** - Ensure no regression from abstraction layers
+
+### Phase 3: Advanced Features (Lower Priority) - **DEFERRED** ⏸️
+**Analysis**: Current implementations are sufficient, Phase 3 would be overengineering
+1. ~~**Build Tree-sitter visitor framework**~~ - **SKIP**: Already well-implemented in Python (`ast_visitor.py`)
+2. ~~**Add chunking strategy system**~~ - **SKIP**: Current `CocoIndexASTChunker` + fallbacks sufficient
+3. ~~**Implement capability system**~~ - **SKIP**: Covered by Phase 2 `BackendCapability` enum
+
+**Alternative Priorities**: Focus on Phase 2.5 integration, then Phase 4 (Qdrant) when needed
 
 ### Phase 4: Integration & Testing ✅ **PARTIALLY COMPLETED**
 1. ✅ **Create backend factory pattern** - Easy backend switching with auto-registration
@@ -194,15 +204,20 @@ class ChunkQuery(TypedDict):
   - ✅ `__init__.py` - Backend factory and VectorStoreBackend interface
   - ✅ `postgres_backend.py` - PostgreSQL functionality with Python metadata integration
   - ✅ `qdrant_backend.py` - Skeleton implementation ready for development
-- **TODO**: `src/cocoindex_code_mcp_server/schemas.py` - Metadata and query schemas
-- **TODO**: `src/cocoindex_code_mcp_server/mappers.py` - Field mapping utilities
+- ✅ `src/cocoindex_code_mcp_server/schemas.py` - Metadata and query schemas (**Phase 2 Complete**)
+- ✅ `src/cocoindex_code_mcp_server/mappers.py` - Field mapping utilities (**Phase 2 Complete**)
+- ✅ `src/cocoindex_code_mcp_server/query_abstraction.py` - Query abstraction layer (**Phase 2 Complete**)
+- **PHASE 2.5**: Update `postgres_backend.py` to use new schemas/mappers
+- **PHASE 2.5**: Update `main_mcp_server.py` to use query abstraction
 
 ### Test Coverage ✅ **COMPLETED**
 - ✅ `tests/backends/test_postgres_backend.py` - 22 comprehensive tests
 - ✅ `tests/backends/test_backend_factory.py` - Factory pattern tests  
 - ✅ `tests/hybrid_search/test_hybrid_search_engine.py` - Updated for backend abstraction
 - ✅ `tests/lang/test_multi_language_support.py` - Fixed assertion logic and graceful parser skipping
+- ✅ `tests/test_phase2_integration.py` - **Phase 2 Complete**: 22 tests for schemas/mappers/query abstraction
 - ✅ `pytest.ini` - Added backend and timeout markers
+- **PHASE 2.5**: Integration tests for complete backend + schema flow
 
 ### Configuration
 - Configuration files for backend selection and tuning
