@@ -427,22 +427,18 @@ class EnhancedHaskellChunker:
 
 
 @cocoindex.op.function()
-def extract_haskell_ast_chunks(content: str, config: Optional[Dict[str, Any]] = None):
+def extract_haskell_ast_chunks(content: str):
     """
-    Enhanced AST-based Haskell chunking with configurable options.
+    Enhanced AST-based Haskell chunking with default configuration.
 
     Args:
         content: Haskell source code
-        config: Optional configuration dictionary
 
     Returns:
         List of chunk dictionaries with enhanced metadata
     """
-    # Convert config dict to HaskellChunkConfig if provided
-    if config:
-        chunk_config = HaskellChunkConfig(**config)
-    else:
-        chunk_config = HaskellChunkConfig()
+    # Use default configuration
+    chunk_config = HaskellChunkConfig()
 
     chunker = EnhancedHaskellChunker(chunk_config)
     chunks = chunker.chunk_code(content)

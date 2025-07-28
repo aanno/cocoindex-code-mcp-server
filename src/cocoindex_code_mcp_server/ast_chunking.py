@@ -10,7 +10,10 @@ import logging
 import os
 from dataclasses import dataclass
 from types import ModuleType
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional, Union
+
+# Type alias for metadata values (CocoIndex-compatible types only)
+MetadataValue = Union[str, int, float, bool]
 
 from cocoindex_code_mcp_server import LOGGER
 
@@ -19,12 +22,12 @@ from cocoindex_code_mcp_server import LOGGER
 class Chunk:
     """Represents a code chunk with text and location metadata."""
     content: str
-    metadata: Dict[str, Any]
+    metadata: Dict[str, MetadataValue]
     location: str = ""
     start: int = 0
     end: int = 0
     
-    def __getitem__(self, key: str) -> Any:
+    def __getitem__(self, key: str) -> MetadataValue:
         """Allow dictionary-style access."""
         if hasattr(self, key):
             return getattr(self, key)
@@ -33,14 +36,14 @@ class Chunk:
         else:
             raise KeyError(f"Key '{key}' not found in chunk")
     
-    def __setitem__(self, key: str, value: Any) -> None:
+    def __setitem__(self, key: str, value: MetadataValue) -> None:
         """Allow dictionary-style assignment."""
         if hasattr(self, key):
             setattr(self, key, value)
         else:
             self.metadata[key] = value
     
-    def get(self, key: str, default: Any = None) -> Any:
+    def get(self, key: str, default: MetadataValue = "") -> MetadataValue:
         """Dictionary-style get method."""
         try:
             return self[key]
@@ -245,7 +248,7 @@ class CocoIndexASTChunker:
                 import importlib
                 haskell_module = importlib.import_module('.lang.haskell.haskell_ast_chunker', 'cocoindex_code_mcp_server')
                 extract_func = getattr(haskell_module, 'extract_haskell_ast_chunks')
-                chunks: List[Any] = extract_func(code)
+                chunks = extract_func(code)
 
                 result_chunks: List[Chunk] = []
                 for i, chunk in enumerate(chunks):
