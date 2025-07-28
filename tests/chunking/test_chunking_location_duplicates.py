@@ -5,6 +5,8 @@ Test to identify exactly why chunking logic produces duplicate location values
 within the same file, causing PostgreSQL "ON CONFLICT DO UPDATE" errors.
 """
 
+from types import FunctionType
+from typing import cast
 import pytest
 
 import cocoindex
@@ -345,7 +347,7 @@ class TestChunkingLocationDuplicates:
         for filename, content, expected_language in test_cases:
             print(f"\n=== Testing {filename} ({expected_language}) ===")
 
-            language = extract_language(filename)
+            language = cast(FunctionType, extract_language)(filename)
             assert language == expected_language, f"Language detection failed: {language} != {expected_language}"
 
             if not AST_CHUNKING_AVAILABLE:
@@ -359,7 +361,7 @@ class TestChunkingLocationDuplicates:
                 print(f"\n--- Chunk size: {chunk_size} ---")
 
                 try:
-                    chunks = ASTChunkOperation(
+                    chunks = cast(FunctionType, ASTChunkOperation)(
                         content=content,
                         language=language,
                         max_chunk_size=chunk_size,
@@ -416,13 +418,13 @@ class TestChunkingLocationDuplicates:
 
         # Test with a file that would use default chunking (Rust is not supported by AST chunking)
         filename = "test.rs"
-        language = extract_language(filename)
+        language = cast(FunctionType, extract_language)(filename)
 
         print(f"Testing {filename} with language: {language}")
 
         # Simulate the default chunking path from the flow
         try:
-            params = get_chunking_params(language)
+            params = cast(FunctionType, get_chunking_params)(language)
             print(f"Chunking params: {params}")
 
             # Create the chunker as used in the flow
@@ -455,11 +457,11 @@ class TestChunkingLocationDuplicates:
             print(f"\n--- Testing {filename} ---")
             print(f"Content: '{content.replace(chr(10), '\\n')}'")
 
-            language = extract_language(filename)
+            language = cast(FunctionType, extract_language)(filename)
 
             if AST_CHUNKING_AVAILABLE:
                 try:
-                    chunks = ASTChunkOperation(
+                    chunks = cast(FunctionType, ASTChunkOperation)(
                         content=content,
                         language=language,
                         max_chunk_size=1000,

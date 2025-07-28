@@ -8,6 +8,8 @@ the PythonNodeHandler through the AST visitor framework.
 
 import json
 import sys
+from types import FunctionType
+from typing import cast
 
 import pytest
 
@@ -146,7 +148,7 @@ def test_function() -> bool:
 '''
 
     # Test through cocoindex_config integration
-    metadata_json = extract_code_metadata(sample_code, "Python", "test.py")
+    metadata_json = cast(FunctionType, extract_code_metadata)(sample_code, "Python", "test.py")
     metadata = json.loads(metadata_json)
 
     # Verify we get proper metadata through the integration
@@ -176,7 +178,7 @@ def incomplete_function(
 '''
 
     # Should not crash and should provide basic metadata
-    metadata_json = extract_code_metadata(broken_code, "Python", "broken.py")
+    metadata_json = cast(FunctionType, extract_code_metadata)(broken_code, "Python", "broken.py")
     metadata = json.loads(metadata_json)
 
     # Should have basic structure even with broken code

@@ -10,6 +10,8 @@ These tests verify:
 3. No duplicate primary keys (filename, location) are generated
 """
 
+from types import FunctionType
+from typing import cast
 import pytest
 
 import cocoindex
@@ -106,18 +108,18 @@ class TestLanguageDetection:
 
     def test_python_detection(self):
         """Test Python file language detection."""
-        language = extract_language("test.py")
+        language = cast(FunctionType, extract_language)("test.py")
         assert language == "Python"
 
     def test_go_detection(self):
         """Test Go file language detection."""
-        language = extract_language("main.go")
+        language = cast(FunctionType, extract_language)("main.go")
         assert language == "Go"
 
     def test_special_files(self):
         """Test special file detection."""
-        assert extract_language("Dockerfile") == "dockerfile"
-        assert extract_language("Makefile") == "makefile"
+        assert cast(FunctionType, extract_language)("Dockerfile") == "dockerfile"
+        assert cast(FunctionType, extract_language)("Makefile") == "makefile"
 
 
 class TestChunkingParams:
@@ -125,21 +127,21 @@ class TestChunkingParams:
 
     def test_python_params(self):
         """Test Python chunking parameters."""
-        params = get_chunking_params("Python")
+        params = cast(FunctionType, get_chunking_params)("Python")
         assert params.chunk_size == 1000
         assert params.min_chunk_size == 300
         assert params.chunk_overlap == 250
 
     def test_go_params(self):
         """Test Go chunking parameters."""
-        params = get_chunking_params("Go")
+        params = cast(FunctionType, get_chunking_params)("Go")
         assert params.chunk_size == 1000
         assert params.min_chunk_size == 250
         assert params.chunk_overlap == 200
 
     def test_default_params(self):
         """Test default chunking parameters."""
-        params = get_chunking_params("UnknownLanguage")
+        params = cast(FunctionType, get_chunking_params)("UnknownLanguage")
         assert params.chunk_size == 1000
         assert params.min_chunk_size == 300
         assert params.chunk_overlap == 200
@@ -163,7 +165,7 @@ class TestCocoIndexSplitRecursively:
 
         try:
             # Test the function call with parameters similar to the flow
-            chunks = split_func(
+            chunks = cast(FunctionType, split_func)(
                 record,
                 language="Python",
                 chunk_size=1000,
@@ -199,7 +201,7 @@ class TestCocoIndexSplitRecursively:
         record = {"content": SAMPLE_GO_CODE}
 
         try:
-            chunks = split_func(
+            chunks = cast(FunctionType, split_func)(
                 record,
                 language="Go",
                 chunk_size=1000,
@@ -231,7 +233,7 @@ class TestASTChunking:
         """Test AST chunking with Python code."""
         try:
             # Test calling ASTChunkOperation directly
-            chunks = ASTChunkOperation(
+            chunks = cast(FunctionType, ASTChunkOperation)(
                 content=SAMPLE_PYTHON_CODE,
                 language="Python",
                 max_chunk_size=1000,
@@ -266,7 +268,7 @@ class TestASTChunking:
     @pytest.mark.skipif(not AST_CHUNKING_AVAILABLE, reason="AST chunking not available")
     def test_ast_chunking_location_uniqueness(self):
         """Test that AST chunking produces unique locations."""
-        chunks = ASTChunkOperation(
+        chunks = cast(FunctionType, ASTChunkOperation)(
             content=SAMPLE_PYTHON_CODE,
             language="Python",
             max_chunk_size=500,  # Smaller chunks to force multiple
@@ -295,7 +297,7 @@ class TestChunkingIntegration:
         split_func = cocoindex.functions.SplitRecursively()
         record = {"content": SAMPLE_PYTHON_CODE}
         try:
-            default_chunks = split_func(
+            default_chunks = cast(FunctionType, split_func)(
                 record,
                 language="Python",
                 chunk_size=800,
@@ -309,7 +311,7 @@ class TestChunkingIntegration:
         # AST chunking
         if AST_CHUNKING_AVAILABLE:
             try:
-                ast_chunks = ASTChunkOperation(
+                ast_chunks = cast(FunctionType, ASTChunkOperation)(
                     content=SAMPLE_PYTHON_CODE,
                     language="Python",
                     max_chunk_size=800,

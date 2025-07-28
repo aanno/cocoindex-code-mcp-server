@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from types import FunctionType
+from typing import cast
 import unittest
 from pathlib import Path
 
@@ -22,15 +24,15 @@ class TestCocoIndexIntegration(unittest.TestCase):
 
     def test_language_detection(self):
         """Test that .hs files are detected as Haskell."""
-        language = extract_language("test_sample.hs")
+        language = cast(FunctionType, extract_language)("test_sample.hs")
         self.assertEqual(language, "Haskell")
 
-        language = extract_language("test_sample.lhs")
+        language = cast(FunctionType, extract_language)("test_sample.lhs")
         self.assertEqual(language, "Haskell")
 
     def test_chunking_parameters(self):
         """Test Haskell chunking parameters."""
-        params = get_chunking_params("Haskell")
+        params = cast(FunctionType, get_chunking_params)("Haskell")
         self.assertEqual(params.chunk_size, 1200)
         self.assertEqual(params.min_chunk_size, 300)
         self.assertEqual(params.chunk_overlap, 200)

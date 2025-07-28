@@ -9,7 +9,8 @@ Based on the pytest example pattern suggested for testing extractors.
 """
 
 import json
-from typing import Any, Dict
+from types import FunctionType
+from typing import Any, Dict, cast
 
 import pytest
 
@@ -48,7 +49,7 @@ class CocoIndexMetadataExtractor:
             language = data.get("language", "Python")
 
             # Extract metadata using CocoIndex
-            metadata_json = extract_code_metadata(code, language, filename)
+            metadata_json = cast(FunctionType, extract_code_metadata)(code, language, filename)
             metadata_dict = json.loads(metadata_json)
 
             # Add extractor information

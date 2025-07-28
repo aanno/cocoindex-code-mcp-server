@@ -7,6 +7,8 @@ Chunk objects. It serves as a regression test for ValueType deserialization
 issues and provides a minimal example of CocoIndex flow patterns.
 """
 
+from types import FunctionType
+from typing import cast
 import pytest
 import cocoindex
 from cocoindex_code_mcp_server.ast_chunking import Chunk
@@ -66,7 +68,7 @@ class TestMinimalFlow:
     def test_simple_chunk_creator_function(self):
         """Test that the simple chunk creator function works correctly."""
         test_content = "def test(): pass"
-        chunks = simple_chunk_creator(test_content)
+        chunks = cast(FunctionType, simple_chunk_creator)(test_content)
         
         assert len(chunks) == 1
         chunk = chunks[0]
@@ -80,7 +82,7 @@ class TestMinimalFlow:
     
     def test_chunk_with_empty_content(self):
         """Test chunk creation with empty content."""
-        chunks = simple_chunk_creator("")
+        chunks = cast(FunctionType, simple_chunk_creator)("")
         
         assert len(chunks) == 1
         chunk = chunks[0]
@@ -92,7 +94,7 @@ class TestMinimalFlow:
     def test_chunk_with_unicode_content(self):
         """Test chunk creation with unicode content."""
         unicode_content = "def 测试(): return '🚀'"
-        chunks = simple_chunk_creator(unicode_content)
+        chunks = cast(FunctionType, simple_chunk_creator)(unicode_content)
         
         assert len(chunks) == 1
         chunk = chunks[0]
@@ -177,7 +179,7 @@ class TestMinimalFlow:
             )]
         
         test_content = "line1\nline2\nline3"
-        chunks = metadata_chunk_creator(test_content)
+        chunks = cast(FunctionType, metadata_chunk_creator)(test_content)
         
         assert len(chunks) == 1
         chunk = chunks[0]

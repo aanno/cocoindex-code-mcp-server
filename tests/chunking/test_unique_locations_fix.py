@@ -4,6 +4,8 @@
 Test to verify the unique location post-processing fix works correctly.
 """
 
+from types import FunctionType
+from typing import cast
 import pytest
 
 import cocoindex
@@ -30,7 +32,7 @@ class TestUniqueLocationsFix:
             print(f"  Chunk {i}: location='{chunk['location']}'")
 
         # Apply the fix
-        unique_chunks = ensure_unique_chunk_locations(duplicate_chunks)
+        unique_chunks = cast(FunctionType, ensure_unique_chunk_locations)(duplicate_chunks)
 
         print("\nOutput chunks with unique locations:")
         locations = []
@@ -64,7 +66,7 @@ class TestUniqueLocationsFix:
             print(f"  Chunk {i}: location='{chunk.location}'")
 
         # Apply the fix
-        unique_chunks = ensure_unique_chunk_locations(duplicate_chunks)
+        unique_chunks = cast(FunctionType, ensure_unique_chunk_locations)(duplicate_chunks)
 
         print("\nOutput Chunk objects with unique locations:")
         locations = []
@@ -95,7 +97,7 @@ class TestUniqueLocationsFix:
         print(f"Input already unique locations: {original_locations}")
 
         # Apply the fix
-        result_chunks = ensure_unique_chunk_locations(unique_chunks)
+        result_chunks = cast(FunctionType, ensure_unique_chunk_locations)(unique_chunks)
         result_locations = [chunk.location for chunk in result_chunks]
 
         print(f"Output locations: {result_locations}")
@@ -107,11 +109,11 @@ class TestUniqueLocationsFix:
 
     def test_ensure_unique_locations_with_empty_input(self):
         """Test edge case with empty input."""
-        result = ensure_unique_chunk_locations([])
+        result = cast(FunctionType, ensure_unique_chunk_locations)([])
         assert result == [], "Empty input should return empty output"
 
         # Note: None input also returns empty list for CocoIndex compatibility
-        result = ensure_unique_chunk_locations(None)
+        result = cast(FunctionType, ensure_unique_chunk_locations)(None)
         assert result == [], "None input should return empty list"
 
         print("✅ Empty/None input handled correctly")
@@ -130,7 +132,7 @@ class TestUniqueLocationsFix:
             else:
                 print(f"  Chunk {i}: dataclass location='{chunk.location}'")
 
-        result_chunks = ensure_unique_chunk_locations(mixed_chunks)
+        result_chunks = cast(FunctionType, ensure_unique_chunk_locations)(mixed_chunks)
 
         print("Output mixed format chunks:")
         locations = []
