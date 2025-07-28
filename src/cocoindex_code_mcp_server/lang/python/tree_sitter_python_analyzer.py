@@ -291,9 +291,9 @@ class PythonASTVisitor(ast.NodeVisitor):
     """
 
     def __init__(self) -> None:
-        self.functions: List[str] = []
-        self.classes: List[str] = []
-        self.imports: List[str] = []
+        self.functions: List[Dict[str, Any]] = []
+        self.classes: List[Dict[str, Any]] = []
+        self.imports: List[Dict[str, Any]] = []
         self.variables: List[str] = []
         self.decorators: Set[str] = set()
         self.complexity_score: float = 0
