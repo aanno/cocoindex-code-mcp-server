@@ -851,7 +851,7 @@ def code_embedding_flow(
 
 def update_flow_config(paths: Union[List[str], None] = None, enable_polling: bool = False, poll_interval: int = 30,
                        use_default_embedding: bool = False, use_default_chunking: bool = False,
-                       use_default_language_handler: bool = False):
+                       use_default_language_handler: bool = False) -> None:
     """Update the global flow configuration."""
     global _global_flow_config
     _global_flow_config.update({
@@ -864,7 +864,7 @@ def update_flow_config(paths: Union[List[str], None] = None, enable_polling: boo
     })
 
 
-def run_flow_update(live_update: bool = False, poll_interval: int = 30):
+def run_flow_update(live_update: bool = False, poll_interval: int = 30) -> None:
     """Run the flow update (one-time or live)."""
     if live_update:
         LOGGER.info("🔄 Starting live update mode...")

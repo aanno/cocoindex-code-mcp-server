@@ -661,7 +661,7 @@ def get_haskell_language_spec(config: Optional[HaskellChunkConfig] = None) -> co
     )
 
 
-def create_enhanced_haskell_chunking_operation():
+def create_enhanced_haskell_chunking_operation() -> None:
     """
     Create a CocoIndex operation for enhanced Haskell chunking.
     Provides a high-level interface similar to ASTChunk operations.

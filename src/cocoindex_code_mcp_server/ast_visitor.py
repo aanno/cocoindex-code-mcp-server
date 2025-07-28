@@ -108,7 +108,7 @@ class GenericMetadataVisitor(ASTVisitor):
         self.node_stats: Dict[str, int] = {}
         self.complexity_score: float = 0
 
-    def add_handler(self, handler: NodeHandler):
+    def add_handler(self, handler: NodeHandler) -> None:
         """Add a node handler to the visitor."""
         self.handlers.append(handler)
 
@@ -137,7 +137,7 @@ class GenericMetadataVisitor(ASTVisitor):
 
         return metadata if metadata else None
 
-    def _update_complexity(self, node_type: str):
+    def _update_complexity(self, node_type: str) -> None:
         """Update complexity score based on node type."""
         # Universal complexity indicators
         complexity_weights = {
@@ -200,7 +200,7 @@ class TreeWalker:
         return metadata
 
     def _walk_recursive(self, node: Node, visitor: ASTVisitor, parent: Optional[Node],
-                        depth: int, scope_stack: List[str]):
+                        depth: int, scope_stack: List[str]) -> None:
         """Recursively walk AST nodes."""
         context = NodeContext(
             node=node,
@@ -426,7 +426,7 @@ class ASTParserFactory:
 class MultiLevelAnalyzer:
     """Multi-level code analyzer with fallback strategies."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.parser_factory = ASTParserFactory()
 
     def analyze_code(self, code: str, language: str = "unknown",

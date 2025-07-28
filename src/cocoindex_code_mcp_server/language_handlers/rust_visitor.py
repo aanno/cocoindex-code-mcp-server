@@ -51,7 +51,7 @@ class RustASTVisitor(GenericMetadataVisitor):
 
         return None
 
-    def _extract_function(self, node: Node):
+    def _extract_function(self, node: Node) -> None:
         """Extract function name from function_item node."""
         try:
             # Rust function structure: function_item -> identifier (after 'fn' keyword)

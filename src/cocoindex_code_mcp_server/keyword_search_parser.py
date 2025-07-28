@@ -34,7 +34,7 @@ class SearchGroup:
 class KeywordSearchParser:
     """Parser for keyword search syntax."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Pattern for field:value pairs - handle quoted and unquoted values
         self.field_value_pattern = re.compile(r'(\w+):(?:(["\'])([^"\']*?)\2|([^\s]+))')
         # Pattern for exists checks

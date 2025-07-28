@@ -49,7 +49,7 @@ class CppASTVisitor(CASTVisitor):
 
         return None
 
-    def _extract_class(self, node: Node):
+    def _extract_class(self, node: Node) -> None:
         """Extract class name from class_specifier node."""
         try:
             # Look for class name (identifier after 'class' keyword)
@@ -64,7 +64,7 @@ class CppASTVisitor(CASTVisitor):
         except Exception as e:
             LOGGER.warning(f"Error extracting C++ class: {e}")
 
-    def _extract_namespace(self, node: Node):
+    def _extract_namespace(self, node: Node) -> None:
         """Extract namespace name from namespace_definition node."""
         try:
             # Look for namespace name

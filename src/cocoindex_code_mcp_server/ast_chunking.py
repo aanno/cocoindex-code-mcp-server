@@ -6,6 +6,7 @@ This module provides a CocoIndex operation that leverages ASTChunk for
 structure-aware code chunking.
 """
 
+from cocoindex.op import FunctionSpec
 import logging
 import os
 from dataclasses import dataclass
@@ -332,7 +333,7 @@ class CocoIndexASTChunker:
         return chunks
 
 
-def create_ast_chunking_operation():
+def create_ast_chunking_operation() -> FunctionSpec:
     """
     Create a CocoIndex AST chunking operation using @cocoindex.op.function() decorator.
     Returns a function registered with CocoIndex that works with .transform() method.
@@ -413,7 +414,7 @@ if cocoindex is not None:
         LOGGER.warning(f"Failed to create ASTChunkOperation: {e}")
 
 
-def create_hybrid_chunking_operation():
+def create_hybrid_chunking_operation() -> FunctionSpec:
     """
     Create a hybrid chunking operation that uses AST-based chunking for supported
     languages and falls back to regex-based chunking for others.

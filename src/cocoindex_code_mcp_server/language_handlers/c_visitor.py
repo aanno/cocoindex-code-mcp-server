@@ -45,7 +45,7 @@ class CASTVisitor(GenericMetadataVisitor):
 
         return None
 
-    def _extract_function(self, node: Node):
+    def _extract_function(self, node: Node) -> None:
         """Extract function name from function_definition node."""
         try:
             # C function structure: function_definition -> function_declarator -> identifier
@@ -61,7 +61,7 @@ class CASTVisitor(GenericMetadataVisitor):
         except Exception as e:
             LOGGER.warning(f"Error extracting C function: {e}")
 
-    def _extract_struct(self, node: Node):
+    def _extract_struct(self, node: Node) -> None:
         """Extract struct name from struct_specifier node."""
         try:
             # Look for struct name (identifier after 'struct' keyword)

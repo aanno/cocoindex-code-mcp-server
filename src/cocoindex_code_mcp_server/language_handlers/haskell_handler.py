@@ -5,6 +5,8 @@ Haskell-specific AST node handler for tree-sitter based analysis.
 Handles Haskell-specific constructs like data types, type classes, modules, etc.
 """
 
+from cocoindex_code_mcp_server.ast_visitor import Position
+from tree_sitter import Node
 import os
 import re
 
@@ -239,7 +241,7 @@ class HaskellNodeHandler:
             }
         }
 
-    def _handle_function_chunk(self, chunk, chunk_text: str, position) -> Dict[str, Any]:
+    def _handle_function_chunk(self, chunk: Node, chunk_text: str, position: Position) -> Dict[str, Any]:
         """Handle function definition chunks."""
         func_info = self._parse_function_text(chunk_text)
         if not func_info:
@@ -270,7 +272,7 @@ class HaskellNodeHandler:
             }
         }
 
-    def _handle_signature_chunk(self, chunk, chunk_text: str, position) -> Dict[str, Any]:
+    def _handle_signature_chunk(self, chunk: Node, chunk_text: str, position: Position) -> Dict[str, Any]:
         """Handle type signature chunks."""
         sig_info = self._parse_type_signature_text(chunk_text)
         if not sig_info:
@@ -289,7 +291,7 @@ class HaskellNodeHandler:
             }
         }
 
-    def _handle_import_chunk(self, chunk, chunk_text: str, position) -> Dict[str, Any]:
+    def _handle_import_chunk(self, chunk: Node, chunk_text: str, position: Position) -> Dict[str, Any]:
         """Handle import statement chunks."""
         import_info = self._parse_import_text(chunk_text)
         if not import_info:
@@ -316,7 +318,7 @@ class HaskellNodeHandler:
             }
         }
 
-    def _handle_module_chunk(self, chunk, chunk_text: str, position) -> Dict[str, Any]:
+    def _handle_module_chunk(self, chunk: Node, chunk_text: str, position: Position) -> Dict[str, Any]:
         """Handle module declaration chunks."""
         module_info = self._parse_module_text(chunk_text)
         if not module_info:
@@ -606,7 +608,7 @@ class HaskellNodeHandler:
 
         return module_info if module_info['name'] else None
 
-    def _extract_export_list(self, exports_node, source_text: str) -> List[str]:
+    def _extract_export_list(self, exports_node: object, source_text: str) -> List[str]:
         """Extract list of exported items."""
         exports: List[str] = []
 
@@ -620,7 +622,7 @@ class HaskellNodeHandler:
 
         return exports
 
-    def _parse_import_statement(self, node, source_text: str) -> Optional[Dict[str, Any]]:
+    def _parse_import_statement(self, node: object, source_text: str) -> Optional[Dict[str, Any]]:
         """Parse import statement components."""
         if not hasattr(node, 'children'):
             return None
@@ -649,7 +651,7 @@ class HaskellNodeHandler:
 
         return import_info if import_info['module'] else None
 
-    def _extract_import_list(self, import_list_node, source_text: str) -> List[str]:
+    def _extract_import_list(self, import_list_node: object, source_text: str) -> List[str]:
         """Extract list of imported/hidden items."""
         items: List[str] = []
 
@@ -706,7 +708,7 @@ class HaskellNodeHandler:
 
         return func_info if func_info['name'] else None
 
-    def _extract_pattern_list(self, patterns_node, source_text: str) -> List[str]:
+    def _extract_pattern_list(self, patterns_node: object, source_text: str) -> List[str]:
         """Extract function parameter patterns."""
         patterns: List[str] = []
 
@@ -720,7 +722,7 @@ class HaskellNodeHandler:
 
         return patterns
 
-    def _extract_type_declaration(self, node, source_text: str, kind: str) -> Optional[Dict[str, Any]]:
+    def _extract_type_declaration(self, node: Node, source_text: str, kind: str) -> Optional[Dict[str, Any]]:
         """Extract type declaration information."""
         if not hasattr(node, 'children'):
             return None
@@ -746,7 +748,7 @@ class HaskellNodeHandler:
 
         return type_info if type_info['name'] else None
 
-    def _extract_constructor_list(self, constructors_node, source_text: str) -> List[str]:
+    def _extract_constructor_list(self, constructors_node: object, source_text: str) -> List[str]:
         """Extract data constructor names."""
         constructors: List[str] = []
 
@@ -760,7 +762,7 @@ class HaskellNodeHandler:
 
         return constructors
 
-    def _extract_deriving_clause(self, deriving_node, source_text: str) -> List[str]:
+    def _extract_deriving_clause(self, deriving_node: object, source_text: str) -> List[str]:
         """Extract deriving clause type classes."""
         deriving_classes: List[str] = []
 
@@ -774,7 +776,7 @@ class HaskellNodeHandler:
 
         return deriving_classes
 
-    def _extract_class_declaration(self, node, source_text: str) -> Optional[Dict[str, Any]]:
+    def _extract_class_declaration(self, node: Node, source_text: str) -> Optional[Dict[str, Any]]:
         """Extract type class declaration information."""
         if not hasattr(node, 'children'):
             return None
@@ -823,7 +825,7 @@ class HaskellNodeHandler:
 
         return instance_info if instance_info['class_name'] and instance_info['type_name'] else None
 
-    def _extract_constraint_list(self, constraints_node, source_text: str) -> List[str]:
+    def _extract_constraint_list(self, constraints_node: object, source_text: str) -> List[str]:
         """Extract constraint list from type class/instance declarations."""
         constraints: List[str] = []
 
@@ -837,7 +839,7 @@ class HaskellNodeHandler:
 
         return constraints
 
-    def _extract_class_methods(self, where_node, source_text: str) -> List[str]:
+    def _extract_class_methods(self, where_node: object, source_text: str) -> List[str]:
         """Extract method names from type class where clause."""
         methods: List[str] = []
 
@@ -911,7 +913,7 @@ class HaskellNodeHandler:
             'type': type_str
         }
 
-    def _get_next_identifier(self, node, source_text: str) -> Optional[str]:
+    def _get_next_identifier(self, node: object, source_text: str) -> Optional[str]:
         """Get the next identifier sibling after the given node."""
         if not hasattr(node, 'parent') or not hasattr(node.parent, 'children'):
             return None
@@ -933,7 +935,7 @@ class HaskellNodeHandler:
         keywords = {'where', 'let', 'in', 'case', 'of', 'if', 'then', 'else', 'do'}
         return any(var not in keywords for var in type_vars)
 
-    def _calculate_function_complexity(self, node, source_text: str) -> int:
+    def _calculate_function_complexity(self, node: Node, source_text: str) -> int:
         """Calculate cyclomatic complexity for a Haskell function."""
         complexity = 1  # Base complexity
 

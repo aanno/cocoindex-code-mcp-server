@@ -597,7 +597,7 @@ class PythonNodeHandler:
 
         return module_name, alias
 
-    def _extract_import_list(self, import_list_node, source_text: str) -> List[str]:
+    def _extract_import_list(self, import_list_node: Node, source_text: str) -> List[str]:
         """Extract list of imported names."""
         names: List[str] = []
 
@@ -633,7 +633,7 @@ class PythonNodeHandler:
 
         return targets
 
-    def _extract_pattern_names(self, pattern_node, source_text: str) -> List[str]:
+    def _extract_pattern_names(self, pattern_node: Node, source_text: str) -> List[str]:
         """Extract names from assignment patterns."""
         names: List[str] = []
 

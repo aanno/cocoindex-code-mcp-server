@@ -55,7 +55,7 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
 
         return None
 
-    def _extract_interface(self, node):
+    def _extract_interface(self, node) -> None:
         """Extract interface name from interface_declaration node."""
         try:
             # Look for interface name (identifier after 'interface' keyword)

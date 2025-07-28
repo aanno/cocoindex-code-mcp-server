@@ -82,7 +82,7 @@ class PythonCodeAnalyzer:
             LOGGER.error(f"Error analyzing Python code: {e}")
             return self._build_fallback_metadata(code, filename)
 
-    def _visit_node(self, node: ast.AST, class_context: Optional[str] = None, depth: int = 0):
+    def _visit_node(self, node: ast.AST, class_context: Optional[str] = None, depth: int = 0) -> None:
         """Recursively visit AST nodes to extract metadata with bounds checking."""
         # Prevent infinite recursion
         if depth > self.max_recursion_depth:
@@ -119,7 +119,7 @@ class PythonCodeAnalyzer:
             # Remove from visited set when done (allow revisiting in different contexts)
             self.visited_nodes.discard(node_id)
 
-    def _extract_function_info(self, node: ast.FunctionDef | ast.AsyncFunctionDef, class_context: Optional[str] = None, is_async: bool = False):
+    def _extract_function_info(self, node: ast.FunctionDef | ast.AsyncFunctionDef, class_context: Optional[str] = None, is_async: bool = False) -> None:
         """Extract information about function definitions."""
         func_info: Dict[str, Any] = {
             "name": node.name,
@@ -170,7 +170,7 @@ class PythonCodeAnalyzer:
 
         self.functions.append(func_info)
 
-    def _extract_class_info(self, node: ast.ClassDef):
+    def _extract_class_info(self, node: ast.ClassDef) -> None:
         """Extract information about class definitions."""
         class_info = {
             "name": node.name,
@@ -194,7 +194,7 @@ class PythonCodeAnalyzer:
         # Extract methods (will be added by function extraction with class context)
         self.classes.append(class_info)
 
-    def _extract_import_info(self, node: ast.AST):
+    def _extract_import_info(self, node: ast.AST) -> None:
         """Extract import information."""
         if isinstance(node, ast.Import):
             for alias in node.names:
@@ -219,7 +219,7 @@ class PythonCodeAnalyzer:
                 }
                 self.imports.append(import_info)
 
-    def _extract_variable_info(self, node: ast.Assign, class_context: Optional[str] = None):
+    def _extract_variable_info(self, node: ast.Assign, class_context: Optional[str] = None) -> None:
         """Extract variable assignment information."""
         for target in node.targets:
             if isinstance(target, ast.Name):
@@ -299,7 +299,7 @@ class PythonCodeAnalyzer:
         except Exception:
             return "unknown_value"
 
-    def _calculate_metrics(self, code: str):
+    def _calculate_metrics(self, code: str) -> None:
         """Calculate code complexity and other metrics."""
         # Simple complexity metrics
         self.complexity_score = (

@@ -243,7 +243,7 @@ def get_multiline_input(prompt_text: str) -> str:
         return ""
 
 
-def run_interactive_hybrid_search():
+def run_interactive_hybrid_search() -> None:
     """Run interactive hybrid search mode with dual prompts."""
     # Initialize the database connection pool
     url = os.getenv("COCOINDEX_DATABASE_URL")

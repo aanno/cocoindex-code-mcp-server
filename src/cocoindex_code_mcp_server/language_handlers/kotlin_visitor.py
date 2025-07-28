@@ -49,7 +49,7 @@ class KotlinASTVisitor(GenericMetadataVisitor):
 
         return None
 
-    def _extract_function(self, node: Node):
+    def _extract_function(self, node: Node) -> None:
         """Extract function name from function_declaration node."""
         try:
             # Kotlin function structure: function_declaration -> identifier (after 'fun' keyword)

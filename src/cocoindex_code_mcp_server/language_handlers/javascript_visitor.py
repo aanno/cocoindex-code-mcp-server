@@ -5,6 +5,7 @@ JavaScript-specific AST visitor for metadata extraction.
 Follows the same pattern as other language visitors by subclassing GenericMetadataVisitor.
 """
 
+from tree_sitter import Node
 import logging
 from typing import Any, Dict, List, Optional
 
@@ -52,7 +53,7 @@ class JavaScriptASTVisitor(GenericMetadataVisitor):
 
         return None
 
-    def _extract_function(self, node):
+    def _extract_function(self, node) -> None:
         """Extract function name from function_declaration node."""
         try:
             # JavaScript function structure: function_declaration -> identifier
@@ -78,7 +79,7 @@ class JavaScriptASTVisitor(GenericMetadataVisitor):
         except Exception as e:
             LOGGER.warning(f"Error extracting JavaScript function expression: {e}")
 
-    def _extract_arrow_function(self, node):
+    def _extract_arrow_function(self, node: Node) -> None:
         """Extract context for arrow functions (often anonymous)."""
         try:
             # Arrow functions are usually anonymous, but we track them

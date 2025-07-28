@@ -74,7 +74,7 @@ class HaskellASTVisitor(GenericMetadataVisitor):
             LOGGER.error(f"Haskell chunk analysis failed: {e}")
             return self._fallback_analysis(code, filename)
 
-    def _process_chunk(self, chunk, source_code: str):
+    def _process_chunk(self, chunk, source_code: str) -> None:
         """Process a single haskell_tree_sitter chunk."""
         # Create a chunk context that works with our handler
         chunk_context = HaskellChunkContext(chunk, source_code)

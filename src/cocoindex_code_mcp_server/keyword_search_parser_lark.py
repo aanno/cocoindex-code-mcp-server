@@ -48,7 +48,7 @@ class SearchGroup:
 class KeywordSearchTransformer(Transformer):
     """Transformer to convert Lark parse tree to SearchGroup objects."""
 
-    def remove_quotes(self, token):
+    def remove_quotes(self, token) -> None:
         """Remove surrounding quotes from quoted strings."""
         s = str(token)
         if (s.startswith('"') and s.endswith('"')) or (s.startswith("'") and s.endswith("'")):
@@ -59,17 +59,17 @@ class KeywordSearchTransformer(Transformer):
         """Transform quoted value by removing quotes."""
         return self.remove_quotes(token)
 
-    def field_condition(self, items):
+    def field_condition(self, items) -> SearchCondition:
         """Transform field:value condition."""
         field, value = items
         return SearchCondition(field=str(field), value=str(value))
 
-    def exists_condition(self, items):
+    def exists_condition(self, items) -> SearchCondition:
         """Transform exists(field) condition."""
         field = items[0]
         return SearchCondition(field=str(field), value="", is_exists_check=True)
 
-    def value_contains_condition(self, items):
+    def value_contains_condition(self, items) -> SearchCondition:
         """Transform value_contains(field, string) condition."""
         field, value = items
         return SearchCondition(
@@ -78,13 +78,13 @@ class KeywordSearchTransformer(Transformer):
             is_value_contains_check=True
         )
 
-    def text_search(self, items):
+    def text_search(self, items) -> SearchCondition:
         """Transform general text search."""
         # Join multiple words with spaces
         value = " ".join(str(item) for item in items)
         return SearchCondition(field="_text", value=value)
 
-    def word(self, items):
+    def word(self, items) -> str:
         """Transform word rule."""
         return str(items[0])
 
@@ -108,7 +108,7 @@ class KeywordSearchTransformer(Transformer):
             return item
         return SearchGroup(conditions=list(items), operator=Operator.OR)
 
-    def start(self, items):
+    def start(self, items) -> SearchGroup:
         """Transform start rule - always return SearchGroup."""
         item = items[0]
         if isinstance(item, SearchCondition):
@@ -123,7 +123,7 @@ class KeywordSearchTransformer(Transformer):
 class KeywordSearchParser:
     """Lark-based parser for keyword search syntax with fallback to regex parser."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the parser with Lark grammar or fallback."""
         self.lark_parser = None
         self.transformer = KeywordSearchTransformer()
