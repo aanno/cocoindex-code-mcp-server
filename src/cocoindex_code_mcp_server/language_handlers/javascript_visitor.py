@@ -16,7 +16,7 @@ LOGGER = logging.getLogger(__name__)
 class JavaScriptASTVisitor(GenericMetadataVisitor):
     """Specialized visitor for JavaScript language AST analysis."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("javascript")
         self.functions: List[str] = []
         self.classes: List[str] = []

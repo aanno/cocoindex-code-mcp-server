@@ -18,7 +18,7 @@ LOGGER = logging.getLogger(__name__)
 class KotlinASTVisitor(GenericMetadataVisitor):
     """Specialized visitor for Kotlin language AST analysis."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("kotlin")
         self.functions: List[str] = []
         self.classes: List[str] = []

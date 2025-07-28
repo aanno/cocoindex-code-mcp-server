@@ -109,7 +109,7 @@ class PythonNodeHandler:
         'expression_statement': 'potential_docstring',
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.functions: List[PythonFunction] = []
         self.classes: List[PythonClass] = []
         self.imports: List[PythonImport] = []

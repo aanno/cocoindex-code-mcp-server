@@ -9,6 +9,8 @@ import os
 import sys
 from typing import Any, Dict, Union
 
+from tree_sitter import Node
+
 from ..ast_visitor import GenericMetadataVisitor, NodeContext
 from ..language_handlers.haskell_handler import HaskellNodeHandler
 from . import LOGGER
@@ -28,7 +30,7 @@ except ImportError:
 class HaskellASTVisitor(GenericMetadataVisitor):
     """Specialized visitor for Haskell code using haskell_tree_sitter chunks."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(language='haskell')
         self.haskell_handler = HaskellNodeHandler()
         # Add the handler to the parent's handler list
@@ -136,7 +138,7 @@ class HaskellASTVisitor(GenericMetadataVisitor):
 class HaskellChunkContext(NodeContext):
     """Specialized NodeContext for haskell_tree_sitter chunks."""
 
-    def __init__(self, chunk, source_code: str):
+    def __init__(self, chunk: Node, source_code: str) -> None:
         # Create a minimal node context that works with chunks
         super().__init__(
             node=chunk,

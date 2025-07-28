@@ -18,7 +18,7 @@ LOGGER = logging.getLogger(__name__)
 class JavaASTVisitor(GenericMetadataVisitor):
     """Specialized visitor for Java language AST analysis."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("java")
         self.functions: List[str] = []
         self.classes: List[str] = []

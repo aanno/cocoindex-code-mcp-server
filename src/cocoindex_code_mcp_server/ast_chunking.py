@@ -10,7 +10,7 @@ import logging
 import os
 from dataclasses import dataclass
 from types import ModuleType
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import cocoindex
 from cocoindex_code_mcp_server import LOGGER

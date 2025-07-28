@@ -70,7 +70,7 @@ class LanguageModelSelector:
         ".lhs": "haskell",
     }
 
-    def __init__(self, fallback_model: str = "sentence-transformers/all-MiniLM-L6-v2"):
+    def __init__(self, fallback_model: str = "sentence-transformers/all-MiniLM-L6-v2") -> None:
         """
         Initialize the language model selector.
 

@@ -134,7 +134,7 @@ class HaskellNodeHandler:
         'pragma': 'language_pragma',
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.functions: List[HaskellFunction] = []
         self.data_types: List[HaskellDataType] = []
         self.type_classes: List[HaskellTypeClass] = []

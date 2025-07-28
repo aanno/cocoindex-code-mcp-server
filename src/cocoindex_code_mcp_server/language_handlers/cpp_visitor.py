@@ -19,7 +19,7 @@ LOGGER = logging.getLogger(__name__)
 class CppASTVisitor(CASTVisitor):
     """Specialized visitor for C++ language AST analysis."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.language = "cpp"
         # Inherit C functionality: self.functions, self.structs, self.enums, self.typedefs

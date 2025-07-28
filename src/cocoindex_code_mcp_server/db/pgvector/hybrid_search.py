@@ -30,7 +30,7 @@ class HybridSearchEngine:
     def __init__(self, table_name: str, parser: KeywordSearchParser,
                  backend: Union[VectorStoreBackend,None] = None, 
                  pool: Union[ConnectionPool,None] = None, 
-                 embedding_func=None):
+                 embedding_func=None) -> None:
         # Support both new backend interface and legacy direct pool access
         if backend is not None:
             self.backend = backend

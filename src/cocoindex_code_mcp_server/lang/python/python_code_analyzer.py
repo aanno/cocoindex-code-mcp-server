@@ -10,6 +10,8 @@ import json
 import re
 from typing import Any, Dict, List, Set, Optional, Union
 
+from tree_sitter import Node
+
 from cocoindex_code_mcp_server.language_handlers.python_handler import PythonClass, PythonFunction, PythonImport
 
 from . import LOGGER
@@ -26,12 +28,12 @@ except ImportError as e:
 class PythonCodeAnalyzer:
     """Analyzer for extracting metadata from Python code chunks."""
 
-    def __init__(self):
-        self.max_recursion_depth = 200  # Prevent infinite recursion
-        self.visited_nodes = set()  # Cycle detection
+    def __init__(self) -> None:
+        self.max_recursion_depth: int = 200  # Prevent infinite recursion
+        self.visited_nodes: Set[int] = set()  # Cycle detection
         self.reset()
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset the analyzer state."""
         self.functions: List[Dict[str, Any]] = []
         self.classes: List[Dict[str, Any]] = []

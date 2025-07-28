@@ -25,7 +25,7 @@ from ..lang.python.python_code_analyzer import analyze_python_code
 class PostgresBackend(VectorStoreBackend):
     """PostgreSQL + pgvector backend implementation."""
     
-    def __init__(self, pool: ConnectionPool, table_name: str):
+    def __init__(self, pool: ConnectionPool, table_name: str) -> None:
         """
         Initialize PostgreSQL backend.
         
@@ -200,7 +200,7 @@ class PostgresBackend(VectorStoreBackend):
         from ..keyword_search_parser import SearchGroup as LegacySearchGroup
         
         class MockSearchGroup:
-            def __init__(self, conditions: List[Any]):
+            def __init__(self, conditions: List[Any]) -> None:
                 self.conditions = conditions
                 self.operator = "and"
         

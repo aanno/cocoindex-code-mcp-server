@@ -18,7 +18,7 @@ from . import VectorStoreBackend, SearchResult, QueryFilters
 class QdrantBackend(VectorStoreBackend):
     """Qdrant backend implementation skeleton."""
     
-    def __init__(self, host: str = "localhost", port: int = 6333, collection_name: str = "code_embeddings", **kwargs: Any):
+    def __init__(self, host: str = "localhost", port: int = 6333, collection_name: str = "code_embeddings", **kwargs: Any) -> None:
         """
         Initialize Qdrant backend.
         

@@ -18,7 +18,7 @@ LOGGER = logging.getLogger(__name__)
 class CASTVisitor(GenericMetadataVisitor):
     """Specialized visitor for C language AST analysis."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("c")
         self.functions: List[str] = []
         self.structs: List[str] = []

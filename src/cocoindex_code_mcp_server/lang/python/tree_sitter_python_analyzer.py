@@ -6,7 +6,7 @@ Combines the generic AST visitor framework with Python-specific node handlers.
 """
 
 import ast
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Set, Union
 
 from ...ast_visitor import (
     ASTParserFactory,
@@ -24,7 +24,7 @@ class TreeSitterPythonAnalyzer:
     Provides comprehensive metadata extraction with multiple analysis strategies.
     """
 
-    def __init__(self, prefer_tree_sitter: bool = True):
+    def __init__(self, prefer_tree_sitter: bool = True) -> None:
         """
         Initialize the analyzer.
 
@@ -290,15 +290,15 @@ class PythonASTVisitor(ast.NodeVisitor):
     Complements tree-sitter analysis with Python-specific semantics.
     """
 
-    def __init__(self):
-        self.functions = []
-        self.classes = []
-        self.imports = []
-        self.variables = []
-        self.decorators = set()
-        self.complexity_score = 0
-        self.current_class = None
-        self.scope_stack = []
+    def __init__(self) -> None:
+        self.functions: List[str] = []
+        self.classes: List[str] = []
+        self.imports: List[str] = []
+        self.variables: List[str] = []
+        self.decorators: Set[str] = set()
+        self.complexity_score: float = 0
+        self.current_class: Optional[str] = None
+        self.scope_stack: List[str] = []
 
     def visit_FunctionDef(self, node: ast.FunctionDef):
         """Visit function definitions."""

@@ -24,7 +24,7 @@ class HaskellChunkConfig:
                  chunk_expansion: bool = False,
                  metadata_template: str = "default",
                  preserve_imports: bool = True,
-                 preserve_exports: bool = True):
+                 preserve_exports: bool = True) -> None:
         self.max_chunk_size = max_chunk_size
         self.chunk_overlap = chunk_overlap
         self.chunk_expansion = chunk_expansion
@@ -81,7 +81,7 @@ class EnhancedHaskellChunker:
     Provides configurable chunking with rich metadata and multiple fallback strategies.
     """
 
-    def __init__(self, config: Optional[HaskellChunkConfig] = None):
+    def __init__(self, config: Optional[HaskellChunkConfig] = None) -> None:
         self.config = config or HaskellChunkConfig()
         self._cache: dict[str, Any] = {}  # Cache for expensive operations
 
@@ -429,7 +429,7 @@ class EnhancedHaskellChunker:
 class CompatibleChunk:
     """Chunk wrapper that provides the interface expected by AST chunking code."""
     
-    def __init__(self, content: str, metadata: dict, start_line: int = 1, end_line: int = 1, node_type: str = "haskell_chunk"):
+    def __init__(self, content: str, metadata: dict, start_line: int = 1, end_line: int = 1, node_type: str = "haskell_chunk") -> None:
         self._content = content
         self._metadata = metadata
         self._start_line = start_line
