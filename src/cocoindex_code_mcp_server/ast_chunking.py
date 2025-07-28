@@ -25,7 +25,7 @@ class Chunk:
     start: int = 0
     end: int = 0
     
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> None:
         """Allow dictionary-style access."""
         if hasattr(self, key):
             return getattr(self, key)

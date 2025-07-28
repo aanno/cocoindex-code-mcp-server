@@ -59,7 +59,7 @@ shutdown_event = threading.Event()
 background_thread: Optional[threading.Thread] = None
 
 
-def safe_embedding_function(query: str):
+def safe_embedding_function(query: str) -> object:
     """Safe wrapper for embedding function that handles shutdown gracefully."""
     if shutdown_event.is_set():
         # Return a zero vector if shutting down
@@ -88,7 +88,7 @@ def safe_embedding_function(query: str):
             return [0.0] * 384
 
 
-def handle_shutdown(signum, frame):
+def handle_shutdown(signum, frame) -> None:
     """Handle shutdown signals gracefully."""
     logger.info("Shutdown signal received, cleaning up...")
     shutdown_event.set()
