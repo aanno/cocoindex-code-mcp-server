@@ -193,7 +193,7 @@ class TestMCPServerModuleIntegration:
 
             # Also spy on the module-level create functions if they exist
             try:
-                create_operation_spy = mocker.spy(ast_chunking, "create_ast_chunking_operation")
+                create_operation_spy = mocker.spy(cocoindex_code_mcp_server.ast_chunking, "create_ast_chunking_operation")
             except AttributeError:
                 create_operation_spy = None
 
@@ -348,7 +348,7 @@ class TestMCPServerQueryIntegration:
                 import cocoindex_code_mcp_server.ast_chunking
                 from cocoindex_code_mcp_server.ast_chunking import CocoIndexASTChunker
                 spies["ast_chunk_code"] = mocker.spy(CocoIndexASTChunker, "chunk_code")
-                spies["create_ast_operation"] = mocker.spy(ast_chunking, "create_ast_chunking_operation")
+                spies["create_ast_operation"] = mocker.spy(cocoindex_code_mcp_server.ast_chunking, "create_ast_chunking_operation")
             except ImportError:
                 print("AST chunking not available for spying")
 
