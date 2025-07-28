@@ -6,8 +6,10 @@ Incorporates techniques from ASTChunk for improved chunking quality.
 """
 
 import re
+from types import FunctionType
 from typing import Any, Dict, List, Optional
 
+from cocoindex.op import FunctionSpec
 import haskell_tree_sitter
 
 import cocoindex
@@ -661,7 +663,7 @@ def get_haskell_language_spec(config: Optional[HaskellChunkConfig] = None) -> co
     )
 
 
-def create_enhanced_haskell_chunking_operation() -> None:
+def create_enhanced_haskell_chunking_operation() -> FunctionSpec:
     """
     Create a CocoIndex operation for enhanced Haskell chunking.
     Provides a high-level interface similar to ASTChunk operations.

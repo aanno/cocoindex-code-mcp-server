@@ -48,7 +48,7 @@ class SearchGroup:
 class KeywordSearchTransformer(Transformer):
     """Transformer to convert Lark parse tree to SearchGroup objects."""
 
-    def remove_quotes(self, token) -> None:
+    def remove_quotes(self, token: str) -> str:
         """Remove surrounding quotes from quoted strings."""
         s = str(token)
         if (s.startswith('"') and s.endswith('"')) or (s.startswith("'") and s.endswith("'")):
