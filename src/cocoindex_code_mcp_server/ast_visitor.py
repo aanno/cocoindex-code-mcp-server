@@ -655,7 +655,7 @@ class MultiLevelAnalyzer:
                 ]
             }
 
-            metadata = {}
+            metadata: Dict[str, Any] = {}
 
             for category, pattern_list in patterns.items():
                 matches = set()

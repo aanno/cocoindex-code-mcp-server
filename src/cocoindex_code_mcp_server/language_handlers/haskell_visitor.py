@@ -151,15 +151,61 @@ class HaskellChunkContext(NodeContext):
         node = self.node
         if node is None:
             return ""
-        return node.text()
+        # Handle node.text() returning bytes or None
+        raw_text = node.text() if hasattr(node, 'text') and callable(node.text) else None
+        if raw_text is None:
+            return ""
+        elif isinstance(raw_text, bytes):
+            return raw_text.decode('utf-8', errors='ignore')
+        else:
+            return str(raw_text)
 
     def get_position(self) -> Position:
         """Get position from the chunk."""
         from ..ast_visitor import Position
+        line = 1
+        byte_offset = 0
+        
+        # Handle both tree-sitter node and chunk interfaces
+        if hasattr(self.node, 'start_point'):
+            point = self.node.start_point
+            if callable(point):
+                point_result = point()
+                line = point_result[0] + 1 if hasattr(point_result, '__getitem__') else 1
+            elif hasattr(point, '__getitem__'):
+                line = point[0] + 1
+        elif hasattr(self.node, 'start_line'):
+            start_line_attr = getattr(self.node, 'start_line')
+            if callable(start_line_attr):
+                try:
+                    result = start_line_attr()
+                    line = int(result) if isinstance(result, (int, float, str)) else 1
+                except (ValueError, TypeError):
+                    line = 1
+            else:
+                try:
+                    line = int(start_line_attr) if isinstance(start_line_attr, (int, float, str)) else 1
+                except (ValueError, TypeError):
+                    line = 1
+                
+        if hasattr(self.node, 'start_byte'):
+            start_byte_attr = getattr(self.node, 'start_byte')
+            if callable(start_byte_attr):
+                try:
+                    result = start_byte_attr()
+                    byte_offset = int(result) if isinstance(result, (int, float, str)) else 0
+                except (ValueError, TypeError, AttributeError):
+                    byte_offset = 0
+            else:
+                try:
+                    byte_offset = int(start_byte_attr) if isinstance(start_byte_attr, (int, float, str)) else 0
+                except (ValueError, TypeError):
+                    byte_offset = 0
+            
         return Position(
-            line=self.node.start_line(),
+            line=line,
             column=0,  # haskell_tree_sitter doesn't provide column info
-            byte_offset=self.node.start_byte() if hasattr(self.node, 'start_byte') else 0
+            byte_offset=byte_offset
         )
 
 

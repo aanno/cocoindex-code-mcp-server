@@ -119,7 +119,7 @@ class TreeSitterPythonAnalyzer:
             metadata = walker.walk(visitor)
 
             # Get handler summary if available
-            if hasattr(python_handler, 'get_summary'):
+            if python_handler and hasattr(python_handler, 'get_summary'):
                 handler_summary = python_handler.get_summary()
                 metadata.update(handler_summary)
 

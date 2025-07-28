@@ -453,7 +453,7 @@ class PythonNodeHandler:
                     # Handle decorator calls like @decorator()
                     if '(' in decorator_name:
                         decorator_name = decorator_name.split('(')[0]
-                    decorators.append(decorator_name)
+                    decorators.add(decorator_name)
 
         return decorators
 

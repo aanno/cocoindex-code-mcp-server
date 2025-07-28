@@ -154,7 +154,8 @@ class PostgresBackend(VectorStoreBackend):
                 cur.execute(
                     f"SELECT COUNT(*) FROM {self.table_name}"
                 )
-                row_count = cur.fetchone()[0]
+                result = cur.fetchone()
+                row_count = result[0] if result else 0
                 
                 # Get index information
                 cur.execute(
@@ -196,12 +197,15 @@ class PostgresBackend(VectorStoreBackend):
     def _build_where_clause(self, filters: QueryFilters) -> Tuple[str, List[Any]]:
         """Convert QueryFilters to PostgreSQL WHERE clause."""
         # Create a mock search group compatible with existing parser
+        from ..keyword_search_parser import SearchGroup as LegacySearchGroup
+        
         class MockSearchGroup:
-            def __init__(self, conditions: List[SearchCondition | SearchGroup]):
+            def __init__(self, conditions: List[Any]):
                 self.conditions = conditions
+                self.operator = "and"
         
         search_group = MockSearchGroup(filters.conditions)
-        return build_sql_where_clause(search_group)
+        return build_sql_where_clause(search_group)  # type: ignore
     
     def _format_result(self, row: Tuple[Any, ...], score_type: str = "vector") -> SearchResult:
         """Format PostgreSQL database row into SearchResult."""

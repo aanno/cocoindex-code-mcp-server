@@ -186,14 +186,18 @@ class KeywordSearchParser:
             try:
                 # Normalize case for keywords
                 normalized_query = self._normalize_keywords(query.strip())
-                result = self.lark_parser.parse(normalized_query)
-                return result
+                tree = self.lark_parser.parse(normalized_query)
+                # Transform the tree to SearchGroup
+                result = self.transformer.transform(tree)
+                return result  # type: ignore
             except (LarkError, ParseError) as e:
                 print(f"Warning: Lark parser failed ({e}), falling back to regex parser")
 
         # Fall back to regex parser
         if self.fallback_parser is not None:
-            return self.fallback_parser.parse(query)
+            fallback_result = self.fallback_parser.parse(query)
+            # Convert fallback SearchGroup to our SearchGroup
+            return self._convert_from_fallback(fallback_result)
         else:
             # Last resort: return empty group
             print("Error: No parser available")
@@ -221,6 +225,36 @@ class KeywordSearchParser:
             result = re.sub(pattern, replacement, result, flags=re.IGNORECASE)
 
         return result
+
+    def _convert_from_fallback(self, fallback_group: Any) -> SearchGroup:
+        """Convert fallback SearchGroup to our SearchGroup."""
+        from .keyword_search_parser import SearchGroup as FallbackSearchGroup, SearchCondition as FallbackSearchCondition
+        
+        if not isinstance(fallback_group, FallbackSearchGroup):
+            return SearchGroup(conditions=[])
+            
+        conditions: List[Union[SearchCondition, SearchGroup]] = []
+        for condition in fallback_group.conditions:
+            if isinstance(condition, FallbackSearchCondition):
+                # Convert SearchCondition
+                new_condition = SearchCondition(
+                    field=condition.field,
+                    value=condition.value,
+                    is_exists_check=getattr(condition, 'is_exists_check', False),
+                    is_value_contains_check=getattr(condition, 'is_value_contains_check', False)
+                )
+                conditions.append(new_condition)
+            elif isinstance(condition, FallbackSearchGroup):
+                # Recursively convert nested groups
+                converted_group = self._convert_from_fallback(condition)
+                conditions.append(converted_group)
+                
+        operator = Operator.AND
+        if hasattr(fallback_group, 'operator'):
+            if fallback_group.operator == "or":
+                operator = Operator.OR
+                
+        return SearchGroup(conditions=conditions, operator=operator)
 
 
 def build_sql_where_clause(search_group: SearchGroup, table_alias: str = "") -> tuple[str, List[Any]]:

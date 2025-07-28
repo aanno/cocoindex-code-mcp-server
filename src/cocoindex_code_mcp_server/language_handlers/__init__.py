@@ -24,7 +24,8 @@ except ImportError:
     HASKELL_HANDLER_AVAILABLE = False
 
 # Registry of available handlers
-AVAILABLE_HANDLERS = {}
+from typing import Dict, Any, Type
+AVAILABLE_HANDLERS: Dict[str, Type[Any]] = {}
 
 if PYTHON_HANDLER_AVAILABLE:
     AVAILABLE_HANDLERS['python'] = PythonNodeHandler

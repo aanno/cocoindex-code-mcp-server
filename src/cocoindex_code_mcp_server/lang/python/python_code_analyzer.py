@@ -532,7 +532,7 @@ def analyze_python_code(code: str, filename: str = "") -> Union[Dict[str, Any],N
         LOGGER.debug(f"Use the enhanced tree-sitter based analyzer for {filename}: {metadata}")
 
         # Ensure metadata_json field for compatibility with existing code
-        if 'metadata_json' not in metadata:
+        if metadata and 'metadata_json' not in metadata:
             metadata['metadata_json'] = json.dumps(metadata, default=str)
 
         return metadata
