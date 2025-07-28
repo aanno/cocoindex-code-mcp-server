@@ -246,6 +246,22 @@ def get_chunking_params(language: str) -> ChunkingParams:
 
 
 @cocoindex.op.function()
+def create_default_metadata(content: str) -> cocoindex.Json:
+    """Create default metadata structure for default language handler."""
+    return {
+        "functions": [],
+        "classes": [],
+        "imports": [],
+        "complexity_score": 0,
+        "has_type_hints": False,
+        "has_async": False,
+        "has_classes": False,
+        "decorators_used": [],
+        "analysis_method": "default_basic",
+    }
+
+
+@cocoindex.op.function()
 def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
     """Extract rich metadata from code chunks based on language and return as JSON string."""
     # Check if we should use default language handler
@@ -780,36 +796,24 @@ def code_embedding_flow(
 
                 if use_default_language_handler:
                     LOGGER.info("Using default language handler (--default-language-handler flag set)")
-                    # Use simple default metadata (no custom processing)
-                    default_metadata = {
-                        "functions": [],
-                        "classes": [],
-                        "imports": [],
-                        "complexity_score": 0,
-                        "has_type_hints": False,
-                        "has_async": False,
-                        "has_classes": False,
-                        "decorators_used": [],
-                        "analysis_method": "default_basic",
-                    }
-                    # Can't directly assign strings to DataSlice fields, skip for now
-                    # chunk["metadata"] = json.dumps(default_metadata)
+                    # Use transform function to create default metadata properly
+                    chunk["extracted_metadata"] = chunk["content"].transform(create_default_metadata)
                 else:
                     LOGGER.info("Using custom language handler extension")
-                    chunk["metadata"] = chunk["content"].transform(
+                    chunk["extracted_metadata"] = chunk["content"].transform(
                         extract_code_metadata,
                         language=file["language"],
                         filename=file["filename"]
                     )
 
                 # Extract individual metadata fields using CocoIndex transforms
-                chunk["functions"] = chunk["metadata"].transform(extract_functions_field)
-                chunk["classes"] = chunk["metadata"].transform(extract_classes_field)
-                chunk["imports"] = chunk["metadata"].transform(extract_imports_field)
-                chunk["complexity_score"] = chunk["metadata"].transform(extract_complexity_score_field)
-                chunk["has_type_hints"] = chunk["metadata"].transform(extract_has_type_hints_field)
-                chunk["has_async"] = chunk["metadata"].transform(extract_has_async_field)
-                chunk["has_classes"] = chunk["metadata"].transform(extract_has_classes_field)
+                chunk["functions"] = chunk["extracted_metadata"].transform(extract_functions_field)
+                chunk["classes"] = chunk["extracted_metadata"].transform(extract_classes_field)
+                chunk["imports"] = chunk["extracted_metadata"].transform(extract_imports_field)
+                chunk["complexity_score"] = chunk["extracted_metadata"].transform(extract_complexity_score_field)
+                chunk["has_type_hints"] = chunk["extracted_metadata"].transform(extract_has_type_hints_field)
+                chunk["has_async"] = chunk["extracted_metadata"].transform(extract_has_async_field)
+                chunk["has_classes"] = chunk["extracted_metadata"].transform(extract_has_classes_field)
 
                 code_embeddings.collect(
                     filename=file["filename"],
@@ -820,7 +824,7 @@ def code_embedding_flow(
                     start=chunk["start"],
                     end=chunk["end"],
                     source_name=source_name,  # Add source name for identification
-                    metadata_json=chunk["metadata"],  # Store full JSON
+                    metadata_json=chunk["extracted_metadata"],  # Store full JSON
                     # Individual metadata fields (properly extracted from JSON)
                     functions=chunk["functions"],
                     classes=chunk["classes"],
