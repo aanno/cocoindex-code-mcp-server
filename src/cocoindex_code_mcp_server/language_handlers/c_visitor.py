@@ -6,7 +6,7 @@ Follows the same pattern as haskell_visitor.py by subclassing GenericMetadataVis
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from ..ast_visitor import GenericMetadataVisitor, NodeContext
 from cocoindex_code_mcp_server.ast_visitor import NodeContext
@@ -53,9 +53,9 @@ class CASTVisitor(GenericMetadataVisitor):
             if declarator:
                 identifier = self._find_child_by_type(declarator, 'identifier')
                 if identifier:
-                    text = child.text
+                    text = identifier.text
                     if text is not None:
-                        func_name = identifier.text.decode('utf-8')
+                        func_name = text.decode('utf-8')
                     self.functions.append(func_name)
                     LOGGER.debug(f"Found C function: {func_name}")
         except Exception as e:
@@ -69,7 +69,7 @@ class CASTVisitor(GenericMetadataVisitor):
                 if child.type == 'type_identifier':
                     text = child.text
                     if text is not None:
-                        struct_name = child.text.decode('utf-8')
+                        struct_name = text.decode('utf-8')
                     self.structs.append(struct_name)
                     LOGGER.debug(f"Found C struct: {struct_name}")
                     break
@@ -102,7 +102,7 @@ class CASTVisitor(GenericMetadataVisitor):
         except Exception as e:
             LOGGER.warning(f"Error extracting C typedef: {e}")
 
-    def _find_child_by_type(self, node: Node, target_type: str) -> Node:
+    def _find_child_by_type(self, node: Node, target_type: str) -> Union[Node,None]:
         """Find first child node of specified type."""
         for child in node.children:
             if child.type == target_type:

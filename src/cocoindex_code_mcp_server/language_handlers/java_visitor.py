@@ -61,7 +61,7 @@ class JavaASTVisitor(GenericMetadataVisitor):
                 if child.type == 'identifier':
                     text = child.text
                     if text is not None:
-                        method_name = child.text.decode('utf-8')
+                        method_name = text.decode('utf-8')
                     self.functions.append(method_name)
                     LOGGER.debug(f"Found Java method: {method_name}")
                     break
@@ -76,7 +76,7 @@ class JavaASTVisitor(GenericMetadataVisitor):
                 if child.type == 'identifier':
                     text = child.text
                     if text is not None:
-                        constructor_name = child.text.decode('utf-8')
+                        constructor_name = text.decode('utf-8')
                     self.functions.append(constructor_name)  # Treat constructors as functions
                     LOGGER.debug(f"Found Java constructor: {constructor_name}")
                     break
@@ -91,7 +91,7 @@ class JavaASTVisitor(GenericMetadataVisitor):
                 if child.type == 'identifier':
                     text = child.text
                     if text is not None:
-                        class_name = child.text.decode('utf-8')
+                        class_name = text.decode('utf-8')
                     self.classes.append(class_name)
                     LOGGER.debug(f"Found Java class: {class_name}")
                     break
@@ -106,7 +106,7 @@ class JavaASTVisitor(GenericMetadataVisitor):
                 if child.type == 'identifier':
                     text = child.text
                     if text is not None:
-                        interface_name = child.text.decode('utf-8')
+                        interface_name = text.decode('utf-8')
                     self.interfaces.append(interface_name)
                     LOGGER.debug(f"Found Java interface: {interface_name}")
                     break
