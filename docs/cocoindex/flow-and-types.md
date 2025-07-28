@@ -329,6 +329,7 @@ chunks = chunks.transform(ensure_unique_chunk_locations)
 | `ON CONFLICT DO UPDATE command cannot affect row a second time` | Duplicate chunk locations within same file | Post-process chunks with `ensure_unique_chunk_locations()` |
 | `data did not match any variant of untagged enum ValueType` | Union types in dataclass fields (e.g., `Dict[str, Union[...]]`) | Use `cocoindex.Json` for flexible metadata fields |
 | `Type mismatch for metadata_json: passed in Json, declared <class 'str'>` | Functions expecting `str` but receiving `cocoindex.Json` | Update function signatures to accept `cocoindex.Json` |
+| `Type mismatch for metadata_json: passed in Str, declared typing.Annotated[typing.Any, TypeKind(kind='Json')] (Json)` | Transform functions return different types (str vs Json) that cause type conflicts | Make metadata functions return consistent types (all strings via `json.dumps()`) |
 | `Untyped dict is not accepted as a specific type annotation` | Using generic `dict` or `list` return types | Use specific types like `list[SomeClass]` or `cocoindex.Json` |
 | `regex parse error: repetition quantifier expects a valid decimal` | Unescaped `{` in regex patterns | Escape curly braces: `r"\{-#"` instead of `r"{-#"` |
 | `NameError: name 'lang' is not defined` | Variable name mismatch in function | Check function parameter names match usage |
@@ -519,7 +520,51 @@ separators = [
 ]
 ```
 
-#### 4. Development Workflow for Type Issues
+#### 4. Metadata Transform Function Type Consistency
+**Root cause:** Inconsistent return types between metadata creation functions cause type mismatches in transform chains.
+
+```python
+# ❌ PROBLEMATIC: Inconsistent return types
+@cocoindex.op.function()
+def create_default_metadata(content: str) -> cocoindex.Json:
+    return {"functions": [], "classes": []}  # Returns dict
+
+@cocoindex.op.function() 
+def extract_code_metadata(text: str, language: str) -> str:
+    return json.dumps({"functions": [], "classes": []})  # Returns string
+
+# When used in transforms:
+chunk["metadata"] = chunk["content"].transform(create_default_metadata)  # -> dict
+chunk["metadata"] = chunk["content"].transform(extract_code_metadata)   # -> str
+
+# Later functions expecting consistent types fail:
+@cocoindex.op.function()
+def extract_functions(metadata_json: cocoindex.Json) -> str:  # Expects Json but gets Str
+    return str(metadata_json.get("functions", []))
+```
+
+**✅ SOLUTION:** Make all metadata functions return consistent types (JSON strings):
+
+```python
+@cocoindex.op.function()
+def create_default_metadata(content: str) -> str:
+    default_metadata = {"functions": [], "classes": []}
+    return json.dumps(default_metadata)  # Consistent string output
+
+@cocoindex.op.function()
+def extract_code_metadata(text: str, language: str) -> str:
+    return json.dumps({"functions": [], "classes": []})  # Already string
+
+# Update extract functions to accept strings:
+@cocoindex.op.function()
+def extract_functions(metadata_json: str) -> str:
+    metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
+    return str(metadata_dict.get("functions", []))
+```
+
+**Key insight:** CocoIndex transforms serialize return values, so functions receiving transformed data should expect serialized types (strings for JSON), not the original types (dicts for `cocoindex.Json`).
+
+#### 5. Development Workflow for Type Issues
 When encountering type system errors:
 
 1. **Isolate the problem** - Create minimal reproduction script
@@ -528,9 +573,10 @@ When encountering type system errors:
 4. **Test incrementally** - Fix one type issue at a time
 5. **Use development metadata strategy** - Keep experimental fields in `cocoindex.Json` until proven
 
-#### 5. Type System Best Practices Summary
+#### 6. Type System Best Practices Summary
 - **Avoid unions in dataclass fields** - Use `cocoindex.Json` for flexible metadata
 - **Keep type annotations** - They are required, not optional in modern CocoIndex
+- **Ensure consistent metadata function types** - All metadata creation functions should return the same type (preferably JSON strings)
 - **Handle both dict and string inputs** - Functions may receive either depending on context
 - **Escape regex special characters** - Language configuration regexes need proper escaping
 - **Test with minimal examples** - Isolate type issues before fixing in main codebase
