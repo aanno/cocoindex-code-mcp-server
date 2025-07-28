@@ -69,9 +69,10 @@ except ImportError as e:
     ASTChunkBuilder = None
 
 # Import CocoIndex conditionally to avoid circular imports
-cocoindex: Optional[ModuleType] = None
+cocoindex_module: Optional[ModuleType] = None
 try:
     import cocoindex
+    cocoindex_module = cocoindex
 except ImportError:
     LOGGER.warning("CocoIndex not available")
 
@@ -467,21 +468,27 @@ def create_hybrid_chunking_operation():
                 try:
                     # Import locally to avoid circular dependency
                     # Use basic CocoIndex chunking if available
-                    if cocoindex is not None:
-                        split_func = cocoindex.functions.SplitRecursively()
+                    if cocoindex_module is not None:
+                        # Import CUSTOM_LANGUAGES for proper SplitRecursively usage
+                        try:
+                            from cocoindex_code_mcp_server.cocoindex_config import CUSTOM_LANGUAGES
+                            splitter = cocoindex_module.functions.SplitRecursively(custom_languages=CUSTOM_LANGUAGES)
+                        except ImportError:
+                            splitter = cocoindex_module.functions.SplitRecursively()
+                        
                         LOGGER.debug(f"Using CocoIndex SplitRecursively for {lang} code")
+                        
+                        # SplitRecursively expects to be called directly on content, not as a transform
+                        # Call it with proper arguments
+                        result = splitter(
+                            code,
+                            language=lang,
+                            chunk_size=chunk_size,
+                            min_chunk_size=min_chunk_size,
+                            chunk_overlap=chunk_overlap
+                        )
                     else:
                         raise ImportError("CocoIndex not available")
-
-                    # Create a temporary record for the split function
-                    temp_record = {source_field: code}
-                    result = split_func(
-                        temp_record,
-                        language=lang,
-                        chunk_size=chunk_size,
-                        min_chunk_size=min_chunk_size,
-                        chunk_overlap=chunk_overlap
-                    )
 
                     return result
                 except ImportError:
