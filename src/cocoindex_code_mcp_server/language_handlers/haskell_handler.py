@@ -701,7 +701,7 @@ class HaskellNodeHandler:
 
     def _extract_pattern_list(self, patterns_node, source_text: str) -> List[str]:
         """Extract function parameter patterns."""
-        patterns = []
+        patterns: List[str] = []
 
         if not hasattr(patterns_node, 'children'):
             return patterns

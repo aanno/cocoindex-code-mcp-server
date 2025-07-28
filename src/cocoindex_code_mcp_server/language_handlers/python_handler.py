@@ -599,7 +599,7 @@ class PythonNodeHandler:
 
     def _extract_import_list(self, import_list_node, source_text: str) -> List[str]:
         """Extract list of imported names."""
-        names = []
+        names: List[str] = []
 
         if not hasattr(import_list_node, 'children'):
             return names
