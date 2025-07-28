@@ -380,11 +380,59 @@ except Exception as e:
     # 4. Database schema up to date?
 ```
 
+## Metadata Strategy: Development vs Production
+
+### Development Phase Strategy
+Use `cocoindex.Json` for flexible metadata experimentation without frequent schema migrations:
+
+```python
+@dataclass
+class Chunk:
+    """Development-friendly chunk with flexible metadata."""
+    content: str
+    metadata: cocoindex.Json  # Flexible bag for experimental fields
+    location: str = ""
+    start: int = 0
+    end: int = 0
+```
+
+**Benefits:**
+- **Fast iteration** - no `cocoindex setup` needed for metadata changes
+- **Experimental fields** - test complexity scores, type hints, etc. without schema impact
+- **Rapid prototyping** - validate metadata usefulness before production commitment
+
+### Production Migration Strategy
+Extract proven metadata fields into dedicated PostgreSQL columns:
+
+```python
+# After validating metadata fields in development, promote to production schema
+code_embeddings.collect(
+    filename=file["filename"],
+    content=chunk["content"],
+    location=chunk["location"],
+    # Promoted from metadata to dedicated columns for performance:
+    functions=chunk["functions"],           # str column with indexing
+    classes=chunk["classes"],              # str column with indexing  
+    complexity_score=chunk["complexity"],   # int column for range queries
+    has_type_hints=chunk["has_type_hints"], # bool column for filtering
+    # Keep metadata for remaining experimental fields
+    metadata_json=chunk["metadata"]         # json column for edge cases
+)
+```
+
+**Production advantages:**
+- **Query performance** - dedicated columns enable proper indexing
+- **pgvector integration** - direct column access for vector operations
+- **Type safety** - PostgreSQL enforces column types
+- **Backward compatibility** - metadata_json remains for experimental fields
+
 ## Summary
 
 - **USE Vector types** with fixed dimensions for embeddings: `Vector[np.float32, Literal[384]]`
 - **Return numpy arrays** (`.astype(np.float32)`), NOT Python lists (`.tolist()`)
 - **Type annotations ARE required** for Vector and complex types
+- **Use cocoindex.Json for development metadata** to avoid frequent schema changes
+- **Promote successful metadata to dedicated columns** for production performance
 - **ALWAYS ensure unique chunk locations** with post-processing to prevent PostgreSQL conflicts
 - **Use comprehensive primary keys** including `source_name` to handle multiple sources
 - **Apply `SplitRecursively(custom_languages=CUSTOM_LANGUAGES)`** with proper parameters

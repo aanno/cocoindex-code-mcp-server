@@ -316,12 +316,13 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
 
 
 @cocoindex.op.function()
-def extract_functions_field(metadata_json: str) -> str:
+def extract_functions_field(metadata_json: cocoindex.Json) -> str:
     """Extract functions field from metadata JSON."""
     try:
-        if not metadata_json or metadata_json.strip() == "":
+        if not metadata_json:
             return "[]"
-        metadata_dict = json.loads(metadata_json)
+        # metadata_json is already a dict when it's cocoindex.Json
+        metadata_dict = metadata_json if isinstance(metadata_json, dict) else json.loads(str(metadata_json))
         functions = metadata_dict.get("functions", [])
         # Ensure it's a list and convert to string representation
         if isinstance(functions, list):
@@ -334,12 +335,13 @@ def extract_functions_field(metadata_json: str) -> str:
 
 
 @cocoindex.op.function()
-def extract_classes_field(metadata_json: str) -> str:
+def extract_classes_field(metadata_json: cocoindex.Json) -> str:
     """Extract classes field from metadata JSON."""
     try:
-        if not metadata_json or metadata_json.strip() == "":
+        if not metadata_json:
             return "[]"
-        metadata_dict = json.loads(metadata_json)
+        # metadata_json is already a dict when it's cocoindex.Json
+        metadata_dict = metadata_json if isinstance(metadata_json, dict) else json.loads(str(metadata_json))
         classes = metadata_dict.get("classes", [])
         if isinstance(classes, list):
             return str(classes)
@@ -351,12 +353,13 @@ def extract_classes_field(metadata_json: str) -> str:
 
 
 @cocoindex.op.function()
-def extract_imports_field(metadata_json: str) -> str:
+def extract_imports_field(metadata_json: cocoindex.Json) -> str:
     """Extract imports field from metadata JSON."""
     try:
-        if not metadata_json or metadata_json.strip() == "":
+        if not metadata_json:
             return "[]"
-        metadata_dict = json.loads(metadata_json)
+        # metadata_json is already a dict when it's cocoindex.Json
+        metadata_dict = metadata_json if isinstance(metadata_json, dict) else json.loads(str(metadata_json))
         imports = metadata_dict.get("imports", [])
         if isinstance(imports, list):
             return str(imports)
@@ -368,12 +371,13 @@ def extract_imports_field(metadata_json: str) -> str:
 
 
 @cocoindex.op.function()
-def extract_complexity_score_field(metadata_json: str) -> int:
+def extract_complexity_score_field(metadata_json: cocoindex.Json) -> int:
     """Extract complexity_score field from metadata JSON."""
     try:
-        if not metadata_json or metadata_json.strip() == "":
+        if not metadata_json:
             return 0
-        metadata_dict = json.loads(metadata_json)
+        # metadata_json is already a dict when it's cocoindex.Json
+        metadata_dict = metadata_json if isinstance(metadata_json, dict) else json.loads(str(metadata_json))
         score = metadata_dict.get("complexity_score", 0)
         return int(score) if isinstance(score, (int, float, str)) and str(score).isdigit() else 0
     except Exception as e:
@@ -382,12 +386,13 @@ def extract_complexity_score_field(metadata_json: str) -> int:
 
 
 @cocoindex.op.function()
-def extract_has_type_hints_field(metadata_json: str) -> bool:
+def extract_has_type_hints_field(metadata_json: cocoindex.Json) -> bool:
     """Extract has_type_hints field from metadata JSON."""
     try:
-        if not metadata_json or metadata_json.strip() == "":
+        if not metadata_json:
             return False
-        metadata_dict = json.loads(metadata_json)
+        # metadata_json is already a dict when it's cocoindex.Json
+        metadata_dict = metadata_json if isinstance(metadata_json, dict) else json.loads(str(metadata_json))
         return bool(metadata_dict.get("has_type_hints", False))
     except Exception as e:
         LOGGER.debug(f"Failed to parse metadata JSON for has_type_hints: {e}")
@@ -395,12 +400,13 @@ def extract_has_type_hints_field(metadata_json: str) -> bool:
 
 
 @cocoindex.op.function()
-def extract_has_async_field(metadata_json: str) -> bool:
+def extract_has_async_field(metadata_json: cocoindex.Json) -> bool:
     """Extract has_async field from metadata JSON."""
     try:
-        if not metadata_json or metadata_json.strip() == "":
+        if not metadata_json:
             return False
-        metadata_dict = json.loads(metadata_json)
+        # metadata_json is already a dict when it's cocoindex.Json
+        metadata_dict = metadata_json if isinstance(metadata_json, dict) else json.loads(str(metadata_json))
         return bool(metadata_dict.get("has_async", False))
     except Exception as e:
         LOGGER.debug(f"Failed to parse metadata JSON for has_async: {e}")
@@ -467,12 +473,13 @@ def ensure_unique_chunk_locations(chunks) -> List[Chunk]:
 
 
 @cocoindex.op.function()
-def extract_has_classes_field(metadata_json: str) -> bool:
+def extract_has_classes_field(metadata_json: cocoindex.Json) -> bool:
     """Extract has_classes field from metadata JSON."""
     try:
-        if not metadata_json or metadata_json.strip() == "":
+        if not metadata_json:
             return False
-        metadata_dict = json.loads(metadata_json)
+        # metadata_json is already a dict when it's cocoindex.Json
+        metadata_dict = metadata_json if isinstance(metadata_json, dict) else json.loads(str(metadata_json))
         return bool(metadata_dict.get("has_classes", False))
     except Exception as e:
         LOGGER.debug(f"Failed to parse metadata JSON for has_classes: {e}")

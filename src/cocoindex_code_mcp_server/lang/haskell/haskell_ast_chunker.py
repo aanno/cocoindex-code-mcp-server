@@ -65,11 +65,11 @@ def get_enhanced_haskell_separators() -> List[str]:
         r"\ndo\s*$",
 
         # Language pragmas (usually at file top, high priority)
-        r"\n{-#\s*[A-Z]+",
+        r"\n\{-#\s*[A-Z]+",
 
         # Comment blocks (can be good separation points)
         r"\n--\s*[=-]{3,}",  # Comment separators like "-- ==="
-        r"\n{-\s*[=-]{3,}",  # Block comment separators
+        r"\n\{-\s*[=-]{3,}",  # Block comment separators
     ]
 
     return enhanced_separators
