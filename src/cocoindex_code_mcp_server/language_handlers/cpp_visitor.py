@@ -57,7 +57,7 @@ class CppASTVisitor(CASTVisitor):
                 if child.type == 'type_identifier':
                     text = child.text
                     if text is not None:
-                        class_name = child.text.decode('utf-8')
+                        class_name = text.decode('utf-8')
                         self.classes.append(class_name)
                         LOGGER.debug(f"Found C++ class: {class_name}")
                         break

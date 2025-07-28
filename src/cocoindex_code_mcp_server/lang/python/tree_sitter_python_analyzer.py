@@ -6,7 +6,7 @@ Combines the generic AST visitor framework with Python-specific node handlers.
 """
 
 import ast
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from ...ast_visitor import (
     ASTParserFactory,
@@ -243,7 +243,7 @@ class TreeSitterPythonAnalyzer:
 
         return merged
 
-    def _normalize_metadata(self, metadata: Dict[str, Any], code: str, filename: str) -> Dict[str, Any]:
+    def _normalize_metadata(self, metadata: Union[Dict[str, Any],None], code: str, filename: str) -> Dict[str, Any]:
         """Ensure metadata has all expected fields without overriding enhanced metadata."""
         base_metadata = {
             'language': 'Python',
@@ -578,7 +578,7 @@ def create_python_analyzer(prefer_tree_sitter: bool = True) -> TreeSitterPythonA
 
 
 # Convenience function for direct analysis
-def analyze_python_code(code: str, filename: str = "", prefer_tree_sitter: bool = True) -> Dict[str, Any]:
+def analyze_python_code(code: str, filename: str = "", prefer_tree_sitter: bool = True) -> Union[Dict[str, Any],None]:
     """Analyze Python code with the enhanced analyzer."""
     analyzer = create_python_analyzer(prefer_tree_sitter=prefer_tree_sitter)
     return analyzer.analyze_code(code, filename)

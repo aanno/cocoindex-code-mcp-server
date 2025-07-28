@@ -450,16 +450,25 @@ class HaskellNodeHandler:
             }
         }
 
+    # def _handle_data_declaration(self, context: NodeContext) -> Dict[str, Any]:
+    #     """Handle data type declarations."""
+    #     return self._handle_type_declaration(context, 'data')
+
+    # def _handle_newtype_declaration(self, context: NodeContext) -> Dict[str, Any]:
+    #     """Handle newtype declarations."""
+    #     return self._handle_type_declaration(context, 'newtype')
+
+    # def _handle_type_declaration(self, context: NodeContext) -> Dict[str, Any]:
+    #     """Handle type synonym declarations."""
+    #     return self._handle_type_declaration(context, 'type')
+    
     def _handle_data_declaration(self, context: NodeContext) -> Dict[str, Any]:
-        """Handle data type declarations."""
         return self._handle_type_declaration(context, 'data')
 
     def _handle_newtype_declaration(self, context: NodeContext) -> Dict[str, Any]:
-        """Handle newtype declarations."""
         return self._handle_type_declaration(context, 'newtype')
 
-    def _handle_type_declaration(self, context: NodeContext) -> Dict[str, Any]:
-        """Handle type synonym declarations."""
+    def _handle_typedef_declaration(self, context: NodeContext) -> Dict[str, Any]:
         return self._handle_type_declaration(context, 'type')
 
     def _handle_type_declaration(self, context: NodeContext, kind: str) -> Dict[str, Any]:
@@ -592,7 +601,7 @@ class HaskellNodeHandler:
 
     def _extract_export_list(self, exports_node, source_text: str) -> List[str]:
         """Extract list of exported items."""
-        exports = []
+        exports: List[str] = []
 
         if not hasattr(exports_node, 'children'):
             return exports
@@ -635,7 +644,7 @@ class HaskellNodeHandler:
 
     def _extract_import_list(self, import_list_node, source_text: str) -> List[str]:
         """Extract list of imported/hidden items."""
-        items = []
+        items: List[str] = []
 
         if not hasattr(import_list_node, 'children'):
             return items
@@ -732,7 +741,7 @@ class HaskellNodeHandler:
 
     def _extract_constructor_list(self, constructors_node, source_text: str) -> List[str]:
         """Extract data constructor names."""
-        constructors = []
+        constructors: List[str] = []
 
         if not hasattr(constructors_node, 'children'):
             return constructors
@@ -746,7 +755,7 @@ class HaskellNodeHandler:
 
     def _extract_deriving_clause(self, deriving_node, source_text: str) -> List[str]:
         """Extract deriving clause type classes."""
-        deriving_classes = []
+        deriving_classes: List[str] = []
 
         if not hasattr(deriving_node, 'children'):
             return deriving_classes
@@ -984,7 +993,7 @@ class HaskellNodeHandler:
             params_text = match.group(2).strip()
 
             # Parse parameters (simplified)
-            parameters = []
+            parameters: List[str] = []
             if params_text:
                 # Simple parameter parsing - just split on whitespace
                 parameters = params_text.split()

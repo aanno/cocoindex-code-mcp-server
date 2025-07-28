@@ -228,20 +228,34 @@ class PostgresBackend(VectorStoreBackend):
         if language == "Python":
             try:
                 metadata = analyze_python_code(code, filename)
-                result.metadata = {
-                    "functions": metadata.get("functions", []),
-                    "classes": metadata.get("classes", []),
-                    "imports": metadata.get("imports", []),
-                    "complexity_score": metadata.get("complexity_score", 0),
-                    "has_type_hints": metadata.get("has_type_hints", False),
-                    "has_async": metadata.get("has_async", False),
-                    "has_classes": metadata.get("has_classes", False),
-                    "private_methods": metadata.get("private_methods", []),
-                    "dunder_methods": metadata.get("dunder_methods", []),
-                    "decorators": metadata.get("decorators", []),
-                    "analysis_method": metadata.get("analysis_method", "python_ast"),
-                    "metadata_json": json.dumps(metadata, default=str)
-                }
+                if metadata is not None:
+                    result.metadata = {
+                        "functions": metadata.get("functions", []),
+                        "classes": metadata.get("classes", []),
+                        "imports": metadata.get("imports", []),
+                        "complexity_score": metadata.get("complexity_score", 0),
+                        "has_type_hints": metadata.get("has_type_hints", False),
+                        "has_async": metadata.get("has_async", False),
+                        "has_classes": metadata.get("has_classes", False),
+                        "private_methods": metadata.get("private_methods", []),
+                        "dunder_methods": metadata.get("dunder_methods", []),
+                        "decorators": metadata.get("decorators", []),
+                        "analysis_method": metadata.get("analysis_method", "python_ast"),
+                        "metadata_json": json.dumps(metadata, default=str)
+                    }
+                else:
+                # Fallback: add basic metadata fields even if analysis fails
+                    result.metadata = {
+                        "functions": [],
+                        "classes": [],
+                        "imports": [],
+                        "complexity_score": 0,
+                        "has_type_hints": False,
+                        "has_async": False,
+                        "has_classes": False,
+                        "analysis_method": "python_ast",
+                        "analysis_error": "metadata was None"
+                    }
             except Exception as e:
                 # Fallback: add basic metadata fields even if analysis fails
                 result.metadata = {

@@ -8,7 +8,7 @@ Enhanced with tree-sitter AST analysis and multi-level fallback strategies.
 import ast
 import json
 import re
-from typing import Any, Dict, List, Set, Optional
+from typing import Any, Dict, List, Set, Optional, Union
 
 from cocoindex_code_mcp_server.language_handlers.python_handler import PythonClass, PythonFunction, PythonImport
 
@@ -508,7 +508,7 @@ class PythonCodeAnalyzer:
         return fallback_metadata
 
 
-def analyze_python_code(code: str, filename: str = "") -> Dict[str, Any]:
+def analyze_python_code(code: str, filename: str = "") -> Union[Dict[str, Any],None]:
     """
     Enhanced Python code analysis with tree-sitter support and fallback strategies.
 

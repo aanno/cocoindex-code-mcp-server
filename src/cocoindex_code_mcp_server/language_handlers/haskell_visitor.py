@@ -146,11 +146,11 @@ class HaskellChunkContext(NodeContext):
             source_text=source_code
         )
 
-    def get_node_text(self) -> Union[str,None]:
+    def get_node_text(self) -> str:
         """Get text from the chunk."""
         node = self.node
         if node is None:
-            return None
+            return ""
         return node.text()
 
     def get_position(self) -> Position:

@@ -282,17 +282,20 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
             }
 
         # Return just the JSON string for now
-        result = {
-            "functions": metadata.get("functions", []),
-            "classes": metadata.get("classes", []),
-            "imports": metadata.get("imports", []),
-            "complexity_score": metadata.get("complexity_score", 0),
-            "has_type_hints": metadata.get("has_type_hints", False),
-            "has_async": metadata.get("has_async", False),
-            "has_classes": metadata.get("has_classes", False),
-            "decorators_used": metadata.get("decorators_used", []),
-            "analysis_method": metadata.get("analysis_method", "basic"),
-        }
+        if metadata is not None:
+            result = {
+                "functions": metadata.get("functions", []),
+                "classes": metadata.get("classes", []),
+                "imports": metadata.get("imports", []),
+                "complexity_score": metadata.get("complexity_score", 0),
+                "has_type_hints": metadata.get("has_type_hints", False),
+                "has_async": metadata.get("has_async", False),
+                "has_classes": metadata.get("has_classes", False),
+                "decorators_used": metadata.get("decorators_used", []),
+                "analysis_method": metadata.get("analysis_method", "basic"),
+            }
+        else:
+            result = {}
         return json.dumps(result)
 
     except Exception as e:
