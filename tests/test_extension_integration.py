@@ -17,7 +17,7 @@ def test_extension_integration():
 
     try:
         # Import the configuration
-        from cocoindex_config import (
+        from cocoindex_code_mcp_server.cocoindex_config import (
             AST_CHUNKING_AVAILABLE,
             PYTHON_HANDLER_AVAILABLE,
             SMART_EMBEDDING_AVAILABLE,

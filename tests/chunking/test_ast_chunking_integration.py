@@ -13,7 +13,7 @@ from typing import Dict, List, Union
 LOGGER = logging.getLogger(__name__)
 
 try:
-    from ast_chunking import CocoIndexASTChunker
+    from cocoindex_code_mcp_server.ast_chunking import CocoIndexASTChunker
     AST_CHUNKING_AVAILABLE = True
 except ImportError as e:
     LOGGER.warning(f"AST chunking not available: {e}")

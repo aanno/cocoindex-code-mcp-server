@@ -4,7 +4,7 @@
 Comprehensive tests for AST-based Haskell chunking functionality.
 """
 
-import haskell_tree_sitter
+import cocoindex_code_mcp_server.haskell_tree_sitter
 import pytest
 
 from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (

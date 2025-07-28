@@ -7,7 +7,7 @@ Test fallback mechanisms for different chunking scenarios.
 import pytest
 
 try:
-    from ast_chunking import CocoIndexASTChunker, detect_language_from_filename
+    from cocoindex_code_mcp_server.ast_chunking import CocoIndexASTChunker, detect_language_from_filename
     COCOINDEX_AST_AVAILABLE = True
 except ImportError:
     COCOINDEX_AST_AVAILABLE = False

@@ -170,7 +170,7 @@ class TestDuplicateKeyDebug:
 
         # Check if Rust is supported by AST chunking
         if AST_CHUNKING_AVAILABLE:
-            from ast_chunking import CocoIndexASTChunker
+            from cocoindex_code_mcp_server.ast_chunking import CocoIndexASTChunker
             chunker = CocoIndexASTChunker()
             is_supported = chunker.is_supported_language(language)
             print(f"Rust supported by AST chunking: {is_supported}")

@@ -124,8 +124,8 @@ class TestMCPServerModuleIntegration:
             cocoindex.init()
 
             # Import required modules after cocoindex init
-            import smart_code_embedding
-            from cocoindex_config import code_embedding_flow, update_flow_config
+            import cocoindex_code_mcp_server.smart_code_embedding
+            from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow, update_flow_config
 
             # Spy on the smart embedding function
             create_spy = mocker.spy(smart_code_embedding, "create_smart_code_embedding")
@@ -133,7 +133,7 @@ class TestMCPServerModuleIntegration:
 
             # Try to spy on LanguageModelSelector if available
             try:
-                from smart_code_embedding import LanguageModelSelector
+                from cocoindex_code_mcp_server.smart_code_embedding import LanguageModelSelector
                 selector_spy = mocker.spy(LanguageModelSelector, "select_model")
             except Exception:
                 pass
@@ -184,9 +184,9 @@ class TestMCPServerModuleIntegration:
             cocoindex.init()
 
             # Import required modules after cocoindex init
-            import ast_chunking
-            from ast_chunking import CocoIndexASTChunker
-            from cocoindex_config import code_embedding_flow, update_flow_config
+            import cocoindex_code_mcp_server.ast_chunking
+            from cocoindex_code_mcp_server.ast_chunking import CocoIndexASTChunker
+            from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow, update_flow_config
 
             # Spy on AST chunking functions
             chunk_code_spy = mocker.spy(CocoIndexASTChunker, "chunk_code")
@@ -307,7 +307,7 @@ class TestMCPServerQueryIntegration:
         """Test that extensions are used during hybrid search queries."""
         try:
             # Import required modules
-            from cocoindex_config import code_embedding_flow, update_flow_config
+            from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow, update_flow_config
             from psycopg_pool import ConnectionPool
 
             import cocoindex

@@ -136,7 +136,7 @@ class TestEmbeddingFunctionIntegration:
 
     def test_model_configuration_consistency(self):
         """Test that embedding functions are consistent with model group configuration."""
-        from cocoindex_config import LANGUAGE_MODEL_GROUPS
+        from cocoindex_code_mcp_server.cocoindex_config import LANGUAGE_MODEL_GROUPS
 
         # This test verifies that the expected models are configured
         assert LANGUAGE_MODEL_GROUPS['graphcodebert']['model'] == 'microsoft/graphcodebert-base'

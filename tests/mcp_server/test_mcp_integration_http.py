@@ -14,6 +14,7 @@ import os
 from contextlib import AsyncExitStack
 from typing import Any
 
+from pydantic import AnyUrl
 import pytest
 import pytest_asyncio
 from dotenv import load_dotenv
@@ -105,7 +106,7 @@ class MCPServer:
         if not self.session:
             raise RuntimeError(f"MCP Server {self.name} not initialized")
 
-        return await self.session.read_resource(uri)
+        return await self.session.read_resource(AnyUrl(uri))
 
     async def execute_tool(
         self,

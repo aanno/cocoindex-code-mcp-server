@@ -51,7 +51,7 @@ class TestEnhancedHaskellSeparators:
 
     def test_separators_include_base(self):
         """Test that enhanced separators include base separators."""
-        import haskell_tree_sitter
+        import cocoindex_code_mcp_server.haskell_tree_sitter
         base_separators = haskell_tree_sitter.get_haskell_separators()
         enhanced_separators = get_enhanced_haskell_separators()
 
