@@ -327,6 +327,10 @@ chunks = chunks.transform(ensure_unique_chunk_locations)
 |-------|-------|----------|
 | `operator class "vector_cosine_ops" does not accept data type jsonb` | Using Python lists instead of Vector types | Use `Vector[np.float32, Literal[dim]]` and return numpy arrays |
 | `ON CONFLICT DO UPDATE command cannot affect row a second time` | Duplicate chunk locations within same file | Post-process chunks with `ensure_unique_chunk_locations()` |
+| `data did not match any variant of untagged enum ValueType` | Union types in dataclass fields (e.g., `Dict[str, Union[...]]`) | Use `cocoindex.Json` for flexible metadata fields |
+| `Type mismatch for metadata_json: passed in Json, declared <class 'str'>` | Functions expecting `str` but receiving `cocoindex.Json` | Update function signatures to accept `cocoindex.Json` |
+| `Untyped dict is not accepted as a specific type annotation` | Using generic `dict` or `list` return types | Use specific types like `list[SomeClass]` or `cocoindex.Json` |
+| `regex parse error: repetition quantifier expects a valid decimal` | Unescaped `{` in regex patterns | Escape curly braces: `r"\{-#"` instead of `r"{-#"` |
 | `NameError: name 'lang' is not defined` | Variable name mismatch in function | Check function parameter names match usage |
 | `Unsupported as a specific type annotation: typing.Any` | Using `typing.Any` in return types | Remove or use specific types |
 | `Setup for flow is not up-to-date` | Flow not set up | Run `cocoindex setup src/config.py` |
@@ -464,3 +468,69 @@ When adding new metadata fields to collection, remember:
 2. Test with `cocoindex evaluate` to verify field population
 3. Check that evaluation outputs show your custom fields
 4. Ensure primary key covers all uniqueness requirements
+
+### ValueType and Type System Debugging
+
+The most complex CocoIndex issues often involve the type system and serialization. Here are key debugging lessons:
+
+#### 1. ValueType Deserialization Errors
+**Root cause:** Union types in dataclass fields cause serialization failures.
+
+```python
+# ❌ PROBLEMATIC: Union types in nested structures
+@dataclass
+class Chunk:
+    metadata: Dict[str, Union[str, int, float, bool]]  # Breaks ValueType enum
+
+# ✅ SOLUTION: Use cocoindex.Json for flexible metadata
+@dataclass  
+class Chunk:
+    metadata: cocoindex.Json  # Handles any JSON-serializable data
+```
+
+#### 2. Function Parameter Type Mismatches
+**Root cause:** Functions expecting one type but receiving another due to schema changes.
+
+```python
+# ❌ PROBLEMATIC: Function expects string but receives Json
+@cocoindex.op.function()
+def extract_field(metadata_json: str) -> str:
+    return json.loads(metadata_json)["field"]
+
+# ✅ SOLUTION: Update to accept cocoindex.Json
+@cocoindex.op.function()
+def extract_field(metadata_json: cocoindex.Json) -> str:
+    metadata_dict = metadata_json if isinstance(metadata_json, dict) else json.loads(str(metadata_json))
+    return str(metadata_dict.get("field", ""))
+```
+
+#### 3. Regex Pattern Issues in Language Configurations
+**Root cause:** Unescaped special characters in regex patterns.
+
+```python
+# ❌ PROBLEMATIC: Unescaped curly braces
+separators = [
+    r"\n{-#\s*[A-Z]+",  # Breaks: { is quantifier syntax
+]
+
+# ✅ SOLUTION: Escape special regex characters  
+separators = [
+    r"\n\{-#\s*[A-Z]+",  # Works: \{ matches literal brace
+]
+```
+
+#### 4. Development Workflow for Type Issues
+When encountering type system errors:
+
+1. **Isolate the problem** - Create minimal reproduction script
+2. **Check union types** - Replace `Union[...]` in dataclasses with `cocoindex.Json`
+3. **Verify function signatures** - Ensure parameter types match data being passed
+4. **Test incrementally** - Fix one type issue at a time
+5. **Use development metadata strategy** - Keep experimental fields in `cocoindex.Json` until proven
+
+#### 5. Type System Best Practices Summary
+- **Avoid unions in dataclass fields** - Use `cocoindex.Json` for flexible metadata
+- **Keep type annotations** - They are required, not optional in modern CocoIndex
+- **Handle both dict and string inputs** - Functions may receive either depending on context
+- **Escape regex special characters** - Language configuration regexes need proper escaping
+- **Test with minimal examples** - Isolate type issues before fixing in main codebase
