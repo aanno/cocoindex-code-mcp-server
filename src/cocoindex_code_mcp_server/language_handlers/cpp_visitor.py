@@ -55,10 +55,12 @@ class CppASTVisitor(CASTVisitor):
             # Look for class name (identifier after 'class' keyword)
             for child in node.children:
                 if child.type == 'type_identifier':
-                    class_name = child.text.decode('utf-8')
-                    self.classes.append(class_name)
-                    LOGGER.debug(f"Found C++ class: {class_name}")
-                    break
+                    text = child.text
+                    if text is not None:
+                        class_name = child.text.decode('utf-8')
+                        self.classes.append(class_name)
+                        LOGGER.debug(f"Found C++ class: {class_name}")
+                        break
         except Exception as e:
             LOGGER.warning(f"Error extracting C++ class: {e}")
 
@@ -68,9 +70,11 @@ class CppASTVisitor(CASTVisitor):
             # Look for namespace name
             for child in node.children:
                 if child.type == 'identifier':
-                    namespace_name = child.text.decode('utf-8')
-                    self.namespaces.append(namespace_name)
-                    LOGGER.debug(f"Found C++ namespace: {namespace_name}")
+                    text = child.text
+                    if text is not None:
+                        namespace_name = text.decode('utf-8')
+                        self.namespaces.append(namespace_name)
+                        LOGGER.debug(f"Found C++ namespace: {namespace_name}")
                     break
         except Exception as e:
             LOGGER.warning(f"Error extracting C++ namespace: {e}")

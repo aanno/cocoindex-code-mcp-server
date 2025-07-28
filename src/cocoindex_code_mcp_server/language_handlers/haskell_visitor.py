@@ -7,7 +7,7 @@ This avoids the complexity of trying to wrap chunks in a generic tree-sitter int
 
 import os
 import sys
-from typing import Any, Dict
+from typing import Any, Dict, Union
 
 from ..ast_visitor import GenericMetadataVisitor, NodeContext
 from ..language_handlers.haskell_handler import HaskellNodeHandler
@@ -146,9 +146,12 @@ class HaskellChunkContext(NodeContext):
             source_text=source_code
         )
 
-    def get_node_text(self) -> str:
+    def get_node_text(self) -> Union[str,None]:
         """Get text from the chunk."""
-        return self.node.text()
+        node = self.node
+        if node is None:
+            return None
+        return node.text()
 
     def get_position(self) -> Position:
         """Get position from the chunk."""

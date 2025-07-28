@@ -35,7 +35,7 @@ class TreeSitterPythonAnalyzer:
         self.multilevel_analyzer = MultiLevelAnalyzer()
         self.parser_factory = ASTParserFactory()
 
-    def analyze_code(self, code: str, filename: str = "") -> Dict[str, Any]:
+    def analyze_code(self, code: str, filename: str = "") -> Union[Dict[str, Any], None]:
         """
         Analyze Python code and extract comprehensive metadata.
 
@@ -521,7 +521,7 @@ class PythonASTVisitor(ast.NodeVisitor):
         else:
             return ast.unparse(decorator)
 
-    def _get_annotation_name(self, annotation) -> str:
+    def _get_annotation_name(self, annotation) -> Union[str,None]:
         """Extract type annotation name."""
         if annotation is None:
             return None

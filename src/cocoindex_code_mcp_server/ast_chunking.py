@@ -137,7 +137,7 @@ class CocoIndexASTChunker:
         """Check if the language is supported by ASTChunk."""
         return language in self.LANGUAGE_MAP
 
-    def chunk_code(self, code: str, language: str, file_path: str = "") -> List[Dict[str, Any]]:
+    def chunk_code(self, code: str, language: str, file_path: str = "") -> List[Chunk]:
         """
         Chunk code using AST-based chunking.
 
@@ -173,7 +173,7 @@ class CocoIndexASTChunker:
             chunks = builder.chunkify(code, **configs)
 
             # Convert ASTChunk format to CocoIndex format
-            result_chunks = []
+            result_chunks: List[Chunk] = []
             for i, chunk in enumerate(chunks):
                 # Extract content and metadata
                 content = chunk.get('content', chunk.get('context', ''))
@@ -202,7 +202,7 @@ class CocoIndexASTChunker:
             LOGGER.error(f"AST chunking failed for {language}: {e}")
             return self._fallback_chunking(code, language, file_path)
 
-    def _fallback_chunking(self, code: str, language: str, file_path: str) -> List[Dict[str, Any]]:
+    def _fallback_chunking(self, code: str, language: str, file_path: str) -> List[Chunk]:
         """
         Fallback to our existing Haskell chunking or simple text chunking.
 
@@ -220,7 +220,7 @@ class CocoIndexASTChunker:
                 from .lang.haskell.haskell_ast_chunker import extract_haskell_ast_chunks
                 chunks: list = extract_haskell_ast_chunks(code)
 
-                result_chunks = []
+                result_chunks: List[Chunk] = []
                 for i, chunk in enumerate(chunks):
                     metadata = {
                         "chunk_id": i,
@@ -249,7 +249,7 @@ class CocoIndexASTChunker:
         # Simple text chunking as last resort
         return self._simple_text_chunking(code, language, file_path)
 
-    def _simple_text_chunking(self, code: str, language: str, file_path: str) -> List[Dict[str, Any]]:
+    def _simple_text_chunking(self, code: str, language: str, file_path: str) -> List[Chunk]:
         """
         Simple text-based chunking as a fallback.
 
@@ -404,7 +404,7 @@ def create_hybrid_chunking_operation():
 
             if chunker.is_supported_language(lang):
                 # Use AST-based chunking
-                chunks = chunker.chunk_code(code, lang, file_path)
+                chunks: List[Chunk] = chunker.chunk_code(code, lang, file_path)
                 LOGGER.debug(f"AST chunking created {len(chunks)} chunks for {lang}")
 
                 # Convert to CocoIndex format
