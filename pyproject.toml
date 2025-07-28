@@ -107,6 +107,9 @@ max_line_length = 120
 # strict = true
 # check-untyped-defs = true
 # local-partial-type = true
+check_untyped_defs = true
+ignore_missing_imports = false
+local_partial_types = false
 
 [[tool.mypy.overrides]]
 module = ["pgvector.*", "mypy-haskell_tree_sitter.*", "mypy-astchunk.*", "haskell_tree_sitter.*", "astchunk.*"]
