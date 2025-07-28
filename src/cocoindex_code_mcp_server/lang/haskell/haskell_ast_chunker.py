@@ -477,7 +477,7 @@ def create_enhanced_regex_fallback_chunks(content: str, file_path: str,
     """
     separators = get_enhanced_haskell_separators()
     lines = content.split('\n')
-    chunks = []
+    chunks: List[HaskellChunk] = []
 
     current_start = 0
     current_size = 0

@@ -55,7 +55,9 @@ class KotlinASTVisitor(GenericMetadataVisitor):
             # Kotlin function structure: function_declaration -> identifier (after 'fun' keyword)
             for child in node.children:
                 if child.type == 'identifier':
-                    func_name = child.text.decode('utf-8')
+                    text = child.text
+                    if text is not None:
+                        func_name = child.text.decode('utf-8')
                     self.functions.append(func_name)
                     LOGGER.debug(f"Found Kotlin function: {func_name}")
                     break  # Take the first identifier (function name)

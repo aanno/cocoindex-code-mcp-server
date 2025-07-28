@@ -53,7 +53,9 @@ class CASTVisitor(GenericMetadataVisitor):
             if declarator:
                 identifier = self._find_child_by_type(declarator, 'identifier')
                 if identifier:
-                    func_name = identifier.text.decode('utf-8')
+                    text = child.text
+                    if text is not None:
+                        func_name = identifier.text.decode('utf-8')
                     self.functions.append(func_name)
                     LOGGER.debug(f"Found C function: {func_name}")
         except Exception as e:
@@ -65,7 +67,9 @@ class CASTVisitor(GenericMetadataVisitor):
             # Look for struct name (identifier after 'struct' keyword)
             for child in node.children:
                 if child.type == 'type_identifier':
-                    struct_name = child.text.decode('utf-8')
+                    text = child.text
+                    if text is not None:
+                        struct_name = child.text.decode('utf-8')
                     self.structs.append(struct_name)
                     LOGGER.debug(f"Found C struct: {struct_name}")
                     break

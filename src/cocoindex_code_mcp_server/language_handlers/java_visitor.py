@@ -59,7 +59,9 @@ class JavaASTVisitor(GenericMetadataVisitor):
             # Java method structure: method_declaration -> identifier
             for child in node.children:
                 if child.type == 'identifier':
-                    method_name = child.text.decode('utf-8')
+                    text = child.text
+                    if text is not None:
+                        method_name = child.text.decode('utf-8')
                     self.functions.append(method_name)
                     LOGGER.debug(f"Found Java method: {method_name}")
                     break
@@ -72,7 +74,9 @@ class JavaASTVisitor(GenericMetadataVisitor):
             # Java constructor structure: constructor_declaration -> identifier
             for child in node.children:
                 if child.type == 'identifier':
-                    constructor_name = child.text.decode('utf-8')
+                    text = child.text
+                    if text is not None:
+                        constructor_name = child.text.decode('utf-8')
                     self.functions.append(constructor_name)  # Treat constructors as functions
                     LOGGER.debug(f"Found Java constructor: {constructor_name}")
                     break
@@ -85,7 +89,9 @@ class JavaASTVisitor(GenericMetadataVisitor):
             # Look for class name (identifier after 'class' keyword)
             for child in node.children:
                 if child.type == 'identifier':
-                    class_name = child.text.decode('utf-8')
+                    text = child.text
+                    if text is not None:
+                        class_name = child.text.decode('utf-8')
                     self.classes.append(class_name)
                     LOGGER.debug(f"Found Java class: {class_name}")
                     break
@@ -98,7 +104,9 @@ class JavaASTVisitor(GenericMetadataVisitor):
             # Look for interface name
             for child in node.children:
                 if child.type == 'identifier':
-                    interface_name = child.text.decode('utf-8')
+                    text = child.text
+                    if text is not None:
+                        interface_name = child.text.decode('utf-8')
                     self.interfaces.append(interface_name)
                     LOGGER.debug(f"Found Java interface: {interface_name}")
                     break

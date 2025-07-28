@@ -15,6 +15,8 @@ from numpy.typing import NDArray
 from pgvector.psycopg import register_vector
 from psycopg_pool import ConnectionPool
 
+from cocoindex_code_mcp_server.keyword_search_parser import SearchCondition, SearchGroup
+
 from . import VectorStoreBackend, SearchResult, QueryFilters
 from ..keyword_search_parser_lark import build_sql_where_clause
 from ..lang.python.python_code_analyzer import analyze_python_code
@@ -195,7 +197,7 @@ class PostgresBackend(VectorStoreBackend):
         """Convert QueryFilters to PostgreSQL WHERE clause."""
         # Create a mock search group compatible with existing parser
         class MockSearchGroup:
-            def __init__(self, conditions: List[Dict[str, Any]]):
+            def __init__(self, conditions: List[SearchCondition | SearchGroup]):
                 self.conditions = conditions
         
         search_group = MockSearchGroup(filters.conditions)

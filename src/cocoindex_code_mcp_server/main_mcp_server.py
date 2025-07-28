@@ -340,7 +340,7 @@ def main(
         logger.info(f"⏰ Polling interval: {poll} seconds")
 
     # Create the MCP server
-    app = Server("cocoindex-rag")
+    app: Server = Server("cocoindex-rag")
 
     @app.list_tools()
     async def list_tools() -> list[types.Tool]:
@@ -434,13 +434,14 @@ def main(
         keyword_weight = arguments.get("keyword_weight", 0.3)
 
         try:
-            results = hybrid_search_engine.search(
-                vector_query=vector_query,
-                keyword_query=keyword_query,
-                top_k=top_k,
-                vector_weight=vector_weight,
-                keyword_weight=keyword_weight
-            )
+            if hybrid_search_engine is not None:
+                results = hybrid_search_engine.search(
+                    vector_query=vector_query,
+                    keyword_query=keyword_query,
+                    top_k=top_k,
+                    vector_weight=vector_weight,
+                    keyword_weight=keyword_weight
+                )
         except ValueError as e:
             # Handle field validation errors with helpful messages
             error_msg = str(e)
@@ -474,13 +475,14 @@ def main(
         query = arguments["query"]
         top_k = arguments.get("top_k", 10)
 
-        results = hybrid_search_engine.search(
-            vector_query=query,
-            keyword_query="",
-            top_k=top_k,
-            vector_weight=1.0,
-            keyword_weight=0.0
-        )
+        if hybrid_search_engine is not None:
+            results = hybrid_search_engine.search(
+                vector_query=query,
+                keyword_query="",
+                top_k=top_k,
+                vector_weight=1.0,
+                keyword_weight=0.0
+            )
 
         return {
             "query": query,
@@ -493,13 +495,14 @@ def main(
         query = arguments["query"]
         top_k = arguments.get("top_k", 10)
 
-        results = hybrid_search_engine.search(
-            vector_query="",
-            keyword_query=query,
-            top_k=top_k,
-            vector_weight=0.0,
-            keyword_weight=1.0
-        )
+        if hybrid_search_engine is not None:
+            results = hybrid_search_engine.search(
+                vector_query="",
+                keyword_query=query,
+                top_k=top_k,
+                vector_weight=0.0,
+                keyword_weight=1.0
+            )
 
         return {
             "query": query,
@@ -542,8 +545,9 @@ def main(
     async def get_embeddings_tool(arguments: dict) -> dict:
         """Generate embeddings for text."""
         text = arguments["text"]
-
-        embedding = hybrid_search_engine.embedding_func(text)
+        
+        if hybrid_search_engine is not None:
+            embedding = hybrid_search_engine.embedding_func(text)
 
         return {
             "text": text,
@@ -820,6 +824,7 @@ QUOTED_VALUE: /"[^"]*"/
         if not database_url:
             raise ValueError("COCOINDEX_DATABASE_URL not found in environment")
 
+        pool = ConnectionPool(database_url)
         # Use connection pool as context manager for proper cleanup
         async with session_manager.run():
             logger.info("🚀 MCP Server started with StreamableHTTP session manager!")
@@ -866,7 +871,7 @@ QUOTED_VALUE: /"[^"]*"/
 # These are created when the module is imported for testing
 try:
     # Create a test server instance for module-level access using the same functions
-    server = Server(AnyUrl("cocoindex-rag-test"))
+    server: Server = Server("cocoindex-rag-test")
 
     @server.list_tools()
     async def handle_list_tools() -> list[types.Tool]:

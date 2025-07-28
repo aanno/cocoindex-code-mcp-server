@@ -7,7 +7,7 @@ Updated to use the VectorStoreBackend abstraction layer.
 
 import json
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 from prompt_toolkit import PromptSession
 from prompt_toolkit.key_binding import KeyBindings
@@ -27,8 +27,9 @@ from cocoindex_code_mcp_server.keyword_search_parser_lark import (
 class HybridSearchEngine:
     """Hybrid search engine combining vector and keyword search."""
 
-    def __init__(self, backend: VectorStoreBackend = None, pool: ConnectionPool = None,
-                 table_name: str = None, parser: KeywordSearchParser = None, 
+    def __init__(self, table_name: str, parser: KeywordSearchParser,
+                 backend: Union[VectorStoreBackend,None] = None, 
+                 pool: Union[ConnectionPool,None] = None, 
                  embedding_func=None):
         # Support both new backend interface and legacy direct pool access
         if backend is not None:
@@ -222,7 +223,7 @@ def get_multiline_input(prompt_text: str) -> str:
     def _(event):
         event.app.exit(result=event.app.current_buffer.text)
 
-    session = PromptSession(key_bindings=bindings, multiline=True)
+    session: PromptSession = PromptSession(key_bindings=bindings, multiline=True)
 
     print(f"{prompt_text} (finish with Ctrl+Q):")
     try:

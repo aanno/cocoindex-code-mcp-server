@@ -57,7 +57,9 @@ class RustASTVisitor(GenericMetadataVisitor):
             # Rust function structure: function_item -> identifier (after 'fn' keyword)
             for child in node.children:
                 if child.type == 'identifier':
-                    func_name = child.text.decode('utf-8')
+                    text = child.text
+                    if text is not None:
+                        func_name = child.text.decode('utf-8')
                     self.functions.append(func_name)
                     LOGGER.debug(f"Found Rust function: {func_name}")
                     break  # Take the first identifier (function name)
