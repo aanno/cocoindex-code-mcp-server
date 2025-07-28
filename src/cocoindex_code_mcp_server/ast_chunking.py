@@ -15,13 +15,37 @@ from typing import Any, Dict, List, Optional
 from cocoindex_code_mcp_server import LOGGER
 
 
-@dataclass(frozen=True)
+@dataclass
 class Chunk:
     """Represents a code chunk with text and location metadata."""
-    text: str
-    location: str
-    start: int
-    end: int
+    content: str
+    metadata: Dict[str, Any]
+    location: str = ""
+    start: int = 0
+    end: int = 0
+    
+    def __getitem__(self, key: str) -> Any:
+        """Allow dictionary-style access."""
+        if hasattr(self, key):
+            return getattr(self, key)
+        elif key in self.metadata:
+            return self.metadata[key]
+        else:
+            raise KeyError(f"Key '{key}' not found in chunk")
+    
+    def __setitem__(self, key: str, value: Any) -> None:
+        """Allow dictionary-style assignment."""
+        if hasattr(self, key):
+            setattr(self, key, value)
+        else:
+            self.metadata[key] = value
+    
+    def get(self, key: str, default: Any = None) -> Any:
+        """Dictionary-style get method."""
+        try:
+            return self[key]
+        except KeyError:
+            return default
 
 
 try:
@@ -190,10 +214,10 @@ class CocoIndexASTChunker:
                     **metadata
                 }
 
-                result_chunks.append({
-                    "content": content,
-                    "metadata": enhanced_metadata
-                })
+                result_chunks.append(Chunk(
+                    content=content,
+                    metadata=enhanced_metadata
+                ))
 
             LOGGER.info(f"AST chunking created {len(result_chunks)} chunks for {language}")
             return result_chunks
@@ -217,8 +241,11 @@ class CocoIndexASTChunker:
         # Use our existing Haskell chunking for Haskell code
         if language == "Haskell":
             try:
-                from .lang.haskell.haskell_ast_chunker import extract_haskell_ast_chunks
-                chunks: list = extract_haskell_ast_chunks(code)
+                # Import and call Haskell chunker
+                import importlib
+                haskell_module = importlib.import_module('.lang.haskell.haskell_ast_chunker', 'cocoindex_code_mcp_server')
+                extract_func = getattr(haskell_module, 'extract_haskell_ast_chunks')
+                chunks: List[Any] = extract_func(code)
 
                 result_chunks: List[Chunk] = []
                 for i, chunk in enumerate(chunks):
@@ -235,10 +262,10 @@ class CocoIndexASTChunker:
                         **chunk.metadata()
                     }
 
-                    result_chunks.append({
-                        "content": chunk.text(),
-                        "metadata": metadata
-                    })
+                    result_chunks.append(Chunk(
+                        content=chunk.text(),
+                        metadata=metadata
+                    ))
 
                 LOGGER.info(f"Haskell AST chunking created {len(result_chunks)} chunks")
                 return result_chunks
@@ -281,10 +308,10 @@ class CocoIndexASTChunker:
                     "end_line": i + len(chunk_lines)
                 }
 
-                chunks.append({
-                    "content": content,
-                    "metadata": metadata
-                })
+                chunks.append(Chunk(
+                    content=content,
+                    metadata=metadata
+                ))
 
         LOGGER.info(f"Simple text chunking created {len(chunks)} chunks")
         return chunks
@@ -349,7 +376,8 @@ def create_ast_chunking_operation():
                 location = f"line:{start_line}#{chunk_id}"
 
             chunks.append(Chunk(
-                text=chunk.get("content", ""),
+                content=chunk.get("content", ""),
+                metadata=metadata,
                 location=location,
                 start=start_line,
                 end=metadata.get("end_line", 0)

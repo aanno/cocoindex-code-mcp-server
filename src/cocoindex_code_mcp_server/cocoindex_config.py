@@ -452,7 +452,8 @@ def ensure_unique_chunk_locations(chunks) -> List[Chunk]:
 
         # Always create Chunk dataclass with unique location
         unique_chunk = Chunk(
-            text=text,
+            content=text,
+            metadata={},
             location=unique_loc,
             start=start,
             end=end
