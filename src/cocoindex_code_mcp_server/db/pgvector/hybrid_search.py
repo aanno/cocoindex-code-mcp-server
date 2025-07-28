@@ -46,6 +46,16 @@ class HybridSearchEngine:
         self.parser = parser or KeywordSearchParser()
         self.embedding_func = embedding_func or (lambda q: code_to_embedding.eval(q))
 
+    @property
+    def pool(self):
+        """Access to the database connection pool via backend."""
+        return getattr(self.backend, 'pool', None)
+
+    @property  
+    def table_name(self):
+        """Access to the table name via backend."""
+        return getattr(self.backend, 'table_name', None)
+
     def search(
         self,
         vector_query: str,
@@ -242,7 +252,15 @@ def run_interactive_hybrid_search():
 
     pool = ConnectionPool(url)
     # Use legacy constructor for backward compatibility
-    search_engine = HybridSearchEngine(pool=pool)
+    table_name = cocoindex.utils.get_target_default_name(
+        code_embedding_flow, "code_embeddings"
+    )
+    parser = KeywordSearchParser()
+    search_engine = HybridSearchEngine(
+        table_name=table_name,
+        pool=pool,
+        parser=parser
+    )
 
     print("\n🔍 Interactive Hybrid Search Mode")
     print("Enter two types of queries:")

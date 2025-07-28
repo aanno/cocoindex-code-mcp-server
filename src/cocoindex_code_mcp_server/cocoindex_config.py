@@ -721,12 +721,19 @@ def code_embedding_flow(
                 file["chunks"] = raw_chunks.transform(ensure_unique_chunk_locations)
             else:
                 LOGGER.info("Using AST chunking extension")
-                raw_chunks = file["content"].transform(
-                    ASTChunkOperation,
-                    language=file["language"],
-                    max_chunk_size=file["chunking_params"]["chunk_size"],
-                    chunk_overlap=file["chunking_params"]["chunk_overlap"]
-                )
+                if ASTChunkOperation is not None:
+                    raw_chunks = file["content"].transform(
+                        ASTChunkOperation,
+                        language=file["language"],
+                        max_chunk_size=file["chunking_params"]["chunk_size"],
+                        chunk_overlap=file["chunking_params"]["chunk_overlap"]
+                    )
+                else:
+                    # Fallback to basic chunking if AST operation is not available
+                    # Use a simple text chunking approach
+                    raw_chunks = file["content"].transform(
+                        lambda text: [{"text": text, "location": "full_file", "start": 0, "end": len(text)}]
+                    )
                 # Ensure unique locations for AST chunking (safety measure)
                 file["chunks"] = raw_chunks.transform(ensure_unique_chunk_locations)
 

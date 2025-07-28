@@ -218,7 +218,7 @@ class CocoIndexASTChunker:
         if language == "Haskell":
             try:
                 from .lang.haskell.haskell_ast_chunker import extract_haskell_ast_chunks
-                chunks = extract_haskell_ast_chunks(code)
+                chunks: list = extract_haskell_ast_chunks(code)
 
                 result_chunks = []
                 for i, chunk in enumerate(chunks):
@@ -262,7 +262,7 @@ class CocoIndexASTChunker:
             List of chunk dictionaries
         """
         lines = code.split('\n')
-        chunks = []
+        chunks: list[Chunk] = []
         chunk_size = self.max_chunk_size // 10  # Rough estimate for lines
 
         for i in range(0, len(lines), chunk_size):

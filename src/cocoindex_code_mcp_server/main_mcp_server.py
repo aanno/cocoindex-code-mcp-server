@@ -35,7 +35,7 @@ from starlette.types import Receive, Scope, Send
 
 import cocoindex
 
-from .cocoindex_config import code_to_embedding, run_flow_update, update_flow_config
+from .cocoindex_config import code_to_embedding, run_flow_update, update_flow_config, code_embedding_flow
 
 # Local imports
 from .db.pgvector.hybrid_search import HybridSearchEngine
@@ -759,7 +759,11 @@ QUOTED_VALUE: /"[^"]*"/
             parser = KeywordSearchParser()
 
             # Initialize hybrid search engine
+            table_name = cocoindex.utils.get_target_default_name(
+                code_embedding_flow, "code_embeddings"
+            )
             hybrid_search_engine = HybridSearchEngine(
+                table_name=table_name,
                 pool=pool,
                 parser=parser,
                 embedding_func=safe_embedding_function

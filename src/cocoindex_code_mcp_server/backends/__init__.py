@@ -15,7 +15,7 @@ from dataclasses import dataclass
 import numpy as np
 from numpy.typing import NDArray
 
-from cocoindex_code_mcp_server.keyword_search_parser import SearchCondition, SearchGroup
+from cocoindex_code_mcp_server.keyword_search_parser_lark import SearchCondition, SearchGroup
 
 
 @dataclass

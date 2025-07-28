@@ -83,7 +83,7 @@ class EnhancedHaskellChunker:
 
     def __init__(self, config: Optional[HaskellChunkConfig] = None):
         self.config = config or HaskellChunkConfig()
-        self._cache = {}  # Cache for expensive operations
+        self._cache: dict[str, Any] = {}  # Cache for expensive operations
 
     def chunk_code(self, content: str, file_path: str = "") -> List[Dict[str, Any]]:
         """
@@ -249,7 +249,7 @@ class EnhancedHaskellChunker:
             final_score = score - distance_penalty
 
             if final_score > best_score:
-                best_score = final_score
+                best_score = int(final_score)
                 best_idx = i
 
         return best_idx
@@ -477,7 +477,7 @@ def create_enhanced_regex_fallback_chunks(content: str, file_path: str,
     """
     separators = get_enhanced_haskell_separators()
     lines = content.split('\n')
-    chunks: List[HaskellChunk] = []
+    chunks: List[Dict[str, Any]] = []
 
     current_start = 0
     current_size = 0
