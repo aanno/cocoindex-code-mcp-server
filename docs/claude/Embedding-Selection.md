@@ -138,7 +138,7 @@ chunk["embedding"] = chunk["text"].transform(
 )
 
 # After: Intelligent language-aware embedding  
-from src.smart_code_embedding import create_smart_code_embedding
+from cocoindex_code_mcp_server.smart_code_embedding import create_smart_code_embedding
 
 chunk["embedding"] = chunk["text"].transform(
     create_smart_code_embedding(file_extension=file["extension"])
@@ -205,7 +205,7 @@ pip install cocoindex[embeddings]
 
 ### 2. Import and Use
 ```python
-from src.smart_code_embedding import create_smart_code_embedding
+from cocoindex_code_mcp_server.smart_code_embedding import create_smart_code_embedding
 
 # In your CocoIndex flow
 embedding_func = create_smart_code_embedding(file_extension=".py")
@@ -214,7 +214,7 @@ chunk["embedding"] = chunk["text"].transform(embedding_func)
 
 ### 3. Supported Languages
 ```python
-from src.smart_code_embedding import get_supported_languages
+from cocoindex_code_mcp_server.smart_code_embedding import get_supported_languages
 
 for language, model in get_supported_languages().items():
     print(f"{language:12} → {model}")

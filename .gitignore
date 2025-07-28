@@ -2,6 +2,7 @@ __pycache__/
 /quickstart/
 /rust/target/
 /monkeytype.sqlite3
+/out/
 .dmypy.json
 *.pyc
 *.log

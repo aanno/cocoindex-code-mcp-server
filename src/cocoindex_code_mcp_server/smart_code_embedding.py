@@ -332,7 +332,7 @@ if __name__ == "__main__":
     print("Example Usage:")
     print("""
     # In your CocoIndex flow:
-    from src.smart_code_embedding import create_smart_code_embedding
+    from cocoindex_code_mcp_server.smart_code_embedding import create_smart_code_embedding
 
     # Automatic model selection
     embedding_func = create_smart_code_embedding(file_extension=".py")
