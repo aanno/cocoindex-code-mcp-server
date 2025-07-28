@@ -183,7 +183,14 @@ class HaskellNodeHandler:
     def _handle_chunk(self, context: NodeContext, node_type: str) -> Dict[str, Any]:
         """Handle haskell_tree_sitter chunks directly."""
         chunk = context.node
-        chunk_text = chunk.text()
+        # Handle chunk.text() returning bytes or None
+        raw_text = chunk.text() if hasattr(chunk, 'text') and callable(chunk.text) else None
+        if raw_text is None:
+            chunk_text = ""
+        elif isinstance(raw_text, bytes):
+            chunk_text = raw_text.decode('utf-8', errors='ignore')
+        else:
+            chunk_text = str(raw_text)
         position = context.get_position()
 
         if node_type == 'data_type':
@@ -661,7 +668,7 @@ class HaskellNodeHandler:
         if not hasattr(node, 'children'):
             return None
 
-        sig_info = {'names': [], 'type': ''}
+        sig_info: Dict[str, Any] = {'names': [], 'type': ''}
 
         # Type signatures have pattern: names :: type
         collecting_names = True
@@ -718,7 +725,7 @@ class HaskellNodeHandler:
         if not hasattr(node, 'children'):
             return None
 
-        type_info = {
+        type_info: Dict[str, Any] = {
             'name': '',
             'type_parameters': [],
             'constructors': [],
@@ -772,7 +779,7 @@ class HaskellNodeHandler:
         if not hasattr(node, 'children'):
             return None
 
-        class_info = {
+        class_info: Dict[str, Any] = {
             'name': '',
             'constraints': [],
             'type_variables': [],
