@@ -7,6 +7,7 @@ Moved from src/python_code_analyzer.py to tests/
 
 import logging
 import sys
+import pytest
 
 from cocoindex_code_mcp_server.lang.python.python_code_analyzer import (
     analyze_python_code,
@@ -59,39 +60,42 @@ if __name__ == "__main__":
     # Analyze the sample code
     metadata = analyze_python_code(sample_code, "test.py")
 
-    # Log the results
-    LOGGER.info("📊 Enhanced Python Code Analysis Results:")
-    LOGGER.info(f"Analysis Method: {metadata.get('analysis_method', 'unknown')}")
-    LOGGER.info(f"Functions: {metadata['functions']}")
-    LOGGER.info(f"Classes: {metadata['classes']}")
-    LOGGER.info(f"Imports: {metadata['imports']}")
-    LOGGER.info(f"Complexity Score: {metadata['complexity_score']}")
-    LOGGER.info(f"Has Async: {metadata['has_async']}")
-    LOGGER.info(f"Has Type Hints: {metadata['has_type_hints']}")
-    LOGGER.info(f"Private Methods: {metadata['private_methods']}")
-    LOGGER.info(f"Dunder Methods: {metadata.get('dunder_methods', [])}")
+    if metadata is None:
+        pytest.fail("metadata is None")
+    else:
+        # Log the results
+        LOGGER.info("📊 Enhanced Python Code Analysis Results:")
+        LOGGER.info(f"Analysis Method: {metadata.get('analysis_method', 'unknown')}")
+        LOGGER.info(f"Functions: {metadata['functions']}")
+        LOGGER.info(f"Classes: {metadata['classes']}")
+        LOGGER.info(f"Imports: {metadata['imports']}")
+        LOGGER.info(f"Complexity Score: {metadata['complexity_score']}")
+        LOGGER.info(f"Has Async: {metadata['has_async']}")
+        LOGGER.info(f"Has Type Hints: {metadata['has_type_hints']}")
+        LOGGER.info(f"Private Methods: {metadata['private_methods']}")
+        LOGGER.info(f"Dunder Methods: {metadata.get('dunder_methods', [])}")
 
-    # Show analysis details if available
-    if 'function_details' in metadata and metadata['function_details']:
-        LOGGER.info(f"Function Details Count: {len(metadata['function_details'])}")
-    if 'class_details' in metadata and metadata['class_details']:
-        LOGGER.info(f"Class Details Count: {len(metadata['class_details'])}")
+        # Show analysis details if available
+        if 'function_details' in metadata and metadata['function_details']:
+            LOGGER.info(f"Function Details Count: {len(metadata['function_details'])}")
+        if 'class_details' in metadata and metadata['class_details']:
+            LOGGER.info(f"Class Details Count: {len(metadata['class_details'])}")
 
-    # Assertions for testing
-    assert metadata['language'].lower() == 'python'  # Handle case variations
-    assert 'standalone_function' in metadata['functions']
-    assert 'DataProcessor' in metadata['classes']
-    assert metadata['has_async'] is True
-    assert metadata['has_type_hints'] is True
-    assert len(metadata['imports']) >= 3  # os, typing, numpy
-    assert metadata['complexity_score'] > 0
+        # Assertions for testing
+        assert metadata['language'].lower() == 'python'  # Handle case variations
+        assert 'standalone_function' in metadata['functions']
+        assert 'DataProcessor' in metadata['classes']
+        assert metadata['has_async'] is True
+        assert metadata['has_type_hints'] is True
+        assert len(metadata['imports']) >= 3  # os, typing, numpy
+        assert metadata['complexity_score'] > 0
 
-    # Check for expected metadata structure
-    assert 'function_details' in metadata
-    assert 'class_details' in metadata
-    assert 'import_details' in metadata
+        # Check for expected metadata structure
+        assert 'function_details' in metadata
+        assert 'class_details' in metadata
+        assert 'import_details' in metadata
 
-    print("✅ Python analyzer integration test passed!")
+        print("✅ Python analyzer integration test passed!")
 
 
 def test_python_analyzer_edge_cases():

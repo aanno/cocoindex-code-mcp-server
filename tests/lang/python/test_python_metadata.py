@@ -71,24 +71,27 @@ class Manager(User):
 
         metadata = analyze_python_code(code, "test.py")
 
-        assert "classes" in metadata
-        assert len(metadata["classes"]) == 2
-        assert "User" in metadata["classes"]
-        assert "Manager" in metadata["classes"]
-        assert metadata["has_classes"] is True
+        if metadata is None:
+            pytest.fail("metadata is None")
+        else:
+            assert "classes" in metadata
+            assert len(metadata["classes"]) == 2
+            assert "User" in metadata["classes"]
+            assert "Manager" in metadata["classes"]
+            assert metadata["has_classes"] is True
 
-        # Check method detection - methods are in function_details
-        assert "function_details" in metadata
-        method_names = [f["name"] for f in metadata["function_details"]]
-        assert "__init__" in method_names
-        assert "get_name" in method_names
-        assert "_private_method" in method_names
-        assert "__str__" in method_names
-        assert "manage" in method_names
+            # Check method detection - methods are in function_details
+            assert "function_details" in metadata
+            method_names = [f["name"] for f in metadata["function_details"]]
+            assert "__init__" in method_names
+            assert "get_name" in method_names
+            assert "_private_method" in method_names
+            assert "__str__" in method_names
+            assert "manage" in method_names
 
-        # Check private and dunder method categorization
-        assert "_private_method" in metadata.get("private_methods", [])
-        assert "__str__" in metadata.get("dunder_methods", [])
+            # Check private and dunder method categorization
+            assert "_private_method" in metadata.get("private_methods", [])
+            assert "__str__" in metadata.get("dunder_methods", [])
 
     def test_async_function_detection(self):
         """Test detection of async functions."""
