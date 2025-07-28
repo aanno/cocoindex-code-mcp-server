@@ -12,9 +12,7 @@ from dataclasses import dataclass
 from types import ModuleType
 from typing import Dict, List, Optional, Union
 
-# Type alias for metadata values (CocoIndex-compatible types only)
-MetadataValue = Union[str, int, float, bool]
-
+import cocoindex
 from cocoindex_code_mcp_server import LOGGER
 
 
@@ -22,12 +20,12 @@ from cocoindex_code_mcp_server import LOGGER
 class Chunk:
     """Represents a code chunk with text and location metadata."""
     content: str
-    metadata: Dict[str, MetadataValue]
+    metadata: cocoindex.Json  # Use cocoindex.Json for union-safe metadata
     location: str = ""
     start: int = 0
     end: int = 0
     
-    def __getitem__(self, key: str) -> MetadataValue:
+    def __getitem__(self, key: str):
         """Allow dictionary-style access."""
         if hasattr(self, key):
             return getattr(self, key)
@@ -36,19 +34,32 @@ class Chunk:
         else:
             raise KeyError(f"Key '{key}' not found in chunk")
     
-    def __setitem__(self, key: str, value: MetadataValue) -> None:
+    def __setitem__(self, key: str, value) -> None:
         """Allow dictionary-style assignment."""
         if hasattr(self, key):
             setattr(self, key, value)
         else:
             self.metadata[key] = value
     
-    def get(self, key: str, default: MetadataValue = "") -> MetadataValue:
+    def get(self, key: str, default=""):
         """Dictionary-style get method."""
         try:
             return self[key]
         except KeyError:
             return default
+    
+    def to_dict(self) -> dict:
+        """Convert chunk to dictionary for CocoIndex compatibility."""
+        result = {
+            "content": self.content,
+            "location": self.location,
+            "start": self.start,
+            "end": self.end
+        }
+        # Merge metadata
+        result.update(self.metadata)
+        return result
+
 
 
 try:
