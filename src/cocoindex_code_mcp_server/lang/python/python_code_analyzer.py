@@ -8,7 +8,7 @@ Enhanced with tree-sitter AST analysis and multi-level fallback strategies.
 import ast
 import json
 import re
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Set, Optional
 
 from cocoindex_code_mcp_server.language_handlers.python_handler import PythonClass, PythonFunction, PythonImport
 
@@ -33,10 +33,10 @@ class PythonCodeAnalyzer:
 
     def reset(self):
         """Reset the analyzer state."""
-        self.functions: List[PythonFunction] = []
-        self.classes: List[PythonClass] = []
-        self.imports: List[PythonImport] = []
-        self.variables: List[str] = []
+        self.functions: List[Dict[str, Any]] = []
+        self.classes: List[Dict[str, Any]] = []
+        self.imports: List[Dict[str, Any]] = []
+        self.variables: List[Dict[str, Any]] = []
         self.decorators: Set[str] = set()
         self.complexity_score: float = 0
         self.visited_nodes.clear()  # Clear visited nodes on reset
@@ -80,7 +80,7 @@ class PythonCodeAnalyzer:
             LOGGER.error(f"Error analyzing Python code: {e}")
             return self._build_fallback_metadata(code, filename)
 
-    def _visit_node(self, node: ast.AST, class_context: str = None, depth: int = 0):
+    def _visit_node(self, node: ast.AST, class_context: Optional[str] = None, depth: int = 0):
         """Recursively visit AST nodes to extract metadata with bounds checking."""
         # Prevent infinite recursion
         if depth > self.max_recursion_depth:
@@ -117,7 +117,7 @@ class PythonCodeAnalyzer:
             # Remove from visited set when done (allow revisiting in different contexts)
             self.visited_nodes.discard(node_id)
 
-    def _extract_function_info(self, node: ast.FunctionDef, class_context: str = None, is_async: bool = False):
+    def _extract_function_info(self, node: ast.FunctionDef | ast.AsyncFunctionDef, class_context: Optional[str] = None, is_async: bool = False):
         """Extract information about function definitions."""
         func_info: Dict[str, Any] = {
             "name": node.name,
@@ -164,7 +164,7 @@ class PythonCodeAnalyzer:
         for decorator in node.decorator_list:
             decorator_name = self._get_decorator_name(decorator, 0)
             func_info["decorators"].append(decorator_name)
-            self.decorators.append(decorator_name)
+            self.decorators.add(decorator_name)
 
         self.functions.append(func_info)
 
@@ -187,7 +187,7 @@ class PythonCodeAnalyzer:
         # Add class decorators to global decorators list (like function decorators)
         for decorator in node.decorator_list:
             decorator_name = self._get_decorator_name(decorator, 0)
-            self.decorators.append(decorator_name)
+            self.decorators.add(decorator_name)
 
         # Extract methods (will be added by function extraction with class context)
         self.classes.append(class_info)
@@ -217,7 +217,7 @@ class PythonCodeAnalyzer:
                 }
                 self.imports.append(import_info)
 
-    def _extract_variable_info(self, node: ast.Assign, class_context: str = None):
+    def _extract_variable_info(self, node: ast.Assign, class_context: Optional[str] = None):
         """Extract variable assignment information."""
         for target in node.targets:
             if isinstance(target, ast.Name):
@@ -289,7 +289,7 @@ class PythonCodeAnalyzer:
                 # Limit dict size
                 items = list(zip(node.keys, node.values))[:5]
                 return {
-                    self._get_ast_value(k, depth + 1): self._get_ast_value(v, depth + 1)
+                    self._get_ast_value(k, depth + 1) if k else "None": self._get_ast_value(v, depth + 1) if v else "None"
                     for k, v in items
                 }
             else:
@@ -323,8 +323,8 @@ class PythonCodeAnalyzer:
         ]))
 
         # Group functions by class
-        class_methods: Dict[str, str] = {}
-        standalone_functions: List[str] = []
+        class_methods: Dict[str, List[Dict[str, Any]]] = {}
+        standalone_functions: List[Dict[str, Any]] = []
 
         for func in self.functions:
             if func['class']:
@@ -539,8 +539,8 @@ def analyze_python_code(code: str, filename: str = "") -> Dict[str, Any]:
     else:
         # Fallback to the enhanced legacy analyzer (not tree-sitter, but still enhanced)
         LOGGER.info("Using enhanced Python AST analyzer (tree-sitter not available)")
-        analyzer = PythonCodeAnalyzer()
-        return analyzer.analyze_code(code, filename)
+        fallback_analyzer: Any = PythonCodeAnalyzer()
+        return fallback_analyzer.analyze_code(code, filename)
 
 
 if __name__ == "__main__":
