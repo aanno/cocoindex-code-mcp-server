@@ -29,7 +29,7 @@ class PythonFunction:
     column: int
     parameters: List[Dict[str, Any]] = field(default_factory=list)
     return_type: Optional[str] = None
-    decorators: Set[str] = set(field(default_factory=list))
+    decorators: Set[str] = field(default_factory=set)
     docstring: Optional[str] = None
     is_async: bool = False
     is_private: bool = False
@@ -44,7 +44,7 @@ class PythonClass:
     line: int
     column: int
     bases: List[str] = field(default_factory=list)
-    decorators: Set[str] = set(field(default_factory=list))
+    decorators: Set[str] = field(default_factory=set)
     docstring: Optional[str] = None
     methods: List[str] = field(default_factory=list)
     is_private: bool = False
