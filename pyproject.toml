@@ -112,5 +112,5 @@ ignore_missing_imports = false
 local_partial_types = false
 
 [[tool.mypy.overrides]]
-module = ["pgvector.*", "mypy-haskell_tree_sitter.*", "mypy-astchunk.*", "haskell_tree_sitter.*", "astchunk.*"]
+module = ["pgvector.*", "mypy-astchunk.*", "astchunk.*"]
 ignore_missing_imports = true
