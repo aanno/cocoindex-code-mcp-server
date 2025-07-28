@@ -426,6 +426,32 @@ class EnhancedHaskellChunker:
         return create_enhanced_regex_fallback_chunks(content, file_path, self.config)
 
 
+class CompatibleChunk:
+    """Chunk wrapper that provides the interface expected by AST chunking code."""
+    
+    def __init__(self, content: str, metadata: dict, start_line: int = 1, end_line: int = 1, node_type: str = "haskell_chunk"):
+        self._content = content
+        self._metadata = metadata
+        self._start_line = start_line
+        self._end_line = end_line
+        self._node_type = node_type
+    
+    def text(self) -> str:
+        return self._content
+    
+    def start_line(self) -> int:
+        return self._start_line
+    
+    def end_line(self) -> int:
+        return self._end_line
+    
+    def node_type(self) -> str:
+        return self._node_type
+    
+    def metadata(self) -> dict:
+        return self._metadata
+
+
 @cocoindex.op.function()
 def extract_haskell_ast_chunks(content: str):
     """
