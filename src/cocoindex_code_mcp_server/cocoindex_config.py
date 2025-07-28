@@ -428,7 +428,7 @@ def ensure_unique_chunk_locations(chunks) -> List[Chunk]:
         if hasattr(chunk, 'location'):
             # Already a Chunk dataclass
             base_loc = chunk.location
-            text = chunk.text
+            text = chunk.content
             start = chunk.start
             end = chunk.end
         elif isinstance(chunk, dict):
@@ -757,16 +757,16 @@ def code_embedding_flow(
                     model_group: Any = chunk["model_group"]
                     if model_group == "graphcodebert":
                         LOGGER.info(f"Using GraphCodeBERT for {file['language']}")
-                        chunk["embedding"] = chunk["text"].call(graphcodebert_embedding)
+                        chunk["embedding"] = chunk["content"].call(graphcodebert_embedding)
                     elif model_group == "unixcoder":
                         LOGGER.info(f"Using UniXcode for {file['language']}")
-                        chunk["embedding"] = chunk["text"].call(unixcoder_embedding)
+                        chunk["embedding"] = chunk["content"].call(unixcoder_embedding)
                     else:  # fallback
                         LOGGER.info(f"Using fallback model for {file['language']}")
-                        chunk["embedding"] = chunk["text"].call(fallback_embedding)
+                        chunk["embedding"] = chunk["content"].call(fallback_embedding)
                 else:
                     LOGGER.info("Using default embedding")
-                    chunk["embedding"] = chunk["text"].call(code_to_embedding)
+                    chunk["embedding"] = chunk["content"].call(code_to_embedding)
 
                 # Extract metadata using appropriate method based on configuration
                 use_default_language_handler = _global_flow_config.get('use_default_language_handler', False)
@@ -789,7 +789,7 @@ def code_embedding_flow(
                     # chunk["metadata"] = json.dumps(default_metadata)
                 else:
                     LOGGER.info("Using custom language handler extension")
-                    chunk["metadata"] = chunk["text"].transform(
+                    chunk["metadata"] = chunk["content"].transform(
                         extract_code_metadata,
                         language=file["language"],
                         filename=file["filename"]
@@ -808,7 +808,7 @@ def code_embedding_flow(
                     filename=file["filename"],
                     language=file["language"],
                     location=chunk["location"],
-                    code=chunk["text"],
+                    code=chunk["content"],
                     embedding=chunk["embedding"],
                     start=chunk["start"],
                     end=chunk["end"],

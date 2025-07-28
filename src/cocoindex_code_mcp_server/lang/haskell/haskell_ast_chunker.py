@@ -448,8 +448,8 @@ def extract_haskell_ast_chunks(content: str):
     for chunk in chunks:
         legacy_chunk = {
             "text": chunk["content"],
-            "start": {"line": chunk["metadata"]["start_line"], "column": 0},
-            "end": {"line": chunk["metadata"]["end_line"], "column": 0},
+            "start": chunk["metadata"]["start_line"],
+            "end": chunk["metadata"]["end_line"],
             "location": f"{chunk['metadata']['start_line']}:{chunk['metadata']['end_line']}",
             "start_byte": chunk["metadata"].get("start_byte", 0),
             "end_byte": chunk["metadata"].get("end_byte", len(chunk["content"].encode('utf-8'))),
@@ -598,8 +598,8 @@ def create_regex_fallback_chunks_python(content: str) -> List[Dict[str, Any]]:
     for chunk in enhanced_chunks:
         legacy_chunk = {
             "text": chunk["content"],
-            "start": {"line": chunk["metadata"]["start_line"], "column": 0},
-            "end": {"line": chunk["metadata"]["end_line"], "column": 0},
+            "start": chunk["metadata"]["start_line"],
+            "end": chunk["metadata"]["end_line"],
             "location": f"{chunk['metadata']['start_line']}:{chunk['metadata']['end_line']}",
             "start_byte": 0,
             "end_byte": len(chunk["content"].encode('utf-8')),
