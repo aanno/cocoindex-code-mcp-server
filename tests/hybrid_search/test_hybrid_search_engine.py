@@ -17,7 +17,7 @@ from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
 from cocoindex_code_mcp_server.backends import QueryFilters, VectorStoreBackend, SearchResult
 from cocoindex_code_mcp_server.keyword_search_parser import SearchCondition, SearchGroup
 from numpy import ndarray
-from typing import List
+from typing import Any, Dict, List
 
 
 class MockVectorStoreBackend(VectorStoreBackend):
@@ -329,8 +329,8 @@ class TestResultFormatting:
 
     def test_format_results_readable_empty(self):
         """Test readable formatting with empty results."""
-        results = []
-        output = format_results_readable(results)
+        results: List[Dict[str, Any]] = []
+        output: str = format_results_readable(results)
         assert output == "No results found."
 
     def test_format_results_readable_single(self):

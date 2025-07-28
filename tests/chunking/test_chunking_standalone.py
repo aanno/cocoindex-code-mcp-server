@@ -126,7 +126,7 @@ class StandaloneASTChunker:
     def _simple_text_chunking(self, code: str, language: str, file_path: str) -> List[Dict[str, Any]]:
         """Simple text-based chunking as a fallback."""
         lines = code.split('\n')
-        chunks = []
+        chunks: List[Dict[str, Any]] = []
         chunk_size = max(10, self.max_chunk_size // 50)  # Rough estimate for lines
 
         for i in range(0, len(lines), chunk_size):

@@ -10,7 +10,7 @@ import re
 
 import haskell_tree_sitter
 import pytest
-from typing import Dict, List, Union
+from typing import Any, Dict, List, Union
 
 LOGGER = logging.getLogger(__name__)
 
@@ -118,7 +118,7 @@ def create_test_regex_fallback_chunks(content: str, file_path: str, config: Hask
     """Standalone test version of regex fallback chunking."""
     separators = get_enhanced_haskell_separators()
     lines = content.split('\n')
-    chunks = []
+    chunks: List[Dict[str, Any]] = []
 
     current_start = 0
     current_size = 0

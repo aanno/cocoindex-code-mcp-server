@@ -370,10 +370,10 @@ class TestErrorHandling:
     def test_search_with_invalid_keyword_syntax(self):
         """Test search with invalid keyword syntax."""
         try:
-            from cocoindex_code_mcp_server.cocoindex_code_mcp_server.db.pgvector.cocoindex_code_mcp_server.hybrid_search import (
+            from cocoindex_code_mcp_server.cocoindex_code_mcp_server.hybrid_search import (
                 HybridSearchEngine,
             )
-            from cocoindex_code_mcp_server.cocoindex_code_mcp_server.keyword_search_parser import (
+            from cocoindex_code_mcp_server.keyword_search_parser import (
                 KeywordSearchParser,
             )
 

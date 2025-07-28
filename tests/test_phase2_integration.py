@@ -10,14 +10,14 @@ import pytest
 from typing import Dict, Any
 import numpy as np
 
-from cocoindex_code_mcp_server.cocoindex_code_mcp_server.schemas import (
+from cocoindex_code_mcp_server.schemas import (
     ChunkMetadata, QueryFilter, FilterOperator, SearchResultType,
     validate_chunk_metadata, create_default_chunk_query
 )
-from cocoindex_code_mcp_server.cocoindex_code_mcp_server.mappers import (
+from cocoindex_code_mcp_server.mappers import (
     PostgresFieldMapper, QdrantFieldMapper, MapperFactory, ResultMapper
 )
-from cocoindex_code_mcp_server.cocoindex_code_mcp_server.query_abstraction import (
+from cocoindex_code_mcp_server.query_abstraction import (
     QueryBuilder, create_query, simple_search, find_functions_in_language
 )
 

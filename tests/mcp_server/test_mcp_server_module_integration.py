@@ -128,7 +128,7 @@ class TestMCPServerModuleIntegration:
             from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow, update_flow_config
 
             # Spy on the smart embedding function
-            create_spy = mocker.spy(smart_code_embedding, "create_smart_code_embedding")
+            create_spy = mocker.spy(cocoindex_code_mcp_server.smart_code_embedding, "create_smart_code_embedding")
             selector_spy = None
 
             # Try to spy on LanguageModelSelector if available

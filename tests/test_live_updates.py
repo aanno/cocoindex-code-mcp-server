@@ -33,7 +33,7 @@ class TestLiveUpdates(unittest.TestCase):
 
     def test_live_arguments_with_paths(self):
         """Test live update arguments combined with paths."""
-        from arg_parser import parse_args
+        from cocoindex_code_mcp_server.arg_parser import parse_args
 
         with patch('sys.argv', ['main_interactive_query.py', '--live', '--poll', '15', '/path/to/code']):
             args = parse_args()
@@ -81,7 +81,7 @@ class TestLiveUpdates(unittest.TestCase):
 
     def test_live_update_flow_configuration(self):
         """Test that live update mode configures the flow correctly."""
-        from cocoindex_config import _global_flow_config
+        from cocoindex_code_mcp_server.cocoindex_config import _global_flow_config
 
         # Test the flow configuration function
         original_config = _global_flow_config.copy()
