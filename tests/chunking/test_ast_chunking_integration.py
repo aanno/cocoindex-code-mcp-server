@@ -23,12 +23,11 @@ except ImportError as e:
     AST_CHUNKING_AVAILABLE = False
 
 
-def test_ast_chunking() -> List[Dict[str, Union[str, Dict[str, Union[str, int]]]]]:
+def test_ast_chunking() -> List[Chunk]:  # List[Dict[str, Union[str, Dict[str, Union[str, int]]]]]:
     """Test the AST chunking functionality."""
     if not AST_CHUNKING_AVAILABLE:
         print("⚠️ Skipping AST chunking test - ast_chunking not available")
-        return
-
+        return []
     # Test with Python code
     python_code = '''
 def hello_world():

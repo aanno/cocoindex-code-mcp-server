@@ -138,8 +138,6 @@ class TestKeywordSearchParser:
 
         assert len(result.conditions) == 1
         
-        condition = result.conditions[0]
-        
         condition: Union[SearchCondition, SearchGroup] = result.conditions[0]
         cond = cast(SearchCondition, condition)
 

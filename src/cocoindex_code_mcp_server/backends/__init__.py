@@ -76,6 +76,21 @@ class VectorStoreBackend(ABC):
         """Close backend connections and cleanup resources."""
         pass
 
+    @property
+    def host(self):
+        return getattr(self.host, 'pool', None)
+
+    @property
+    def port(self):
+        return getattr(self.host, 'port', None)
+
+    @property
+    def extra_config(self):
+        return getattr(self.host, 'extra_config', None)
+
+    @property
+    def backend_type(self):
+        return getattr(self.host, 'backend_type', None)
 
 class BackendFactory:
     """Factory for creating vector store backends."""

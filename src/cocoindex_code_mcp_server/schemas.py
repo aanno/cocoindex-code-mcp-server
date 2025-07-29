@@ -147,7 +147,6 @@ class ChunkQuery(TypedDict, total=False):
     # Embedding vector (when doing pure vector search)
     embedding: Optional[NDArray[np.float32]]
 
-
 # =============================================================================
 # Search Results
 # =============================================================================
