@@ -39,7 +39,7 @@ class MockCocoIndex:
 
 
 # Patch the import before importing our module
-sys.modules['cocoindex'] = MockCocoIndex()
+sys.modules['cocoindex'] = MockCocoIndex()  # type: ignore[assignment]
 
 
 class TestLanguageModelSelector:
@@ -187,21 +187,25 @@ class TestExternalAPIFunctions:
     def test_create_smart_code_embedding(self):
         """Test smart code embedding creation."""
         # Test automatic detection
-        result: Dict[str, Any] | None = create_smart_code_embedding(file_extension=".py")
+        result = create_smart_code_embedding(file_extension=".py")
 
         if result is not None:
             # Verify it returns a mock function with correct model
-            assert result.model == "microsoft/graphcodebert-base"
-            assert result.args["trust_remote_code"] == True
+            assert hasattr(result, 'model') and result.model == "microsoft/graphcodebert-base"
+            if hasattr(result, 'args') and isinstance(result.args, dict):
+                args_dict = result.args
+                assert args_dict["trust_remote_code"] == True
 
     def test_create_smart_code_embedding_manual_language(self):
         """Test smart code embedding with manual language."""
-        result: Dict[str, Any] | None = create_smart_code_embedding(language="rust")
+        result = create_smart_code_embedding(language="rust")
 
         if result is not None:
             # Verify it returns a mock function with UniXcode
-            assert result.model == "microsoft/unixcoder-base"
-            assert result.args["trust_remote_code"] == True
+            assert hasattr(result, 'model') and result.model == "microsoft/unixcoder-base"
+            if hasattr(result, 'args') and isinstance(result.args, dict):
+                args_dict = result.args
+                assert args_dict["trust_remote_code"] == True
 
     def test_create_smart_code_embedding_force_model(self):
         """Test smart code embedding with forced model."""

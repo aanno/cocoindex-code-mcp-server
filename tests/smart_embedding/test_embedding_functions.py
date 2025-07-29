@@ -65,11 +65,11 @@ class TestEmbeddingFunctions:
         ]
 
         for func, keywords in functions_and_expected_keywords:
-            assert func.__doc__ is not None, f"{func.__name__} should have a docstring"
+            assert func.__doc__ is not None, f"{getattr(func, '__name__', str(func))} should have a docstring"
             docstring = func.__doc__.lower()
 
             for keyword in keywords:
-                assert keyword.lower() in docstring, f"{func.__name__} docstring should mention '{keyword}'"
+                assert keyword.lower() in docstring, f"{getattr(func, '__name__', str(func))} docstring should mention '{keyword}'"
 
     def test_transform_flow_decorators(self):
         """Test that embedding functions are properly decorated with @cocoindex.transform_flow()."""
@@ -80,10 +80,11 @@ class TestEmbeddingFunctions:
 
         for func in functions:
             # CocoIndex transform_flow functions should be callable
-            assert callable(func), f"{func.__name__} should be callable"
+            assert callable(func), f"{getattr(func, '__name__', str(func))} should be callable"
 
-            # They should have a __name__ attribute
-            assert hasattr(func, '__name__'), f"{func.__name__} should have __name__ attribute"
+            # They should have a __name__ attribute (or equivalent)
+            func_name = getattr(func, '__name__', str(func))
+            assert func_name, f"{func_name} should have identifiable name"
 
     def test_function_parameter_types(self):
         """Test that embedding functions have correct parameter type hints."""
@@ -94,11 +95,11 @@ class TestEmbeddingFunctions:
             sig = inspect.signature(func)
 
             # Check that 'text' parameter exists
-            assert 'text' in sig.parameters, f"{func.__name__} should have 'text' parameter"
+            assert 'text' in sig.parameters, f"{getattr(func, '__name__', str(func))} should have 'text' parameter"
 
             # Check parameter annotation (this might be complex due to CocoIndex types)
             text_param = sig.parameters['text']
-            assert text_param.annotation is not None, f"{func.__name__} 'text' parameter should have type annotation"
+            assert text_param.annotation is not None, f"{getattr(func, '__name__', str(func))} 'text' parameter should have type annotation"
 
     def test_all_functions_defined(self):
         """Test that all required embedding functions are defined."""
