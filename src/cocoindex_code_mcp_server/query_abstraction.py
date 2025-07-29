@@ -147,15 +147,7 @@ class QueryExecutor:
         self.backend = backend
         self.mapper = MapperFactory.create_mapper(backend.__class__.__name__.replace("Backend", "").lower())
     
-    def _convert_metadata(self, backend_metadata: Optional[Dict[str, Any]]) -> Optional[ChunkMetadata]:
-        """Convert backend metadata to ChunkMetadata schema."""
-        if backend_metadata is None:
-            return None
-        try:
-            return validate_chunk_metadata(backend_metadata)
-        except ValueError:
-            # If validation fails, return None rather than crashing
-            return None
+
     
     async def execute(self, query: ChunkQuery) -> List[SchemaSearchResult]:
         """
@@ -213,7 +205,7 @@ class QueryExecutor:
                 score=backend_result.score,
                 score_type=SearchResultType.VECTOR_SIMILARITY,
                 source=backend_result.source,
-                metadata=self._convert_metadata(backend_result.metadata)
+                metadata=backend_result.metadata
             )
             results.append(schema_result)
         
@@ -253,7 +245,7 @@ class QueryExecutor:
                 score=backend_result.score,
                 score_type=SearchResultType.KEYWORD_MATCH,
                 source=backend_result.source,
-                metadata=self._convert_metadata(backend_result.metadata)
+                metadata=backend_result.metadata
             )
             results.append(schema_result)
         
@@ -301,7 +293,7 @@ class QueryExecutor:
                 score=backend_result.score,
                 score_type=SearchResultType.HYBRID_COMBINED,
                 source=backend_result.source,
-                metadata=self._convert_metadata(backend_result.metadata)
+                metadata=backend_result.metadata
             )
             results.append(schema_result)
         

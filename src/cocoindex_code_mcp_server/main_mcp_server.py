@@ -27,8 +27,8 @@ import mcp.types as types
 from dotenv import load_dotenv
 from mcp.server.lowlevel import Server
 from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
-from pgvector.psycopg import register_vector
-from psycopg_pool import ConnectionPool
+# Backend abstraction imports
+from .backends import BackendFactory, VectorStoreBackend
 from starlette.applications import Starlette
 from starlette.routing import Mount
 from starlette.types import Receive, Scope, Send
@@ -746,14 +746,13 @@ QUOTED_VALUE: /"[^"]*"/
         return json.dumps(operators, indent=2)
 
     # Initialize search engine
-    async def initialize_search_engine(pool: ConnectionPool):
-        """Initialize the hybrid search engine with provided connection pool."""
+    async def initialize_search_engine(backend: VectorStoreBackend):
+        """Initialize the hybrid search engine with provided backend."""
         global hybrid_search_engine
 
         try:
-            # Register pgvector
-            with pool.connection() as conn:
-                register_vector(conn)
+            # Backend handles its own initialization (e.g., pgvector registration)
+            # No need for manual register_vector() calls
 
             # Initialize search engine components
             parser = KeywordSearchParser()
@@ -764,12 +763,12 @@ QUOTED_VALUE: /"[^"]*"/
             )
             hybrid_search_engine = HybridSearchEngine(
                 table_name=table_name,
-                pool=pool,
                 parser=parser,
+                backend=backend,
                 embedding_func=safe_embedding_function
             )
 
-            logger.info("✅ CocoIndex RAG MCP Server initialized successfully")
+            logger.info("✅ CocoIndex RAG MCP Server initialized successfully with backend abstraction")
 
         except Exception as e:
             logger.error(f"Failed to initialize search engine: {e}")
@@ -828,30 +827,35 @@ QUOTED_VALUE: /"[^"]*"/
         if not database_url:
             raise ValueError("COCOINDEX_DATABASE_URL not found in environment")
 
-        pool = ConnectionPool(database_url)
-        # Use connection pool as context manager for proper cleanup
+        backend_type = os.getenv("COCOINDEX_BACKEND_TYPE", "postgres").lower()
+        # Use backend abstraction for proper cleanup
         async with session_manager.run():
             logger.info("🚀 MCP Server started with StreamableHTTP session manager!")
 
-            # Create connection pool as context manager
-            with ConnectionPool(
-                conninfo=database_url,
-                min_size=1,
-                max_size=5,
-                timeout=10.0
-            ) as pool:
-                logger.info("🔧 Initializing database connection...")
-                await initialize_search_engine(pool)
+            # Create backend using factory pattern
+            table_name = cocoindex.utils.get_target_default_name(
+                code_embedding_flow, "code_embeddings"
+            )
+            backend = BackendFactory.create_backend(
+                backend_type,
+                connection_string=database_url,
+                table_name=table_name
+            )
+            
+            logger.info(f"🔧 Initializing {backend_type} backend...")
+            await initialize_search_engine(backend)
 
-                # Initialize background components
-                await background_initialization()
+            # Initialize background components
+            await background_initialization()
 
-                try:
-                    yield
-                finally:
-                    logger.info("🛑 MCP Server shutting down...")
-                    shutdown_event.set()
-                    logger.info("🧹 Connection pool will be cleaned up automatically by context manager")
+            try:
+                yield
+            finally:
+                logger.info("🛑 MCP Server shutting down...")
+                shutdown_event.set()
+                if hasattr(backend, 'close'):
+                    backend.close()
+                logger.info("🧹 Backend resources cleaned up")
 
     # Create ASGI application
     starlette_app = Starlette(
