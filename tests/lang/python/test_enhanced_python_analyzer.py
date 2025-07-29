@@ -6,6 +6,7 @@ Test the enhanced Python analyzer with tree-sitter integration.
 
 import logging
 import sys
+import pytest
 
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)

@@ -410,34 +410,37 @@ class TestCustomVsDefaultHandlerComparison:
 
     def test_metadata_richness_comparison(self) -> None:
         """Compare overall metadata richness between handlers."""
-        custom_result = self.custom_analyzer.analyze_code(SAMPLE_PYTHON_CODE, self.filename)
+        custom_result: Union[Dict[str, Any], None] = self.custom_analyzer.analyze_code(SAMPLE_PYTHON_CODE, self.filename)
         default_result = basic_analyze_python_code(SAMPLE_PYTHON_CODE, self.filename)
 
-        # Count total fields in each result
-        custom_field_count = len([k for k, v in custom_result.items() if v])
-        default_field_count = len([k for k, v in default_result.items() if v])
+        if custom_result is not None:
+            # Count total fields in each result
+            custom_field_count = len([k for k, v in custom_result.items() if v])
+            default_field_count = len([k for k, v in default_result.items() if v])
 
-        # Custom handler should provide more fields with meaningful data
-        assert custom_field_count >= default_field_count, \
-            f"Custom handler should provide at least as many fields (custom: {custom_field_count}, default: {default_field_count})"
+            # Custom handler should provide more fields with meaningful data
+            assert custom_field_count >= default_field_count, \
+                f"Custom handler should provide at least as many fields (custom: {custom_field_count}, default: {default_field_count})"
 
-        # Count complex data structures (lists with content, dicts with content)
-        def count_complex_data(result: Dict[str, Any]) -> int:
-            count = 0
-            for value in result.values():
-                if isinstance(value, list) and len(value) > 0:
-                    count += 1
-                elif isinstance(value, dict) and len(value) > 0:
-                    count += 1
-            return count
+            # Count complex data structures (lists with content, dicts with content)
+            def count_complex_data(result: Dict[str, Any]) -> int:
+                count = 0
+                for value in result.values():
+                    if isinstance(value, list) and len(value) > 0:
+                        count += 1
+                    elif isinstance(value, dict) and len(value) > 0:
+                        count += 1
+                return count
 
-        custom_complex_count = count_complex_data(custom_result)
-        default_complex_count = count_complex_data(default_result)
+            custom_complex_count = count_complex_data(custom_result)
+            default_complex_count = count_complex_data(default_result)
 
-        # Custom handler should generally provide more complex data, but be flexible
-        # At minimum, both should provide some meaningful data structures
-        assert custom_complex_count >= 2, f"Custom handler should provide at least 2 complex data structures, got {custom_complex_count}"
-        assert default_complex_count >= 1, f"Default handler should provide at least 1 complex data structure, got {default_complex_count}"
+            # Custom handler should generally provide more complex data, but be flexible
+            # At minimum, both should provide some meaningful data structures
+            assert custom_complex_count >= 2, f"Custom handler should provide at least 2 complex data structures, got {custom_complex_count}"
+            assert default_complex_count >= 1, f"Default handler should provide at least 1 complex data structure, got {default_complex_count}"
+        else:
+            pytest.fail("custom_result is None")
 
     def test_error_handling_comparison(self) -> None:
         """Compare error handling between custom and default handlers."""

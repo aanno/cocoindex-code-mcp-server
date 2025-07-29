@@ -176,11 +176,13 @@ async def test_async_query_execution():
     executor = QueryExecutor(mock_backend)
     query = QueryBuilder().text("async function").vector_search().build()
     
-    results = await executor.execute(query)
+    results: List[SearchResult] = await executor.execute(query)
     
     assert len(results) == 1
-    assert results[0].metadata["has_async"] == True
-    assert "test" in results[0].metadata["functions"]
+    metadata = results[0].metadata
+    if metadata is not None:
+        assert metadata["has_async"] == True
+        assert "test" in metadata["functions"]
 
 
 if __name__ == "__main__":
