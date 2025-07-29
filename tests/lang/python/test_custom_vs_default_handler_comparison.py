@@ -172,12 +172,12 @@ if __name__ == "__main__":
 class TestCustomVsDefaultHandlerComparison:
     """Test suite comparing custom and default Python code analysis."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.custom_analyzer = TreeSitterPythonAnalyzer(prefer_tree_sitter=True)
         self.filename = "test_sample.py"
 
-    def test_basic_metadata_structure_comparison(self):
+    def test_basic_metadata_structure_comparison(self) -> None:
         """Compare basic metadata structure between custom and default handlers."""
         # Analyze with custom handler
         custom_result = self.custom_analyzer.analyze_code(SAMPLE_PYTHON_CODE, self.filename)
@@ -185,33 +185,36 @@ class TestCustomVsDefaultHandlerComparison:
         # Analyze with basic handler (for true comparison)
         default_result = basic_analyze_python_code(SAMPLE_PYTHON_CODE, self.filename)
 
-        # Both should have basic required fields
-        basic_fields = [
-            'functions', 'classes', 'imports', 'has_classes',
-            'has_async', 'analysis_method'
-        ]
+        if custom_result is not None and default_result is not None:
+            # Both should have basic required fields
+            basic_fields = [
+                'functions', 'classes', 'imports', 'has_classes',
+                'has_async', 'analysis_method'
+            ]
 
-        for field in basic_fields:
-            assert field in custom_result, f"Custom handler missing field: {field}"
-            assert field in default_result, f"Default handler missing field: {field}"
+            for field in basic_fields:
+                assert field in custom_result, f"Custom handler missing field: {field}"
+                assert field in default_result, f"Default handler missing field: {field}"
 
-        # Check decorator fields (may vary in naming)
-        assert ('decorators' in custom_result or 'decorators_used' in custom_result), \
-            "Custom handler should have decorator information"
-        assert ('decorators' in default_result or 'decorators_used' in default_result), \
-            "Default handler should have decorator information"
+            # Check decorator fields (may vary in naming)
+            assert ('decorators' in custom_result or 'decorators_used' in custom_result), \
+                "Custom handler should have decorator information"
+            assert ('decorators' in default_result or 'decorators_used' in default_result), \
+                "Default handler should have decorator information"
 
-        # Custom handler should have additional enhanced fields
-        enhanced_fields = [
-            'has_docstrings', 'function_details', 'class_details',
-            'decorators', 'has_decorators'
-        ]
+            # Custom handler should have additional enhanced fields
+            enhanced_fields = [
+                'has_docstrings', 'function_details', 'class_details',
+                'decorators', 'has_decorators'
+            ]
 
-        for field in enhanced_fields:
-            assert field in custom_result, f"Custom handler missing enhanced field: {field}"
-            # Default handler may or may not have these fields
+            for field in enhanced_fields:
+                assert field in custom_result, f"Custom handler missing enhanced field: {field}"
+                # Default handler may or may not have these fields
+        else:
+            pytest.fail("no metadata in chunk")
 
-    def test_function_detection_comparison(self):
+    def test_function_detection_comparison(self) -> None:
         """Compare function detection capabilities."""
         custom_result = self.custom_analyzer.analyze_code(SAMPLE_PYTHON_CODE, self.filename)
         default_result = basic_analyze_python_code(SAMPLE_PYTHON_CODE, self.filename)
@@ -386,21 +389,24 @@ class TestCustomVsDefaultHandlerComparison:
         """Test that analysis method is properly tracked."""
         custom_result: Union[Dict[str, Any], None] = self.custom_analyzer.analyze_code(SAMPLE_PYTHON_CODE, self.filename)
         default_result: Dict[str, Any] = basic_analyze_python_code(SAMPLE_PYTHON_CODE, self.filename)
+        
+        if custom_result is not None and default_result is not None:
+            # Check analysis method is tracked
+            assert 'analysis_method' in custom_result
+            assert 'analysis_method' in default_result
 
-        # Check analysis method is tracked
-        assert 'analysis_method' in custom_result
-        assert 'analysis_method' in default_result
+            # Custom analyzer should indicate hybrid approach
+            if custom_result is not None:
+                custom_method = custom_result['analysis_method']
+                assert custom_method in ['tree_sitter', 'python_ast', 'hybrid', 'tree_sitter+python_ast'], \
+                    f"Custom analyzer should use advanced method, got: {custom_method}"
 
-        # Custom analyzer should indicate hybrid approach
-        if custom_result is not None:
-            custom_method = custom_result['analysis_method']
-            assert custom_method in ['tree_sitter', 'python_ast', 'hybrid', 'tree_sitter+python_ast'], \
-                f"Custom analyzer should use advanced method, got: {custom_method}"
-
-        # Default should be basic
-        default_method = default_result['analysis_method']
-        assert default_method in ['basic', 'python_ast', 'python', 'basic_ast_only'], \
-            f"Default analyzer method: {default_method}"
+            # Default should be basic
+            default_method = default_result['analysis_method']
+            assert default_method in ['basic', 'python_ast', 'python', 'basic_ast_only'], \
+                f"Default analyzer method: {default_method}"
+        else:
+            pytest.fail("no metadata in chunk")
 
     def test_metadata_richness_comparison(self) -> None:
         """Compare overall metadata richness between handlers."""
