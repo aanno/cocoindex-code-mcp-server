@@ -111,6 +111,11 @@ class TestMinimalFlow:
         
         This is a regression test for ValueType deserialization issues.
         """
+        # Load environment variables from .env file
+        import os
+        from dotenv import load_dotenv
+        load_dotenv('.env')
+        
         cocoindex.init()
         
         # Create a test file
