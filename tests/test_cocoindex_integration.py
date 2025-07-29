@@ -38,7 +38,7 @@ class TestCocoIndexIntegration(unittest.TestCase):
         self.assertEqual(params.chunk_overlap, 200)
 
     @pytest.mark.skip(reason="Language spec count changed due to refactoring")
-    def test_custom_language_spec(self):
+    def test_custom_language_spec(self) -> None:
         """Test that Haskell custom language spec is properly configured."""
         haskell_spec = None
         for spec in CUSTOM_LANGUAGES:
@@ -46,17 +46,20 @@ class TestCocoIndexIntegration(unittest.TestCase):
                 haskell_spec = spec
                 break
 
-        self.assertIsNotNone(haskell_spec, "Haskell custom language spec not found")
-        self.assertEqual(len(haskell_spec.separators_regex), 24)
-        self.assertIn(".hs", haskell_spec.aliases)
-        self.assertIn(".lhs", haskell_spec.aliases)
+        if haskell_spec is not None:
+            self.assertIsNotNone(haskell_spec, "Haskell custom language spec not found")
+            self.assertEqual(len(haskell_spec.separators_regex), 24)
+            self.assertIn(".hs", haskell_spec.aliases)
+            self.assertIn(".lhs", haskell_spec.aliases)
 
-        # Check for specific important separators
-        separators = haskell_spec.separators_regex
-        self.assertIn(r"\n\w+\s*::\s*", separators)  # Type signatures
-        self.assertIn(r"\nmodule\s+", separators)    # Module declarations
-        self.assertIn(r"\nimport\s+", separators)    # Import statements
-        self.assertIn(r"\ndata\s+", separators)      # Data declarations
+            # Check for specific important separators
+            separators = haskell_spec.separators_regex
+            self.assertIn(r"\n\w+\s*::\s*", separators)  # Type signatures
+            self.assertIn(r"\nmodule\s+", separators)    # Module declarations
+            self.assertIn(r"\nimport\s+", separators)    # Import statements
+            self.assertIn(r"\ndata\s+", separators)      # Data declarations
+        else:
+            pytest.fail("no metadata in chunk")
 
     def test_split_recursively_configuration(self):
         """Test that SplitRecursively can be configured with Haskell support."""
