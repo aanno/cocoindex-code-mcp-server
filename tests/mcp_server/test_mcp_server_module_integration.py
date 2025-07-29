@@ -314,6 +314,7 @@ class TestMCPServerQueryIntegration:
             from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
                 HybridSearchEngine,
             )
+            from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
 
             # Skip if database not available
             try:
@@ -382,10 +383,10 @@ class TestMCPServerQueryIntegration:
                 time.sleep(2)
 
                 # Now perform a hybrid search query
-                search_engine = HybridSearchEngine(connection_pool)
+                search_engine = HybridSearchEngine("code_embeddings", KeywordSearchParser(), pool=connection_pool)
 
                 # Search for something that should match our test corpus
-                results = search_engine.hybrid_search(
+                results = search_engine.search(
                     vector_query="process data function",
                     keyword_query="language:python",
                     top_k=5
