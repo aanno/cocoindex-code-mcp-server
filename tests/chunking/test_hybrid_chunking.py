@@ -75,8 +75,11 @@ if __name__ == "__main__":
     # Verify we're using AST chunking for Python
     for chunk in chunks:
         metadata = chunk['metadata']
-        assert 'chunk_method' in metadata
-        assert metadata['language'] == 'Python'
+        if metadata is not None:
+            assert 'chunk_method' in metadata
+            assert metadata['language'] == 'Python'
+        else:
+            pytest.fail("no metadata in chunk")
 
 
 @pytest.mark.skipif(not COCOINDEX_AST_AVAILABLE, reason="CocoIndexASTChunker not available")
@@ -106,8 +109,11 @@ public class Calculator {
     assert len(chunks) > 0
     for chunk in chunks:
         metadata = chunk['metadata']
-        assert 'chunk_method' in metadata
-        assert metadata['language'] == 'Java'
+        if metadata is not None:
+            assert 'chunk_method' in metadata
+            assert metadata['language'] == 'Java'
+        else:
+            pytest.fail("no metadata in chunk")
 
 
 @pytest.mark.skipif(not COCOINDEX_AST_AVAILABLE, reason="CocoIndexASTChunker not available")
@@ -143,8 +149,11 @@ public class Calculator
     assert len(chunks) > 0
     for chunk in chunks:
         metadata = chunk['metadata']
-        assert 'chunk_method' in metadata
-        assert metadata['language'] == 'C#'
+        if metadata is not None:
+            assert 'chunk_method' in metadata
+            assert metadata['language'] == 'C#'
+        else:
+            pytest.fail("no metadata in chunk")
 
 
 @pytest.mark.skipif(not COCOINDEX_AST_AVAILABLE, reason="CocoIndexASTChunker not available")
@@ -176,8 +185,11 @@ main();
     assert len(chunks) > 0
     for chunk in chunks:
         metadata = chunk['metadata']
-        assert 'chunk_method' in metadata
-        assert metadata['language'] == 'TypeScript'
+        if metadata is not None:
+            assert 'chunk_method' in metadata
+            assert metadata['language'] == 'TypeScript'
+        else:
+            pytest.fail("no metadata in chunk")
 
 
 @pytest.mark.skipif(not COCOINDEX_AST_AVAILABLE, reason="CocoIndexASTChunker not available")
@@ -201,8 +213,11 @@ factorial n = n * factorial (n - 1)
     assert len(chunks) > 0
     for chunk in chunks:
         metadata = chunk['metadata']
-        assert 'chunk_method' in metadata
-        assert metadata['language'] == 'Haskell'
+        if metadata is not None:
+            assert 'chunk_method' in metadata
+            assert metadata['language'] == 'Haskell'
+        else:
+            pytest.fail("no metadata in chunk")
 
 
 @pytest.mark.skipif(not COCOINDEX_AST_AVAILABLE, reason="CocoIndexASTChunker not available")
@@ -221,7 +236,10 @@ but should still be chunked
     assert len(chunks) > 0
     for chunk in chunks:
         metadata = chunk['metadata']
-        assert metadata['language'] == 'Unknown'
+        if metadata is not None:
+            assert metadata['language'] == 'Unknown'
+        else:
+            pytest.fail("no metadata in chunk")
 
 
 @pytest.mark.skipif(not COCOINDEX_AST_AVAILABLE, reason="CocoIndexASTChunker not available")

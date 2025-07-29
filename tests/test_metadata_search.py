@@ -51,9 +51,16 @@ class TestMetadataSearch:
                             WHERE table_name = 'code_embeddings'
                         );
                     """)
-                    table_exists = cur.fetchone()[0]
-                    if not table_exists:
-                        pytest.skip("code_embeddings table does not exist - database not initialized")
+                    if cur is not None:
+                        one = cur.fetchone()
+                        if one is not None:
+                            table_exists = one[0]
+                            if not table_exists:
+                                pytest.skip("code_embeddings table does not exist - database not initialized")
+                        else:
+                                pytest.skip("code_embeddings table does not exist - database not initialized")
+                    else:
+                        pytest.fail("code_embeddings table does not exist - database not initialized")
         except Exception as e:
             pytest.skip(f"Could not connect to database or check table: {e}")
 

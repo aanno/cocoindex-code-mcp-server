@@ -6,6 +6,7 @@ This tests the specific issue where class decorators from Python AST analysis
 are not being properly merged with function decorators from tree-sitter analysis.
 """
 
+from typing import Any, Union, Dict
 import pytest
 from cocoindex_code_mcp_server.lang.python.python_code_analyzer import (
     analyze_python_code,
@@ -104,26 +105,29 @@ class SortableDataExample:
     value: int
 """
 
-    metadata = analyze_python_code(code, "test.py")
+    metadata: Union[Dict[str, Any],None] = analyze_python_code(code, "test.py")
 
-    assert "decorators" in metadata
-    decorators = metadata["decorators"]
+    if metadata is not None:
+        assert "decorators" in metadata
+        decorators = metadata["decorators"]
 
-    # Function decorators (should be detected by tree-sitter)
-    assert "property" in decorators, f"property not found in {decorators}"
-    assert "staticmethod" in decorators, f"staticmethod not found in {decorators}"
-    assert "classmethod" in decorators, f"classmethod not found in {decorators}"
-    assert "custom_decorator" in decorators, f"custom_decorator not found in {decorators}"
-    assert "another_decorator" in decorators, f"another_decorator not found in {decorators}"
+        # Function decorators (should be detected by tree-sitter)
+        assert "property" in decorators, f"property not found in {decorators}"
+        assert "staticmethod" in decorators, f"staticmethod not found in {decorators}"
+        assert "classmethod" in decorators, f"classmethod not found in {decorators}"
+        assert "custom_decorator" in decorators, f"custom_decorator not found in {decorators}"
+        assert "another_decorator" in decorators, f"another_decorator not found in {decorators}"
 
-    # Class decorators (should be detected by Python AST and merged)
-    assert "dataclass" in decorators, f"dataclass not found in {decorators}"
-    # total_ordering might be detected as full dotted name
-    assert any(
-        "total_ordering" in dec for dec in decorators), f"total_ordering (or functools.total_ordering) not found in {decorators}"
+        # Class decorators (should be detected by Python AST and merged)
+        assert "dataclass" in decorators, f"dataclass not found in {decorators}"
+        # total_ordering might be detected as full dotted name
+        assert any(
+            "total_ordering" in dec for dec in decorators), f"total_ordering (or functools.total_ordering) not found in {decorators}"
 
-    # Verify has_decorators flag
-    assert metadata["has_decorators"] is True
+        # Verify has_decorators flag
+        assert metadata["has_decorators"] is True
+    else:
+        pytest.fail("no metadata in chunk")
 
 
 def test_nested_class_decorators():

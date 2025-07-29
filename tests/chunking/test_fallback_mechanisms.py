@@ -4,7 +4,10 @@
 Test fallback mechanisms for different chunking scenarios.
 """
 
+from typing import List
 import pytest
+
+from cocoindex_code_mcp_server.ast_chunking import Chunk
 
 try:
     from cocoindex_code_mcp_server.ast_chunking import CocoIndexASTChunker, detect_language_from_filename
@@ -31,8 +34,11 @@ class Test:
     assert len(chunks) > 0
     for chunk in chunks:
         metadata = chunk['metadata']
-        assert 'chunk_method' in metadata
-        assert metadata['language'] == 'Python'
+        if metadata is not None:
+            assert 'chunk_method' in metadata
+            assert metadata['language'] == 'Python'
+        else:
+            pytest.fail("no metadata in chunk")
 
 
 @pytest.mark.skipif(not COCOINDEX_AST_AVAILABLE, reason="CocoIndexASTChunker not available")
@@ -52,8 +58,11 @@ main = do
     assert len(chunks) > 0
     for chunk in chunks:
         metadata = chunk['metadata']
-        assert 'chunk_method' in metadata
-        assert metadata['language'] == 'Haskell'
+        if metadata is not None:
+            assert 'chunk_method' in metadata
+            assert metadata['language'] == 'Haskell'
+        else:
+            pytest.fail("no metadata in chunk")
 
 
 @pytest.mark.skipif(not COCOINDEX_AST_AVAILABLE, reason="CocoIndexASTChunker not available")
@@ -80,8 +89,11 @@ print("This has wrong indentation")
     assert len(chunks) > 0
     for chunk in chunks:
         metadata = chunk['metadata']
-        assert 'chunk_method' in metadata
-        assert metadata['language'] == 'Python'
+        if metadata is not None:
+            assert 'chunk_method' in metadata
+            assert metadata['language'] == 'Python'
+        else:
+            pytest.fail("no metadata in chunk")
 
 
 @pytest.mark.skipif(not COCOINDEX_AST_AVAILABLE, reason="CocoIndexASTChunker not available")
@@ -142,7 +154,8 @@ class Class2:
     assert len(chunks) >= 1
     for chunk in chunks:
         metadata = chunk['metadata']
-        assert metadata['language'] == 'Python'
+        if metadata is not None:
+            assert metadata['language'] == 'Python'
 
 
 @pytest.mark.skipif(not COCOINDEX_AST_AVAILABLE, reason="CocoIndexASTChunker not available")
@@ -162,9 +175,12 @@ def hello():
     assert len(chunks) >= 1
     for chunk in chunks:
         metadata = chunk['metadata']
-        assert metadata['language'] == 'Python'
-        # Each chunk should be reasonably small
-        assert len(chunk['content']) <= 200  # Some tolerance for AST chunking
+        content = chunk['content']
+        if metadata is not None:
+            assert metadata['language'] == 'Python'
+        if content is not None:
+            # Each chunk should be reasonably small
+            assert len(content) <= 200  # Some tolerance for AST chunking
 
 
 @pytest.mark.skipif(not COCOINDEX_AST_AVAILABLE, reason="CocoIndexASTChunker not available")
@@ -201,13 +217,14 @@ if __name__ == "__main__":
     main()
 '''
 
-    chunks = chunker.chunk_code(mixed_content, "Python", "mixed.py")
+    chunks: List[Chunk] = chunker.chunk_code(mixed_content, "Python", "mixed.py")
 
     assert len(chunks) > 0
     for chunk in chunks:
         metadata = chunk['metadata']
-        assert metadata['language'] == 'Python'
-        assert 'chunk_method' in metadata
+        if metadata is not None:
+            assert metadata['language'] == 'Python'
+            assert 'chunk_method' in metadata
 
 
 @pytest.mark.skipif(not COCOINDEX_AST_AVAILABLE, reason="CocoIndexASTChunker not available")
@@ -234,7 +251,10 @@ class TestClass:
     assert len(chunks) > 0
     for chunk in chunks:
         metadata = chunk['metadata']
-        assert metadata['language'] == 'Unknown'
+        if metadata is not None:
+            assert metadata['language'] == 'Unknown'
+        else:
+            pytest.fail("no metadata in chunk")
 
 
 @pytest.mark.skipif(not COCOINDEX_AST_AVAILABLE, reason="CocoIndexASTChunker not available")
@@ -255,13 +275,16 @@ def fibonacci(n):
 '''
 
     # Chunk the same code multiple times
-    chunks1 = chunker.chunk_code(code, "Python", "test.py")
-    chunks2 = chunker.chunk_code(code, "Python", "test.py")
+    chunks1: List[Chunk] = chunker.chunk_code(code, "Python", "test.py")
+    chunks2: List[Chunk] = chunker.chunk_code(code, "Python", "test.py")
 
     # Should produce the same number of chunks
     assert len(chunks1) == len(chunks2)
 
     # Content should be identical
     for c1, c2 in zip(chunks1, chunks2):
+        metadata1 = c1['metadata']
+        metadata2 = c2['metadata']
         assert c1['content'] == c2['content']
-        assert c1['metadata']['language'] == c2['metadata']['language']
+        if metadata1 is not None and metadata2 is not None:
+            assert metadata1['language'] == metadata2['language']

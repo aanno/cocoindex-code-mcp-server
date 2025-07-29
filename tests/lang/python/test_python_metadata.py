@@ -7,6 +7,7 @@ Comprehensive tests for Python metadata extraction functionality.
 import json
 import logging
 import sys
+from typing import Any, Dict, Union
 
 import pytest
 
@@ -26,7 +27,7 @@ except ImportError as e:
 class TestPythonMetadataAnalysis:
     """Test suite for Python code metadata analysis."""
 
-    def test_simple_function_detection(self):
+    def test_simple_function_detection(self) -> None:
         """Test detection of simple functions."""
         if analyze_python_code is None:
             pytest.skip("python_code_analyzer not available")
@@ -39,14 +40,17 @@ def calculate(x, y):
     return x + y
 """
 
-        metadata = analyze_python_code(code, "test.py")
+        metadata: Union[Dict[str, Any],None] = analyze_python_code(code, "test.py")
 
-        assert "functions" in metadata
-        assert len(metadata["functions"]) == 2
-        assert "hello_world" in metadata["functions"]
-        assert "calculate" in metadata["functions"]
-        assert metadata["has_classes"] is False
-        assert metadata["has_async"] is False
+        if metadata is not None:
+            assert "functions" in metadata
+            assert len(metadata["functions"]) == 2
+            assert "hello_world" in metadata["functions"]
+            assert "calculate" in metadata["functions"]
+            assert metadata["has_classes"] is False
+            assert metadata["has_async"] is False
+        else:
+            pytest.fail("no metadata in chunk")
 
     def test_class_detection(self):
         """Test detection of classes and methods."""
@@ -69,7 +73,7 @@ class Manager(User):
         pass
 """
 
-        metadata = analyze_python_code(code, "test.py")
+        metadata: Union[Dict[str, Any],None] = analyze_python_code(code, "test.py")
 
         if metadata is None:
             pytest.fail("metadata is None")
@@ -107,12 +111,15 @@ async def process_data():
         pass
 """
 
-        metadata = analyze_python_code(code, "test.py")
+        metadata: Union[Dict[str, Any],None] = analyze_python_code(code, "test.py")
 
-        assert metadata["has_async"] is True
-        assert "fetch_data" in metadata["functions"]
-        assert "sync_function" in metadata["functions"]
-        assert "process_data" in metadata["functions"]
+        if metadata is not None:
+            assert metadata["has_async"] is True
+            assert "fetch_data" in metadata["functions"]
+            assert "sync_function" in metadata["functions"]
+            assert "process_data" in metadata["functions"]
+        else:
+            pytest.fail("no metadata in chunk")
 
     def test_type_hints_detection(self):
         """Test detection of type hints."""
@@ -127,12 +134,15 @@ def no_hints(x, y):
     return x + y
 """
 
-        metadata = analyze_python_code(code, "test.py")
+        metadata: Union[Dict[str, Any],None] = analyze_python_code(code, "test.py")
 
-        assert metadata["has_type_hints"] is True
-        assert len(metadata["functions"]) == 3
+        if metadata is not None:
+            assert metadata["has_type_hints"] is True
+            assert len(metadata["functions"]) == 3
+        else:
+            pytest.fail("no metadata in chunk")
 
-    def test_import_detection(self):
+    def test_import_detection(self) -> None:
         """Test detection of imports."""
         code = """
 import os
@@ -145,16 +155,19 @@ from collections import defaultdict
 
         metadata = analyze_python_code(code, "test.py")
 
-        assert "imports" in metadata
-        imports = metadata["imports"]
-        assert "os" in imports
-        assert "sys" in imports
-        assert "json" in imports  # 'as js' should be detected as 'json'
-        assert "typing" in imports
-        assert "pathlib" in imports
-        assert "collections" in imports
+        if metadata is not None:
+            assert "imports" in metadata
+            imports = metadata["imports"]
+            assert "os" in imports
+            assert "sys" in imports
+            assert "json" in imports  # 'as js' should be detected as 'json'
+            assert "typing" in imports
+            assert "pathlib" in imports
+            assert "collections" in imports
+        else:
+            pytest.fail("no metadata in chunk")
 
-    def test_decorator_detection(self):
+    def test_decorator_detection(self) -> None:
         """Test detection of decorators."""
         code = """
 @property
@@ -179,20 +192,23 @@ class DataExample:
     name: str
 """
 
-        metadata = analyze_python_code(code, "test.py")
+        metadata: Union[Dict[str, Any],None] = analyze_python_code(code, "test.py")
 
-        assert "decorators" in metadata
-        decorators = metadata["decorators"]
-        assert "property" in decorators
-        assert "staticmethod" in decorators
-        assert "classmethod" in decorators
-        assert "custom_decorator" in decorators
-        assert "another_decorator" in decorators
-        assert "dataclass" in decorators
+        if metadata is not None:
+            assert "decorators" in metadata
+            decorators = metadata["decorators"]
+            assert "property" in decorators
+            assert "staticmethod" in decorators
+            assert "classmethod" in decorators
+            assert "custom_decorator" in decorators
+            assert "another_decorator" in decorators
+            assert "dataclass" in decorators
 
-        assert metadata["has_decorators"] is True
+            assert metadata["has_decorators"] is True
+        else:
+            pytest.fail("no metadata in chunk")
 
-    def test_complexity_score(self):
+    def test_complexity_score(self) -> None:
         """Test complexity score calculation."""
         simple_code = """
 def simple():
@@ -217,11 +233,15 @@ def complex_function(x, y, z):
         return None
 """
 
-        simple_metadata = analyze_python_code(simple_code, "simple.py")
-        complex_metadata = analyze_python_code(complex_code, "complex.py")
+        simple_metadata: Union[Dict[str, Any],None] = analyze_python_code(simple_code, "simple.py")
+        complex_metadata: Union[Dict[str, Any],None] = analyze_python_code(complex_code, "complex.py")
 
-        assert simple_metadata["complexity_score"] < complex_metadata["complexity_score"]
-        assert complex_metadata["complexity_score"] > 5  # Should be reasonably high (adjusted for enhanced analyzer)
+        if simple_metadata is not None and complex_metadata is not None:
+            assert simple_metadata["complexity_score"] < complex_metadata["complexity_score"]
+            pytest.fail("no metadata in chunk")
+            assert complex_metadata["complexity_score"] > 5  # Should be reasonably high (adjusted for enhanced analyzer)
+        else:
+            pytest.fail("no metadata in chunk")
 
     def test_docstring_detection(self):
         """Test detection of docstrings."""
@@ -244,9 +264,12 @@ class DocumentedClass:
         pass
 """
 
-        metadata = analyze_python_code(code, "test.py")
+        metadata: Union[Dict[str, Any],None] = analyze_python_code(code, "test.py")
 
-        assert metadata["has_docstrings"] is True
+        if metadata is not None:
+            assert metadata["has_docstrings"] is True
+        else:
+            pytest.fail("no metadata in chunk")
 
     @pytest.mark.skip(reason="Variable detection format changed in enhanced analyzer")
     def test_variable_detection(self):
@@ -263,18 +286,21 @@ class MyClass:
     class_var = "class level"  # This should be detected
 """
 
-        metadata = analyze_python_code(code, "test.py")
+        metadata: Union[Dict[str, Any],None] = analyze_python_code(code, "test.py")
 
-        assert "variables" in metadata
-        variables = metadata["variables"]
-        assert "MODULE_CONSTANT" in variables
-        assert "global_var" in variables
-        assert "_private_var" in variables
+        if metadata is not None:
+            assert "variables" in metadata
+            variables = metadata["variables"]
+            assert "MODULE_CONSTANT" in variables
+            assert "global_var" in variables
+            assert "_private_var" in variables
 
-        # Class variables should be separate
-        assert "class_variables" in metadata
-        class_vars = metadata["class_variables"]
-        assert "class_var" in class_vars
+            # Class variables should be separate
+            assert "class_variables" in metadata
+            class_vars = metadata["class_variables"]
+            assert "class_var" in class_vars
+        else:
+            pytest.fail("no metadata in chunk")
 
     @pytest.mark.skip(reason="Output format validation changed in enhanced analyzer")
     def test_comprehensive_real_world_example(self):
@@ -354,40 +380,43 @@ if __name__ == "__main__":
     processor = DataProcessor(config)
 '''
 
-        metadata = analyze_python_code(code, "real_example.py")
+        metadata: Union[Dict[str, Any],None] = analyze_python_code(code, "real_example.py")
+        
+        if metadata is not None:
+            # Verify comprehensive analysis
+            assert metadata["has_classes"] is True
+            assert metadata["has_async"] is True
+            assert metadata["has_type_hints"] is True
+            assert metadata["has_decorators"] is True
+            assert metadata["has_docstrings"] is True
 
-        # Verify comprehensive analysis
-        assert metadata["has_classes"] is True
-        assert metadata["has_async"] is True
-        assert metadata["has_type_hints"] is True
-        assert metadata["has_decorators"] is True
-        assert metadata["has_docstrings"] is True
+            # Check specific elements
+            assert "Config" in metadata["classes"]
+            assert "DataProcessor" in metadata["classes"]
+            assert "ProcessingError" in metadata["classes"]
 
-        # Check specific elements
-        assert "Config" in metadata["classes"]
-        assert "DataProcessor" in metadata["classes"]
-        assert "ProcessingError" in metadata["classes"]
+            assert "load_config" in metadata["functions"]
+            assert "process_async" in metadata["functions"]
+            assert "_process_single" in metadata["private_methods"]
+            assert "__str__" in metadata["dunder_methods"]
 
-        assert "load_config" in metadata["functions"]
-        assert "process_async" in metadata["functions"]
-        assert "_process_single" in metadata["private_methods"]
-        assert "__str__" in metadata["dunder_methods"]
+            assert "dataclass" in metadata["decorators"]
+            assert "property" in metadata["decorators"]
+            assert "staticmethod" in metadata["decorators"]
 
-        assert "dataclass" in metadata["decorators"]
-        assert "property" in metadata["decorators"]
-        assert "staticmethod" in metadata["decorators"]
+            assert "os" in metadata["imports"]
+            assert "json" in metadata["imports"]
+            assert "typing" in metadata["imports"]
+            assert "dataclasses" in metadata["imports"]
+            assert "pathlib" in metadata["imports"]
 
-        assert "os" in metadata["imports"]
-        assert "json" in metadata["imports"]
-        assert "typing" in metadata["imports"]
-        assert "dataclasses" in metadata["imports"]
-        assert "pathlib" in metadata["imports"]
+            assert "DEFAULT_CONFIG" in metadata["variables"]
+            assert "MAX_RETRIES" in metadata["variables"]
 
-        assert "DEFAULT_CONFIG" in metadata["variables"]
-        assert "MAX_RETRIES" in metadata["variables"]
-
-        # Should have reasonable complexity
-        assert metadata["complexity_score"] > 15
+            # Should have reasonable complexity
+            assert metadata["complexity_score"] > 15
+        else:
+            pytest.fail("no metadata in chunk")
 
     def test_metadata_json_serialization(self):
         """Test that metadata can be properly serialized to JSON."""
@@ -417,16 +446,22 @@ class Example:
         """Test edge cases and error handling."""
 
         # Empty code
-        metadata = analyze_python_code("", "empty.py")
-        assert metadata["line_count"] == 0
-        assert metadata["char_count"] == 0
-        assert len(metadata["functions"]) == 0
-        assert len(metadata["classes"]) == 0
+        metadata: Union[Dict[str, Any],None] = analyze_python_code("", "empty.py")
+        if metadata is not None:
+            assert metadata["line_count"] == 0
+            assert metadata["char_count"] == 0
+            assert len(metadata["functions"]) == 0
+            assert len(metadata["classes"]) == 0
+        else:
+            pytest.fail("no metadata in chunk")
 
         # Only comments
         metadata = analyze_python_code("# Just a comment\n# Another comment", "comments.py")
-        assert metadata["line_count"] == 2
-        assert len(metadata["functions"]) == 0
+        if metadata is not None:
+            assert metadata["line_count"] == 2
+            assert len(metadata["functions"]) == 0
+        else:
+            pytest.fail("no metadata in chunk")
 
         # Syntax error handling
         try:

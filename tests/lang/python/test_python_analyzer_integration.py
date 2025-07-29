@@ -7,6 +7,7 @@ Moved from src/python_code_analyzer.py to tests/
 
 import logging
 import sys
+from typing import Any, Union, Dict
 import pytest
 
 from cocoindex_code_mcp_server.lang.python.python_code_analyzer import (
@@ -98,32 +99,41 @@ if __name__ == "__main__":
         print("✅ Python analyzer integration test passed!")
 
 
-def test_python_analyzer_edge_cases():
+def test_python_analyzer_edge_cases() -> None:
     """Test edge cases for the Python analyzer."""
 
     # Test empty code
-    empty_metadata = analyze_python_code("", "empty.py")
-    assert empty_metadata['line_count'] == 1
-    assert len(empty_metadata['functions']) == 0
-    assert len(empty_metadata['classes']) == 0
+    empty_metadata: Union[Dict[str, Any],None] = analyze_python_code("", "empty.py")
+    if empty_metadata is not None:
+        assert empty_metadata['line_count'] == 1
+        assert len(empty_metadata['functions']) == 0
+        assert len(empty_metadata['classes']) == 0
+    else:
+        pytest.fail("no metadata in chunk")
 
     # Test minimal code
     minimal_code = "x = 1"
-    minimal_metadata = analyze_python_code(minimal_code, "minimal.py")
-    assert minimal_metadata['language'].lower() == 'python'  # Handle case variations
-    assert minimal_metadata['line_count'] == 1
+    minimal_metadata: Union[Dict[str, Any],None] = analyze_python_code(minimal_code, "minimal.py")
+    if minimal_metadata is not None:
+        assert minimal_metadata['language'].lower() == 'python'  # Handle case variations
+        assert minimal_metadata['line_count'] == 1
+    else:
+        pytest.fail("no metadata in chunk")
 
     # Test syntax error handling
     broken_code = "def broken(:\n    pass"
-    broken_metadata = analyze_python_code(broken_code, "broken.py")
+    broken_metadata: Union[Dict[str, Any],None] = analyze_python_code(broken_code, "broken.py")
     # Should handle gracefully and return basic metadata
-    assert 'language' in broken_metadata
-    assert broken_metadata['language'].lower() == 'python'  # Handle case variations
+    if broken_metadata is not None:
+        assert 'language' in broken_metadata
+        assert broken_metadata['language'].lower() == 'python'  # Handle case variations
+    else:
+        pytest.fail("no metadata in chunk")
 
     print("✅ Python analyzer edge cases test passed!")
 
 
-def test_python_analyzer_comprehensive():
+def test_python_analyzer_comprehensive() -> None:
     """Test comprehensive Python features."""
 
     comprehensive_code = '''
@@ -203,35 +213,38 @@ VERSION = "1.0.0"
 DEBUG = True
 '''
 
-    metadata = analyze_python_code(comprehensive_code, "comprehensive.py")
+    metadata: Union[Dict[str, Any],None] = analyze_python_code(comprehensive_code, "comprehensive.py")
 
-    # Verify comprehensive analysis
-    assert metadata['has_classes'] is True
-    assert metadata['has_async'] is True
-    assert metadata['has_type_hints'] is True
-    assert metadata['has_decorators'] is True
-    assert metadata['has_docstrings'] is True
+    if metadata is not None:
+        # Verify comprehensive analysis
+        assert metadata['has_classes'] is True
+        assert metadata['has_async'] is True
+        assert metadata['has_type_hints'] is True
+        assert metadata['has_decorators'] is True
+        assert metadata['has_docstrings'] is True
 
-    # Check specific elements
-    assert 'Config' in metadata['classes']
-    assert 'Processor' in metadata['classes']
-    assert 'GenericProcessor' in metadata['classes']
+        # Check specific elements
+        assert 'Config' in metadata['classes']
+        assert 'Processor' in metadata['classes']
+        assert 'GenericProcessor' in metadata['classes']
 
-    assert 'utility_function' in metadata['functions']
+        assert 'utility_function' in metadata['functions']
 
-    expected_imports = ['asyncio', 'typing', 'dataclasses', 'pathlib']
-    for imp in expected_imports:
-        assert imp in metadata['imports'], f"Missing import: {imp}"
+        expected_imports = ['asyncio', 'typing', 'dataclasses', 'pathlib']
+        for imp in expected_imports:
+            assert imp in metadata['imports'], f"Missing import: {imp}"
 
-    # Check for decorators
-    assert 'dataclass' in metadata['decorators']
-    assert 'classmethod' in metadata['decorators']
-    assert 'staticmethod' in metadata['decorators']
+        # Check for decorators
+        assert 'dataclass' in metadata['decorators']
+        assert 'classmethod' in metadata['decorators']
+        assert 'staticmethod' in metadata['decorators']
 
-    # Should have reasonable complexity (adjusted expectation)
-    assert metadata['complexity_score'] > 2
+        # Should have reasonable complexity (adjusted expectation)
+        assert metadata['complexity_score'] > 2
 
-    print("✅ Python analyzer comprehensive test passed!")
+        print("✅ Python analyzer comprehensive test passed!")
+    else:
+        pytest.fail("no metadata in chunk")
 
 
 if __name__ == "__main__":

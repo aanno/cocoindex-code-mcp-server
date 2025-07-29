@@ -8,7 +8,7 @@ against the default CocoIndex language handling to validate our improvements.
 """
 
 import ast
-from typing import Any, Dict
+from typing import Any, Dict, Union
 
 import pytest
 
@@ -382,26 +382,27 @@ class TestCustomVsDefaultHandlerComparison:
             assert found_in_custom >= 2, f"Custom handler should find at least 2 expected imports, found {found_in_custom}"
             assert found_in_default >= 2, f"Default handler should find at least 2 expected imports, found {found_in_default}"
 
-    def test_analysis_method_tracking(self):
+    def test_analysis_method_tracking(self) -> None:
         """Test that analysis method is properly tracked."""
-        custom_result = self.custom_analyzer.analyze_code(SAMPLE_PYTHON_CODE, self.filename)
-        default_result = basic_analyze_python_code(SAMPLE_PYTHON_CODE, self.filename)
+        custom_result: Union[Dict[str, Any], None] = self.custom_analyzer.analyze_code(SAMPLE_PYTHON_CODE, self.filename)
+        default_result: Dict[str, Any] = basic_analyze_python_code(SAMPLE_PYTHON_CODE, self.filename)
 
         # Check analysis method is tracked
         assert 'analysis_method' in custom_result
         assert 'analysis_method' in default_result
 
         # Custom analyzer should indicate hybrid approach
-        custom_method = custom_result['analysis_method']
-        assert custom_method in ['tree_sitter', 'python_ast', 'hybrid', 'tree_sitter+python_ast'], \
-            f"Custom analyzer should use advanced method, got: {custom_method}"
+        if custom_result is not None:
+            custom_method = custom_result['analysis_method']
+            assert custom_method in ['tree_sitter', 'python_ast', 'hybrid', 'tree_sitter+python_ast'], \
+                f"Custom analyzer should use advanced method, got: {custom_method}"
 
         # Default should be basic
         default_method = default_result['analysis_method']
         assert default_method in ['basic', 'python_ast', 'python', 'basic_ast_only'], \
             f"Default analyzer method: {default_method}"
 
-    def test_metadata_richness_comparison(self):
+    def test_metadata_richness_comparison(self) -> None:
         """Compare overall metadata richness between handlers."""
         custom_result = self.custom_analyzer.analyze_code(SAMPLE_PYTHON_CODE, self.filename)
         default_result = basic_analyze_python_code(SAMPLE_PYTHON_CODE, self.filename)
@@ -432,7 +433,7 @@ class TestCustomVsDefaultHandlerComparison:
         assert custom_complex_count >= 2, f"Custom handler should provide at least 2 complex data structures, got {custom_complex_count}"
         assert default_complex_count >= 1, f"Default handler should provide at least 1 complex data structure, got {default_complex_count}"
 
-    def test_error_handling_comparison(self):
+    def test_error_handling_comparison(self) -> None:
         """Compare error handling between custom and default handlers."""
         # Test with malformed Python code
         malformed_code = '''
