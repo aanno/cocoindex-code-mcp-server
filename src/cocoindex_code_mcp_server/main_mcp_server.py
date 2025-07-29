@@ -836,11 +836,29 @@ QUOTED_VALUE: /"[^"]*"/
             table_name = cocoindex.utils.get_target_default_name(
                 code_embedding_flow, "code_embeddings"
             )
-            backend = BackendFactory.create_backend(
-                backend_type,
-                connection_string=database_url,
-                table_name=table_name
-            )
+            
+            # Create the appropriate backend
+            if backend_type == "postgres":
+                from psycopg_pool import ConnectionPool
+                from pgvector.psycopg import register_vector
+                
+                pool = ConnectionPool(database_url)
+                # Register pgvector extensions
+                with pool.connection() as conn:
+                    register_vector(conn)
+                
+                backend = BackendFactory.create_backend(
+                    backend_type,
+                    pool=pool,
+                    table_name=table_name
+                )
+            else:
+                # For other backends that might expect connection_string
+                backend = BackendFactory.create_backend(
+                    backend_type,
+                    connection_string=database_url,
+                    table_name=table_name
+                )
             
             logger.info(f"🔧 Initializing {backend_type} backend...")
             await initialize_search_engine(backend)
