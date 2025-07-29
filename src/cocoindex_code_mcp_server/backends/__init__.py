@@ -78,19 +78,19 @@ class VectorStoreBackend(ABC):
 
     @property
     def host(self):
-        return getattr(self.host, 'pool', None)
-
+        return getattr(self, 'pool', None)
+    
     @property
     def port(self):
-        return getattr(self.host, 'port', None)
-
+        return getattr(self, 'port', None)
+    
     @property
     def extra_config(self):
-        return getattr(self.host, 'extra_config', None)
+        return getattr(self, 'extra_config', None)
 
     @property
     def backend_type(self):
-        return getattr(self.host, 'backend_type', None)
+        return getattr(self, 'backend_type', None)
 
 class BackendFactory:
     """Factory for creating vector store backends."""
