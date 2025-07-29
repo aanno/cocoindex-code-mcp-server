@@ -57,7 +57,9 @@ def db_pool():
 @pytest.fixture
 def search_engine(db_pool):
     """Create HybridSearchEngine instance."""
-    return HybridSearchEngine(db_pool)
+    from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
+    parser = KeywordSearchParser()
+    return HybridSearchEngine(table_name="code_embeddings", parser=parser, pool=db_pool)
 
 
 @pytest.mark.integration

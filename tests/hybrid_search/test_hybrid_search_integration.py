@@ -195,7 +195,7 @@ class TestWorkflowIntegration:
             from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
                 HybridSearchEngine,
             )
-            from cocoindex_code_mcp_server.keyword_search_parser import (
+            from cocoindex_code_mcp_server.keyword_search_parser_lark import (
                 KeywordSearchParser,
             )
 
@@ -206,9 +206,9 @@ class TestWorkflowIntegration:
             def embedding_func(x): return [0.1, 0.2, 0.3]  # Simple mock embedding
 
             engine = HybridSearchEngine(
-                pool=mock_pool,
                 table_name="test_embeddings",
                 parser=parser,
+                pool=mock_pool,
                 embedding_func=embedding_func
             )
 
@@ -251,7 +251,7 @@ class TestWorkflowIntegration:
             from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
                 HybridSearchEngine,
             )
-            from cocoindex_code_mcp_server.keyword_search_parser import (
+            from cocoindex_code_mcp_server.keyword_search_parser_lark import (
                 KeywordSearchParser,
             )
 
@@ -262,9 +262,9 @@ class TestWorkflowIntegration:
             def embedding_func(x): return [0.1, 0.2, 0.3]
 
             engine = HybridSearchEngine(
-                pool=mock_pool,
                 table_name="test_embeddings",
                 parser=parser,
+                pool=mock_pool,
                 embedding_func=embedding_func
             )
 
@@ -354,9 +354,12 @@ class TestErrorHandling:
             mock_pool = Mock()
             mock_pool.connection.side_effect = Exception("Database connection failed")
 
+            from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
+            parser = KeywordSearchParser()
             engine = HybridSearchEngine(
-                pool=mock_pool,
                 table_name="test_embeddings",
+                parser=parser,
+                pool=mock_pool,
                 embedding_func=lambda x: [0.1, 0.2, 0.3]
             )
 
@@ -373,7 +376,7 @@ class TestErrorHandling:
             from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
                 HybridSearchEngine,
             )
-            from cocoindex_code_mcp_server.keyword_search_parser import (
+            from cocoindex_code_mcp_server.keyword_search_parser_lark import (
                 KeywordSearchParser,
             )
 
@@ -382,9 +385,9 @@ class TestErrorHandling:
             mock_pool = Mock()
 
             engine = HybridSearchEngine(
-                pool=mock_pool,
                 table_name="test_embeddings",
                 parser=parser,
+                pool=mock_pool,
                 embedding_func=lambda x: [0.1, 0.2, 0.3]
             )
 
@@ -410,9 +413,12 @@ class TestErrorHandling:
 
             mock_pool = Mock()
 
+            from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
+            parser = KeywordSearchParser()
             engine = HybridSearchEngine(
-                pool=mock_pool,
                 table_name="test_embeddings",
+                parser=parser,
+                pool=mock_pool,
                 embedding_func=failing_embedding_func
             )
 

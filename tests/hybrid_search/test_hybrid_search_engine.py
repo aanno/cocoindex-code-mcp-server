@@ -15,6 +15,7 @@ from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
     format_results_readable
 )
 from cocoindex_code_mcp_server.backends import QueryFilters, VectorStoreBackend, SearchResult
+from cocoindex_code_mcp_server.schemas import SearchResultType
 from cocoindex_code_mcp_server.keyword_search_parser import SearchCondition, SearchGroup
 from numpy import ndarray
 from typing import Any, Dict, List
@@ -35,11 +36,12 @@ class MockVectorStoreBackend(VectorStoreBackend):
                 filename="test.py",
                 language="Python", 
                 code="def test():",
+                location="test.py:1-3",
                 score=0.8,
                 start={"line": 1},
                 end={"line": 3},
                 source="files",
-                score_type="vector"
+                score_type=SearchResultType.VECTOR_SIMILARITY
             )
         ]
     
@@ -50,11 +52,12 @@ class MockVectorStoreBackend(VectorStoreBackend):
                 filename="test.py",
                 language="Python",
                 code="def test():",
+                location="test.py:1-3",
                 score=1.0,
                 start={"line": 1},
                 end={"line": 3},
                 source="files", 
-                score_type="keyword"
+                score_type=SearchResultType.KEYWORD_MATCH
             )
         ]
     
@@ -65,11 +68,12 @@ class MockVectorStoreBackend(VectorStoreBackend):
                 filename="test.py",
                 language="Python",
                 code="def test():",
+                location="test.py:1-3",
                 score=0.75,
                 start={"line": 1},
                 end={"line": 3},
                 source="files",
-                score_type="hybrid"
+                score_type=SearchResultType.HYBRID_COMBINED
             )
         ]
     
@@ -115,6 +119,7 @@ def mock_embedding_func():
 def hybrid_engine_with_backend(mock_backend, mock_parser, mock_embedding_func):
     """Create a HybridSearchEngine with mock backend."""
     return HybridSearchEngine(
+        table_name="test_table",
         backend=mock_backend,
         parser=mock_parser,
         embedding_func=mock_embedding_func
@@ -127,9 +132,9 @@ def hybrid_engine_legacy(mock_pool, mock_parser, mock_embedding_func):
     with patch('cocoindex_code_mcp_server.backends.BackendFactory.create_backend') as mock_factory:
         mock_factory.return_value = MockVectorStoreBackend()
         return HybridSearchEngine(
-            pool=mock_pool,
             table_name="test_table",
             parser=mock_parser,
+            pool=mock_pool,
             embedding_func=mock_embedding_func
         )
 
@@ -142,6 +147,7 @@ class TestHybridSearchEngine:
     def test_initialization_with_backend(self, mock_backend: MockVectorStoreBackend, mock_parser: Mock, mock_embedding_func: Mock):
         """Test engine initialization with backend."""
         engine = HybridSearchEngine(
+            table_name="test_table",
             backend=mock_backend,
             parser=mock_parser,
             embedding_func=mock_embedding_func
@@ -172,6 +178,7 @@ class TestHybridSearchEngine:
         """Test engine initialization error when neither backend nor pool provided."""
         with pytest.raises(ValueError, match="Either 'backend' or 'pool' parameter must be provided"):
             HybridSearchEngine(
+                table_name="test_table",
                 parser=mock_parser,
                 embedding_func=mock_embedding_func
             )
@@ -188,7 +195,7 @@ class TestHybridSearchEngine:
         mock_parser_class.return_value = mock_parser_instance
         mock_get_name.return_value = "default_table"
 
-        engine = HybridSearchEngine(pool=mock_pool)
+        engine = HybridSearchEngine(table_name="default_table", parser=mock_parser_instance, pool=mock_pool)
 
         mock_factory.assert_called_once_with("postgres", pool=mock_pool, table_name="default_table")
         assert engine.backend == mock_backend
@@ -296,16 +303,30 @@ class TestHybridSearchEngine:
 
     def test_search_result_to_dict_conversion(self, hybrid_engine_with_backend: HybridSearchEngine):
         """Test SearchResult to dict conversion."""
+        from cocoindex_code_mcp_server.schemas import ChunkMetadata
+        metadata: ChunkMetadata = {
+            "filename": "test.py",
+            "language": "Python",
+            "location": "test.py:1-3",
+            "functions": ["test"],
+            "classes": [],
+            "imports": [],
+            "complexity_score": 5,
+            "has_type_hints": False,
+            "has_async": False,
+            "has_classes": False
+        }
         search_result = SearchResult(
             filename="test.py",
             language="Python",
             code="def test():",
+            location="test.py:1-3",
             score=0.85,
             start={"line": 1},
             end={"line": 3},
             source="files",
-            score_type="hybrid",
-            metadata={"functions": ["test"], "complexity": 5}
+            score_type=SearchResultType.HYBRID_COMBINED,
+            metadata=metadata
         )
         
         result_dict = hybrid_engine_with_backend._search_result_to_dict(search_result)
@@ -453,14 +474,15 @@ class TestBackendIntegration:
         mock_backend = MockVectorStoreBackend()
         mock_factory.return_value = mock_backend
         
-        engine = HybridSearchEngine(pool=mock_pool, table_name="custom_table")
+        mock_parser_instance = Mock()
+        engine = HybridSearchEngine(table_name="custom_table", parser=mock_parser_instance, pool=mock_pool)
         
         mock_factory.assert_called_once_with("postgres", pool=mock_pool, table_name="custom_table")
         assert engine.backend == mock_backend
 
-    def test_backend_constructor_uses_provided_backend(self, mock_backend: MockVectorStoreBackend):
+    def test_backend_constructor_uses_provided_backend(self, mock_backend: MockVectorStoreBackend, mock_parser: Mock):
         """Test that backend constructor uses provided backend directly."""
-        engine = HybridSearchEngine(backend=mock_backend)
+        engine = HybridSearchEngine(table_name="test_table", parser=mock_parser, backend=mock_backend)
         
         assert engine.backend == mock_backend
 
