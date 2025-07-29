@@ -6,7 +6,7 @@ The main_interactive_query.py file has been successfully refactored into smaller
 
 ## New Module Structure
 
-### 1. `src/arg_parser.py`
+### 1. `src/arg_parser_old.py`
 **Purpose**: Command-line argument parsing
 - `parse_args()`: Parse command-line arguments
 - `determine_paths()`: Determine which paths to use based on arguments
@@ -56,7 +56,7 @@ The main_interactive_query.py file has been successfully refactored into smaller
 
 ```
 main_interactive_query.py
-├── arg_parser.py
+├── arg_parser_old.py
 ├── query_interactive.py
 │   └── cocoindex_config.py
 │       └── haskell_ast_chunker.py
@@ -100,4 +100,4 @@ This modular structure makes it easy to add new features:
 - Additional language support can be added to new modules
 - New query modes can be implemented in separate modules
 - Different embedding models can be configured independently
-- Enhanced CLI features can be added to arg_parser.py
+- Enhanced CLI features can be added to arg_parser_old.py

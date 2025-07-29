@@ -11,7 +11,7 @@ class TestLiveUpdates(unittest.TestCase):
 
     def test_live_argument_parsing(self):
         """Test that --live and --poll arguments are parsed correctly."""
-        from cocoindex_code_mcp_server.arg_parser import parse_args
+        from cocoindex_code_mcp_server.arg_parser_old import parse_args
 
         # Test --live flag
         with patch('sys.argv', ['main_interactive_query.py', '--live']):
@@ -33,7 +33,7 @@ class TestLiveUpdates(unittest.TestCase):
 
     def test_live_arguments_with_paths(self):
         """Test live update arguments combined with paths."""
-        from cocoindex_code_mcp_server.arg_parser import parse_args
+        from cocoindex_code_mcp_server.arg_parser_old import parse_args
 
         with patch('sys.argv', ['main_interactive_query.py', '--live', '--poll', '15', '/path/to/code']):
             args = parse_args()

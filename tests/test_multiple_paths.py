@@ -33,7 +33,7 @@ class TestMultiplePaths(unittest.TestCase):
 
     def test_argument_parsing_logic(self):
         """Test the argument parsing logic for multiple paths."""
-        from cocoindex_code_mcp_server.arg_parser import parse_args
+        from cocoindex_code_mcp_server.arg_parser_old import parse_args
 
         # Test default behavior
         with patch('sys.argv', ['main_interactive_query.py']):

@@ -19,5 +19,5 @@
 * pgvector on podman: use a volume for the data
 * bug report against python mcp library for the resource bug
 * use click for all arguments parsing
-* unify command line argument parsing (in arg_parser.py)
+* unify command line argument parsing (in arg_parser_old.py)
 * add hypothesis property testing: https://hypothesis.readthedocs.io/en/latest/
