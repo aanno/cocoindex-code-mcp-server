@@ -272,7 +272,7 @@ class ASTParserFactory:
         '.kt': 'kotlin', '.kts': 'kotlin',
         '.md': 'markdown', '.mdx': 'markdown',
         '.php': 'php',
-        '.py': 'python', '.pyi': 'python',
+        '.py': 'python', # '.pyi': 'python',
         '.rb': 'ruby',
         '.rs': 'rust',
         '.scala': 'scala',

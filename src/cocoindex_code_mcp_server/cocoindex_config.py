@@ -96,7 +96,7 @@ TREE_SITTER_LANGUAGE_MAP = {
     ".md": "Markdown", ".mdx": "Markdown",
     ".pas": "Pascal", ".dpr": "Pascal",
     ".php": "PHP",
-    ".py": "Python", ".pyi": "Python",
+    ".py": "Python", # ".pyi": "Python",
     ".r": "R", ".R": "R",
     ".rb": "Ruby",
     ".rs": "Rust",

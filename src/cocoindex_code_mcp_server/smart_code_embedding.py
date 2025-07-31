@@ -43,7 +43,7 @@ class LanguageModelSelector:
     # File extension to language mapping
     EXTENSION_TO_LANGUAGE = {
         ".py": "python",
-        ".pyi": "python",
+        # ".pyi": "python",
         ".rs": "rust",
         ".js": "javascript",
         ".mjs": "javascript",

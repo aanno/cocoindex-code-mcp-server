@@ -91,7 +91,7 @@ def detect_language_from_filename(filename: str) -> str:
         ".go": "Go",
         ".java": "Java",
         ".js": "JavaScript", ".mjs": "JavaScript", ".cjs": "JavaScript",
-        ".py": "Python", ".pyi": "Python",
+        ".py": "Python", # ".pyi": "Python",
         ".rb": "Ruby",
         ".rs": "Rust",
         ".scala": "Scala",
