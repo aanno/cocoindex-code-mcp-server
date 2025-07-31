@@ -204,7 +204,7 @@ def get_mcp_resources() -> list[types.Resource]:
             mimeType="application/json",
         ),
         types.Resource(
-            uri=AnyUrl("cocoindex://query/examples"),
+            uri=AnyUrl("cocoindex://search/examples"),
             name="search:examples",
             description="Categorized examples of keyword query syntax",
             mimeType="application/json",
@@ -222,7 +222,7 @@ def get_mcp_resources() -> list[types.Resource]:
             mimeType="application/json",
         ),
         types.Resource(
-            uri=AnyUrl("cocoindex://test/simple"),
+            uri=AnyUrl("cocoindex://debug/example_resource"),
             name="debug:example_resource",
             description="Simple test resource for debugging",
             mimeType="application/json",
@@ -364,13 +364,13 @@ def main(
             content = await get_search_config()
         elif uri_str == "cocoindex://database/schema":
             content = await get_database_schema()
-        elif uri_str == "cocoindex://query/examples":
+        elif uri_str == "cocoindex://search/examples":
             content = await get_query_examples()
         elif uri_str == "cocoindex://search/grammar":
             content = await get_search_grammar()
         elif uri_str == "cocoindex://search/operators":
             content = await get_search_operators()
-        elif uri_str == "cocoindex://test/simple":
+        elif uri_str == "cocoindex://debug/example_resource":
             logger.info("✅ Test resource accessed successfully!")
             content = json.dumps({"message": "Test resource working", "uri": uri_str}, indent=2)
         else:

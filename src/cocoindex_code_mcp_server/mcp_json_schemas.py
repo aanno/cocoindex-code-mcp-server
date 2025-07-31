@@ -50,10 +50,6 @@ HYBRID_SEARCH_OUTPUT_SCHEMA = {
             },
             "required": [
                 "vector_query",
-                "keyword_query",
-                "top_k",
-                "vector_weight",
-                "keyword_weight"
             ],
             "additionalProperties": False
         },
@@ -149,22 +145,6 @@ HYBRID_SEARCH_OUTPUT_SCHEMA = {
                             "filename",
                             "line_count",
                             "char_count",
-                            "functions",
-                            "classes",
-                            "imports",
-                            "variables",
-                            "decorators",
-                            "complexity_score",
-                            "has_async",
-                            "has_classes",
-                            "has_decorators",
-                            "has_type_hints",
-                            "has_docstrings",
-                            "private_methods",
-                            "dunder_methods",
-                            "function_details",
-                            "class_details",
-                            "import_details",
                             "analysis_method",
                             "metadata_json"
                         ],
@@ -182,13 +162,6 @@ HYBRID_SEARCH_OUTPUT_SCHEMA = {
                     "score_type",
                     "location",
                     "source_name",
-                    "functions",
-                    "classes",
-                    "imports",
-                    "complexity_score",
-                    "has_type_hints",
-                    "has_async",
-                    "has_classes",
                     "metadata_json"
                 ],
                 "additionalProperties": True
