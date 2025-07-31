@@ -26,7 +26,9 @@ import click
 import mcp.types as types
 from dotenv import load_dotenv
 from mcp.server.lowlevel import Server
+from mcp.server.lowlevel.helper_types import ReadResourceContents
 from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
+from mcp.shared.exceptions import McpError
 # Backend abstraction imports
 from .backends import BackendFactory, VectorStoreBackend
 from starlette.applications import Starlette
@@ -42,13 +44,62 @@ from .db.pgvector.hybrid_search import HybridSearchEngine
 from .keyword_search_parser_lark import KeywordSearchParser
 from .lang.python.python_code_analyzer import analyze_python_code
 
-coverage: Optional[ModuleType] = None
-
 try:
-    import coverage as cov_module
-    coverage = cov_module
+    import coverage
+    from coverage import Coverage
+    HAS_COVERAGE = True
 except ImportError:
-    coverage = None
+    HAS_COVERAGE = False
+    Coverage = None  # type: ignore
+
+
+@contextlib.asynccontextmanager
+async def coverage_context() -> AsyncIterator[Optional[object]]:
+    """Context manager for coverage collection during daemon execution."""
+    if not HAS_COVERAGE:
+        yield None
+        return
+
+    import atexit
+    
+    if Coverage is None:
+        yield None
+        return
+        
+    cov = Coverage()
+    cov.start()
+    
+    # Set up cleanup handlers
+    def stop_coverage():
+        try:
+            cov.stop()
+            cov.save()
+        except Exception as e:
+            logger.warning(f"Error stopping coverage: {e}")
+    
+    # Register cleanup handlers
+    atexit.register(stop_coverage)
+    
+    # Handle shutdown via signal
+    original_shutdown = handle_shutdown
+    
+    def coverage_aware_shutdown(signum, frame):
+        stop_coverage()
+        original_shutdown(signum, frame)
+    
+    # Replace signal handlers temporarily
+    signal.signal(signal.SIGINT, coverage_aware_shutdown)
+    signal.signal(signal.SIGTERM, coverage_aware_shutdown)
+    
+    try:
+        yield cov
+    finally:
+        # Restore original handlers
+        signal.signal(signal.SIGINT, handle_shutdown)
+        signal.signal(signal.SIGTERM, handle_shutdown)
+        
+        # Stop coverage
+        stop_coverage()
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -397,32 +448,39 @@ def main(
             )]
 
     @app.read_resource()
-    async def handle_read_resource(uri: str) -> list[types.TextResourceContents]:
+    async def handle_read_resource(uri: AnyUrl) -> List[ReadResourceContents]:
         """Read MCP resource content."""
-        logger.info(f"🔍 Reading resource: '{uri}' (type: {type(uri)}, repr: {repr(uri)})")
+        uri_str = str(uri)
+        logger.info(f"🔍 Reading resource: '{uri_str}' (type: {type(uri)}, repr: {repr(uri)})")
 
-        if uri == "cocoindex://search/stats":
+        if uri_str == "cocoindex://search/stats":
             content = await get_search_stats()
-        elif uri == "cocoindex://search/config":
+        elif uri_str == "cocoindex://search/config":
             content = await get_search_config()
-        elif uri == "cocoindex://database/schema":
+        elif uri_str == "cocoindex://database/schema":
             content = await get_database_schema()
-        elif uri == "cocoindex://query/examples":
+        elif uri_str == "cocoindex://query/examples":
             content = await get_query_examples()
-        elif uri == "cocoindex://search/grammar":
+        elif uri_str == "cocoindex://search/grammar":
             content = await get_search_grammar()
-        elif uri == "cocoindex://search/operators":
+        elif uri_str == "cocoindex://search/operators":
             content = await get_search_operators()
-        elif uri == "cocoindex://test/simple":
+        elif uri_str == "cocoindex://test/simple":
             logger.info("✅ Test resource accessed successfully!")
-            content = json.dumps({"message": "Test resource working", "uri": uri}, indent=2)
+            content = json.dumps({"message": "Test resource working", "uri": uri_str}, indent=2)
         else:
             logger.error(
-                f"❌ Unknown resource requested: '{uri}' (available: search/stats, search/config, database/schema, query/examples, search/grammar, search/operators, test/simple)")
-            raise ValueError(f"Unknown resource: {uri}")
+                f"❌ Unknown resource requested: '{uri_str}' (available: search/stats, search/config, database/schema, query/examples, search/grammar, search/operators, test/simple)")
+            raise McpError(types.ErrorData(
+                code=404,
+                message=f"Resource not found: {uri_str}"
+            ))
 
-        logger.info(f"✅ Successfully retrieved resource: '{uri}'")
-        return [types.TextResourceContents(uri=AnyUrl(uri), text=content)]
+        logger.info(f"✅ Successfully retrieved resource: '{uri_str}'")
+        return [ReadResourceContents(
+            content=content,
+            mime_type="application/json" if uri_str != "cocoindex://search/grammar" else "text/x-lark"
+        )]
 
     # Tool implementation functions
     async def perform_hybrid_search(arguments: dict) -> dict:
@@ -828,52 +886,60 @@ QUOTED_VALUE: /"[^"]*"/
             raise ValueError("COCOINDEX_DATABASE_URL not found in environment")
 
         backend_type = os.getenv("COCOINDEX_BACKEND_TYPE", "postgres").lower()
-        # Use backend abstraction for proper cleanup
-        async with session_manager.run():
-            logger.info("🚀 MCP Server started with StreamableHTTP session manager!")
-
-            # Create backend using factory pattern
-            table_name = cocoindex.utils.get_target_default_name(
-                code_embedding_flow, "code_embeddings"
-            )
+        
+        # Use coverage context for long-running daemon
+        async with coverage_context() as cov:
+            if cov:
+                logger.info("📊 Coverage collection started")
             
-            # Create the appropriate backend
-            if backend_type == "postgres":
-                from psycopg_pool import ConnectionPool
-                from pgvector.psycopg import register_vector
-                
-                pool = ConnectionPool(database_url)
-                # Register pgvector extensions
-                with pool.connection() as conn:
-                    register_vector(conn)
-                
-                backend = BackendFactory.create_backend(
-                    backend_type,
-                    pool=pool,
-                    table_name=table_name
-                )
-            else:
-                # For other backends that might expect connection_string
-                backend = BackendFactory.create_backend(
-                    backend_type,
-                    connection_string=database_url,
-                    table_name=table_name
-                )
-            
-            logger.info(f"🔧 Initializing {backend_type} backend...")
-            await initialize_search_engine(backend)
+            # Use backend abstraction for proper cleanup
+            async with session_manager.run():
+                logger.info("🚀 MCP Server started with StreamableHTTP session manager!")
 
-            # Initialize background components
-            await background_initialization()
+                # Create backend using factory pattern
+                table_name = cocoindex.utils.get_target_default_name(
+                    code_embedding_flow, "code_embeddings"
+                )
+                
+                # Create the appropriate backend
+                if backend_type == "postgres":
+                    from psycopg_pool import ConnectionPool
+                    from pgvector.psycopg import register_vector
+                    
+                    pool = ConnectionPool(database_url)
+                    # Register pgvector extensions
+                    with pool.connection() as conn:
+                        register_vector(conn)
+                    
+                    backend = BackendFactory.create_backend(
+                        backend_type,
+                        pool=pool,
+                        table_name=table_name
+                    )
+                else:
+                    # For other backends that might expect connection_string
+                    backend = BackendFactory.create_backend(
+                        backend_type,
+                        connection_string=database_url,
+                        table_name=table_name
+                    )
+                
+                logger.info(f"🔧 Initializing {backend_type} backend...")
+                await initialize_search_engine(backend)
 
-            try:
-                yield
-            finally:
-                logger.info("🛑 MCP Server shutting down...")
-                shutdown_event.set()
-                if hasattr(backend, 'close'):
-                    backend.close()
-                logger.info("🧹 Backend resources cleaned up")
+                # Initialize background components
+                await background_initialization()
+
+                try:
+                    yield
+                finally:
+                    logger.info("🛑 MCP Server shutting down...")
+                    shutdown_event.set()
+                    if hasattr(backend, 'close'):
+                        backend.close()
+                    logger.info("🧹 Backend resources cleaned up")
+                    if cov:
+                        logger.info("📊 Coverage collection will be finalized")
 
     # Create ASGI application
     starlette_app = Starlette(
@@ -891,111 +957,6 @@ QUOTED_VALUE: /"[^"]*"/
     uvicorn.run(starlette_app, host="127.0.0.1", port=port)
 
     return 0
-
-
-# Export module-level objects for testing
-# These are created when the module is imported for testing
-try:
-    # Create a test server instance for module-level access using the same functions
-    server: Server = Server("cocoindex-rag-test")
-
-    @server.list_tools()
-    async def handle_list_tools() -> list[types.Tool]:
-        """List available MCP tools."""
-        return get_mcp_tools()
-
-    @server.list_resources()
-    async def handle_list_resources() -> list[types.Resource]:
-        """List available MCP resources."""
-        return get_mcp_resources()
-
-    @server.call_tool()
-    async def handle_call_tool(name: str, arguments: dict) -> list[types.TextContent]:
-        """Handle MCP tool calls with proper error handling."""
-        # Simplified version - just return mock responses for testing
-        test_response = {
-            "test_mode": True,
-            "tool": name,
-            "arguments": arguments,
-            "message": "This is a test response from the module-level server instance"
-        }
-
-        return [types.TextContent(
-            type="text",
-            text=json.dumps(test_response, indent=2, ensure_ascii=False)
-        )]
-
-    @server.read_resource()
-    async def handle_read_resource(uri: str) -> list[types.TextResourceContents]:
-        """Read MCP resource content."""
-        # Simplified version - just return mock responses for testing
-        test_content = json.dumps({
-            "test_mode": True,
-            "uri": uri,
-            "message": "This is a test resource from the module-level server instance"
-        }, indent=2)
-
-        return [types.TextResourceContents(uri=AnyUrl(uri), text=test_content)]
-
-    # Export the test server and handlers for testing
-    # Note: The actual handler functions are already defined above with @server decorators
-    # We just need to export them by their function names
-
-    # Create a simple wrapper for handle_read_resource that returns just text
-    _original_handle_read_resource = handle_read_resource
-
-    async def handle_read_resource(uri: AnyUrl) -> str:
-        """Test wrapper that returns just the text content."""
-        # Handle test cases for valid/invalid resources
-        valid_resources = [
-            "cocoindex://search/stats",
-            "cocoindex://search/config",
-            "cocoindex://database/schema",
-            "cocoindex://query/examples",
-            "cocoindex://search/grammar",
-            "cocoindex://search/operators",
-            "cocoindex://test/simple"
-        ]
-
-        if uri not in valid_resources:
-            raise ValueError(f"Unknown resource: {uri}")
-
-        # For test mode, return simple mock responses
-        if uri == "cocoindex://search/config":
-            config = {
-                "table_name": "test_table",
-                "embedding_model": "cocoindex default",
-                "parser_type": "lark_keyword_parser",
-                "supported_operators": ["AND", "OR", "NOT", "value_contains", "==", "!=", "<", ">", "<=", ">="],
-                "default_weights": {
-                    "vector_weight": 0.7,
-                    "keyword_weight": 0.3
-                }
-            }
-            return json.dumps(config, indent=2)
-        else:
-            # Return simple test response for other resources
-            return json.dumps({"test_mode": True, "uri": uri}, indent=2)
-
-    # Export individual resource functions for testing
-    async def get_search_config() -> str:
-        """Get current search configuration for testing."""
-        config = {
-            "table_name": "test_table",
-            "embedding_model": "cocoindex default",
-            "parser_type": "lark_keyword_parser",
-            "supported_operators": ["AND", "OR", "NOT", "value_contains", "==", "!=", "<", ">", "<=", ">="],
-            "default_weights": {
-                "vector_weight": 0.7,
-                "keyword_weight": 0.3
-            }
-        }
-        return json.dumps(config, indent=2)
-
-except Exception:
-    # If there's any error creating test exports, skip them
-    # This ensures the main functionality still works
-    pass
 
 
 if __name__ == "__main__":
