@@ -37,6 +37,14 @@ class MockCocoIndex:
             """Mock utils.get_target_default_name method."""
             return default_name
 
+    class op:
+        @staticmethod
+        def function():
+            """Mock op.function decorator."""
+            def decorator(func):
+                return func
+            return decorator
+
 
 # Patch the import before importing our module
 sys.modules['cocoindex'] = MockCocoIndex()  # type: ignore[assignment]

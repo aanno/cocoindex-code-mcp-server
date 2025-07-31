@@ -395,6 +395,9 @@ class MapperFactory:
             return PostgresFieldMapper()
         elif backend_type.lower() == "qdrant":
             return QdrantFieldMapper()
+        elif backend_type.lower() == "mock":
+            # For testing purposes, return PostgresFieldMapper as default
+            return PostgresFieldMapper()
         else:
             raise ValueError(f"Unknown backend type: {backend_type}")
 
