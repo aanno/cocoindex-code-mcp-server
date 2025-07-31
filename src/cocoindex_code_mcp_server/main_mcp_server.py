@@ -149,7 +149,7 @@ def get_mcp_tools() -> list[types.Tool]:
     return [
         types.Tool(
             name="search:hybrid",
-            description="Perform hybrid search combining vector similarity and keyword metadata filtering. Keyword syntax: field:value, exists(field), value_contains(field, 'text'), AND/OR logic.",
+            description="Perform hybrid search combining vector similarity and keyword metadata filtering. Keyword syntax: field:value, exists(field), value_contains(field, 'text'), multiple terms are AND ed, use parentheses for OR.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -695,9 +695,10 @@ def main(
                     }
                 },
                 "boolean_logic": {
-                    "AND": "language:python AND has_async:true",
-                    "OR": "language:python OR language:rust",
-                    "grouping": "(language:python OR language:rust) AND exists(functions)"
+                    "AND": "default, i.e. simple separate search terms with spaces",
+                    "OR": "parentheses are used to create OR terms",
+                    "examples": ['(language:python language:rust) exists(functions)', 
+'(value_contains(code, "async")) exists(functions)) (value_contains(filename, "test") has_async:true)']
                 },
                 "available_fields": [
                     "filename", "language", "code", "functions", "classes", "imports",
@@ -734,9 +735,8 @@ def main(
         """Get current search configuration."""
         config = {
             "table_name": hybrid_search_engine.table_name if hybrid_search_engine else "unknown",
-            "embedding_model": "cocoindex default",
-            "parser_type": "lark_keyword_parser",
-            "supported_operators": ["AND", "OR", "NOT", "value_contains", "==", "!=", "<", ">", "<=", ">="],
+            "embedding_model": "TODO: language dependent",
+            "parser_type": "TODO: lark_keyword_parser",
             "default_weights": {
                 "vector_weight": 0.7,
                 "keyword_weight": 0.3
@@ -791,10 +791,16 @@ def main(
                 'value_contains(filename, "test")',
                 'value_contains(functions, "parse") AND language:python'
             ],
+            "boolean_and_logic": [
+                "language:python has_async:true",
+                "language:python exists(embedding)"
+            ],
+            "boolean_or_logic": [
+                "(language:python language:rust)",
+                '(value_contains(code, "async") value_contains(code, "await"))'
+            ],
             "boolean_logic": [
-                "language:python AND has_async:true",
-                "(language:python OR language:rust) AND exists(embedding)",
-                'value_contains(code, "async") OR value_contains(code, "await")'
+                "(language:python language:rust) exists(embedding)"
             ]
         }
         return json.dumps(examples, indent=2)
@@ -803,27 +809,8 @@ def main(
         """Get the Lark grammar for keyword search parsing."""
         # This is a simplified version of the grammar used by our parser
         grammar = '''
-start: expression
-
-expression: term
-          | expression "AND" term  -> and_expr
-          | expression "OR" term   -> or_expr
-
-term: field_expr
-    | exists_expr
-    | value_contains_expr
-    | "(" expression ")"
-
-field_expr: FIELD ":" VALUE
-exists_expr: "exists(" FIELD ")"
-value_contains_expr: "value_contains(" FIELD "," QUOTED_VALUE ")"
-
-FIELD: /[a-zA-Z_][a-zA-Z0-9_]*/
-VALUE: /[^\\s()]+/ | QUOTED_VALUE
-QUOTED_VALUE: /"[^"]*"/
-
-%import common.WS
-%ignore WS
+TODO:
+include file src/cocoindex_code_mcp_server/grammars/keyword_search.lark here
         '''
         return grammar.strip()
 
@@ -848,18 +835,7 @@ QUOTED_VALUE: /"[^"]*"/
                     "examples": ['value_contains(code, "async")', 'value_contains(filename, "test")']
                 },
                 "boolean_logic": {
-                    "AND": "Both conditions must be true",
-                    "OR": "Either condition can be true",
-                    "NOT": "Condition must be false",
-                    "parentheses": "Group conditions with ()"
-                },
-                "comparison": {
-                    "==": "Equal to",
-                    "!=": "Not equal to",
-                    "<": "Less than",
-                    ">": "Greater than",
-                    "<=": "Less than or equal",
-                    ">=": "Greater than or equal"
+                    "parentheses": "parentheses are used to create OR terms, without parentheses multiple terms are AND ed"
                 }
             }
         }
