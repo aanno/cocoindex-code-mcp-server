@@ -10,6 +10,7 @@ import pytest
 
 from cocoindex_code_mcp_server.backends.postgres_backend import PostgresBackend
 from cocoindex_code_mcp_server.backends import SearchResult, QueryFilters
+from cocoindex_code_mcp_server.schemas import SearchResultType
 from cocoindex_code_mcp_server.keyword_search_parser_lark import SearchCondition, SearchGroup
 from typing import Tuple
 
@@ -91,7 +92,7 @@ class TestPostgresBackend:
         assert result.language == "Python"
         assert result.code == "def test():"
         assert result.score == 0.8  # 1.0 - 0.2
-        assert result.score_type == "vector"
+        assert result.score_type == SearchResultType.VECTOR_SIMILARITY
 
     @patch('cocoindex_code_mcp_server.backends.postgres_backend.build_sql_where_clause')
     def test_keyword_search(self, mock_build_where: MagicMock, postgres_backend: Tuple[PostgresBackend, MagicMock, MagicMock]):
@@ -131,7 +132,7 @@ class TestPostgresBackend:
         assert len(results) == 1
         result = results[0]
         assert isinstance(result, SearchResult)
-        assert result.score_type == "keyword"
+        assert result.score_type == SearchResultType.KEYWORD_MATCH
         assert result.score == 1.0
 
     @patch('cocoindex_code_mcp_server.backends.postgres_backend.register_vector')
@@ -189,7 +190,7 @@ class TestPostgresBackend:
         assert len(results) == 1
         result = results[0]
         assert isinstance(result, SearchResult)
-        assert result.score_type == "hybrid"
+        assert result.score_type == SearchResultType.HYBRID_COMBINED
         assert result.score == 0.75
 
     def test_get_table_info(self, postgres_backend: Tuple[PostgresBackend, MagicMock, MagicMock]):
@@ -309,7 +310,7 @@ class TestPostgresBackend:
         assert isinstance(result, SearchResult)
         assert result.metadata is not None
         assert result.metadata["functions"] == []
-        assert result.metadata.get("analysis_error") == "Analysis failed"
+        assert result.metadata["metadata_json"].get("analysis_error") == "Analysis failed"
 
     def test_format_result_non_python(self, postgres_backend: Tuple[PostgresBackend, MagicMock, MagicMock]):
         """Test result formatting for non-Python code."""
@@ -319,11 +320,13 @@ class TestPostgresBackend:
         row = ("test.js", "JavaScript", "function test() {}", 0.3, {"line": 1}, {"line": 3}, "files")
         result = backend._format_result(row, score_type="vector")
         
-        # Verify result structure without metadata
+        # Verify result structure with basic metadata for non-Python code
         assert isinstance(result, SearchResult)
         assert result.filename == "test.js"
         assert result.language == "JavaScript"
-        assert result.metadata is None
+        assert result.metadata is not None
+        assert result.metadata["functions"] == []
+        assert result.metadata["metadata_json"].get("analysis_method") == "none"
 
     def test_build_where_clause(self, postgres_backend: Tuple[PostgresBackend, MagicMock, MagicMock]):
         """Test QueryFilters to SQL WHERE clause conversion."""

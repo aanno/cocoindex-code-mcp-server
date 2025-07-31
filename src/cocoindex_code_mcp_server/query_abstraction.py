@@ -7,7 +7,7 @@ This module provides a unified query interface that can work across different
 vector database backends while maintaining backend-specific optimizations.
 """
 
-from typing import Any, Dict, List, Optional, Union, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, Union, TYPE_CHECKING, Callable
 from dataclasses import dataclass, field
 import numpy as np
 from numpy.typing import NDArray
@@ -137,15 +137,17 @@ class QueryExecutor:
     while maintaining consistent result format.
     """
     
-    def __init__(self, backend: 'VectorStoreBackend'):
+    def __init__(self, backend: 'VectorStoreBackend', embedding_func: Optional[Callable[[str], object]] = None):
         """
         Initialize with a specific backend.
         
         Args:
             backend: Vector store backend to execute queries against
+            embedding_func: Optional function to convert text to embeddings
         """
         self.backend = backend
         self.mapper = MapperFactory.create_mapper(backend.__class__.__name__.replace("Backend", "").lower())
+        self.embedding_func = embedding_func
     
 
     
@@ -182,11 +184,18 @@ class QueryExecutor:
         if embedding is None:
             if query.get("text") is None:
                 raise ValueError("Vector search requires either embedding or text")
-            # Would need to compute embedding from text here
-            # This requires access to the embedding model
-            raise NotImplementedError("Text-to-embedding conversion not implemented yet")
+            # Convert text to embedding if embedding function is available
+            if self.embedding_func is None:
+                raise ValueError("No embedding function provided for text-to-embedding conversion")
+            text = query.get("text")
+            if text is None:
+                raise ValueError("Vector search requires either embedding or text")
+            embedding = self.embedding_func(text)
         
         # Use backend's vector search
+        # Convert embedding to numpy array if needed
+        if not isinstance(embedding, np.ndarray):
+            embedding = np.array(embedding, dtype=np.float32)
         backend_results = self.backend.vector_search(
             query_vector=embedding,
             top_k=query.get("top_k", 10)

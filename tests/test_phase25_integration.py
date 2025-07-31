@@ -59,8 +59,12 @@ class TestQueryExecutorIntegration:
         mock_backend.keyword_search.return_value = [mock_result] 
         mock_backend.hybrid_search.return_value = [mock_result]
         
-        # Create QueryExecutor
-        executor = QueryExecutor(mock_backend)
+        # Create QueryExecutor with mock embedding function
+        def mock_embedding_func(text: str) -> list[float]:
+            # Return a simple mock embedding
+            return [0.1] * 384
+        
+        executor = QueryExecutor(mock_backend, embedding_func=mock_embedding_func)
         
         # Test vector search
         query = QueryBuilder().text("test query").vector_search().limit(5).build()
@@ -177,7 +181,11 @@ async def test_async_query_execution():
     
     mock_backend.vector_search.return_value = [mock_result]
     
-    executor = QueryExecutor(mock_backend)
+    # Mock embedding function for async test
+    def mock_embedding_func(text: str) -> list[float]:
+        return [0.2] * 384
+        
+    executor = QueryExecutor(mock_backend, embedding_func=mock_embedding_func)
     query = QueryBuilder().text("async function").vector_search().build()
     
     results: List[SearchResult] = await executor.execute(query)
