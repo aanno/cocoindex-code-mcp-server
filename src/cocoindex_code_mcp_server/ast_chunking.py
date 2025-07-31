@@ -26,14 +26,21 @@ class Chunk:
     start: int = 0
     end: int = 0
     
-    def __getitem__(self, key: str) -> None:
+    def __getitem__(self, key: Union[str, int]) -> Any:
         """Allow dictionary-style access."""
-        if hasattr(self, key):
-            return getattr(self, key)
-        elif key in self.metadata:
-            return self.metadata[key]
+        if isinstance(key, str):
+            if hasattr(self, key):
+                return getattr(self, key)
+            elif key in self.metadata:
+                return self.metadata[key]
+            else:
+                raise KeyError(f"Key '{key}' not found in chunk")
         else:
-            raise KeyError(f"Key '{key}' not found in chunk")
+            # For integer access, treat this chunk as if it's the only item in a list
+            if key == 0:
+                return self
+            else:
+                raise IndexError(f"Chunk index {key} out of range (only index 0 is valid)")
     
     def __setitem__(self, key: str, value) -> None:
         """Allow dictionary-style assignment."""
@@ -41,6 +48,10 @@ class Chunk:
             setattr(self, key, value)
         else:
             self.metadata[key] = value
+    
+    def __contains__(self, key: str) -> bool:
+        """Check if key exists in chunk (for 'key in chunk' syntax)."""
+        return hasattr(self, key) or key in self.metadata
     
     def get(self, key: str, default=""):
         """Dictionary-style get method."""

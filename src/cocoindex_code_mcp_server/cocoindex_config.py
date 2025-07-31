@@ -16,13 +16,16 @@ import numpy as np
 from numpy.typing import NDArray
 
 import cocoindex
-from cocoindex_code_mcp_server import LOGGER
+import logging
+# from cocoindex_code_mcp_server import LOGGER
 
 # from sentence_transformers import SentenceTransformer  # Use cocoindex.functions.SentenceTransformerEmbed instead
 from .ast_chunking import ASTChunkOperation, Chunk
 from .lang.haskell.haskell_ast_chunker import get_haskell_language_spec
 from .lang.python.python_code_analyzer import analyze_python_code
 from .smart_code_embedding import LanguageModelSelector
+
+LOGGER = logging.getLogger(__name__)  # root logger
 
 # Models will be instantiated directly (HuggingFace handles caching)
 
@@ -267,6 +270,14 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
     """Extract rich metadata from code chunks based on language and return as JSON string."""
     # Check if we should use default language handler
     use_default_handler = _global_flow_config.get('use_default_language_handler', False)
+    
+    # DEBUG: Log configuration for specific files
+    if filename and 'cpp_visitor.py' in filename:
+        LOGGER.info(f"🔍 DEBUGGING extract_code_metadata for {filename}")
+        LOGGER.info(f"   language: {language}")
+        LOGGER.info(f"   use_default_handler: {use_default_handler}")
+        LOGGER.info(f"   PYTHON_HANDLER_AVAILABLE: {PYTHON_HANDLER_AVAILABLE}")
+        LOGGER.info(f"   _global_flow_config: {_global_flow_config}")
 
     try:
         if language == "Python" and PYTHON_HANDLER_AVAILABLE and not use_default_handler:
@@ -317,7 +328,12 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
 
     except Exception as e:
         # Fallback to empty metadata if everything fails
-        LOGGER.debug(f"Metadata extraction failed for {filename}, using empty metadata: {e}")
+        if filename and 'cpp_visitor.py' in filename:
+            LOGGER.error(f"❌ EXCEPTION in extract_code_metadata for {filename}: {e}")
+            import traceback
+            LOGGER.error(f"   Traceback: {traceback.format_exc()}")
+        else:
+            LOGGER.debug(f"Metadata extraction failed for {filename}, using empty metadata: {e}")
         fallback_result = {
             "functions": [],
             "classes": [],
@@ -454,18 +470,21 @@ def ensure_unique_chunk_locations(chunks) -> List[Chunk]:
             text = chunk.content
             start = chunk.start
             end = chunk.end
+            metadata = chunk.metadata
         elif isinstance(chunk, dict):
             # Dictionary format from SplitRecursively - convert to Chunk
             base_loc = chunk.get("location", f"chunk_{i}")
             text = chunk.get("text", "")
             start = chunk.get("start", 0)
             end = chunk.get("end", 0)
+            metadata = chunk.get("metadata", {})
         else:
             # Fallback for unexpected types
             base_loc = f"chunk_{i}"
             text = str(chunk) if chunk else ""
             start = 0
             end = 0
+            metadata = {}
 
         # Make location unique
         unique_loc = base_loc
@@ -476,10 +495,10 @@ def ensure_unique_chunk_locations(chunks) -> List[Chunk]:
 
         seen_locations.add(unique_loc)
 
-        # Always create Chunk dataclass with unique location
+        # Always create Chunk dataclass with unique location, preserving metadata
         unique_chunk = Chunk(
             content=text,
-            metadata={},
+            metadata=metadata,  # CRITICAL FIX: Preserve metadata instead of discarding it
             location=unique_loc,
             start=start,
             end=end

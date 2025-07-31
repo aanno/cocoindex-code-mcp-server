@@ -3,6 +3,7 @@
 """
 C++-specific AST visitor for metadata extraction.
 Inherits from C visitor since C is largely a subset of C++.
+Updated to trigger CocoIndex reprocessing.
 """
 
 import logging
