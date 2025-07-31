@@ -197,7 +197,7 @@ class TestBackendFactory:
             # Verify configuration was passed correctly
             assert backend.host == "example.com"
             assert backend.port == 3306
-            assert backend.database == "production"
+            assert hasattr(backend, 'database') and getattr(backend, 'database') == "production"
             assert backend.extra_config["ssl_mode"] == "require"
             assert backend.extra_config["timeout"] == 30
         finally:

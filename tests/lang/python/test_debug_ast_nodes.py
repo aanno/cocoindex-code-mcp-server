@@ -103,7 +103,7 @@ def utility_function() -> str:
 
                     return original_visit_node(context)
 
-                visitor.visit_node = debug_visit_node
+                setattr(visitor, 'visit_node', debug_visit_node)
 
                 metadata = walker.walk(visitor)
 

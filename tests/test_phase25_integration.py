@@ -10,7 +10,7 @@ from typing import List
 
 from cocoindex_code_mcp_server.query_abstraction import QueryExecutor, QueryBuilder
 from cocoindex_code_mcp_server.backends.postgres_backend import PostgresBackend
-from cocoindex_code_mcp_server.schemas import SearchResult, SearchResultType, ChunkMetadata
+from cocoindex_code_mcp_server.schemas import SearchResult, SearchResultType, ChunkMetadata, FilterOperator
 from cocoindex_code_mcp_server.backends import QueryFilters
 
 
@@ -83,24 +83,27 @@ class TestQueryExecutorIntegration:
                        .limit(10)
                        .build())
         
-        assert vector_query.text == "find functions"
-        assert vector_query.search_type == "vector"
-        assert vector_query.top_k == 10
+        assert vector_query.get("text") == "find functions"
+        query_type = vector_query.get("query_type")
+        assert query_type is not None and query_type.value == "vector"  # QueryType enum
+        assert vector_query.get("top_k") == 10
         
         # Test hybrid search query  
         hybrid_query = (QueryBuilder()
                        .text("async functions")
-                       .filter("language", "Python")
+                       .filter_by("language", FilterOperator.EQUALS, "Python")
                        .hybrid_search(vector_weight=0.7, keyword_weight=0.3)
                        .limit(20)
                        .build())
         
-        assert hybrid_query.text == "async functions"
-        assert hybrid_query.search_type == "hybrid"
-        assert hybrid_query.top_k == 20
-        assert len(hybrid_query.filters.filters) == 1
-        assert hybrid_query.filters.filters[0].field == "language"
-        assert hybrid_query.filters.filters[0].value == "Python"
+        assert hybrid_query.get("text") == "async functions"
+        query_type = hybrid_query.get("query_type")
+        assert query_type is not None and query_type.value == "hybrid"
+        assert hybrid_query.get("top_k") == 20
+        filters = hybrid_query.get("filters", [])
+        assert len(filters) == 1
+        assert filters[0].field == "language"
+        assert filters[0].value == "Python"
         
     def test_schema_search_result_metadata_compatibility(self):
         """Test that SchemaSearchResult handles ChunkMetadata properly."""
@@ -141,10 +144,11 @@ class TestQueryExecutorIntegration:
         
         # Verify metadata is preserved and accessible
         assert result.metadata is not None
-        assert result.metadata["classes"] == ["Example"]
-        assert result.metadata["has_classes"] == True
-        assert result.metadata["complexity_score"] == 2
-        assert result.metadata["metadata_json"]["ast_nodes"] == ["ClassDef"]
+        assert result.metadata.get("classes") == ["Example"]
+        assert result.metadata.get("has_classes") == True
+        assert result.metadata.get("complexity_score") == 2
+        metadata_json = result.metadata.get("metadata_json", {})
+        assert metadata_json.get("ast_nodes") == ["ClassDef"]
 
 
 @pytest.mark.asyncio 
@@ -181,8 +185,9 @@ async def test_async_query_execution():
     assert len(results) == 1
     metadata = results[0].metadata
     if metadata is not None:
-        assert metadata["has_async"] == True
-        assert "test" in metadata["functions"]
+        assert metadata.get("has_async") == True
+        functions = metadata.get("functions", [])
+        assert "test" in functions
 
 
 if __name__ == "__main__":

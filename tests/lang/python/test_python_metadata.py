@@ -7,7 +7,7 @@ Comprehensive tests for Python metadata extraction functionality.
 import json
 import logging
 import sys
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, Optional, Callable
 
 import pytest
 
@@ -21,7 +21,8 @@ try:
 except ImportError as e:
     LOGGER.warning(f"Could not import python_code_analyzer: {e}")
     print("⚠️  Warning: These tests require the full application setup.")
-    analyze_python_code = None
+    def analyze_python_code(code: str, filename: str = "") -> Optional[Dict[str, Any]]:
+        return None
 
 
 class TestPythonMetadataAnalysis:

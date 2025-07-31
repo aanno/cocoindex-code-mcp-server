@@ -90,7 +90,7 @@ def test_tool_with_optional_fields():
         title="Advanced Tool",
         inputSchema={"type": "object", "properties": {}},
         outputSchema={"type": "object"},
-        annotations={"experimental": True}
+        annotations=None  # ToolAnnotations doesn't have experimental parameter
     )
 
     dumped = tool.model_dump(exclude_none=True)

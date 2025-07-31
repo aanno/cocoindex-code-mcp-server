@@ -318,9 +318,11 @@ nested_structure = [
                         print(f"❌ {field}: expected {expected}, got {actual}")
                         content_accurate = False
                 else:  # Lists
-                    missing = set(expected) - set(actual or [])
+                    actual_list = actual if isinstance(actual, list) else []
+                    expected_list = expected if isinstance(expected, list) else []
+                    missing = set(expected_list) - set(actual_list)
                     if not missing:
-                        print(f"✅ {field}: all {len(expected)} expected items found")
+                        print(f"✅ {field}: all {len(expected_list)} expected items found")
                     else:
                         print(f"❌ {field}: missing {missing}")
                         content_accurate = False

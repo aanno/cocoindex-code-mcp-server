@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Test cases for value_contains functionality in keyword search parsers."""
 
-from typing import Union, cast
+from typing import Union, cast, Optional, Callable, Tuple, List, Any
 import pytest
 
 from cocoindex_code_mcp_server.keyword_search_parser import (
@@ -16,6 +16,8 @@ from cocoindex_code_mcp_server.keyword_search_parser import (
 try:
     from cocoindex_code_mcp_server.keyword_search_parser_lark import (
         KeywordSearchParser as LarkParser,
+        SearchCondition as LarkSearchCondition,
+        SearchGroup as LarkSearchGroup,
     )
     from cocoindex_code_mcp_server.keyword_search_parser_lark import (
         build_sql_where_clause as lark_build_sql_where_clause,
@@ -23,7 +25,6 @@ try:
     LARK_AVAILABLE = True
 except ImportError:
     LARK_AVAILABLE = False
-    lark_build_sql_where_clause = None
 
 
 class TestValueContainsFallbackParser:
@@ -150,8 +151,8 @@ class TestValueContainsLarkParser:
         result = parser.parse('value_contains(code, "function")')
 
         assert len(result.conditions) == 1
-        condition: Union[SearchCondition, SearchGroup] = result.conditions[0]
-        cond = cast(SearchCondition, condition)
+        condition: Union[LarkSearchCondition, LarkSearchGroup] = result.conditions[0]
+        cond = cast(LarkSearchCondition, condition)
         assert cond.field == "code"
         assert cond.value == "function"
         assert cond.is_value_contains_check is True

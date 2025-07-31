@@ -10,7 +10,7 @@ from typing import List
 
 from cocoindex_code_mcp_server.query_abstraction import QueryExecutor, QueryBuilder
 from cocoindex_code_mcp_server.backends.postgres_backend import PostgresBackend
-from cocoindex_code_mcp_server.schemas import SearchResult, SearchResultType, ChunkMetadata
+from cocoindex_code_mcp_server.schemas import SearchResult, SearchResultType, ChunkMetadata, FilterOperator
 from cocoindex_code_mcp_server.backends import QueryFilters
 from cocoindex_code_mcp_server.mappers import PostgresFieldMapper
 
@@ -96,7 +96,7 @@ class TestQueryExecutorIntegration:
         # Test hybrid search query  
         hybrid_query = (QueryBuilder()
                        .text("async functions")
-                       .filter("language", "Python")
+                       .filter_by("language", FilterOperator.EQUALS, "Python")
                        .hybrid_search(vector_weight=0.7, keyword_weight=0.3)
                        .limit(20)
                        .build())

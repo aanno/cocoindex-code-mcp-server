@@ -12,7 +12,7 @@ import json
 import logging
 import os
 from contextlib import AsyncExitStack
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import AnyUrl
 import pytest
@@ -31,7 +31,7 @@ logging.basicConfig(
 class MCPServer:
     """Manages MCP server connections and tool execution using proper MCP client."""
 
-    def __init__(self, name: str, command: str, args: list[str], env: dict[str, str] = None):
+    def __init__(self, name: str, command: str, args: list[str], env: Optional[dict[str, str]] = None):
         self.name: str = name
         self.command: str = command
         self.args: list[str] = args

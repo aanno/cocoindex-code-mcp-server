@@ -10,6 +10,7 @@ import pytest
 
 from cocoindex_code_mcp_server.backends.postgres_backend import PostgresBackend
 from cocoindex_code_mcp_server.backends import SearchResult, QueryFilters
+from cocoindex_code_mcp_server.keyword_search_parser_lark import SearchCondition, SearchGroup
 from typing import Tuple
 
 
@@ -106,7 +107,7 @@ class TestPostgresBackend:
         ]
         
         # Test keyword search
-        filters = QueryFilters(conditions=[{"field": "language", "value": "Python"}])
+        filters = QueryFilters(conditions=[SearchCondition(field="language", value="Python")])
         results = backend.keyword_search(filters, top_k=5)
         
         # Verify WHERE clause builder was called
@@ -149,7 +150,7 @@ class TestPostgresBackend:
         
         # Test hybrid search
         query_vector = np.array([0.1, 0.2, 0.3], dtype=np.float32)
-        filters = QueryFilters(conditions=[{"field": "language", "value": "Python"}])
+        filters = QueryFilters(conditions=[SearchCondition(field="language", value="Python")])
         results = backend.hybrid_search(
             query_vector=query_vector,
             filters=filters,
@@ -237,13 +238,13 @@ class TestPostgresBackend:
         backend, _, _ = postgres_backend
         
         # Add close method to pool mock
-        backend.pool.close = Mock()
+        setattr(backend.pool, 'close', Mock())
         
         # Test close
         backend.close()
         
         # Verify pool close was called
-        backend.pool.close.assert_called_once()
+        getattr(backend.pool, 'close').assert_called_once()
 
     def test_close_no_close_method(self, postgres_backend: Tuple[PostgresBackend, MagicMock, MagicMock]):
         """Test backend cleanup when pool has no close method."""
@@ -308,7 +309,7 @@ class TestPostgresBackend:
         assert isinstance(result, SearchResult)
         assert result.metadata is not None
         assert result.metadata["functions"] == []
-        assert result.metadata["analysis_error"] == "Analysis failed"
+        assert result.metadata.get("analysis_error") == "Analysis failed"
 
     def test_format_result_non_python(self, postgres_backend: Tuple[PostgresBackend, MagicMock, MagicMock]):
         """Test result formatting for non-Python code."""
@@ -329,7 +330,7 @@ class TestPostgresBackend:
         backend, _, _ = postgres_backend
         
         # Create test filters
-        filters = QueryFilters(conditions=[{"field": "language", "value": "Python"}])
+        filters = QueryFilters(conditions=[SearchCondition(field="language", value="Python")])
         
         # Test WHERE clause building (this tests the mock search group creation)
         with patch('cocoindex_code_mcp_server.backends.postgres_backend.build_sql_where_clause') as mock_build:
@@ -341,7 +342,10 @@ class TestPostgresBackend:
             mock_build.assert_called_once()
             search_group = mock_build.call_args[0][0]
             assert hasattr(search_group, 'conditions')
-            assert search_group.conditions == [{"field": "language", "value": "Python"}]
+            assert len(search_group.conditions) == 1
+            condition = search_group.conditions[0]
+            assert condition.field == "language"
+            assert condition.value == "Python"
             
             assert where_clause == "language = %s"
             assert params == ["Python"]

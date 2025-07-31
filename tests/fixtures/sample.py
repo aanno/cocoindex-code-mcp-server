@@ -97,7 +97,7 @@ configuration = {
 
 if __name__ == "__main__":
     # Example usage
-    sample_data = [
+    sample_data: List[Dict[str, Any]] = [
         {"name": "item1", "value": 10},
         {"name": "item2", "value": 20},
         {"name": "item3"}  # No value, should default to 0

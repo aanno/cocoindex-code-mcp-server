@@ -31,7 +31,7 @@ class QueryFilters:
 class VectorStoreBackend(ABC):
     """Abstract base class for vector store backends."""
     
-    def __init__(self, host: str, port: int, backend_type: Type[VectorStoreBackend], extra_config: Dict[str, Any]) -> None:
+    def __init__(self, host: str, port: int, backend_type: Type[Any], extra_config: Dict[str, Any]) -> None:
         self._host = host
         self._port = port
         self._extra_config = extra_config

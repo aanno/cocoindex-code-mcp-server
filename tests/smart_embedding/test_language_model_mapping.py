@@ -120,7 +120,7 @@ class TestLanguageModelMapping:
         unixcoder_langs = LANGUAGE_MODEL_GROUPS['unixcoder']['languages']
 
         # Check no overlap between specialized groups
-        overlap = graphcodebert_langs & unixcoder_langs
+        overlap = set(graphcodebert_langs) & set(unixcoder_langs)
         assert len(overlap) == 0, f"Languages should not overlap between groups: {overlap}"
 
     def test_comprehensive_language_coverage(self):

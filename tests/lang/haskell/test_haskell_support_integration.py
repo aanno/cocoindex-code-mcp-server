@@ -27,7 +27,7 @@ def test_enhanced_haskell_chunking() -> List[Union[Tuple[HaskellChunkConfig, Lis
     """Test the enhanced Haskell chunking functionality."""
     if not haskell_ast_chunker_AVAILABLE:
         print("⚠️ Skipping Haskell test - haskell_ast_chunker not available")
-        return
+        return []
 
     haskell_code = '''
 module Main where
