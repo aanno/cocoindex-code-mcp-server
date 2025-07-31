@@ -5,6 +5,7 @@ Lark-based keyword search parser for metadata search with enhanced syntax suppor
 Supports field:value, exists(field), value_contains(field, string), and boolean operators.
 """
 
+import logging
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -23,6 +24,9 @@ from .keyword_search_parser import (
     build_sql_where_clause as fallback_build_sql_where_clause,
 )
 FALLBACK_AVAILABLE = True
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 class Operator(Enum):
     AND = "and"
@@ -147,18 +151,18 @@ class KeywordSearchParser:
                         }
                     )
                 else:
-                    print(f"Warning: Grammar file not found at {grammar_path}, falling back to regex parser")
+                    logger.warning(f"Grammar file not found at {grammar_path}, falling back to regex parser")
             except Exception as e:
-                print(f"Warning: Failed to initialize Lark parser ({e}), falling back to regex parser")
+                logger.warning(f"Failed to initialize Lark parser ({e}), falling back to regex parser")
 
         # Initialize fallback parser if Lark is not available or failed
         if self.lark_parser is None:
             if FALLBACK_AVAILABLE:
                 self.fallback_parser = FallbackParser()
                 if not LARK_AVAILABLE:
-                    print("Warning: Lark not available, using regex-based parser")
+                    logger.warning("Lark not available, using regex-based parser")
             else:
-                print("Warning: No parser available - neither Lark nor fallback parser could be loaded")
+                logger.error("No parser available - neither Lark nor fallback parser could be loaded")
 
     def parse(self, query: str) -> SearchGroup:
         """
@@ -187,11 +191,10 @@ class KeywordSearchParser:
                 # Normalize case for keywords
                 normalized_query = self._normalize_keywords(query.strip())
                 tree = self.lark_parser.parse(normalized_query)
-                # Transform the tree to SearchGroup
-                result = self.transformer.transform(tree)
-                return result  # type: ignore
+                # The tree is already transformed to SearchGroup during parsing
+                return tree  # type: ignore
             except (LarkError, ParseError) as e:
-                print(f"Warning: Lark parser failed ({e}), falling back to regex parser")
+                logger.warning(f"Lark parser failed ({e}), falling back to regex parser")
 
         # Fall back to regex parser
         if self.fallback_parser is not None:
@@ -200,7 +203,7 @@ class KeywordSearchParser:
             return self._convert_from_fallback(fallback_result)
         else:
             # Last resort: return empty group
-            print("Error: No parser available")
+            logger.error("No parser available")
             return SearchGroup(conditions=[])
 
     def _normalize_keywords(self, query: str) -> str:

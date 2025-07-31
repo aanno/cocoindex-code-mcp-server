@@ -80,26 +80,15 @@ async def coverage_context() -> AsyncIterator[Optional[object]]:
     # Register cleanup handlers
     atexit.register(stop_coverage)
     
-    # Handle shutdown via signal
-    original_shutdown = handle_shutdown
-    
-    def coverage_aware_shutdown(signum, frame):
-        stop_coverage()
-        original_shutdown(signum, frame)
-    
-    # Replace signal handlers temporarily
-    signal.signal(signal.SIGINT, coverage_aware_shutdown)
-    signal.signal(signal.SIGTERM, coverage_aware_shutdown)
-    
     try:
         yield cov
     finally:
-        # Restore original handlers
-        signal.signal(signal.SIGINT, handle_shutdown)
-        signal.signal(signal.SIGTERM, handle_shutdown)
-        
-        # Stop coverage
-        stop_coverage()
+        # Stop coverage without interfering with shutdown
+        try:
+            stop_coverage()
+        except Exception as e:
+            # Don't let coverage cleanup block shutdown
+            logger.warning(f"Coverage cleanup warning: {e}")
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -482,6 +471,79 @@ def main(
             mime_type="application/json" if uri_str != "cocoindex://search/grammar" else "text/x-lark"
         )]
 
+    # Helper function to make SearchResult objects JSON serializable
+    def serialize_search_results(results) -> list:
+        """Convert SearchResult objects to JSON-serializable dictionaries."""
+        import json
+        from decimal import Decimal
+        from enum import Enum
+        
+        def make_serializable(obj):
+            """Recursively convert objects to JSON-serializable format."""
+            if obj is None:
+                return None
+            elif isinstance(obj, (str, int, float, bool)):
+                return obj
+            elif isinstance(obj, Decimal):
+                return float(obj)
+            elif hasattr(obj, 'item'):  # numpy scalar
+                return obj.item()
+            elif isinstance(obj, Enum):
+                return obj.value
+            elif isinstance(obj, (list, tuple)):
+                return [make_serializable(item) for item in obj]
+            elif isinstance(obj, dict):
+                return {key: make_serializable(value) for key, value in obj.items()}
+            elif hasattr(obj, '__dict__'):
+                # Convert object to dict
+                if hasattr(obj, 'conditions') and hasattr(obj, 'operator'):  # SearchGroup object
+                    return {
+                        'conditions': make_serializable(obj.conditions),
+                        'operator': make_serializable(obj.operator)
+                    }
+                elif hasattr(obj, 'field') and hasattr(obj, 'value'):  # SearchCondition object
+                    return {
+                        'field': make_serializable(obj.field),
+                        'value': make_serializable(obj.value),
+                        'operator': make_serializable(getattr(obj, 'operator', None))
+                    }
+                elif hasattr(obj, 'filename'):  # SearchResult object
+                    result_dict = {
+                        'filename': make_serializable(obj.filename),
+                        'language': make_serializable(obj.language),
+                        'code': make_serializable(obj.code),
+                        'location': make_serializable(obj.location),
+                        'start': make_serializable(obj.start),
+                        'end': make_serializable(obj.end),
+                        'score': make_serializable(obj.score),
+                        'score_type': make_serializable(obj.score_type),
+                        'source': make_serializable(obj.source)
+                    }
+                    
+                    # Add direct metadata fields from SearchResult
+                    metadata_fields = ['functions', 'classes', 'imports', 'complexity_score', 
+                                     'has_type_hints', 'has_async', 'has_classes', 'metadata_json']
+                    for key in metadata_fields:
+                        if hasattr(obj, key):
+                            result_dict[key] = make_serializable(getattr(obj, key))
+                    
+                    # Extract fields from metadata_json if it exists
+                    if hasattr(obj, 'metadata_json') and isinstance(obj.metadata_json, dict):
+                        metadata_json = obj.metadata_json
+                        for key in ['analysis_method']:
+                            if key in metadata_json:
+                                result_dict[key] = make_serializable(metadata_json[key])
+                    
+                    return result_dict
+                else:
+                    # Generic object serialization
+                    return {key: make_serializable(value) for key, value in obj.__dict__.items()}
+            else:
+                # Fallback to string representation
+                return str(obj)
+        
+        return [make_serializable(result) for result in results]
+
     # Tool implementation functions
     async def perform_hybrid_search(arguments: dict) -> dict:
         """Perform hybrid search combining vector and keyword search."""
@@ -524,7 +586,7 @@ def main(
                 "vector_weight": vector_weight,
                 "keyword_weight": keyword_weight
             },
-            "results": results,
+            "results": serialize_search_results(results),
             "total_results": len(results)
         }
 
@@ -544,7 +606,7 @@ def main(
 
         return {
             "query": query,
-            "results": results,
+            "results": serialize_search_results(results),
             "total_results": len(results)
         }
 
@@ -564,7 +626,7 @@ def main(
 
         return {
             "query": query,
-            "results": results,
+            "results": serialize_search_results(results),
             "total_results": len(results)
         }
 

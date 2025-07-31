@@ -18,6 +18,9 @@ from cocoindex_code_mcp_server.db.pgvector.hybrid_search import HybridSearchEngi
 
 # Package should be installed via maturin develop or pip install -e .
 
+# TODO:
+# The e2e tests are failing because they're trying to access a real database table code_embeddings that doesn't exist. 
+# These are integration tests that expect actual database setup.
 
 LOGGER = logging.getLogger(__name__)
 
