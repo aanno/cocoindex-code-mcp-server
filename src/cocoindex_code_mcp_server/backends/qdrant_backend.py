@@ -28,10 +28,8 @@ class QdrantBackend(VectorStoreBackend):
             collection_name: Name of the Qdrant collection
             **kwargs: Additional Qdrant client configuration
         """
-        self.host = host
-        self.port = port
+        super().__init__(host, port, QdrantBackend, kwargs)
         self.collection_name = collection_name
-        self.config = kwargs
         
         # TODO: Initialize Qdrant client when implementing
         # from qdrant_client import QdrantClient
@@ -104,7 +102,7 @@ class QdrantBackend(VectorStoreBackend):
         # - Payload indexing
         # - Memory mapping options
         
-        self.config.update(options)
+        self.extra_config.update(options)
     
     def get_table_info(self) -> Dict[str, Any]:
         """Get information about the Qdrant collection."""

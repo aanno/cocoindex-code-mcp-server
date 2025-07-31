@@ -165,10 +165,8 @@ class TestBackendFactory:
         
         class ConfigurableBackend(VectorStoreBackend):
             def __init__(self, host="localhost", port=5432, database="test", **kwargs):
-                self.host = host
-                self.port = port
+                super().__init__(host, port, ConfigurableBackend, kwargs)
                 self.database = database
-                self.extra_config = kwargs
             
             def vector_search(self, query_vector, top_k=10):
                 return []

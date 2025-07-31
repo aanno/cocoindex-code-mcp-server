@@ -31,6 +31,12 @@ class QueryFilters:
 class VectorStoreBackend(ABC):
     """Abstract base class for vector store backends."""
     
+    def __init__(self, host: str, port: int, backend_type: Type[VectorStoreBackend], extra_config: Dict[str, Any]) -> None:
+        self._host = host
+        self._port = port
+        self._extra_config = extra_config
+        self._backend_type = backend_type
+    
     @abstractmethod
     def vector_search(
         self, 
@@ -78,19 +84,23 @@ class VectorStoreBackend(ABC):
 
     @property
     def host(self):
-        return getattr(self, 'pool', None)
+        # return getattr(self, 'host', None)
+        return self._host
     
     @property
     def port(self):
-        return getattr(self, 'port', None)
+        # return getattr(self, 'port', None)
+        return self._port
     
     @property
     def extra_config(self):
-        return getattr(self, 'extra_config', None)
+        # return getattr(self, 'extra_config', None)
+        return self._extra_config
 
     @property
     def backend_type(self):
-        return getattr(self, 'backend_type', None)
+        # return getattr(self, 'backend_type', None)
+        return self._backend_type
 
 class BackendFactory:
     """Factory for creating vector store backends."""
