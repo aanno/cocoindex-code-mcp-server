@@ -55,7 +55,7 @@ build = [
     "auto-type-annotate>=1.1.2",
     # code quality
     "isort>=6.0.1",
-    "autoflake8>=1.7.0",
+    "autoflake8>=0.4.1",
     "autopep8>=2.0.0",
     "flake8>=7.3.0",
     "autopep8>=2.0.0",
