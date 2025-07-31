@@ -202,10 +202,10 @@ class SearchResult:
 
 class BackendCapability(Enum):
     """Capabilities that backends can support."""
-    VECTOR_SEARCH = "vector_search"
-    KEYWORD_SEARCH = "keyword_search"
-    HYBRID_SEARCH = "hybrid_search"
-    FULL_TEXT_SEARCH = "full_text_search"
+    VECTOR_SEARCH = "search:vector"
+    KEYWORD_SEARCH = "search:keyword"
+    HYBRID_SEARCH = "search:hybrid"
+    FULL_TEXT_SEARCH = "search:full_text" # TODO: not in use?
     JSONB_QUERIES = "jsonb_queries"
     PAYLOAD_INDEXING = "payload_indexing"
     TRANSACTION_SUPPORT = "transaction_support"

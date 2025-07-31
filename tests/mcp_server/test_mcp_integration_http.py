@@ -390,12 +390,12 @@ class TestMCPIntegrationHTTP:
         # Check specific tools exist
         tool_names = [tool.name for tool in tools]
         expected_tools = [
-            "hybrid_search",
-            "vector_search",
-            "keyword_search",
-            "analyze_code",
-            "get_embeddings",
-            "get_keyword_syntax_help"
+            "search:hybrid",
+            "search:vector",
+            "search:keyword",
+            "code:analyze",
+            "code:embeddings",
+            "help:keyword_syntax"
         ]
 
         for expected_tool in expected_tools:
@@ -417,10 +417,10 @@ class TestMCPIntegrationHTTP:
         # Check specific resources exist
         resource_names = [resource.name for resource in resources]
         expected_resources = [
-            "Search Statistics",
-            "Search Configuration",
-            "Database Schema",
-            "Query Examples"
+            "search:statistics",
+            "search:configuration",
+            "database:schema",
+            "search:examples"
         ]
 
         for expected_resource in expected_resources:
@@ -471,7 +471,7 @@ class TestMCPIntegrationHTTP:
     async def test_execute_tool_get_embeddings(self, mcp_server):
         """Test executing the get_embeddings tool via proper MCP client."""
         result = await mcp_server.execute_tool(
-            "get_embeddings",
+            "code:embeddings",
             {"text": "test text for embedding"}
         )
 
@@ -500,7 +500,7 @@ class TestMCPIntegrationHTTP:
     async def test_execute_tool_vector_search(self, mcp_server):
         """Test executing the vector_search tool via proper MCP client."""
         result = await mcp_server.execute_tool(
-            "vector_search",
+            "search:vector",
             {
                 "query": "Python async function for processing data",
                 "top_k": 3
@@ -555,7 +555,7 @@ class DataProcessor:
 '''
 
         result = await mcp_server.execute_tool(
-            "analyze_code",
+            "code:analyze",
             {
                 "code": test_code,
                 "file_path": "test.py",
@@ -596,7 +596,7 @@ class DataProcessor:
     async def test_execute_tool_keyword_search_basic(self, mcp_server):
         """Test executing the keyword_search tool with basic queries."""
         result = await mcp_server.execute_tool(
-            "keyword_search",
+            "search:keyword",
             {
                 "query": "language:Python",
                 "top_k": 5
@@ -624,7 +624,7 @@ class DataProcessor:
     async def test_execute_tool_get_keyword_syntax_help(self, mcp_server):
         """Test executing the get_keyword_syntax_help tool."""
         result = await mcp_server.execute_tool(
-            "get_keyword_syntax_help",
+            "help:keyword_syntax",
             {}
         )
 
@@ -666,7 +666,7 @@ class DataProcessor:
         """Test that smart embedding is working with language-aware model selection."""
         # Test Python code - should use GraphCodeBERT
         python_result = await mcp_server.execute_tool(
-            "vector_search",
+            "search:vector",
             {
                 "query": "Python async function with type hints",
                 "top_k": 3

@@ -148,7 +148,7 @@ def get_mcp_tools() -> list[types.Tool]:
     """Get the list of MCP tools with their schemas."""
     return [
         types.Tool(
-            name="hybrid_search",
+            name="search:hybrid",
             description="Perform hybrid search combining vector similarity and keyword metadata filtering. Keyword syntax: field:value, exists(field), value_contains(field, 'text'), AND/OR logic.",
             inputSchema={
                 "type": "object",
@@ -181,7 +181,7 @@ def get_mcp_tools() -> list[types.Tool]:
             },
         ),
         types.Tool(
-            name="vector_search",
+            name="search:vector",
             description="Perform pure vector similarity search",
             inputSchema={
                 "type": "object",
@@ -200,7 +200,7 @@ def get_mcp_tools() -> list[types.Tool]:
             },
         ),
         types.Tool(
-            name="keyword_search",
+            name="search:keyword",
             description="Perform pure keyword metadata search using field:value, exists(field), value_contains(field, 'text') syntax",
             inputSchema={
                 "type": "object",
@@ -219,7 +219,7 @@ def get_mcp_tools() -> list[types.Tool]:
             },
         ),
         types.Tool(
-            name="analyze_code",
+            name="code:analyse",
             description="Analyze code and extract metadata for indexing",
             inputSchema={
                 "type": "object",
@@ -241,7 +241,7 @@ def get_mcp_tools() -> list[types.Tool]:
             },
         ),
         types.Tool(
-            name="get_embeddings",
+            name="code:embeddings",
             description="Generate embeddings for text using the configured embedding model",
             inputSchema={
                 "type": "object",
@@ -255,7 +255,7 @@ def get_mcp_tools() -> list[types.Tool]:
             },
         ),
         types.Tool(
-            name="get_keyword_syntax_help",
+            name="help:keyword_syntax",
             description="Get comprehensive help and examples for keyword query syntax",
             inputSchema={
                 "type": "object",
@@ -271,43 +271,43 @@ def get_mcp_resources() -> list[types.Resource]:
     return [
         types.Resource(
             uri=AnyUrl("cocoindex://search/stats"),
-            name="Search Statistics",
+            name="search:statistics",
             description="Database and search performance statistics",
             mimeType="application/json",
         ),
         types.Resource(
             uri=AnyUrl("cocoindex://search/config"),
-            name="Search Configuration",
+            name="search:configuration",
             description="Current hybrid search configuration and settings",
             mimeType="application/json",
         ),
         types.Resource(
             uri=AnyUrl("cocoindex://database/schema"),
-            name="Database Schema",
+            name="database:schema",
             description="Database table structure and schema information",
             mimeType="application/json",
         ),
         types.Resource(
             uri=AnyUrl("cocoindex://query/examples"),
-            name="Query Examples",
+            name="search:examples",
             description="Categorized examples of keyword query syntax",
             mimeType="application/json",
         ),
         types.Resource(
             uri=AnyUrl("cocoindex://search/grammar"),
-            name="Search Grammar",
+            name="search:keyword:grammar",
             description="Lark grammar for keyword search parsing",
             mimeType="text/x-lark",
         ),
         types.Resource(
             uri=AnyUrl("cocoindex://search/operators"),
-            name="Search Operators",
+            name="search:operators",
             description="List of supported search operators and syntax",
             mimeType="application/json",
         ),
         types.Resource(
             uri=AnyUrl("cocoindex://test/simple"),
-            name="Test Resource",
+            name="debug:example_resource",
             description="Simple test resource for debugging",
             mimeType="application/json",
         ),
@@ -401,17 +401,17 @@ def main(
             if not hybrid_search_engine:
                 raise RuntimeError("Hybrid search engine not initialized. Please check database connection.")
 
-            if name == "hybrid_search":
+            if name == "search:hybrid":
                 result = await perform_hybrid_search(arguments)
-            elif name == "vector_search":
+            elif name == "search:vector":
                 result = await perform_vector_search(arguments)
-            elif name == "keyword_search":
+            elif name == "search:keyword":
                 result = await perform_keyword_search(arguments)
-            elif name == "analyze_code":
+            elif name == "code:analyze":
                 result = await analyze_code_tool(arguments)
-            elif name == "get_embeddings":
+            elif name == "code:embeddings":
                 result = await get_embeddings_tool(arguments)
-            elif name == "get_keyword_syntax_help":
+            elif name == "help:keyword_syntax":
                 result = await get_keyword_syntax_help_tool(arguments)
             else:
                 raise ValueError(f"Unknown tool '{name}'")
