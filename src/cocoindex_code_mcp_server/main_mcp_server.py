@@ -43,6 +43,7 @@ from .cocoindex_config import code_to_embedding, run_flow_update, update_flow_co
 from .db.pgvector.hybrid_search import HybridSearchEngine
 from .keyword_search_parser_lark import KeywordSearchParser
 from .lang.python.python_code_analyzer import analyze_python_code
+from . import mcp_json_schemas
 
 try:
     import coverage
@@ -150,118 +151,32 @@ def get_mcp_tools() -> list[types.Tool]:
         types.Tool(
             name="search:hybrid",
             description="Perform hybrid search combining vector similarity and keyword metadata filtering. Keyword syntax: field:value, exists(field), value_contains(field, 'text'), multiple terms are AND ed, use parentheses for OR.",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "vector_query": {
-                        "type": "string",
-                        "description": "Text to embed and search for semantic similarity"
-                    },
-                    "keyword_query": {
-                        "type": "string",
-                        "description": "Keyword search query for metadata filtering. Syntax: field:value, exists(field), value_contains(field, 'text'), AND/OR operators"
-                    },
-                    "top_k": {
-                        "type": "integer",
-                        "description": "Number of results to return",
-                        "default": 10
-                    },
-                    "vector_weight": {
-                        "type": "number",
-                        "description": "Weight for vector similarity score (0-1)",
-                        "default": 0.7
-                    },
-                    "keyword_weight": {
-                        "type": "number",
-                        "description": "Weight for keyword match score (0-1)",
-                        "default": 0.3
-                    }
-                },
-                "required": ["vector_query", "keyword_query"]
-            },
+            inputSchema=mcp_json_schemas.HYBRID_SEARCH_INPUT_SCHEMA,
         ),
         types.Tool(
             name="search:vector",
             description="Perform pure vector similarity search",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "Text to embed and search for semantic similarity"
-                    },
-                    "top_k": {
-                        "type": "integer",
-                        "description": "Number of results to return",
-                        "default": 10
-                    }
-                },
-                "required": ["query"]
-            },
+            inputSchema=mcp_json_schemas.VECTOR_SEARCH_INPUT_SCHEMA,
         ),
         types.Tool(
             name="search:keyword",
             description="Perform pure keyword metadata search using field:value, exists(field), value_contains(field, 'text') syntax",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "Keyword search query with AND/OR operators and parentheses grouping"
-                    },
-                    "top_k": {
-                        "type": "integer",
-                        "description": "Number of results to return",
-                        "default": 10
-                    }
-                },
-                "required": ["query"]
-            },
+            inputSchema=mcp_json_schemas.KEYWORD_SEARCH_INPUT_SCHEMA,
         ),
         types.Tool(
             name="code:analyse",
             description="Analyze code and extract metadata for indexing",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "code": {
-                        "type": "string",
-                        "description": "Code content to analyze"
-                    },
-                    "file_path": {
-                        "type": "string",
-                        "description": "File path for context"
-                    },
-                    "language": {
-                        "type": "string",
-                        "description": "Programming language (auto-detected if not provided)"
-                    }
-                },
-                "required": ["code", "file_path"]
-            },
+            inputSchema=mcp_json_schemas.CODE_ANALYZE_INPUT_SCHEMA,
         ),
         types.Tool(
             name="code:embeddings",
             description="Generate embeddings for text using the configured embedding model",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "text": {
-                        "type": "string",
-                        "description": "Text to generate embeddings for"
-                    }
-                },
-                "required": ["text"]
-            },
+            inputSchema=mcp_json_schemas.CODE_EMBEDDINGS_INPUT_SCHEMA,
         ),
         types.Tool(
             name="help:keyword_syntax",
             description="Get comprehensive help and examples for keyword query syntax",
-            inputSchema={
-                "type": "object",
-                "properties": {},
-                "required": []
-            },
+            inputSchema=mcp_json_schemas.EMPTY_JSON_SCHEMA,
         ),
     ]
 
