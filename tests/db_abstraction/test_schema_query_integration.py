@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Integration tests for Phase 2: Schema & Query Standardization.
+Integration tests for db_abstraction: Schema & Query Standardization.
 
 Tests the interaction between schemas, mappers, and query abstraction.
 """

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Integration tests for Phase 2.5: QueryExecutor with backend integration.
+Integration tests db_abstraction: QueryExecutor with backend integration (fixed).
 """
 
 import pytest

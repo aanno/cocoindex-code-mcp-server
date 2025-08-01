@@ -919,6 +919,7 @@ class DataProcessor:
         # Report results
         if failed_tests:
             error_msg = f"Hybrid search validation failed for {len(failed_tests)} test(s):\n"
+            failed = error_msg
             for failure in failed_tests:
                 error_msg += f"\n  Test: {failure['test']}\n"
                 error_msg += f"  Query: {failure['query']}\n"
@@ -926,7 +927,8 @@ class DataProcessor:
                 if "actual_results" in failure:
                     error_msg += f"  Sample Results: {json.dumps(failure['actual_results'], indent=2)}\n"
             
-            pytest.fail(error_msg)
+            logging.info(error_msg)
+            pytest.fail(failed)
         else:
             logging.info(f"✅ All {len(test_data['tests'])} hybrid search validation tests passed!")
 
