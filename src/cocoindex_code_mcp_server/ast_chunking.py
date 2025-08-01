@@ -60,6 +60,12 @@ class Chunk:
         except KeyError:
             return default
     
+    def keys(self):
+        """Return available keys (attribute names + metadata keys)."""
+        chunk_attrs = ["content", "metadata", "location", "start", "end"]
+        metadata_keys = list(self.metadata.keys()) if isinstance(self.metadata, dict) else []
+        return chunk_attrs + metadata_keys
+    
     def to_dict(self) -> dict:
         """Convert chunk to dictionary for CocoIndex compatibility."""
         result = {
