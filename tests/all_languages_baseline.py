@@ -6,7 +6,7 @@ Tests both tree-sitter visitors and CocoIndex baseline analysis.
 
 import json
 from pathlib import Path
-from typing import Any, Dict, Set
+from typing import Any, Dict, Set, Optional
 
 from cocoindex_code_mcp_server.ast_visitor import analyze_code
 
@@ -17,7 +17,7 @@ class LanguageBaseline:
     """Baseline test for a specific language."""
 
     def __init__(self, language: str, fixture_file: str, expected_functions: Set[str],
-                 expected_constructs: Dict[str, Set[str]] = None):
+                 expected_constructs: Optional[Dict[str, Set[str]]] = None):
         self.language = language
         self.fixture_file = Path(f"tests/fixtures/{fixture_file}")
         self.expected_functions = expected_functions
@@ -296,7 +296,7 @@ class MultiLanguageBaseline:
     def run_all_tests(self) -> Dict[str, Any]:
         """Run baseline tests for all languages."""
         results = {}
-        summary = {
+        summary: Dict[str, Any] = {
             'total_languages': len(self.languages),
             'successful_languages': 0,
             'failed_languages': 0,

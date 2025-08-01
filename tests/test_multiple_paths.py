@@ -33,7 +33,7 @@ class TestMultiplePaths(unittest.TestCase):
 
     def test_argument_parsing_logic(self):
         """Test the argument parsing logic for multiple paths."""
-        from arg_parser import parse_args
+        from cocoindex_code_mcp_server.arg_parser_old import parse_args
 
         # Test default behavior
         with patch('sys.argv', ['main_interactive_query.py']):
@@ -61,7 +61,7 @@ class TestMultiplePaths(unittest.TestCase):
     @pytest.mark.skip(reason="Main function output format changed")
     def test_main_function_output(self):
         """Test that the main function properly handles multiple paths."""
-        from main import main
+        from cocoindex_code_mcp_server.main_interactive_query import main
 
         # Test that the main function doesn't crash with multiple paths
         # We can't easily test the full flow without a database, but we can test the interface

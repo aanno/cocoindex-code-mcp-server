@@ -5,6 +5,8 @@ Debug test to identify the exact source of PostgreSQL duplicate key errors.
 This test simulates the actual flow execution to see where duplicates are generated.
 """
 
+from types import FunctionType
+from typing import cast
 import pytest
 
 import cocoindex
@@ -101,7 +103,7 @@ class TestDuplicateKeyDebug:
     def test_typescript_chunking_path(self):
         """Test what chunking path TypeScript files take."""
         filename = "userRoutes.ts"
-        language = extract_language(filename)
+        language = cast(FunctionType, extract_language)(filename)
 
         print(f"Filename: {filename}")
         print(f"Detected language: {language}")
@@ -121,7 +123,7 @@ class TestDuplicateKeyDebug:
 
                 # This is where we'd need to simulate the DataSlice transform
                 # For now, just verify the chunker exists and takes parameters
-                params = get_chunking_params(language)
+                params = cast(FunctionType, get_chunking_params)(language)
                 print(
                     f"Chunking params: chunk_size={params.chunk_size}, min_chunk_size={params.min_chunk_size}, chunk_overlap={params.chunk_overlap}")
 
@@ -133,7 +135,7 @@ class TestDuplicateKeyDebug:
 
             # Test AST chunking
             try:
-                chunks = ASTChunkOperation(
+                chunks = cast(FunctionType, ASTChunkOperation)(
                     content=SAMPLE_TYPESCRIPT_CODE,
                     language=language,
                     max_chunk_size=1000,
@@ -163,14 +165,14 @@ class TestDuplicateKeyDebug:
     def test_rust_chunking_path(self):
         """Test what chunking path Rust files take."""
         filename = "lib.rs"
-        language = extract_language(filename)
+        language = cast(FunctionType, extract_language)(filename)
 
         print(f"Filename: {filename}")
         print(f"Detected language: {language}")
 
         # Check if Rust is supported by AST chunking
         if AST_CHUNKING_AVAILABLE:
-            from ast_chunking import CocoIndexASTChunker
+            from cocoindex_code_mcp_server.ast_chunking import CocoIndexASTChunker
             chunker = CocoIndexASTChunker()
             is_supported = chunker.is_supported_language(language)
             print(f"Rust supported by AST chunking: {is_supported}")
@@ -182,7 +184,7 @@ class TestDuplicateKeyDebug:
 
                 # Test AST chunking with Rust
                 try:
-                    chunks = ASTChunkOperation(
+                    chunks = cast(FunctionType, ASTChunkOperation)(
                         content=SAMPLE_RUST_CODE,
                         language=language,
                         max_chunk_size=1000,
@@ -218,10 +220,10 @@ class TestDuplicateKeyDebug:
         results = []
         for run in range(2):
             print(f"\n--- Run {run + 1} ---")
-            language = extract_language(filename)
+            language = cast(FunctionType, extract_language)(filename)
 
             if AST_CHUNKING_AVAILABLE:
-                chunks = ASTChunkOperation(
+                chunks = cast(FunctionType, ASTChunkOperation)(
                     content=SAMPLE_TYPESCRIPT_CODE,
                     language=language,
                     max_chunk_size=800,
@@ -255,11 +257,11 @@ class TestDuplicateKeyDebug:
 
         for filename, content in test_cases:
             print(f"\n=== Testing {filename} with content: '{content}' ===")
-            language = extract_language(filename)
+            language = cast(FunctionType, extract_language)(filename)
 
             if AST_CHUNKING_AVAILABLE:
                 try:
-                    chunks = ASTChunkOperation(
+                    chunks = cast(FunctionType, ASTChunkOperation)(
                         content=content,
                         language=language,
                         max_chunk_size=1000,

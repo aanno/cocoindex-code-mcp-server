@@ -210,7 +210,7 @@ def setup_test_environment():
     """Setup test environment before each test."""
     # Ensure smart embedding is available for tests
     try:
-        from cocoindex_config import SMART_EMBEDDING_AVAILABLE
+        from cocoindex_code_mcp_server.cocoindex_config import SMART_EMBEDDING_AVAILABLE
         if not SMART_EMBEDDING_AVAILABLE:
             pytest.skip("Smart embedding not available - check configuration")
     except ImportError as e:

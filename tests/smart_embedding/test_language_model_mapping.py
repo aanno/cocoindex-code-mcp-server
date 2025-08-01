@@ -4,6 +4,8 @@ Test suite for smart embedding language-to-model mapping.
 Tests that different programming languages are correctly mapped to appropriate embedding models.
 """
 
+from types import FunctionType
+from typing import cast
 import pytest
 
 from cocoindex_code_mcp_server.cocoindex_config import (
@@ -83,7 +85,7 @@ class TestLanguageModelMapping:
     ])
     def test_language_to_group_mapping(self, language, expected_group):
         """Test that languages are correctly mapped to their embedding model groups."""
-        actual_group = get_embedding_model_group(language)
+        actual_group = cast(FunctionType, get_embedding_model_group)(language)
         assert actual_group == expected_group, f"Language '{language}' should map to '{expected_group}', got '{actual_group}'"
 
     def test_case_insensitive_mapping(self):
@@ -97,7 +99,7 @@ class TestLanguageModelMapping:
         ]
 
         for language, expected_group in test_cases:
-            actual_group = get_embedding_model_group(language)
+            actual_group = cast(FunctionType, get_embedding_model_group)(language)
             assert actual_group == expected_group, f"Case insensitive test failed for '{language}'"
 
     def test_model_group_to_model_mapping(self):
@@ -118,7 +120,7 @@ class TestLanguageModelMapping:
         unixcoder_langs = LANGUAGE_MODEL_GROUPS['unixcoder']['languages']
 
         # Check no overlap between specialized groups
-        overlap = graphcodebert_langs & unixcoder_langs
+        overlap = set(graphcodebert_langs) & set(unixcoder_langs)
         assert len(overlap) == 0, f"Languages should not overlap between groups: {overlap}"
 
     def test_comprehensive_language_coverage(self):
@@ -130,7 +132,7 @@ class TestLanguageModelMapping:
         ]
 
         for lang in important_languages:
-            group = get_embedding_model_group(lang)
+            group = cast(FunctionType, get_embedding_model_group)(lang)
             assert group in ['graphcodebert',
                              'unixcoder'], f"Important language '{lang}' should use specialized model, got '{group}'"
 

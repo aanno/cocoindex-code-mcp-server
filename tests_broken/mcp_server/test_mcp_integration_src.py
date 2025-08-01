@@ -85,7 +85,7 @@ class MCPServerTestRunner:
                 self.process.wait()
             self.process = None
 
-    def make_request(self, method: str, params: Dict[str, Any] = None, request_id: int = 1) -> Dict[str, Any]:
+    def make_request(self, method: str, params: Optional[Dict[str, Any]] = None, request_id: int = 1) -> Dict[str, Any]:
         """Make a JSON-RPC request to the MCP server."""
         payload = {
             "jsonrpc": "2.0",

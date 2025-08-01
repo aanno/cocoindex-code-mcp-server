@@ -5,6 +5,7 @@ Standalone tests for enhanced Haskell chunking functionality.
 Tests the new HaskellChunkConfig and EnhancedHaskellChunker classes without CocoIndex imports.
 """
 
+from typing import Any, Dict, List
 from unittest.mock import Mock, patch
 
 import pytest
@@ -183,11 +184,11 @@ instance Functor Tree where
 """
 
         config = HaskellChunkConfig()
-        chunks = create_enhanced_regex_fallback_chunks(haskell_code, "test.hs", config)
+        chunks: List[Dict[str, Any]] = create_enhanced_regex_fallback_chunks(haskell_code, "test.hs", config)
 
         # Combine all chunks to check overall content analysis
         " ".join(chunk["content"] for chunk in chunks)
-        all_metadata = {}
+        all_metadata: Dict[str, Any] = {}
         for chunk in chunks:
             for key, value in chunk["metadata"].items():
                 if key.startswith("has_"):

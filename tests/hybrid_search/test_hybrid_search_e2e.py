@@ -18,6 +18,9 @@ from cocoindex_code_mcp_server.db.pgvector.hybrid_search import HybridSearchEngi
 
 # Package should be installed via maturin develop or pip install -e .
 
+# TODO:
+# The e2e tests are failing because they're trying to access a real database table code_embeddings that doesn't exist. 
+# These are integration tests that expect actual database setup.
 
 LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +60,9 @@ def db_pool():
 @pytest.fixture
 def search_engine(db_pool):
     """Create HybridSearchEngine instance."""
-    return HybridSearchEngine(db_pool)
+    from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
+    parser = KeywordSearchParser()
+    return HybridSearchEngine(table_name="code_embeddings", parser=parser, pool=db_pool)
 
 
 @pytest.mark.integration

@@ -5,6 +5,8 @@ Tests that different languages are properly processed and embedded with correct 
 """
 
 import os
+from types import FunctionType
+from typing import cast
 
 import pytest
 
@@ -46,11 +48,11 @@ class TestRAGIntegration:
         filename = os.path.basename(filepath)
 
         # Test language extraction from filename
-        detected_language = extract_language(filename)
+        detected_language = cast(FunctionType, extract_language)(filename)
         assert detected_language.lower() == language.lower(), f"Language extraction failed for {filename}"
 
         # Test model group selection
-        model_group = get_embedding_model_group(detected_language)
+        model_group = cast(FunctionType, get_embedding_model_group)(detected_language)
         assert model_group == expected_group, f"Model group selection failed for {language}"
 
         # Test model mapping
@@ -97,7 +99,7 @@ class TestRAGIntegration:
         fallback_languages = set()
 
         for language, filepath in fixture_files.items():
-            model_group = get_embedding_model_group(language)
+            model_group = cast(FunctionType, get_embedding_model_group)(language)
             if model_group == 'graphcodebert':
                 graphcodebert_languages.add(language)
             elif model_group == 'unixcoder':
@@ -126,8 +128,8 @@ class TestSmartEmbeddingFlow:
             # Multiple calls should return same result
             results = []
             for _ in range(3):
-                detected_lang = extract_language(filename)
-                model_group = get_embedding_model_group(detected_lang)
+                detected_lang = cast(FunctionType, extract_language)(filename)
+                model_group = cast(FunctionType, get_embedding_model_group)(detected_lang)
                 results.append((detected_lang, model_group))
 
             # All results should be identical
@@ -139,12 +141,12 @@ class TestSmartEmbeddingFlow:
             filename = os.path.basename(filepath)
 
             # Test original case
-            original_lang = extract_language(filename)
-            original_group = get_embedding_model_group(original_lang)
+            original_lang = cast(FunctionType, extract_language)(filename)
+            original_group = cast(FunctionType, get_embedding_model_group)(original_lang)
 
             # Test different cases
-            upper_group = get_embedding_model_group(original_lang.upper())
-            lower_group = get_embedding_model_group(original_lang.lower())
+            upper_group = cast(FunctionType, get_embedding_model_group)(original_lang.upper())
+            lower_group = cast(FunctionType, get_embedding_model_group)(original_lang.lower())
 
             assert original_group == upper_group == lower_group, f"Case sensitivity issue for {language}"
 

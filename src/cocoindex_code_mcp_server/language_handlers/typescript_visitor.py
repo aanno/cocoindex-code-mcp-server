@@ -17,7 +17,7 @@ LOGGER = logging.getLogger(__name__)
 class TypeScriptASTVisitor(JavaScriptASTVisitor):
     """Specialized visitor for TypeScript language AST analysis."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.language = "typescript"
         # Inherit JavaScript functionality: self.functions, self.classes, etc.
@@ -55,7 +55,7 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
 
         return None
 
-    def _extract_interface(self, node):
+    def _extract_interface(self, node) -> None:
         """Extract interface name from interface_declaration node."""
         try:
             # Look for interface name (identifier after 'interface' keyword)

@@ -7,6 +7,7 @@ as a real MCP client and testing the full protocol interaction.
 
 import json
 
+from pydantic import AnyUrl
 import pytest
 from mcp.client.session import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
@@ -132,7 +133,7 @@ class TestMCPIntegration:
             await session.initialize()
 
             # Read search configuration resource
-            resource_result = await session.read_resource("cocoindex://search/config")
+            resource_result = await session.read_resource(AnyUrl("cocoindex://search/config"))
 
             assert resource_result is not None
             contents = resource_result.contents

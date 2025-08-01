@@ -1,0 +1,364 @@
+{
+  // Test cases for hybrid search functionality
+  // Each test contains: name, query, and expected results (excerpts)
+  "tests": [
+    {
+      "name": "basename_python_language_filter",
+      "description": "Search for 'basename' with Python language filter - should find files with proper metadata",
+      "query": {
+        "vector_query": "basename",
+        "keyword_query": "language:Python"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "filename_pattern": ".*cpp_visitor\\.py$",
+            "expected_metadata": {
+              "imports": ["logging", "typing"],
+              "classes": ["CppASTVisitor"],  
+              "functions": ["analyze_cpp_code"],
+              "complexity_score": ">0",
+              "line_count": ">50",
+              "char_count": ">1000",
+              "has_classes": true,
+              "analysis_method": "!unknown"
+            },
+            "should_not_be_empty": ["code", "imports", "classes", "functions"]
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "ast_visitor_search",
+      "description": "Search for AST visitor related code",
+      "query": {
+        "vector_query": "AST visitor pattern",
+        "keyword_query": "language:Python"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "filename_pattern": ".*visitor.*\\.py$",
+            "expected_metadata": {
+              "classes": "!empty",
+              "functions": "!empty", 
+              "imports": "!empty",
+              "complexity_score": ">0",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 2
+      }
+    },
+    {
+      "name": "python_handler_search",
+      "description": "Search for Python language handler",
+      "query": {
+        "vector_query": "python handler",
+        "keyword_query": "language:Python filename:python_handler"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "filename_pattern": ".*python_handler\\.py$",
+            "expected_metadata": {
+              "classes": "!empty",
+              "functions": "!empty",
+              "imports": "!empty",
+              "has_classes": true,
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "complex_function_search",
+      "description": "Search for complex functions with high complexity",
+      "query": {
+        "vector_query": "complex algorithm implementation",
+        "keyword_query": "language:Python complexity:>5"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "complexity_score": ">5",
+              "functions": "!empty",
+              "code": "!empty",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "class_search",
+      "description": "Search for files containing classes",
+      "query": {
+        "vector_query": "class definition",
+        "keyword_query": "language:Python has_classes:true"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "classes": "!empty",
+              "has_classes": true,
+              "code": "!empty",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 3
+      }
+    },
+    {
+      "name": "rust_struct_search",
+      "description": "Search for Rust struct definitions and implementations",
+      "query": {
+        "vector_query": "struct implementation methods",
+        "keyword_query": "language:Rust"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "filename_pattern": ".*test_rust\\.rs$",
+            "expected_metadata": {
+              "functions": "!empty",
+              "has_classes": false,
+              "complexity_score": ">0",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "java_class_inheritance_search",
+      "description": "Search for Java class inheritance and polymorphism",
+      "query": {
+        "vector_query": "class inheritance abstract extends",
+        "keyword_query": "language:Java"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "filename_pattern": ".*test_java\\.java$",
+            "expected_metadata": {
+              "classes": "!empty",
+              "functions": "!empty",
+              "has_classes": true,
+              "complexity_score": ">5",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "javascript_arrow_functions_search",
+      "description": "Search for JavaScript arrow functions and closures",
+      "query": {
+        "vector_query": "arrow function closure callback",
+        "keyword_query": "language:JavaScript"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "filename_pattern": ".*test_javascript\\.js$",
+            "expected_metadata": {
+              "functions": "!empty",
+              "classes": "!empty",
+              "has_classes": true,
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "typescript_interface_search",
+      "description": "Search for TypeScript interfaces and type definitions",
+      "query": {
+        "vector_query": "interface type definition generics",
+        "keyword_query": "language:TypeScript"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "filename_pattern": ".*test_typescript\\.ts$",
+            "expected_metadata": {
+              "functions": "!empty",
+              "classes": "!empty",
+              "has_classes": true,
+              "has_type_hints": true,
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "cpp_template_search",
+      "description": "Search for C++ templates and generic programming",
+      "query": {
+        "vector_query": "template generic class function",
+        "keyword_query": "language:CPP"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "filename_pattern": ".*test_cpp\\.cpp$",
+            "expected_metadata": {
+              "functions": "!empty",
+              "classes": "!empty",
+              "has_classes": true,
+              "complexity_score": ">3",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "c_struct_functions_search",
+      "description": "Search for C struct definitions and functions",
+      "query": {
+        "vector_query": "struct typedef function pointer",
+        "keyword_query": "language:C"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "filename_pattern": ".*test_c\\.c$",
+            "expected_metadata": {
+              "functions": "!empty",
+              "has_classes": false,
+              "complexity_score": ">0",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "kotlin_data_class_search",
+      "description": "Search for Kotlin data classes and sealed classes",
+      "query": {
+        "vector_query": "data class sealed class when expression",
+        "keyword_query": "language:Kotlin"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "filename_pattern": ".*test_kotlin\\.kt$",
+            "expected_metadata": {
+              "functions": "!empty",
+              "classes": "!empty",
+              "has_classes": true,
+              "complexity_score": ">2",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "haskell_functional_search",
+      "description": "Search for Haskell functional programming patterns",
+      "query": {
+        "vector_query": "higher order function pattern matching recursion",
+        "keyword_query": "language:Haskell"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "filename_pattern": ".*test_haskell\\.hs$",
+            "expected_metadata": {
+              "functions": "!empty",
+              "has_classes": false,
+              "complexity_score": ">1",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "multi_language_fibonacci_search",
+      "description": "Search for fibonacci implementations across all languages",
+      "query": {
+        "vector_query": "fibonacci recursive algorithm implementation",
+        "keyword_query": "functions:fibonacci"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "functions": "!empty",
+              "complexity_score": ">0",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 5
+      }
+    },
+    {
+      "name": "cross_language_class_search",
+      "description": "Search for class definitions across object-oriented languages",
+      "query": {
+        "vector_query": "class constructor method inheritance",
+        "keyword_query": "has_classes:true"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "classes": "!empty",
+              "functions": "!empty",
+              "has_classes": true,
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 4
+      }
+    }
+  ],
+  "test_metadata": {
+    "version": "2.0",
+    "description": "Multi-language hybrid search integration tests to validate code analysis across all supported languages",
+    "supported_languages": [
+      "Python", "Rust", "Java", "JavaScript", "TypeScript", 
+      "CPP", "C", "Kotlin", "Haskell"
+    ],
+    "test_categories": [
+      "Language-specific searches (Python, Rust, Java, JS, TS, C++, C, Kotlin, Haskell)",
+      "Cross-language pattern searches (fibonacci implementations, class definitions)",
+      "Metadata validation (functions, classes, complexity, analysis methods)"
+    ],
+    "notes": [
+      "Tests validate that files are properly analyzed with correct metadata across all languages",
+      "Empty code fields indicate analysis failures",
+      "analysis_method should not be 'unknown' for proper analysis",
+      "Each language should use appropriate embedding models (GraphCodeBERT vs UniXcode vs fallback)",
+      "Patterns use regex matching, ! prefix means 'not equal'",
+      "> prefix means 'greater than' for numeric comparisons",
+      "Cross-language tests verify consistent metadata extraction across different syntaxes"
+    ]
+  }
+}

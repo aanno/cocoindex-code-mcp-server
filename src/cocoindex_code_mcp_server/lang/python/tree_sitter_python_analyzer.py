@@ -5,8 +5,10 @@ Tree-sitter based Python code analyzer.
 Combines the generic AST visitor framework with Python-specific node handlers.
 """
 
+from ast import AST
+from ast import expr
 import ast
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set, Union
 
 from ...ast_visitor import (
     ASTParserFactory,
@@ -24,7 +26,7 @@ class TreeSitterPythonAnalyzer:
     Provides comprehensive metadata extraction with multiple analysis strategies.
     """
 
-    def __init__(self, prefer_tree_sitter: bool = True):
+    def __init__(self, prefer_tree_sitter: bool = True) -> None:
         """
         Initialize the analyzer.
 
@@ -35,7 +37,7 @@ class TreeSitterPythonAnalyzer:
         self.multilevel_analyzer = MultiLevelAnalyzer()
         self.parser_factory = ASTParserFactory()
 
-    def analyze_code(self, code: str, filename: str = "") -> Dict[str, Any]:
+    def analyze_code(self, code: str, filename: str = "") -> Union[Dict[str, Any], None]:
         """
         Analyze Python code and extract comprehensive metadata.
 
@@ -119,7 +121,7 @@ class TreeSitterPythonAnalyzer:
             metadata = walker.walk(visitor)
 
             # Get handler summary if available
-            if hasattr(python_handler, 'get_summary'):
+            if python_handler and hasattr(python_handler, 'get_summary'):
                 handler_summary = python_handler.get_summary()
                 metadata.update(handler_summary)
 
@@ -243,7 +245,7 @@ class TreeSitterPythonAnalyzer:
 
         return merged
 
-    def _normalize_metadata(self, metadata: Dict[str, Any], code: str, filename: str) -> Dict[str, Any]:
+    def _normalize_metadata(self, metadata: Union[Dict[str, Any],None], code: str, filename: str) -> Dict[str, Any]:
         """Ensure metadata has all expected fields without overriding enhanced metadata."""
         base_metadata = {
             'language': 'Python',
@@ -290,27 +292,27 @@ class PythonASTVisitor(ast.NodeVisitor):
     Complements tree-sitter analysis with Python-specific semantics.
     """
 
-    def __init__(self):
-        self.functions = []
-        self.classes = []
-        self.imports = []
-        self.variables = []
-        self.decorators = set()
-        self.complexity_score = 0
-        self.current_class = None
-        self.scope_stack = []
+    def __init__(self) -> None:
+        self.functions: List[Dict[str, Any]] = []
+        self.classes: List[Dict[str, Any]] = []
+        self.imports: List[Dict[str, Any]] = []
+        self.variables: List[str] = []
+        self.decorators: Set[str] = set()
+        self.complexity_score: float = 0
+        self.current_class: Optional[str] = None
+        self.scope_stack: List[str] = []
 
-    def visit_FunctionDef(self, node: ast.FunctionDef):
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         """Visit function definitions."""
         self._process_function(node, is_async=False)
         self.generic_visit(node)
 
-    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef):
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         """Visit async function definitions."""
         self._process_function(node, is_async=True)
         self.generic_visit(node)
 
-    def visit_ClassDef(self, node: ast.ClassDef):
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
         """Visit class definitions."""
         self._process_class(node)
 
@@ -325,7 +327,7 @@ class PythonASTVisitor(ast.NodeVisitor):
         self.current_class = old_class
         self.scope_stack.pop()
 
-    def visit_Import(self, node: ast.Import):
+    def visit_Import(self, node: ast.Import) -> None:
         """Visit import statements."""
         for alias in node.names:
             self.imports.append({
@@ -337,7 +339,7 @@ class PythonASTVisitor(ast.NodeVisitor):
 
         self.generic_visit(node)
 
-    def visit_ImportFrom(self, node: ast.ImportFrom):
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         """Visit from...import statements."""
         module = node.module or ""
         for alias in node.names:
@@ -351,7 +353,7 @@ class PythonASTVisitor(ast.NodeVisitor):
 
         self.generic_visit(node)
 
-    def visit_Assign(self, node: ast.Assign):
+    def visit_Assign(self, node: ast.Assign) -> None:
         """Visit assignment statements."""
         # Only track module-level variables
         if len(self.scope_stack) == 0:
@@ -361,7 +363,7 @@ class PythonASTVisitor(ast.NodeVisitor):
 
         self.generic_visit(node)
 
-    def visit_AnnAssign(self, node: ast.AnnAssign):
+    def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
         """Visit annotated assignment statements."""
         # Only track module-level variables
         if len(self.scope_stack) == 0 and isinstance(node.target, ast.Name):
@@ -370,43 +372,43 @@ class PythonASTVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
     # Control flow nodes for complexity calculation
-    def visit_If(self, node: ast.If):
+    def visit_If(self, node: ast.If) -> None:
         self.complexity_score += 1
         self.generic_visit(node)
 
-    def visit_For(self, node: ast.For):
+    def visit_For(self, node: ast.For) -> None:
         self.complexity_score += 1
         self.generic_visit(node)
 
-    def visit_While(self, node: ast.While):
+    def visit_While(self, node: ast.While) -> None:
         self.complexity_score += 1
         self.generic_visit(node)
 
-    def visit_Try(self, node: ast.Try):
+    def visit_Try(self, node: ast.Try) -> None:
         self.complexity_score += 1
         self.generic_visit(node)
 
-    def visit_With(self, node: ast.With):
+    def visit_With(self, node: ast.With) -> None:
         self.complexity_score += 1
         self.generic_visit(node)
 
-    def visit_ListComp(self, node: ast.ListComp):
+    def visit_ListComp(self, node: ast.ListComp) -> None:
         self.complexity_score += 1
         self.generic_visit(node)
 
-    def visit_DictComp(self, node: ast.DictComp):
+    def visit_DictComp(self, node: ast.DictComp) -> None:
         self.complexity_score += 1
         self.generic_visit(node)
 
-    def visit_SetComp(self, node: ast.SetComp):
+    def visit_SetComp(self, node: ast.SetComp) -> None:
         self.complexity_score += 1
         self.generic_visit(node)
 
-    def visit_GeneratorExp(self, node: ast.GeneratorExp):
+    def visit_GeneratorExp(self, node: ast.GeneratorExp) -> None:
         self.complexity_score += 1
         self.generic_visit(node)
 
-    def visit_Lambda(self, node: ast.Lambda):
+    def visit_Lambda(self, node: ast.Lambda) -> None:
         self.complexity_score += 1
         self.generic_visit(node)
 
@@ -510,7 +512,7 @@ class PythonASTVisitor(ast.NodeVisitor):
 
         return parameters
 
-    def _get_decorator_name(self, decorator) -> str:
+    def _get_decorator_name(self, decorator: expr) -> str:
         """Extract decorator name."""
         if isinstance(decorator, ast.Name):
             return decorator.id
@@ -521,7 +523,7 @@ class PythonASTVisitor(ast.NodeVisitor):
         else:
             return ast.unparse(decorator)
 
-    def _get_annotation_name(self, annotation) -> str:
+    def _get_annotation_name(self, annotation: expr) -> Union[str,None]:
         """Extract type annotation name."""
         if annotation is None:
             return None
@@ -531,7 +533,7 @@ class PythonASTVisitor(ast.NodeVisitor):
         except BaseException:
             return str(annotation)
 
-    def _get_default_value(self, default) -> str:
+    def _get_default_value(self, default: AST) -> str:
         """Extract default parameter value."""
         try:
             return ast.unparse(default)
@@ -578,7 +580,7 @@ def create_python_analyzer(prefer_tree_sitter: bool = True) -> TreeSitterPythonA
 
 
 # Convenience function for direct analysis
-def analyze_python_code(code: str, filename: str = "", prefer_tree_sitter: bool = True) -> Dict[str, Any]:
+def analyze_python_code(code: str, filename: str = "", prefer_tree_sitter: bool = True) -> Union[Dict[str, Any],None]:
     """Analyze Python code with the enhanced analyzer."""
     analyzer = create_python_analyzer(prefer_tree_sitter=prefer_tree_sitter)
     return analyzer.analyze_code(code, filename)

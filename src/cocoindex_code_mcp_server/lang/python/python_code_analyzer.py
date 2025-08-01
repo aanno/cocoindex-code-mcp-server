@@ -8,7 +8,11 @@ Enhanced with tree-sitter AST analysis and multi-level fallback strategies.
 import ast
 import json
 import re
-from typing import Any, Dict
+from typing import Any, Dict, List, Set, Optional, Union
+
+from tree_sitter import Node
+
+from cocoindex_code_mcp_server.language_handlers.python_handler import PythonClass, PythonFunction, PythonImport
 
 from . import LOGGER
 
@@ -24,19 +28,19 @@ except ImportError as e:
 class PythonCodeAnalyzer:
     """Analyzer for extracting metadata from Python code chunks."""
 
-    def __init__(self):
-        self.max_recursion_depth = 200  # Prevent infinite recursion
-        self.visited_nodes = set()  # Cycle detection
+    def __init__(self) -> None:
+        self.max_recursion_depth: int = 200  # Prevent infinite recursion
+        self.visited_nodes: Set[int] = set()  # Cycle detection
         self.reset()
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset the analyzer state."""
-        self.functions = []
-        self.classes = []
-        self.imports = []
-        self.variables = []
-        self.decorators = []
-        self.complexity_score = 0
+        self.functions: List[Dict[str, Any]] = []
+        self.classes: List[Dict[str, Any]] = []
+        self.imports: List[Dict[str, Any]] = []
+        self.variables: List[Dict[str, Any]] = []
+        self.decorators: Set[str] = set()
+        self.complexity_score: float = 0
         self.visited_nodes.clear()  # Clear visited nodes on reset
 
     def analyze_code(self, code: str, filename: str = "") -> Dict[str, Any]:
@@ -78,7 +82,7 @@ class PythonCodeAnalyzer:
             LOGGER.error(f"Error analyzing Python code: {e}")
             return self._build_fallback_metadata(code, filename)
 
-    def _visit_node(self, node: ast.AST, class_context: str = None, depth: int = 0):
+    def _visit_node(self, node: ast.AST, class_context: Optional[str] = None, depth: int = 0) -> None:
         """Recursively visit AST nodes to extract metadata with bounds checking."""
         # Prevent infinite recursion
         if depth > self.max_recursion_depth:
@@ -115,9 +119,9 @@ class PythonCodeAnalyzer:
             # Remove from visited set when done (allow revisiting in different contexts)
             self.visited_nodes.discard(node_id)
 
-    def _extract_function_info(self, node: ast.FunctionDef, class_context: str = None, is_async: bool = False):
+    def _extract_function_info(self, node: ast.FunctionDef | ast.AsyncFunctionDef, class_context: Optional[str] = None, is_async: bool = False) -> None:
         """Extract information about function definitions."""
-        func_info = {
+        func_info: Dict[str, Any] = {
             "name": node.name,
             "type": "async_function" if is_async else "method" if class_context else "function",
             "class": class_context,
@@ -162,11 +166,11 @@ class PythonCodeAnalyzer:
         for decorator in node.decorator_list:
             decorator_name = self._get_decorator_name(decorator, 0)
             func_info["decorators"].append(decorator_name)
-            self.decorators.append(decorator_name)
+            self.decorators.add(decorator_name)
 
         self.functions.append(func_info)
 
-    def _extract_class_info(self, node: ast.ClassDef):
+    def _extract_class_info(self, node: ast.ClassDef) -> None:
         """Extract information about class definitions."""
         class_info = {
             "name": node.name,
@@ -185,12 +189,12 @@ class PythonCodeAnalyzer:
         # Add class decorators to global decorators list (like function decorators)
         for decorator in node.decorator_list:
             decorator_name = self._get_decorator_name(decorator, 0)
-            self.decorators.append(decorator_name)
+            self.decorators.add(decorator_name)
 
         # Extract methods (will be added by function extraction with class context)
         self.classes.append(class_info)
 
-    def _extract_import_info(self, node: ast.AST):
+    def _extract_import_info(self, node: ast.AST) -> None:
         """Extract import information."""
         if isinstance(node, ast.Import):
             for alias in node.names:
@@ -215,7 +219,7 @@ class PythonCodeAnalyzer:
                 }
                 self.imports.append(import_info)
 
-    def _extract_variable_info(self, node: ast.Assign, class_context: str = None):
+    def _extract_variable_info(self, node: ast.Assign, class_context: Optional[str] = None) -> None:
         """Extract variable assignment information."""
         for target in node.targets:
             if isinstance(target, ast.Name):
@@ -287,7 +291,7 @@ class PythonCodeAnalyzer:
                 # Limit dict size
                 items = list(zip(node.keys, node.values))[:5]
                 return {
-                    self._get_ast_value(k, depth + 1): self._get_ast_value(v, depth + 1)
+                    self._get_ast_value(k, depth + 1) if k else "None": self._get_ast_value(v, depth + 1) if v else "None"
                     for k, v in items
                 }
             else:
@@ -295,7 +299,7 @@ class PythonCodeAnalyzer:
         except Exception:
             return "unknown_value"
 
-    def _calculate_metrics(self, code: str):
+    def _calculate_metrics(self, code: str) -> None:
         """Calculate code complexity and other metrics."""
         # Simple complexity metrics
         self.complexity_score = (
@@ -321,8 +325,8 @@ class PythonCodeAnalyzer:
         ]))
 
         # Group functions by class
-        class_methods = {}
-        standalone_functions = []
+        class_methods: Dict[str, List[Dict[str, Any]]] = {}
+        standalone_functions: List[Dict[str, Any]] = []
 
         for func in self.functions:
             if func['class']:
@@ -418,7 +422,7 @@ class PythonCodeAnalyzer:
 
     def _build_node_relationships(self) -> Dict[str, Any]:
         """Build node relationships mapping parent-child and scope relationships."""
-        relationships = {
+        relationships: Dict[str, Any] = {
             "parent": None,  # Module level has no parent
             "children": [],
             "scope": "module",
@@ -506,7 +510,7 @@ class PythonCodeAnalyzer:
         return fallback_metadata
 
 
-def analyze_python_code(code: str, filename: str = "") -> Dict[str, Any]:
+def analyze_python_code(code: str, filename: str = "") -> Union[Dict[str, Any],None]:
     """
     Enhanced Python code analysis with tree-sitter support and fallback strategies.
 
@@ -530,15 +534,15 @@ def analyze_python_code(code: str, filename: str = "") -> Dict[str, Any]:
         LOGGER.debug(f"Use the enhanced tree-sitter based analyzer for {filename}: {metadata}")
 
         # Ensure metadata_json field for compatibility with existing code
-        if 'metadata_json' not in metadata:
+        if metadata and 'metadata_json' not in metadata:
             metadata['metadata_json'] = json.dumps(metadata, default=str)
 
         return metadata
     else:
         # Fallback to the enhanced legacy analyzer (not tree-sitter, but still enhanced)
         LOGGER.info("Using enhanced Python AST analyzer (tree-sitter not available)")
-        analyzer = PythonCodeAnalyzer()
-        return analyzer.analyze_code(code, filename)
+        fallback_analyzer: Any = PythonCodeAnalyzer()
+        return fallback_analyzer.analyze_code(code, filename)
 
 
 if __name__ == "__main__":

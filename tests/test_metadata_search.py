@@ -20,6 +20,7 @@ try:
         HybridSearchEngine,
         format_results_readable,
     )
+    from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
 except ImportError as e:
     LOGGER.warning(f"Could not import hybrid_search module: {e}")
     print("⚠️  Warning: These are integration tests that require the full application setup.")
@@ -40,7 +41,7 @@ class TestMetadataSearch:
 
         try:
             self.pool = ConnectionPool(db_url)
-            self.search_engine = HybridSearchEngine(self.pool)
+            self.search_engine = HybridSearchEngine("code_embeddings", KeywordSearchParser(), pool=self.pool)
 
             # Check if the required table exists
             with self.pool.connection() as conn:
@@ -51,9 +52,16 @@ class TestMetadataSearch:
                             WHERE table_name = 'code_embeddings'
                         );
                     """)
-                    table_exists = cur.fetchone()[0]
-                    if not table_exists:
-                        pytest.skip("code_embeddings table does not exist - database not initialized")
+                    if cur is not None:
+                        one = cur.fetchone()
+                        if one is not None:
+                            table_exists = one[0]
+                            if not table_exists:
+                                pytest.skip("code_embeddings table does not exist - database not initialized")
+                        else:
+                                pytest.skip("code_embeddings table does not exist - database not initialized")
+                    else:
+                        pytest.fail("code_embeddings table does not exist - database not initialized")
         except Exception as e:
             pytest.skip(f"Could not connect to database or check table: {e}")
 
@@ -157,7 +165,7 @@ def run_manual_metadata_search():
 
     try:
         pool = ConnectionPool(db_url)
-        search_engine = HybridSearchEngine(pool)
+        search_engine = HybridSearchEngine("code_embeddings", KeywordSearchParser(), pool=pool)
     except Exception as e:
         print(f"❌ Could not connect to database: {e}")
         return

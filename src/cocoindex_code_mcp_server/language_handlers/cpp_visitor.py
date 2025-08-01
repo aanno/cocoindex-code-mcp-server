@@ -3,6 +3,7 @@
 """
 C++-specific AST visitor for metadata extraction.
 Inherits from C visitor since C is largely a subset of C++.
+Updated to trigger CocoIndex reprocessing.
 """
 
 import logging
@@ -10,6 +11,8 @@ from typing import Any, Dict, List, Optional
 
 from ..ast_visitor import NodeContext
 from .c_visitor import CASTVisitor
+from cocoindex_code_mcp_server.ast_visitor import NodeContext
+from tree_sitter import Node
 
 LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +20,7 @@ LOGGER = logging.getLogger(__name__)
 class CppASTVisitor(CASTVisitor):
     """Specialized visitor for C++ language AST analysis."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.language = "cpp"
         # Inherit C functionality: self.functions, self.structs, self.enums, self.typedefs
@@ -47,28 +50,32 @@ class CppASTVisitor(CASTVisitor):
 
         return None
 
-    def _extract_class(self, node):
+    def _extract_class(self, node: Node) -> None:
         """Extract class name from class_specifier node."""
         try:
             # Look for class name (identifier after 'class' keyword)
             for child in node.children:
                 if child.type == 'type_identifier':
-                    class_name = child.text.decode('utf-8')
-                    self.classes.append(class_name)
-                    LOGGER.debug(f"Found C++ class: {class_name}")
-                    break
+                    text = child.text
+                    if text is not None:
+                        class_name = text.decode('utf-8')
+                        self.classes.append(class_name)
+                        LOGGER.debug(f"Found C++ class: {class_name}")
+                        break
         except Exception as e:
             LOGGER.warning(f"Error extracting C++ class: {e}")
 
-    def _extract_namespace(self, node):
+    def _extract_namespace(self, node: Node) -> None:
         """Extract namespace name from namespace_definition node."""
         try:
             # Look for namespace name
             for child in node.children:
                 if child.type == 'identifier':
-                    namespace_name = child.text.decode('utf-8')
-                    self.namespaces.append(namespace_name)
-                    LOGGER.debug(f"Found C++ namespace: {namespace_name}")
+                    text = child.text
+                    if text is not None:
+                        namespace_name = text.decode('utf-8')
+                        self.namespaces.append(namespace_name)
+                        LOGGER.debug(f"Found C++ namespace: {namespace_name}")
                     break
         except Exception as e:
             LOGGER.warning(f"Error extracting C++ namespace: {e}")

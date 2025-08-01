@@ -1,29 +1,102 @@
 #!/usr/bin/env python3
 
 """
-Tests for the hybrid search engine.
+Tests for the hybrid search engine with backend abstraction.
 """
 
 from unittest.mock import MagicMock, Mock, patch
+import numpy as np
 
 import pytest
 
-# Mock pgvector before importing hybrid_search
-with patch('pgvector.psycopg.register_vector'):
-    from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
-        HybridSearchEngine,
-        format_results_as_json,
-        format_results_readable
-    )
-
+from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
+    HybridSearchEngine,
+    format_results_as_json,
+    format_results_readable
+)
+from cocoindex_code_mcp_server.backends import QueryFilters, VectorStoreBackend, SearchResult
+from cocoindex_code_mcp_server.schemas import SearchResultType
 from cocoindex_code_mcp_server.keyword_search_parser import SearchCondition, SearchGroup
+from numpy import ndarray
+from typing import Any, Dict, List
+
+
+class MockVectorStoreBackend(VectorStoreBackend):
+    """Mock backend for testing."""
+    
+    def __init__(self):
+        self.vector_search_calls = []
+        self.keyword_search_calls = []
+        self.hybrid_search_calls = []
+    
+    def vector_search(self, query_vector: ndarray, top_k: int=10) -> List[SearchResult]:
+        self.vector_search_calls.append((query_vector, top_k))
+        return [
+            SearchResult(
+                filename="test.py",
+                language="Python", 
+                code="def test():",
+                location="test.py:1-3",
+                score=0.8,
+                start={"line": 1},
+                end={"line": 3},
+                source="files",
+                score_type=SearchResultType.VECTOR_SIMILARITY
+            )
+        ]
+    
+    def keyword_search(self, filters: QueryFilters, top_k: int=10) -> List[SearchResult]:
+        self.keyword_search_calls.append((filters, top_k))
+        return [
+            SearchResult(
+                filename="test.py",
+                language="Python",
+                code="def test():",
+                location="test.py:1-3",
+                score=1.0,
+                start={"line": 1},
+                end={"line": 3},
+                source="files", 
+                score_type=SearchResultType.KEYWORD_MATCH
+            )
+        ]
+    
+    def hybrid_search(self, query_vector: ndarray, filters: QueryFilters, top_k: int=10, vector_weight: float=0.7, keyword_weight: float=0.3) -> List[SearchResult]:
+        self.hybrid_search_calls.append((query_vector, filters, top_k, vector_weight, keyword_weight))
+        return [
+            SearchResult(
+                filename="test.py",
+                language="Python",
+                code="def test():",
+                location="test.py:1-3",
+                score=0.75,
+                start={"line": 1},
+                end={"line": 3},
+                source="files",
+                score_type=SearchResultType.HYBRID_COMBINED
+            )
+        ]
+    
+    def configure(self, **options):
+        pass
+    
+    def get_table_info(self):
+        return {"backend_type": "mock", "table_name": "test_table"}
+    
+    def close(self):
+        pass
 
 
 @pytest.fixture
+def mock_backend():
+    """Create a mock vector store backend."""
+    return MockVectorStoreBackend()
+
+
+@pytest.fixture 
 def mock_pool():
     """Create a mock database connection pool."""
     pool = MagicMock()
-    # Set up the connection to return a MagicMock context manager
     pool.connection.return_value = MagicMock()
     return pool
 
@@ -38,70 +111,104 @@ def mock_parser():
 def mock_embedding_func():
     """Create a mock embedding function."""
     mock_func = Mock()
-    mock_func.return_value = [0.1, 0.2, 0.3]
+    mock_func.return_value = np.array([0.1, 0.2, 0.3], dtype=np.float32)
     return mock_func
 
 
 @pytest.fixture
-def hybrid_engine(mock_pool, mock_parser, mock_embedding_func):
-    """Create a HybridSearchEngine with mocked dependencies."""
+def hybrid_engine_with_backend(mock_backend, mock_parser, mock_embedding_func):
+    """Create a HybridSearchEngine with mock backend."""
     return HybridSearchEngine(
-        pool=mock_pool,
         table_name="test_table",
+        backend=mock_backend,
         parser=mock_parser,
         embedding_func=mock_embedding_func
     )
 
 
+@pytest.fixture
+def hybrid_engine_legacy(mock_pool, mock_parser, mock_embedding_func):
+    """Create a HybridSearchEngine with legacy pool constructor."""
+    with patch('cocoindex_code_mcp_server.backends.BackendFactory.create_backend') as mock_factory:
+        mock_factory.return_value = MockVectorStoreBackend()
+        return HybridSearchEngine(
+            table_name="test_table",
+            parser=mock_parser,
+            pool=mock_pool,
+            embedding_func=mock_embedding_func
+        )
+
+
 @pytest.mark.db_integration
 @pytest.mark.search_engine
-@patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.register_vector')
 class TestHybridSearchEngine:
-    """Test HybridSearchEngine class."""
+    """Test HybridSearchEngine class with backend abstraction."""
 
-    def test_initialization(self, mock_register, hybrid_engine, mock_pool, mock_parser, mock_embedding_func):
-        """Test engine initialization."""
-        assert hybrid_engine.pool == mock_pool
-        assert hybrid_engine.parser == mock_parser
-        assert hybrid_engine.table_name == "test_table"
-        assert hybrid_engine.embedding_func == mock_embedding_func
+    def test_initialization_with_backend(self, mock_backend: MockVectorStoreBackend, mock_parser: Mock, mock_embedding_func: Mock):
+        """Test engine initialization with backend."""
+        engine = HybridSearchEngine(
+            table_name="test_table",
+            backend=mock_backend,
+            parser=mock_parser,
+            embedding_func=mock_embedding_func
+        )
+        
+        assert engine.backend == mock_backend
+        assert engine.parser == mock_parser
+        assert engine.embedding_func == mock_embedding_func
+
+    @patch('cocoindex_code_mcp_server.backends.BackendFactory.create_backend')
+    def test_initialization_legacy_pool(self, mock_factory: MagicMock, mock_pool: MagicMock, mock_parser: Mock, mock_embedding_func: Mock):
+        """Test engine initialization with legacy pool parameter."""
+        mock_backend = MockVectorStoreBackend()
+        mock_factory.return_value = mock_backend
+        
+        engine = HybridSearchEngine(
+            pool=mock_pool,
+            table_name="test_table",
+            parser=mock_parser,
+            embedding_func=mock_embedding_func
+        )
+        
+        # Verify backend factory was called with correct parameters
+        mock_factory.assert_called_once_with("postgres", pool=mock_pool, table_name="test_table")
+        assert engine.backend == mock_backend
+
+    def test_initialization_error_no_backend_or_pool(self, mock_parser: Mock, mock_embedding_func: Mock):
+        """Test engine initialization error when neither backend nor pool provided."""
+        with pytest.raises(ValueError, match="Either 'backend' or 'pool' parameter must be provided"):
+            HybridSearchEngine(
+                table_name="test_table",
+                parser=mock_parser,
+                embedding_func=mock_embedding_func
+            )
 
     @patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.KeywordSearchParser')
     @patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.cocoindex.utils.get_target_default_name')
     @patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.code_to_embedding')
-    def test_initialization_with_defaults(self, mock_embedding, mock_get_name, mock_parser_class, mock_pool):
+    @patch('cocoindex_code_mcp_server.backends.BackendFactory.create_backend')
+    def test_initialization_with_defaults(self, mock_factory: MagicMock, mock_embedding: MagicMock, mock_get_name: MagicMock, mock_parser_class: MagicMock, mock_pool: MagicMock):
         """Test engine initialization with default values."""
+        mock_backend = MockVectorStoreBackend()
+        mock_factory.return_value = mock_backend
         mock_parser_instance = Mock()
         mock_parser_class.return_value = mock_parser_instance
         mock_get_name.return_value = "default_table"
 
-        engine = HybridSearchEngine(mock_pool)
+        engine = HybridSearchEngine(table_name="default_table", parser=mock_parser_instance, pool=mock_pool)
 
-        assert engine.pool == mock_pool
+        mock_factory.assert_called_once_with("postgres", pool=mock_pool, table_name="default_table")
+        assert engine.backend == mock_backend
         assert engine.parser == mock_parser_instance
-        assert engine.table_name == "default_table"
 
-    def test_search_vector_only(self, mock_register, hybrid_engine, mock_parser, mock_embedding_func, mock_pool):
+    def test_search_vector_only(self, hybrid_engine_with_backend: HybridSearchEngine, mock_backend: MockVectorStoreBackend, mock_parser: Mock, mock_embedding_func: Mock):
         """Test search with vector query only."""
         # Mock parser to return empty search group
         empty_group = SearchGroup(conditions=[])
         mock_parser.parse.return_value = empty_group
 
-        # Mock database connection and cursor with proper context managers
-        mock_conn = MagicMock()
-        mock_cursor = MagicMock()
-        mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
-        mock_conn.cursor.return_value.__exit__.return_value = None
-        mock_pool.connection.return_value.__enter__.return_value = mock_conn
-        mock_pool.connection.return_value.__exit__.return_value = None
-
-        # Mock cursor results
-        mock_cursor.fetchall.return_value = [
-            ("test.py", "Python", "def test():", 0.2, {"line": 1}, {"line": 3}, "files")
-        ]
-
         # Execute search
-        results = hybrid_engine.search("test query", "", top_k=5)
+        results = hybrid_engine_with_backend.search("test query", "", top_k=5)
 
         # Verify embedding function was called
         mock_embedding_func.assert_called_once_with("test query")
@@ -109,8 +216,11 @@ class TestHybridSearchEngine:
         # Verify parser was called with empty keyword query
         mock_parser.parse.assert_called_once_with("")
 
-        # Verify database query was executed
-        mock_cursor.execute.assert_called_once()
+        # Verify backend vector_search was called
+        assert len(mock_backend.vector_search_calls) == 1
+        query_vector, top_k = mock_backend.vector_search_calls[0]
+        np.testing.assert_array_equal(query_vector, np.array([0.1, 0.2, 0.3], dtype=np.float32))
+        assert top_k == 5
 
         # Verify results format
         assert len(results) == 1
@@ -118,30 +228,18 @@ class TestHybridSearchEngine:
         assert result["filename"] == "test.py"
         assert result["language"] == "Python"
         assert result["code"] == "def test():"
-        assert abs(result["score"] - 0.8) < 0.001  # 1.0 - 0.2
+        assert result["score"] == 0.8
+        assert result["score_type"] == "vector"
 
-    def test_search_keyword_only(self, mock_register, hybrid_engine, mock_parser, mock_embedding_func, mock_pool):
+    def test_search_keyword_only(self, hybrid_engine_with_backend: HybridSearchEngine, mock_backend: MockVectorStoreBackend, mock_parser: Mock, mock_embedding_func: Mock):
         """Test search with keyword query only."""
         # Mock parser to return a search group with conditions
         condition = SearchCondition(field="language", value="python")
         search_group = SearchGroup(conditions=[condition])
         mock_parser.parse.return_value = search_group
 
-        # Mock database connection and cursor with proper context managers
-        mock_conn = MagicMock()
-        mock_cursor = MagicMock()
-        mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
-        mock_conn.cursor.return_value.__exit__.return_value = None
-        mock_pool.connection.return_value.__enter__.return_value = mock_conn
-        mock_pool.connection.return_value.__exit__.return_value = None
-
-        # Mock cursor results
-        mock_cursor.fetchall.return_value = [
-            ("test.py", "Python", "def test():", 0.0, {"line": 1}, {"line": 3}, "files")
-        ]
-
         # Execute search
-        results = hybrid_engine.search("", "language:python", top_k=5)
+        results = hybrid_engine_with_backend.search("", "language:python", top_k=5)
 
         # Verify embedding function was not called
         mock_embedding_func.assert_not_called()
@@ -149,36 +247,26 @@ class TestHybridSearchEngine:
         # Verify parser was called with keyword query
         mock_parser.parse.assert_called_once_with("language:python")
 
-        # Verify database query was executed
-        mock_cursor.execute.assert_called_once()
+        # Verify backend keyword_search was called
+        assert len(mock_backend.keyword_search_calls) == 1
+        filters, top_k = mock_backend.keyword_search_calls[0]
+        assert len(filters.conditions) == 1
+        assert top_k == 5
 
         # Verify results format
         assert len(results) == 1
         result = results[0]
         assert result["score_type"] == "keyword"
 
-    def test_search_hybrid(self, mock_register, hybrid_engine, mock_parser, mock_embedding_func, mock_pool):
+    def test_search_hybrid(self, hybrid_engine_with_backend: HybridSearchEngine, mock_backend: MockVectorStoreBackend, mock_parser: Mock, mock_embedding_func: Mock):
         """Test hybrid search with both vector and keyword queries."""
         # Mock parser to return a search group with conditions
         condition = SearchCondition(field="language", value="python")
         search_group = SearchGroup(conditions=[condition])
         mock_parser.parse.return_value = search_group
 
-        # Mock database connection and cursor with proper context managers
-        mock_conn = MagicMock()
-        mock_cursor = MagicMock()
-        mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
-        mock_conn.cursor.return_value.__exit__.return_value = None
-        mock_pool.connection.return_value.__enter__.return_value = mock_conn
-        mock_pool.connection.return_value.__exit__.return_value = None
-
-        # Mock cursor results for hybrid search
-        mock_cursor.fetchall.return_value = [
-            ("test.py", "Python", "def test():", 0.2, {"line": 1}, {"line": 3}, "files", 0.75)
-        ]
-
         # Execute search
-        results = hybrid_engine.search("test query", "language:python", top_k=5)
+        results = hybrid_engine_with_backend.search("test query", "language:python", top_k=5, vector_weight=0.6, keyword_weight=0.4)
 
         # Verify embedding function was called
         mock_embedding_func.assert_called_once_with("test query")
@@ -186,8 +274,14 @@ class TestHybridSearchEngine:
         # Verify parser was called with keyword query
         mock_parser.parse.assert_called_once_with("language:python")
 
-        # Verify database query was executed
-        mock_cursor.execute.assert_called_once()
+        # Verify backend hybrid_search was called
+        assert len(mock_backend.hybrid_search_calls) == 1
+        query_vector, filters, top_k, vector_weight, keyword_weight = mock_backend.hybrid_search_calls[0]
+        np.testing.assert_array_equal(query_vector, np.array([0.1, 0.2, 0.3], dtype=np.float32))
+        assert len(filters.conditions) == 1
+        assert top_k == 5
+        assert vector_weight == 0.6
+        assert keyword_weight == 0.4
 
         # Verify results format
         assert len(results) == 1
@@ -195,74 +289,58 @@ class TestHybridSearchEngine:
         assert result["score_type"] == "hybrid"
         assert result["score"] == 0.75
 
-    def test_search_empty_queries(self, mock_register, hybrid_engine, mock_parser):
+    def test_search_empty_queries(self, hybrid_engine_with_backend: HybridSearchEngine, mock_parser: Mock):
         """Test search with empty queries."""
         # Mock parser to return empty search group for empty string
         empty_group = SearchGroup(conditions=[])
         mock_parser.parse.return_value = empty_group
 
         # Execute search with both empty queries
-        results = hybrid_engine.search("", "", top_k=5)
+        results = hybrid_engine_with_backend.search("", "", top_k=5)
 
         # Should return empty results
         assert results == []
 
-    @pytest.mark.skip(reason='Format result enhanced with Python analysis - test needs updating')
-    def test_format_result_vector(self, mock_register, hybrid_engine):
-        """Test _format_result for vector search."""
-        row = ("test.py", "Python", "def test():", 0.2, {"line": 1}, {"line": 3}, "files")
-        result = hybrid_engine._format_result(row, score_type="vector")
-
-        expected = {
+    def test_search_result_to_dict_conversion(self, hybrid_engine_with_backend: HybridSearchEngine):
+        """Test SearchResult to dict conversion."""
+        from cocoindex_code_mcp_server.schemas import ChunkMetadata
+        metadata: ChunkMetadata = {
             "filename": "test.py",
             "language": "Python",
-            "code": "def test():",
-            "score": 0.8,  # 1.0 - 0.2
-            "start": {"line": 1},
-            "end": {"line": 3},
-            "source": "unknown",  # "files" gets converted to "unknown"
-            "score_type": "vector"
+            "location": "test.py:1-3",
+            "functions": ["test"],
+            "classes": [],
+            "imports": [],
+            "complexity_score": 5,
+            "has_type_hints": False,
+            "has_async": False,
+            "has_classes": False
         }
-
-        assert result == expected
-
-    @pytest.mark.skip(reason='Format result enhanced with Python analysis - test needs updating')
-    def test_format_result_keyword(self, mock_register, hybrid_engine):
-        """Test _format_result for keyword search."""
-        row = ("test.py", "Python", "def test():", 0.0, {"line": 1}, {"line": 3}, "custom_source")
-        result = hybrid_engine._format_result(row, score_type="keyword")
-
-        expected = {
-            "filename": "test.py",
-            "language": "Python",
-            "code": "def test():",
-            "score": 1.0,  # Fixed score for keyword search
-            "start": {"line": 1},
-            "end": {"line": 3},
-            "source": "custom_source",
-            "score_type": "keyword"
-        }
-
-        assert result == expected
-
-    @pytest.mark.skip(reason='Format result enhanced with Python analysis - test needs updating')
-    def test_format_result_hybrid(self, mock_register, hybrid_engine):
-        """Test _format_result for hybrid search."""
-        row = ("test.py", "Python", "def test():", 0.2, {"line": 1}, {"line": 3}, "files", 0.85)
-        result = hybrid_engine._format_result(row, score_type="hybrid")
-
-        expected = {
-            "filename": "test.py",
-            "language": "Python",
-            "code": "def test():",
-            "score": 0.85,
-            "start": {"line": 1},
-            "end": {"line": 3},
-            "source": "unknown",
-            "score_type": "hybrid"
-        }
-
-        assert result == expected
+        search_result = SearchResult(
+            filename="test.py",
+            language="Python",
+            code="def test():",
+            location="test.py:1-3",
+            score=0.85,
+            start={"line": 1},
+            end={"line": 3},
+            source="files",
+            score_type=SearchResultType.HYBRID_COMBINED,
+            metadata=metadata
+        )
+        
+        result_dict = hybrid_engine_with_backend._search_result_to_dict(search_result)
+        
+        assert result_dict["filename"] == "test.py"
+        assert result_dict["language"] == "Python"
+        assert result_dict["code"] == "def test():"
+        assert result_dict["score"] == 0.85
+        assert result_dict["start"] == {"line": 1}
+        assert result_dict["end"] == {"line": 3}
+        assert result_dict["source"] == "files"
+        assert result_dict["score_type"] == "hybrid"
+        assert result_dict["functions"] == ["test"]
+        assert result_dict["complexity"] == 5
 
 
 @pytest.mark.unit
@@ -270,34 +348,10 @@ class TestHybridSearchEngine:
 class TestResultFormatting:
     """Test result formatting functions."""
 
-    @pytest.mark.skip(reason="JSON format changed due to enhanced analyzer")
-    def test_format_results_as_json(self):
-        """Test JSON formatting of results."""
-        results = [
-            {
-                "filename": "test.py",
-                "language": "Python",
-                "code": "def test():",
-                "score": 0.85,
-                "start": {"line": 1},
-                "end": {"line": 3},
-                "source": "files",
-                "score_type": "hybrid"
-            }
-        ]
-
-        json_output = format_results_as_json(results)
-
-        # Should be valid JSON
-        import json
-        parsed = json.loads(json_output)
-        assert len(parsed) == 1
-        assert parsed[0]["filename"] == "test.py"
-
     def test_format_results_readable_empty(self):
         """Test readable formatting with empty results."""
-        results = []
-        output = format_results_readable(results)
+        results: List[Dict[str, Any]] = []
+        output: str = format_results_readable(results)
         assert output == "No results found."
 
     def test_format_results_readable_single(self):
@@ -376,110 +430,78 @@ class TestResultFormatting:
         assert "[files]" not in output
         assert "test.py (Python)" in output
 
+    def test_format_results_readable_with_python_metadata(self):
+        """Test readable formatting with Python metadata."""
+        results = [
+            {
+                "filename": "test.py",
+                "language": "Python",
+                "code": "def test():",
+                "score": 0.85,
+                "start": {"line": 1},
+                "end": {"line": 3},
+                "source": "files",
+                "score_type": "vector",
+                "functions": ["test", "helper"],
+                "classes": ["TestClass"],
+                "imports": ["os", "sys", "json"],
+                "decorators": ["@pytest.fixture"],
+                "has_type_hints": True,
+                "has_async": False,
+                "complexity_score": 15
+            }
+        ]
+
+        output = format_results_readable(results)
+
+        # Check Python metadata is included
+        assert "Functions: test, helper" in output
+        assert "Classes: TestClass" in output
+        assert "Imports: os, sys, json" in output  # First 3 imports
+        assert "Decorators: @pytest.fixture" in output
+        assert "typed" in output
+        assert "complex(15)" in output
+
 
 @pytest.mark.unit
-@pytest.mark.db_integration
-@pytest.mark.search_engine
-class TestMockDatabase:
-    """Test with mock database operations."""
+@pytest.mark.backend
+class TestBackendIntegration:
+    """Test backend integration scenarios."""
 
-    @patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.register_vector')
-    def test_vector_search_sql_query(self, mock_register, mock_pool):
-        """Test that vector search generates correct SQL."""
-        mock_conn = MagicMock()
-        mock_cursor = MagicMock()
-        mock_pool.connection.return_value.__enter__.return_value = mock_conn
-        mock_pool.connection.return_value.__exit__.return_value = None
-        mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
-        mock_conn.cursor.return_value.__exit__.return_value = None
-        mock_cursor.fetchall.return_value = []
+    @patch('cocoindex_code_mcp_server.backends.BackendFactory.create_backend')
+    def test_legacy_constructor_creates_postgres_backend(self, mock_factory: MagicMock, mock_pool: MagicMock):
+        """Test that legacy constructor creates PostgreSQL backend."""
+        mock_backend = MockVectorStoreBackend()
+        mock_factory.return_value = mock_backend
+        
+        mock_parser_instance = Mock()
+        engine = HybridSearchEngine(table_name="custom_table", parser=mock_parser_instance, pool=mock_pool)
+        
+        mock_factory.assert_called_once_with("postgres", pool=mock_pool, table_name="custom_table")
+        assert engine.backend == mock_backend
 
-        engine = HybridSearchEngine(
-            pool=mock_pool,
-            table_name="test_embeddings",
-            embedding_func=lambda x: [0.1, 0.2, 0.3]
-        )
+    def test_backend_constructor_uses_provided_backend(self, mock_backend: MockVectorStoreBackend, mock_parser: Mock):
+        """Test that backend constructor uses provided backend directly."""
+        engine = HybridSearchEngine(table_name="test_table", parser=mock_parser, backend=mock_backend)
+        
+        assert engine.backend == mock_backend
 
-        engine._vector_search("test query", 5)
-
-        # Verify the SQL query structure
-        call_args = mock_cursor.execute.call_args
-        sql_query = call_args[0][0]
-
-        assert "SELECT filename, language, code, embedding <=> %s AS distance" in sql_query
-        assert "FROM test_embeddings" in sql_query
-        assert "ORDER BY distance" in sql_query
-        assert "LIMIT %s" in sql_query
-
-    @patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.register_vector')
-    def test_keyword_search_sql_query(self, mock_register, mock_pool):
-        """Test that keyword search generates correct SQL."""
-        mock_conn = MagicMock()
-        mock_cursor = MagicMock()
-        mock_pool.connection.return_value.__enter__.return_value = mock_conn
-        mock_pool.connection.return_value.__exit__.return_value = None
-        mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
-        mock_conn.cursor.return_value.__exit__.return_value = None
-        mock_cursor.fetchall.return_value = []
-
-        engine = HybridSearchEngine(
-            pool=mock_pool,
-            table_name="test_embeddings",
-            embedding_func=lambda x: [0.1, 0.2, 0.3]
-        )
-
-        condition = SearchCondition(field="language", value="python")
-        search_group = SearchGroup(conditions=[condition])
-
-        engine._keyword_search(search_group, 5)
-
-        # Verify the SQL query structure
-        call_args = mock_cursor.execute.call_args
-        sql_query = call_args[0][0]
-
-        assert "SELECT filename, language, code, 0.0 as distance" in sql_query
-        assert "FROM test_embeddings" in sql_query
-        # The WHERE clause might be empty if build_sql_where_clause returns empty string
-        assert "WHERE" in sql_query
-        # Check if conditions are properly processed - if not, skip this assertion
-        where_part = sql_query.split("WHERE ")[1].split("ORDER")[0].strip()
-        if where_part and where_part != "":
-            assert "language = %s" in sql_query
-        assert "LIMIT %s" in sql_query
-
-    @patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.register_vector')
-    def test_hybrid_search_sql_query(self, mock_register, mock_pool):
-        """Test that hybrid search generates correct SQL."""
-        mock_conn = MagicMock()
-        mock_cursor = MagicMock()
-        mock_pool.connection.return_value.__enter__.return_value = mock_conn
-        mock_pool.connection.return_value.__exit__.return_value = None
-        mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
-        mock_conn.cursor.return_value.__exit__.return_value = None
-        mock_cursor.fetchall.return_value = []
-
-        engine = HybridSearchEngine(
-            pool=mock_pool,
-            table_name="test_embeddings",
-            embedding_func=lambda x: [0.1, 0.2, 0.3]
-        )
-
-        condition = SearchCondition(field="language", value="python")
-        search_group = SearchGroup(conditions=[condition])
-
-        engine._hybrid_search("test query", search_group, 5, 0.7, 0.3)
-
-        # Verify the SQL query structure
-        call_args = mock_cursor.execute.call_args
-        sql_query = call_args[0][0]
-
-        assert "WITH vector_scores AS" in sql_query
-        assert "embedding <=> %s" in sql_query
-        # The WHERE clause might be empty if build_sql_where_clause returns empty string
-        assert "WHERE" in sql_query
-        # Check if conditions are properly processed - if not, skip this assertion
-        if "WHERE " in sql_query:
-            where_part = sql_query.split("WHERE ")[1].split(")")[0].strip()
-            if where_part and where_part != "":
-                assert "language = %s" in sql_query
-        assert "ORDER BY hybrid_score DESC" in sql_query
+    def test_backend_method_delegation(self, hybrid_engine_with_backend: HybridSearchEngine, mock_backend: MockVectorStoreBackend, mock_parser: Mock):
+        """Test that search methods properly delegate to backend."""
+        # Set up parser mock
+        empty_group = SearchGroup(conditions=[])
+        mock_parser.parse.return_value = empty_group
+        
+        # Test vector search
+        hybrid_engine_with_backend.search("query", "", top_k=3)
+        assert len(mock_backend.vector_search_calls) == 1
+        
+        # Test keyword search  
+        condition_group = SearchGroup(conditions=[SearchCondition(field="lang", value="py")])
+        mock_parser.parse.return_value = condition_group
+        hybrid_engine_with_backend.search("", "lang:py", top_k=3)
+        assert len(mock_backend.keyword_search_calls) == 1
+        
+        # Test hybrid search
+        hybrid_engine_with_backend.search("query", "lang:py", top_k=3)
+        assert len(mock_backend.hybrid_search_calls) == 1

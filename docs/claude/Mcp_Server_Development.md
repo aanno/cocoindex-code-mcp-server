@@ -187,7 +187,7 @@ async def search_database(query: str):
 ```
 
 **Best Practice**:
-```python
+cocoindex```python
 # DO: Use connection pooling
 connection_pool = ConnectionPool(DATABASE_URL, min_size=1, max_size=10)
 

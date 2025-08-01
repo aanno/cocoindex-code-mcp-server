@@ -19,6 +19,7 @@ dependencies = [
     "astchunk @ git+https://github.com/yilinjz/astchunk.git",
     "lark-parser>=0.12.0",
     "prompt-toolkit>=3.0.0",
+    "asyncpg>=0.29.0",
     "tree-sitter>=0.23.0,<0.24.0",
     "tree-sitter-python>=0.23.6",
     "tree-sitter-c-sharp>=0.23.1",
@@ -39,6 +40,7 @@ test = [
     "pytest-mock>=3.10.0",
     "pytest-timeout>=2.1.0",
     "pytest-xdist>=3.4.0",
+    "pytest-mypy>=1.0.1",
     "coverage>=7.9.2",
 ]
 mcp-server = [
@@ -48,9 +50,12 @@ build = [
     "maturin>=1.0,<2.0",
     # typing
     "mypy>=1.10.0",
+    "MonkeyType>=23.3.0",
+    "pytest-monkeytype>=1.1.0",
+    "auto-type-annotate>=1.1.2",
     # code quality
     "isort>=6.0.1",
-    "autoflake8>=1.7.0",
+    "autoflake8>=0.4.1",
     "autopep8>=2.0.0",
     "flake8>=7.3.0",
     "autopep8>=2.0.0",
@@ -97,3 +102,16 @@ expand-star-imports = true
 
 [tool.autopep8]
 max_line_length = 120
+
+[tool.mypy]
+# global config here, if any
+# strict = true
+# check-untyped-defs = true
+# local-partial-type = true
+check_untyped_defs = true
+ignore_missing_imports = false
+local_partial_types = false
+
+[[tool.mypy.overrides]]
+module = ["pgvector.*", "mypy-astchunk.*", "astchunk.*"]
+ignore_missing_imports = true

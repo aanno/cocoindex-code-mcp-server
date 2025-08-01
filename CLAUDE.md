@@ -11,12 +11,17 @@ For running `src/cocoindex_code_mcp_server/main_mcp_server.py` do:
 python -m cocoindex_code_mcp_server.main_mcp_server
 ```
 
-- We want to transform the codebase to mypy
-  - Use `mypy` for type annotations in code your write anew
+Our code is mypy compatible! Use the type checking script:
+
+```bash
+./scripts/mypy-check.sh
+```
+
 - If you are technically stuck or unsure about the next step, ask for help.
 - cocoindex is a complex beast, so don't hesitate to ask for clarification or guidance.
 - Test should be pytest at ./tests (NOT at ./src/cocoindex_code_mcp_server/tests).
 - Think about using our own RAG (MCP server 'cocoindex-rag') before using grep or search.
+  + However, the resource endpoint don't work. But all other tools are all right!
 - Never try to start/stop our RAG MCP server, just ask, I will do it for you.
 - Use gw-memory to store and retrieve information about the codebase.
   + Tag all entries with 'cocoindex_code_mcp_server' to indicate they are related to the code MCP server.

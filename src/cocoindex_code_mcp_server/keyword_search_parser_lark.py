@@ -5,6 +5,7 @@ Lark-based keyword search parser for metadata search with enhanced syntax suppor
 Supports field:value, exists(field), value_contains(field, string), and boolean operators.
 """
 
+import logging
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -18,17 +19,14 @@ except ImportError:
     LARK_AVAILABLE = False
 
 # Import the fallback parser components
-try:
-    from .keyword_search_parser import KeywordSearchParser as FallbackParser
-    from .keyword_search_parser import (
-        build_sql_where_clause as fallback_build_sql_where_clause,
-    )
-    FALLBACK_AVAILABLE = True
-except ImportError:
-    FALLBACK_AVAILABLE = False
-    FallbackParser = None
-    fallback_build_sql_where_clause = None
+from .keyword_search_parser import KeywordSearchParser as FallbackParser
+from .keyword_search_parser import (
+    build_sql_where_clause as fallback_build_sql_where_clause,
+)
+FALLBACK_AVAILABLE = True
 
+# Configure logging
+logger = logging.getLogger(__name__)
 
 class Operator(Enum):
     AND = "and"
@@ -54,7 +52,7 @@ class SearchGroup:
 class KeywordSearchTransformer(Transformer):
     """Transformer to convert Lark parse tree to SearchGroup objects."""
 
-    def remove_quotes(self, token):
+    def remove_quotes(self, token: str) -> str:
         """Remove surrounding quotes from quoted strings."""
         s = str(token)
         if (s.startswith('"') and s.endswith('"')) or (s.startswith("'") and s.endswith("'")):
@@ -65,17 +63,17 @@ class KeywordSearchTransformer(Transformer):
         """Transform quoted value by removing quotes."""
         return self.remove_quotes(token)
 
-    def field_condition(self, items):
+    def field_condition(self, items) -> SearchCondition:
         """Transform field:value condition."""
         field, value = items
         return SearchCondition(field=str(field), value=str(value))
 
-    def exists_condition(self, items):
+    def exists_condition(self, items) -> SearchCondition:
         """Transform exists(field) condition."""
         field = items[0]
         return SearchCondition(field=str(field), value="", is_exists_check=True)
 
-    def value_contains_condition(self, items):
+    def value_contains_condition(self, items) -> SearchCondition:
         """Transform value_contains(field, string) condition."""
         field, value = items
         return SearchCondition(
@@ -84,13 +82,13 @@ class KeywordSearchTransformer(Transformer):
             is_value_contains_check=True
         )
 
-    def text_search(self, items):
+    def text_search(self, items) -> SearchCondition:
         """Transform general text search."""
         # Join multiple words with spaces
         value = " ".join(str(item) for item in items)
         return SearchCondition(field="_text", value=value)
 
-    def word(self, items):
+    def word(self, items) -> str:
         """Transform word rule."""
         return str(items[0])
 
@@ -114,7 +112,7 @@ class KeywordSearchTransformer(Transformer):
             return item
         return SearchGroup(conditions=list(items), operator=Operator.OR)
 
-    def start(self, items):
+    def start(self, items) -> SearchGroup:
         """Transform start rule - always return SearchGroup."""
         item = items[0]
         if isinstance(item, SearchCondition):
@@ -129,7 +127,7 @@ class KeywordSearchTransformer(Transformer):
 class KeywordSearchParser:
     """Lark-based parser for keyword search syntax with fallback to regex parser."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the parser with Lark grammar or fallback."""
         self.lark_parser = None
         self.transformer = KeywordSearchTransformer()
@@ -153,18 +151,18 @@ class KeywordSearchParser:
                         }
                     )
                 else:
-                    print(f"Warning: Grammar file not found at {grammar_path}, falling back to regex parser")
+                    logger.warning(f"Grammar file not found at {grammar_path}, falling back to regex parser")
             except Exception as e:
-                print(f"Warning: Failed to initialize Lark parser ({e}), falling back to regex parser")
+                logger.warning(f"Failed to initialize Lark parser ({e}), falling back to regex parser")
 
         # Initialize fallback parser if Lark is not available or failed
         if self.lark_parser is None:
             if FALLBACK_AVAILABLE:
                 self.fallback_parser = FallbackParser()
                 if not LARK_AVAILABLE:
-                    print("Warning: Lark not available, using regex-based parser")
+                    logger.warning("Lark not available, using regex-based parser")
             else:
-                print("Warning: No parser available - neither Lark nor fallback parser could be loaded")
+                logger.error("No parser available - neither Lark nor fallback parser could be loaded")
 
     def parse(self, query: str) -> SearchGroup:
         """
@@ -192,17 +190,20 @@ class KeywordSearchParser:
             try:
                 # Normalize case for keywords
                 normalized_query = self._normalize_keywords(query.strip())
-                result = self.lark_parser.parse(normalized_query)
-                return result
+                tree = self.lark_parser.parse(normalized_query)
+                # The tree is already transformed to SearchGroup during parsing
+                return tree  # type: ignore
             except (LarkError, ParseError) as e:
-                print(f"Warning: Lark parser failed ({e}), falling back to regex parser")
+                logger.warning(f"Lark parser failed ({e}), falling back to regex parser")
 
         # Fall back to regex parser
         if self.fallback_parser is not None:
-            return self.fallback_parser.parse(query)
+            fallback_result = self.fallback_parser.parse(query)
+            # Convert fallback SearchGroup to our SearchGroup
+            return self._convert_from_fallback(fallback_result)
         else:
             # Last resort: return empty group
-            print("Error: No parser available")
+            logger.error("No parser available")
             return SearchGroup(conditions=[])
 
     def _normalize_keywords(self, query: str) -> str:
@@ -227,6 +228,36 @@ class KeywordSearchParser:
             result = re.sub(pattern, replacement, result, flags=re.IGNORECASE)
 
         return result
+
+    def _convert_from_fallback(self, fallback_group: Any) -> SearchGroup:
+        """Convert fallback SearchGroup to our SearchGroup."""
+        from .keyword_search_parser import SearchGroup as FallbackSearchGroup, SearchCondition as FallbackSearchCondition
+        
+        if not isinstance(fallback_group, FallbackSearchGroup):
+            return SearchGroup(conditions=[])
+            
+        conditions: List[Union[SearchCondition, SearchGroup]] = []
+        for condition in fallback_group.conditions:
+            if isinstance(condition, FallbackSearchCondition):
+                # Convert SearchCondition
+                new_condition = SearchCondition(
+                    field=condition.field,
+                    value=condition.value,
+                    is_exists_check=getattr(condition, 'is_exists_check', False),
+                    is_value_contains_check=getattr(condition, 'is_value_contains_check', False)
+                )
+                conditions.append(new_condition)
+            elif isinstance(condition, FallbackSearchGroup):
+                # Recursively convert nested groups
+                converted_group = self._convert_from_fallback(condition)
+                conditions.append(converted_group)
+                
+        operator = Operator.AND
+        if hasattr(fallback_group, 'operator'):
+            if fallback_group.operator == "or":
+                operator = Operator.OR
+                
+        return SearchGroup(conditions=conditions, operator=operator)
 
 
 def build_sql_where_clause(search_group: SearchGroup, table_alias: str = "") -> tuple[str, List[Any]]:

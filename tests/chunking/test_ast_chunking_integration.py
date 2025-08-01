@@ -7,24 +7,27 @@ Moved from src/ast_chunking.py to tests/
 
 import logging
 import sys
+from typing import Dict, List, Union
+import pytest
+
+from cocoindex_code_mcp_server.ast_chunking import Chunk
 
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)
 
 try:
-    from ast_chunking import CocoIndexASTChunker
+    from cocoindex_code_mcp_server.ast_chunking import CocoIndexASTChunker
     AST_CHUNKING_AVAILABLE = True
 except ImportError as e:
     LOGGER.warning(f"AST chunking not available: {e}")
     AST_CHUNKING_AVAILABLE = False
 
 
-def test_ast_chunking():
+def test_ast_chunking() -> List[Chunk]:  # List[Dict[str, Union[str, Dict[str, Union[str, int]]]]]:
     """Test the AST chunking functionality."""
     if not AST_CHUNKING_AVAILABLE:
         print("⚠️ Skipping AST chunking test - ast_chunking not available")
-        return
-
+        return []
     # Test with Python code
     python_code = '''
 def hello_world():
@@ -48,23 +51,31 @@ if __name__ == "__main__":
     '''
 
     chunker = CocoIndexASTChunker(max_chunk_size=300)
-    chunks = chunker.chunk_code(python_code, "Python", "test.py")
+    chunks: List[Chunk] = chunker.chunk_code(python_code, "Python", "test.py")
 
     LOGGER.info(f"Created {len(chunks)} chunks:")
     for i, chunk in enumerate(chunks):
-        LOGGER.info(f"\nChunk {i + 1}:")
-        LOGGER.info(f"Method: {chunk['metadata']['chunk_method']}")
-        LOGGER.info(f"Size: {chunk['metadata']['chunk_size']} chars")
-        LOGGER.info(f"Lines: {chunk['metadata']['line_count']}")
-        LOGGER.info("Content:")
-        LOGGER.info(chunk['content'][:200] + "..." if len(chunk['content']) > 200 else chunk['content'])
+        if chunk is not None:
+            metadata = chunk['metadata']
+            if metadata is not None:
+                LOGGER.info(f"\nChunk {i + 1}:")
+                LOGGER.info(f"Method: {metadata['chunk_method']}")
+                LOGGER.info(f"Size: {metadata['chunk_size']} chars")
+                LOGGER.info(f"Lines: {metadata['line_count']}")
+                LOGGER.info("Content:")
+                LOGGER.info(chunk['content'][:200] + "..." if chunk['content'] is not None and len(chunk['content']) > 200 else chunk['content'])
 
     # Basic assertions
     assert len(chunks) > 0, "No chunks created"
     for chunk in chunks:
-        assert 'content' in chunk
-        assert 'metadata' in chunk
-        assert chunk['metadata']['chunk_size'] > 0
+        if chunk is not None:
+            metadata = chunk['metadata']
+            if metadata is not None:
+                assert 'content' in chunk
+                assert 'metadata' in chunk
+                assert metadata['chunk_size'] > 0
+            else:
+                pytest.fail("no metadata in chunk")
 
     print("✅ AST chunking test passed!")
     return chunks
@@ -113,15 +124,17 @@ main = print (factorial 5)
 '''
 
     chunker = CocoIndexASTChunker(max_chunk_size=200)
-    chunks = chunker.chunk_code(haskell_code, "Haskell", "test.hs")
+    chunks: List[Chunk] = chunker.chunk_code(haskell_code, "Haskell", "test.hs")
 
     # Should fallback to Haskell AST chunking or simple text chunking
     assert len(chunks) > 0, "No chunks created in fallback"
 
     # Check that fallback method is indicated
     for chunk in chunks:
-        method = chunk['metadata']['chunk_method']
-        assert method in ['haskell_ast_chunking', 'simple_text_chunking'], f"Unexpected method: {method}"
+        metadata = chunk['metadata']
+        if metadata is not None:
+            method = metadata['chunk_method']
+            assert method in ['haskell_ast_chunking', 'simple_text_chunking'], f"Unexpected method: {method}"
 
     print("✅ AST chunking fallback test passed!")
 

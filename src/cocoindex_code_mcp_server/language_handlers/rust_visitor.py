@@ -9,6 +9,8 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from ..ast_visitor import GenericMetadataVisitor, NodeContext
+from cocoindex_code_mcp_server.ast_visitor import NodeContext
+from tree_sitter import Node
 
 LOGGER = logging.getLogger(__name__)
 
@@ -16,7 +18,7 @@ LOGGER = logging.getLogger(__name__)
 class RustASTVisitor(GenericMetadataVisitor):
     """Specialized visitor for Rust language AST analysis."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("rust")
         self.functions: List[str] = []
         self.structs: List[str] = []
@@ -49,13 +51,15 @@ class RustASTVisitor(GenericMetadataVisitor):
 
         return None
 
-    def _extract_function(self, node):
+    def _extract_function(self, node: Node) -> None:
         """Extract function name from function_item node."""
         try:
             # Rust function structure: function_item -> identifier (after 'fn' keyword)
             for child in node.children:
                 if child.type == 'identifier':
-                    func_name = child.text.decode('utf-8')
+                    text = child.text
+                    if text is not None:
+                        func_name = text.decode('utf-8')
                     self.functions.append(func_name)
                     LOGGER.debug(f"Found Rust function: {func_name}")
                     break  # Take the first identifier (function name)

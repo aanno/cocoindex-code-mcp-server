@@ -11,30 +11,11 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Protocol
+import tree_sitter
+from tree_sitter import Language, Node, Parser, Tree
 
-try:
-    import tree_sitter
-    from tree_sitter import Language, Node, Parser, Tree
-    TREE_SITTER_AVAILABLE = True
-except ImportError:
-    TREE_SITTER_AVAILABLE = False
-    # Mock classes for when tree-sitter is not available
-
-    class Language:
-        pass
-
-    class Parser:
-        pass
-
-    class Tree:
-        pass
-
-    class Node:
-        pass
-
-
+TREE_SITTER_AVAILABLE = True
 LOGGER = logging.getLogger(__name__)
-
 
 @dataclass
 class Position:
@@ -96,8 +77,8 @@ class ASTVisitor(ABC):
 
     def __init__(self, language: str = "unknown"):
         self.language = language
-        self.metadata = {}
-        self.errors = []
+        self.metadata: Dict[str, str] = {}
+        self.errors: List[str] = []
 
     @abstractmethod
     def visit_node(self, context: NodeContext) -> Optional[Dict[str, Any]]:
@@ -124,10 +105,10 @@ class GenericMetadataVisitor(ASTVisitor):
     def __init__(self, language: str = "unknown"):
         super().__init__(language)
         self.handlers: List[NodeHandler] = []
-        self.node_stats = {}
-        self.complexity_score = 0
+        self.node_stats: Dict[str, int] = {}
+        self.complexity_score: float = 0
 
-    def add_handler(self, handler: NodeHandler):
+    def add_handler(self, handler: NodeHandler) -> None:
         """Add a node handler to the visitor."""
         self.handlers.append(handler)
 
@@ -156,7 +137,7 @@ class GenericMetadataVisitor(ASTVisitor):
 
         return metadata if metadata else None
 
-    def _update_complexity(self, node_type: str):
+    def _update_complexity(self, node_type: str) -> None:
         """Update complexity score based on node type."""
         # Universal complexity indicators
         complexity_weights = {
@@ -219,7 +200,7 @@ class TreeWalker:
         return metadata
 
     def _walk_recursive(self, node: Node, visitor: ASTVisitor, parent: Optional[Node],
-                        depth: int, scope_stack: List[str]):
+                        depth: int, scope_stack: List[str]) -> None:
         """Recursively walk AST nodes."""
         context = NodeContext(
             node=node,
@@ -291,7 +272,7 @@ class ASTParserFactory:
         '.kt': 'kotlin', '.kts': 'kotlin',
         '.md': 'markdown', '.mdx': 'markdown',
         '.php': 'php',
-        '.py': 'python', '.pyi': 'python',
+        '.py': 'python', # '.pyi': 'python',
         '.rb': 'ruby',
         '.rs': 'rust',
         '.scala': 'scala',
@@ -445,7 +426,7 @@ class ASTParserFactory:
 class MultiLevelAnalyzer:
     """Multi-level code analyzer with fallback strategies."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.parser_factory = ASTParserFactory()
 
     def analyze_code(self, code: str, language: str = "unknown",
@@ -674,7 +655,7 @@ class MultiLevelAnalyzer:
                 ]
             }
 
-            metadata = {}
+            metadata: Dict[str, Any] = {}
 
             for category, pattern_list in patterns.items():
                 matches = set()

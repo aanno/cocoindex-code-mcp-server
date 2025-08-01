@@ -4,6 +4,8 @@
 Test to verify the unique location post-processing fix works correctly.
 """
 
+from types import FunctionType
+from typing import cast
 import pytest
 
 import cocoindex
@@ -30,7 +32,7 @@ class TestUniqueLocationsFix:
             print(f"  Chunk {i}: location='{chunk['location']}'")
 
         # Apply the fix
-        unique_chunks = ensure_unique_chunk_locations(duplicate_chunks)
+        unique_chunks = cast(FunctionType, ensure_unique_chunk_locations)(duplicate_chunks)
 
         print("\nOutput chunks with unique locations:")
         locations = []
@@ -53,10 +55,10 @@ class TestUniqueLocationsFix:
         """Test the function with duplicate Chunk dataclass objects (AST chunking format)."""
         # Simulate what AST chunking might produce if it had a bug
         duplicate_chunks = [
-            Chunk(text="chunk 1", location="line:0#0", start=0, end=10),
-            Chunk(text="chunk 2", location="line:0#0", start=10, end=20),  # duplicate location
-            Chunk(text="chunk 3", location="line:0#1", start=20, end=30),
-            Chunk(text="chunk 4", location="line:0#1", start=30, end=40),  # duplicate location
+            Chunk(content="chunk 1", location="line:0#0", start=0, end=10, metadata={}),
+            Chunk(content="chunk 2", location="line:0#0", start=10, end=20, metadata={}),  # duplicate location
+            Chunk(content="chunk 3", location="line:0#1", start=20, end=30, metadata={}),
+            Chunk(content="chunk 4", location="line:0#1", start=30, end=40, metadata={}),  # duplicate location
         ]
 
         print("Input Chunk objects with duplicate locations:")
@@ -64,7 +66,7 @@ class TestUniqueLocationsFix:
             print(f"  Chunk {i}: location='{chunk.location}'")
 
         # Apply the fix
-        unique_chunks = ensure_unique_chunk_locations(duplicate_chunks)
+        unique_chunks = cast(FunctionType, ensure_unique_chunk_locations)(duplicate_chunks)
 
         print("\nOutput Chunk objects with unique locations:")
         locations = []
@@ -95,7 +97,7 @@ class TestUniqueLocationsFix:
         print(f"Input already unique locations: {original_locations}")
 
         # Apply the fix
-        result_chunks = ensure_unique_chunk_locations(unique_chunks)
+        result_chunks = cast(FunctionType, ensure_unique_chunk_locations)(unique_chunks)
         result_locations = [chunk.location for chunk in result_chunks]
 
         print(f"Output locations: {result_locations}")
@@ -107,11 +109,11 @@ class TestUniqueLocationsFix:
 
     def test_ensure_unique_locations_with_empty_input(self):
         """Test edge case with empty input."""
-        result = ensure_unique_chunk_locations([])
+        result = cast(FunctionType, ensure_unique_chunk_locations)([])
         assert result == [], "Empty input should return empty output"
 
         # Note: None input also returns empty list for CocoIndex compatibility
-        result = ensure_unique_chunk_locations(None)
+        result = cast(FunctionType, ensure_unique_chunk_locations)(None)
         assert result == [], "None input should return empty list"
 
         print("✅ Empty/None input handled correctly")
@@ -120,7 +122,7 @@ class TestUniqueLocationsFix:
         """Test with mixed chunk formats (shouldn't happen in practice but good to test)."""
         mixed_chunks = [
             {"text": "dict chunk", "location": "line:0"},
-            Chunk(text="dataclass chunk", location="line:0", start=0, end=10),
+            Chunk(content="dataclass chunk", location="line:0", start=0, end=10, metadata={}),
         ]
 
         print("Input mixed format chunks:")
@@ -128,9 +130,10 @@ class TestUniqueLocationsFix:
             if isinstance(chunk, dict):
                 print(f"  Chunk {i}: dict location='{chunk['location']}'")
             else:
-                print(f"  Chunk {i}: dataclass location='{chunk.location}'")
+                location_value = getattr(chunk, 'location', 'N/A')
+                print(f"  Chunk {i}: dataclass location='{location_value}'")
 
-        result_chunks = ensure_unique_chunk_locations(mixed_chunks)
+        result_chunks = ensure_unique_chunk_locations.eval(mixed_chunks)  # type: ignore[attr-defined]
 
         print("Output mixed format chunks:")
         locations = []

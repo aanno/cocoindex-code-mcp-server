@@ -6,21 +6,78 @@ This module provides a CocoIndex operation that leverages ASTChunk for
 structure-aware code chunking.
 """
 
+from cocoindex.op import FunctionSpec
 import logging
 import os
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from types import ModuleType
+from typing import Any, Dict, List, Optional, Union
 
+import cocoindex
 from cocoindex_code_mcp_server import LOGGER
 
 
-@dataclass(frozen=True)
+@dataclass
 class Chunk:
     """Represents a code chunk with text and location metadata."""
-    text: str
-    location: str
-    start: int
-    end: int
+    content: str
+    metadata: cocoindex.Json  # Use cocoindex.Json for union-safe metadata
+    location: str = ""
+    start: int = 0
+    end: int = 0
+    
+    def __getitem__(self, key: Union[str, int]) -> Any:
+        """Allow dictionary-style access."""
+        if isinstance(key, str):
+            if hasattr(self, key):
+                return getattr(self, key)
+            elif key in self.metadata:
+                return self.metadata[key]
+            else:
+                raise KeyError(f"Key '{key}' not found in chunk")
+        else:
+            # For integer access, treat this chunk as if it's the only item in a list
+            if key == 0:
+                return self
+            else:
+                raise IndexError(f"Chunk index {key} out of range (only index 0 is valid)")
+    
+    def __setitem__(self, key: str, value) -> None:
+        """Allow dictionary-style assignment."""
+        if hasattr(self, key):
+            setattr(self, key, value)
+        else:
+            self.metadata[key] = value
+    
+    def __contains__(self, key: str) -> bool:
+        """Check if key exists in chunk (for 'key in chunk' syntax)."""
+        return hasattr(self, key) or key in self.metadata
+    
+    def get(self, key: str, default=""):
+        """Dictionary-style get method."""
+        try:
+            return self[key]
+        except KeyError:
+            return default
+    
+    def keys(self):
+        """Return available keys (attribute names + metadata keys)."""
+        chunk_attrs = ["content", "metadata", "location", "start", "end"]
+        metadata_keys = list(self.metadata.keys()) if isinstance(self.metadata, dict) else []
+        return chunk_attrs + metadata_keys
+    
+    def to_dict(self) -> dict:
+        """Convert chunk to dictionary for CocoIndex compatibility."""
+        result = {
+            "content": self.content,
+            "location": self.location,
+            "start": self.start,
+            "end": self.end
+        }
+        # Merge metadata
+        result.update(self.metadata)
+        return result
+
 
 
 try:
@@ -30,9 +87,10 @@ except ImportError as e:
     ASTChunkBuilder = None
 
 # Import CocoIndex conditionally to avoid circular imports
-cocoindex = None
+cocoindex_module: Optional[ModuleType] = None
 try:
     import cocoindex
+    cocoindex_module = cocoindex
 except ImportError:
     LOGGER.warning("CocoIndex not available")
 
@@ -50,7 +108,7 @@ def detect_language_from_filename(filename: str) -> str:
         ".go": "Go",
         ".java": "Java",
         ".js": "JavaScript", ".mjs": "JavaScript", ".cjs": "JavaScript",
-        ".py": "Python", ".pyi": "Python",
+        ".py": "Python", # ".pyi": "Python",
         ".rb": "Ruby",
         ".rs": "Rust",
         ".scala": "Scala",
@@ -136,7 +194,7 @@ class CocoIndexASTChunker:
         """Check if the language is supported by ASTChunk."""
         return language in self.LANGUAGE_MAP
 
-    def chunk_code(self, code: str, language: str, file_path: str = "") -> List[Dict[str, Any]]:
+    def chunk_code(self, code: str, language: str, file_path: str = "") -> List[Chunk]:
         """
         Chunk code using AST-based chunking.
 
@@ -172,7 +230,7 @@ class CocoIndexASTChunker:
             chunks = builder.chunkify(code, **configs)
 
             # Convert ASTChunk format to CocoIndex format
-            result_chunks = []
+            result_chunks: List[Chunk] = []
             for i, chunk in enumerate(chunks):
                 # Extract content and metadata
                 content = chunk.get('content', chunk.get('context', ''))
@@ -189,10 +247,10 @@ class CocoIndexASTChunker:
                     **metadata
                 }
 
-                result_chunks.append({
-                    "content": content,
-                    "metadata": enhanced_metadata
-                })
+                result_chunks.append(Chunk(
+                    content=content,
+                    metadata=enhanced_metadata
+                ))
 
             LOGGER.info(f"AST chunking created {len(result_chunks)} chunks for {language}")
             return result_chunks
@@ -201,7 +259,7 @@ class CocoIndexASTChunker:
             LOGGER.error(f"AST chunking failed for {language}: {e}")
             return self._fallback_chunking(code, language, file_path)
 
-    def _fallback_chunking(self, code: str, language: str, file_path: str) -> List[Dict[str, Any]]:
+    def _fallback_chunking(self, code: str, language: str, file_path: str) -> List[Chunk]:
         """
         Fallback to our existing Haskell chunking or simple text chunking.
 
@@ -216,10 +274,13 @@ class CocoIndexASTChunker:
         # Use our existing Haskell chunking for Haskell code
         if language == "Haskell":
             try:
-                from .lang.haskell.haskell_ast_chunker import extract_haskell_ast_chunks
-                chunks = extract_haskell_ast_chunks(code)
+                # Import and call Haskell chunker
+                import importlib
+                haskell_module = importlib.import_module('.lang.haskell.haskell_ast_chunker', 'cocoindex_code_mcp_server')
+                extract_func = getattr(haskell_module, 'extract_haskell_ast_chunks')
+                chunks = extract_func(code)
 
-                result_chunks = []
+                result_chunks: List[Chunk] = []
                 for i, chunk in enumerate(chunks):
                     metadata = {
                         "chunk_id": i,
@@ -234,10 +295,10 @@ class CocoIndexASTChunker:
                         **chunk.metadata()
                     }
 
-                    result_chunks.append({
-                        "content": chunk.text(),
-                        "metadata": metadata
-                    })
+                    result_chunks.append(Chunk(
+                        content=chunk.text(),
+                        metadata=metadata
+                    ))
 
                 LOGGER.info(f"Haskell AST chunking created {len(result_chunks)} chunks")
                 return result_chunks
@@ -248,7 +309,7 @@ class CocoIndexASTChunker:
         # Simple text chunking as last resort
         return self._simple_text_chunking(code, language, file_path)
 
-    def _simple_text_chunking(self, code: str, language: str, file_path: str) -> List[Dict[str, Any]]:
+    def _simple_text_chunking(self, code: str, language: str, file_path: str) -> List[Chunk]:
         """
         Simple text-based chunking as a fallback.
 
@@ -261,7 +322,7 @@ class CocoIndexASTChunker:
             List of chunk dictionaries
         """
         lines = code.split('\n')
-        chunks = []
+        chunks: list[Chunk] = []
         chunk_size = self.max_chunk_size // 10  # Rough estimate for lines
 
         for i in range(0, len(lines), chunk_size):
@@ -280,16 +341,16 @@ class CocoIndexASTChunker:
                     "end_line": i + len(chunk_lines)
                 }
 
-                chunks.append({
-                    "content": content,
-                    "metadata": metadata
-                })
+                chunks.append(Chunk(
+                    content=content,
+                    metadata=metadata
+                ))
 
         LOGGER.info(f"Simple text chunking created {len(chunks)} chunks")
         return chunks
 
 
-def create_ast_chunking_operation():
+def create_ast_chunking_operation() -> FunctionSpec:
     """
     Create a CocoIndex AST chunking operation using @cocoindex.op.function() decorator.
     Returns a function registered with CocoIndex that works with .transform() method.
@@ -331,10 +392,16 @@ def create_ast_chunking_operation():
 
         # Generate chunks from the content
         raw_chunks = chunker.chunk_code(content, detected_language, "")
+        LOGGER.info(f"🔍 AST chunking produced {len(raw_chunks)} raw chunks")
 
         # Convert dictionaries to Chunk dataclass instances
         chunks = []
         for i, chunk in enumerate(raw_chunks):
+            chunk_content = chunk.get("content", "")
+            LOGGER.info(f"  Raw chunk {i+1}: content_len={len(chunk_content)}")
+            if len(chunk_content) == 0:
+                LOGGER.error(f"❌ Raw chunk {i+1} has NO CONTENT! Keys: {list(chunk.keys())}")
+                LOGGER.error(f"   Chunk data: {chunk}")
             metadata = chunk.get("metadata", {})
             # Construct location from file path and line numbers, ensuring uniqueness
             file_path = metadata.get("file_path", "")
@@ -348,7 +415,8 @@ def create_ast_chunking_operation():
                 location = f"line:{start_line}#{chunk_id}"
 
             chunks.append(Chunk(
-                text=chunk.get("content", ""),
+                content=chunk.get("content", ""),
+                metadata=metadata,
                 location=location,
                 start=start_line,
                 end=metadata.get("end_line", 0)
@@ -369,7 +437,7 @@ if cocoindex is not None:
         LOGGER.warning(f"Failed to create ASTChunkOperation: {e}")
 
 
-def create_hybrid_chunking_operation():
+def create_hybrid_chunking_operation() -> FunctionSpec:
     """
     Create a hybrid chunking operation that uses AST-based chunking for supported
     languages and falls back to regex-based chunking for others.
@@ -403,18 +471,19 @@ def create_hybrid_chunking_operation():
 
             if chunker.is_supported_language(lang):
                 # Use AST-based chunking
-                chunks = chunker.chunk_code(code, lang, file_path)
+                chunks: List[Chunk] = chunker.chunk_code(code, lang, file_path)
                 LOGGER.debug(f"AST chunking created {len(chunks)} chunks for {lang}")
 
                 # Convert to CocoIndex format
                 result = []
                 for chunk in chunks:
+                    metadata = chunk["metadata"]
                     chunk_record = {
                         "text": chunk["content"],
-                        "location": f"{file_path}:{chunk['metadata'].get('start_line', 0)}",
-                        "start": chunk["metadata"].get("start_line", 0),
-                        "end": chunk["metadata"].get("end_line", 0),
-                        "metadata": chunk["metadata"]
+                        "location": f"{file_path}:{metadata.get('start_line', 0) if metadata is not None else None}",
+                        "start": metadata.get("start_line", 0) if metadata is not None else None,
+                        "end": metadata.get("end_line", 0) if metadata is not None else None,
+                        "metadata": metadata
                     }
                     result.append(chunk_record)
 
@@ -424,21 +493,27 @@ def create_hybrid_chunking_operation():
                 try:
                     # Import locally to avoid circular dependency
                     # Use basic CocoIndex chunking if available
-                    if cocoindex is not None:
-                        split_func = cocoindex.functions.SplitRecursively()
+                    if cocoindex_module is not None:
+                        # Import CUSTOM_LANGUAGES for proper SplitRecursively usage
+                        try:
+                            from cocoindex_code_mcp_server.cocoindex_config import CUSTOM_LANGUAGES
+                            splitter = cocoindex_module.functions.SplitRecursively(custom_languages=CUSTOM_LANGUAGES)
+                        except ImportError:
+                            splitter = cocoindex_module.functions.SplitRecursively()
+                        
                         LOGGER.debug(f"Using CocoIndex SplitRecursively for {lang} code")
+                        
+                        # SplitRecursively expects to be called directly on content, not as a transform
+                        # Call it with proper arguments
+                        result = splitter(
+                            code,
+                            language=lang,
+                            chunk_size=chunk_size,
+                            min_chunk_size=min_chunk_size,
+                            chunk_overlap=chunk_overlap
+                        )
                     else:
                         raise ImportError("CocoIndex not available")
-
-                    # Create a temporary record for the split function
-                    temp_record = {source_field: code}
-                    result = split_func(
-                        temp_record,
-                        language=lang,
-                        chunk_size=chunk_size,
-                        min_chunk_size=min_chunk_size,
-                        chunk_overlap=chunk_overlap
-                    )
 
                     return result
                 except ImportError:
@@ -450,12 +525,13 @@ def create_hybrid_chunking_operation():
                     # Convert to CocoIndex format
                     result = []
                     for chunk in chunks:
+                        metadata = chunk["metadata"]
                         chunk_record = {
                             "text": chunk["content"],
-                            "location": f"{file_path}:{chunk['metadata'].get('start_line', 0)}",
-                            "start": chunk["metadata"].get("start_line", 0),
-                            "end": chunk["metadata"].get("end_line", 0),
-                            "metadata": chunk["metadata"]
+                            "location": f"{file_path}:{metadata.get('start_line', 0) if metadata is not None else None}",
+                            "start": metadata.get("start_line", 0) if metadata is not None else None,
+                            "end": metadata.get("end_line", 0) if metadata is not None else None,
+                            "metadata": metadata
                         }
                         result.append(chunk_record)
 

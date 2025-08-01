@@ -6,8 +6,10 @@ Incorporates techniques from ASTChunk for improved chunking quality.
 """
 
 import re
+from types import FunctionType
 from typing import Any, Dict, List, Optional
 
+from cocoindex.op import FunctionSpec
 import haskell_tree_sitter
 
 import cocoindex
@@ -24,7 +26,7 @@ class HaskellChunkConfig:
                  chunk_expansion: bool = False,
                  metadata_template: str = "default",
                  preserve_imports: bool = True,
-                 preserve_exports: bool = True):
+                 preserve_exports: bool = True) -> None:
         self.max_chunk_size = max_chunk_size
         self.chunk_overlap = chunk_overlap
         self.chunk_expansion = chunk_expansion
@@ -65,11 +67,11 @@ def get_enhanced_haskell_separators() -> List[str]:
         r"\ndo\s*$",
 
         # Language pragmas (usually at file top, high priority)
-        r"\n{-#\s*[A-Z]+",
+        r"\n\{-#\s*[A-Z]+",
 
         # Comment blocks (can be good separation points)
         r"\n--\s*[=-]{3,}",  # Comment separators like "-- ==="
-        r"\n{-\s*[=-]{3,}",  # Block comment separators
+        r"\n\{-\s*[=-]{3,}",  # Block comment separators
     ]
 
     return enhanced_separators
@@ -81,9 +83,9 @@ class EnhancedHaskellChunker:
     Provides configurable chunking with rich metadata and multiple fallback strategies.
     """
 
-    def __init__(self, config: Optional[HaskellChunkConfig] = None):
+    def __init__(self, config: Optional[HaskellChunkConfig] = None) -> None:
         self.config = config or HaskellChunkConfig()
-        self._cache = {}  # Cache for expensive operations
+        self._cache: dict[str, Any] = {}  # Cache for expensive operations
 
     def chunk_code(self, content: str, file_path: str = "") -> List[Dict[str, Any]]:
         """
@@ -249,7 +251,7 @@ class EnhancedHaskellChunker:
             final_score = score - distance_penalty
 
             if final_score > best_score:
-                best_score = final_score
+                best_score = int(final_score)
                 best_idx = i
 
         return best_idx
@@ -426,23 +428,45 @@ class EnhancedHaskellChunker:
         return create_enhanced_regex_fallback_chunks(content, file_path, self.config)
 
 
+class CompatibleChunk:
+    """Chunk wrapper that provides the interface expected by AST chunking code."""
+    
+    def __init__(self, content: str, metadata: dict, start_line: int = 1, end_line: int = 1, node_type: str = "haskell_chunk") -> None:
+        self._content = content
+        self._metadata = metadata
+        self._start_line = start_line
+        self._end_line = end_line
+        self._node_type = node_type
+    
+    def text(self) -> str:
+        return self._content
+    
+    def start_line(self) -> int:
+        return self._start_line
+    
+    def end_line(self) -> int:
+        return self._end_line
+    
+    def node_type(self) -> str:
+        return self._node_type
+    
+    def metadata(self) -> dict:
+        return self._metadata
+
+
 @cocoindex.op.function()
-def extract_haskell_ast_chunks(content: str, config: Optional[Dict[str, Any]] = None):
+def extract_haskell_ast_chunks(content: str):
     """
-    Enhanced AST-based Haskell chunking with configurable options.
+    Enhanced AST-based Haskell chunking with default configuration.
 
     Args:
         content: Haskell source code
-        config: Optional configuration dictionary
 
     Returns:
         List of chunk dictionaries with enhanced metadata
     """
-    # Convert config dict to HaskellChunkConfig if provided
-    if config:
-        chunk_config = HaskellChunkConfig(**config)
-    else:
-        chunk_config = HaskellChunkConfig()
+    # Use default configuration
+    chunk_config = HaskellChunkConfig()
 
     chunker = EnhancedHaskellChunker(chunk_config)
     chunks = chunker.chunk_code(content)
@@ -452,8 +476,8 @@ def extract_haskell_ast_chunks(content: str, config: Optional[Dict[str, Any]] = 
     for chunk in chunks:
         legacy_chunk = {
             "text": chunk["content"],
-            "start": {"line": chunk["metadata"]["start_line"], "column": 0},
-            "end": {"line": chunk["metadata"]["end_line"], "column": 0},
+            "start": chunk["metadata"]["start_line"],
+            "end": chunk["metadata"]["end_line"],
             "location": f"{chunk['metadata']['start_line']}:{chunk['metadata']['end_line']}",
             "start_byte": chunk["metadata"].get("start_byte", 0),
             "end_byte": chunk["metadata"].get("end_byte", len(chunk["content"].encode('utf-8'))),
@@ -477,7 +501,7 @@ def create_enhanced_regex_fallback_chunks(content: str, file_path: str,
     """
     separators = get_enhanced_haskell_separators()
     lines = content.split('\n')
-    chunks = []
+    chunks: List[Dict[str, Any]] = []
 
     current_start = 0
     current_size = 0
@@ -602,8 +626,8 @@ def create_regex_fallback_chunks_python(content: str) -> List[Dict[str, Any]]:
     for chunk in enhanced_chunks:
         legacy_chunk = {
             "text": chunk["content"],
-            "start": {"line": chunk["metadata"]["start_line"], "column": 0},
-            "end": {"line": chunk["metadata"]["end_line"], "column": 0},
+            "start": chunk["metadata"]["start_line"],
+            "end": chunk["metadata"]["end_line"],
             "location": f"{chunk['metadata']['start_line']}:{chunk['metadata']['end_line']}",
             "start_byte": 0,
             "end_byte": len(chunk["content"].encode('utf-8')),
@@ -639,7 +663,7 @@ def get_haskell_language_spec(config: Optional[HaskellChunkConfig] = None) -> co
     )
 
 
-def create_enhanced_haskell_chunking_operation():
+def create_enhanced_haskell_chunking_operation() -> FunctionSpec:
     """
     Create a CocoIndex operation for enhanced Haskell chunking.
     Provides a high-level interface similar to ASTChunk operations.

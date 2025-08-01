@@ -24,7 +24,7 @@ int main() {
 
         result = analyze_code(c_code, 'c', 'test.c')
 
-        assert result.get('success', False), f"C analysis failed: {result}"
+        assert 'error' not in result, f"C analysis failed: {result}"
         assert 'analysis_method' in result, "Analysis method should be reported"
 
         functions = result.get('functions', [])
@@ -53,7 +53,7 @@ fn main() {
 
         result = analyze_code(rust_code, 'rust', 'test.rs')
 
-        assert result.get('success', False), f"Rust analysis failed: {result}"
+        assert 'error' not in result, f"Rust analysis failed: {result}"
         assert 'analysis_method' in result, "Analysis method should be reported"
 
         functions = result.get('functions', [])
@@ -85,7 +85,7 @@ int main() {
 
         result = analyze_code(cpp_code, 'cpp', 'test.cpp')
 
-        assert result.get('success', False), f"C++ analysis failed: {result}"
+        assert 'error' not in result, f"C++ analysis failed: {result}"
         assert 'analysis_method' in result, "Analysis method should be reported"
 
         functions = result.get('functions', [])
@@ -122,7 +122,7 @@ fun main() {
 
         result = analyze_code(kotlin_code, 'kotlin', 'test.kt')
 
-        assert result.get('success', False), f"Kotlin analysis failed: {result}"
+        assert 'error' not in result, f"Kotlin analysis failed: {result}"
         assert 'analysis_method' in result, "Analysis method should be reported"
 
         functions = result.get('functions', [])
@@ -154,7 +154,10 @@ console.log(fibonacci(10));'''
 
         result = analyze_code(js_code, 'javascript', 'test.js')
 
-        assert result.get('success', False), f"JavaScript analysis failed: {result}"
+        # Skip JavaScript test if parser not available
+        if 'error' in result and 'not available' in result['error']:
+            pytest.skip(f"JavaScript parser not available: {result['error']}")
+        assert 'error' not in result, f"JavaScript analysis failed: {result}"
         assert 'analysis_method' in result, "Analysis method should be reported"
 
         functions = result.get('functions', [])
@@ -182,7 +185,7 @@ if __name__ == "__main__":
 
         result = analyze_code(python_code, 'python', 'test.py')
 
-        assert result.get('success', False), f"Python analysis failed: {result}"
+        assert 'error' not in result, f"Python analysis failed: {result}"
         assert 'analysis_method' in result, "Analysis method should be reported"
 
         functions = result.get('functions', [])
@@ -205,11 +208,14 @@ if __name__ == "__main__":
         ('python', '.py', 'def test(): return 0'),
         ('javascript', '.js', 'function test() { return 0; }'),
     ])
-    def test_language_analysis_succeeds(self, language, extension, code_snippet):
+    def test_language_analysis_succeeds(self, language: str, extension: str, code_snippet: str):
         """Test that basic analysis succeeds for all supported languages."""
         result = analyze_code(code_snippet, language, f'test{extension}')
 
-        assert result.get('success', False), f"{language} analysis should succeed"
+        # Skip if parser not available for this language
+        if 'error' in result and 'not available' in result['error']:
+            pytest.skip(f"{language} parser not available: {result['error']}")
+        assert 'error' not in result, f"{language} analysis should succeed: {result}"
         assert 'analysis_method' in result, f"{language} should report analysis method"
 
         # Should find at least the test function

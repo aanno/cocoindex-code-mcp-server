@@ -4,6 +4,8 @@
 Comprehensive tests for AST-based Haskell chunking functionality.
 """
 
+from types import FunctionType
+from typing import cast
 import haskell_tree_sitter
 import pytest
 
@@ -64,7 +66,7 @@ greet :: Person -> String
 greet (Person name _) = "Hello, " ++ name
 """
 
-        chunks = extract_haskell_ast_chunks(sample_code)
+        chunks = cast(FunctionType, extract_haskell_ast_chunks)(sample_code)
         assert len(chunks) > 0
 
         # Check that chunks have required fields for CocoIndex
@@ -91,7 +93,7 @@ instance Greetable Person where
     greet (Person name _) = "Hello, " ++ name
 """
 
-        chunks = extract_haskell_ast_chunks(sample_code)
+        chunks = cast(FunctionType, extract_haskell_ast_chunks)(sample_code)
 
         # Find specific chunks and verify metadata
         data_chunks = [c for c in chunks if c['node_type'] == 'data_type']
@@ -138,7 +140,7 @@ fibonacci 0 = 0
 fibonacci n = fibonacci (n - 1) + fibonacci (n - 2)
 """
 
-        chunks = extract_haskell_ast_chunks(sample_code)
+        chunks = cast(FunctionType, extract_haskell_ast_chunks)(sample_code)
 
         # Find function-related chunks
         function_chunks = [c for c in chunks if 'function_name' in c['metadata']]
@@ -164,7 +166,7 @@ helper :: Int -> Int
 helper x = x + 1
 """
 
-        chunks = extract_haskell_ast_chunks(sample_code)
+        chunks = cast(FunctionType, extract_haskell_ast_chunks)(sample_code)
 
         # Find documentation chunks
         doc_chunks = [c for c in chunks if c['node_type'] == 'haddock']
@@ -208,7 +210,7 @@ processAll :: [ComplexType String Int] -> [Maybe String]
 processAll = map process
 """
 
-        chunks = extract_haskell_ast_chunks(sample_code)
+        chunks = cast(FunctionType, extract_haskell_ast_chunks)(sample_code)
         assert len(chunks) > 5  # Should have multiple chunks
 
         # Check that we get various types of chunks

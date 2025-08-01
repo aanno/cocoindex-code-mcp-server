@@ -5,7 +5,7 @@ Tests for external language-aware code embedding functionality.
 Tests the smart_code_embedding module without modifying CocoIndex.
 """
 
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -180,7 +180,7 @@ class TestExternalAPIFunctions:
     """Test suite for external API functions."""
 
     @patch('cocoindex_code_mcp_server.smart_code_embedding.cocoindex')
-    def test_create_smart_code_embedding(self, mock_cocoindex):
+    def test_create_smart_code_embedding(self, mock_cocoindex: MagicMock):
         """Test smart code embedding creation."""
         # Mock the SentenceTransformerEmbed function
         mock_embed_func = Mock()
@@ -197,7 +197,7 @@ class TestExternalAPIFunctions:
         assert result == mock_embed_func
 
     @patch('cocoindex_code_mcp_server.smart_code_embedding.cocoindex')
-    def test_create_smart_code_embedding_manual_language(self, mock_cocoindex):
+    def test_create_smart_code_embedding_manual_language(self, mock_cocoindex: MagicMock):
         """Test smart code embedding with manual language."""
         mock_embed_func = Mock()
         mock_cocoindex.functions.SentenceTransformerEmbed.return_value = mock_embed_func
@@ -212,7 +212,7 @@ class TestExternalAPIFunctions:
         assert result == mock_embed_func
 
     @patch('cocoindex_code_mcp_server.smart_code_embedding.cocoindex')
-    def test_create_smart_code_embedding_force_model(self, mock_cocoindex):
+    def test_create_smart_code_embedding_force_model(self, mock_cocoindex: MagicMock):
         """Test smart code embedding with forced model."""
         mock_embed_func = Mock()
         mock_cocoindex.functions.SentenceTransformerEmbed.return_value = mock_embed_func
@@ -230,7 +230,7 @@ class TestExternalAPIFunctions:
         assert result == mock_embed_func
 
     @patch('cocoindex_code_mcp_server.smart_code_embedding.cocoindex')
-    def test_create_smart_code_embedding_fallback(self, mock_cocoindex):
+    def test_create_smart_code_embedding_fallback(self, mock_cocoindex: MagicMock):
         """Test smart code embedding fallback for unsupported language."""
         mock_embed_func = Mock()
         mock_cocoindex.functions.SentenceTransformerEmbed.return_value = mock_embed_func
@@ -245,7 +245,7 @@ class TestExternalAPIFunctions:
         assert result == mock_embed_func
 
     @patch('cocoindex_code_mcp_server.smart_code_embedding.cocoindex')
-    def test_language_specific_functions(self, mock_cocoindex):
+    def test_language_specific_functions(self, mock_cocoindex: MagicMock):
         """Test language-specific convenience functions."""
         mock_embed_func = Mock()
         mock_cocoindex.functions.SentenceTransformerEmbed.return_value = mock_embed_func
@@ -317,7 +317,7 @@ class TestIntegrationScenarios:
                 f"Language {detected_language}: expected model {expected_model}, got {selected_model}"
 
     @patch('cocoindex_code_mcp_server.smart_code_embedding.cocoindex')
-    def test_file_context_integration(self, mock_cocoindex):
+    def test_file_context_integration(self, mock_cocoindex: MagicMock):
         """Test integration with file context from CocoIndex flows."""
         from cocoindex_code_mcp_server.smart_code_embedding import (
             create_smart_embedding_from_file_context,

@@ -7,11 +7,14 @@ This avoids the complexity of trying to wrap chunks in a generic tree-sitter int
 
 import os
 import sys
-from typing import Any, Dict
+from typing import Any, Dict, Union
+
+from tree_sitter import Node
 
 from ..ast_visitor import GenericMetadataVisitor, NodeContext
 from ..language_handlers.haskell_handler import HaskellNodeHandler
 from . import LOGGER
+from cocoindex_code_mcp_server.ast_visitor import Position
 
 # Import from parent directory
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
@@ -27,7 +30,7 @@ except ImportError:
 class HaskellASTVisitor(GenericMetadataVisitor):
     """Specialized visitor for Haskell code using haskell_tree_sitter chunks."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(language='haskell')
         self.haskell_handler = HaskellNodeHandler()
         # Add the handler to the parent's handler list
@@ -71,7 +74,7 @@ class HaskellASTVisitor(GenericMetadataVisitor):
             LOGGER.error(f"Haskell chunk analysis failed: {e}")
             return self._fallback_analysis(code, filename)
 
-    def _process_chunk(self, chunk, source_code: str):
+    def _process_chunk(self, chunk, source_code: str) -> None:
         """Process a single haskell_tree_sitter chunk."""
         # Create a chunk context that works with our handler
         chunk_context = HaskellChunkContext(chunk, source_code)
@@ -135,7 +138,7 @@ class HaskellASTVisitor(GenericMetadataVisitor):
 class HaskellChunkContext(NodeContext):
     """Specialized NodeContext for haskell_tree_sitter chunks."""
 
-    def __init__(self, chunk, source_code: str):
+    def __init__(self, chunk: Node, source_code: str) -> None:
         # Create a minimal node context that works with chunks
         super().__init__(
             node=chunk,
@@ -147,15 +150,64 @@ class HaskellChunkContext(NodeContext):
 
     def get_node_text(self) -> str:
         """Get text from the chunk."""
-        return self.node.text()
+        node = self.node
+        if node is None:
+            return ""
+        # Handle node.text() returning bytes or None
+        raw_text = node.text() if hasattr(node, 'text') and callable(node.text) else None
+        if raw_text is None:
+            return ""
+        elif isinstance(raw_text, bytes):
+            return raw_text.decode('utf-8', errors='ignore')
+        else:
+            return str(raw_text)
 
-    def get_position(self):
+    def get_position(self) -> Position:
         """Get position from the chunk."""
         from ..ast_visitor import Position
+        line = 1
+        byte_offset = 0
+        
+        # Handle both tree-sitter node and chunk interfaces
+        if hasattr(self.node, 'start_point'):
+            point = self.node.start_point
+            if callable(point):
+                point_result = point()
+                line = point_result[0] + 1 if hasattr(point_result, '__getitem__') else 1
+            elif hasattr(point, '__getitem__'):
+                line = point[0] + 1
+        elif hasattr(self.node, 'start_line'):
+            start_line_attr = getattr(self.node, 'start_line')
+            if callable(start_line_attr):
+                try:
+                    result = start_line_attr()
+                    line = int(result) if isinstance(result, (int, float, str)) else 1
+                except (ValueError, TypeError):
+                    line = 1
+            else:
+                try:
+                    line = int(start_line_attr) if isinstance(start_line_attr, (int, float, str)) else 1
+                except (ValueError, TypeError):
+                    line = 1
+                
+        if hasattr(self.node, 'start_byte'):
+            start_byte_attr = getattr(self.node, 'start_byte')
+            if callable(start_byte_attr):
+                try:
+                    result = start_byte_attr()
+                    byte_offset = int(result) if isinstance(result, (int, float, str)) else 0
+                except (ValueError, TypeError, AttributeError):
+                    byte_offset = 0
+            else:
+                try:
+                    byte_offset = int(start_byte_attr) if isinstance(start_byte_attr, (int, float, str)) else 0
+                except (ValueError, TypeError):
+                    byte_offset = 0
+            
         return Position(
-            line=self.node.start_line(),
+            line=line,
             column=0,  # haskell_tree_sitter doesn't provide column info
-            byte_offset=self.node.start_byte() if hasattr(self.node, 'start_byte') else 0
+            byte_offset=byte_offset
         )
 
 

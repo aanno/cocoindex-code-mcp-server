@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from types import FunctionType
+from typing import cast
 import unittest
 from pathlib import Path
 
@@ -22,21 +24,21 @@ class TestCocoIndexIntegration(unittest.TestCase):
 
     def test_language_detection(self):
         """Test that .hs files are detected as Haskell."""
-        language = extract_language("test_sample.hs")
+        language = cast(FunctionType, extract_language)("test_sample.hs")
         self.assertEqual(language, "Haskell")
 
-        language = extract_language("test_sample.lhs")
+        language = cast(FunctionType, extract_language)("test_sample.lhs")
         self.assertEqual(language, "Haskell")
 
     def test_chunking_parameters(self):
         """Test Haskell chunking parameters."""
-        params = get_chunking_params("Haskell")
+        params = cast(FunctionType, get_chunking_params)("Haskell")
         self.assertEqual(params.chunk_size, 1200)
         self.assertEqual(params.min_chunk_size, 300)
         self.assertEqual(params.chunk_overlap, 200)
 
     @pytest.mark.skip(reason="Language spec count changed due to refactoring")
-    def test_custom_language_spec(self):
+    def test_custom_language_spec(self) -> None:
         """Test that Haskell custom language spec is properly configured."""
         haskell_spec = None
         for spec in CUSTOM_LANGUAGES:
@@ -44,17 +46,20 @@ class TestCocoIndexIntegration(unittest.TestCase):
                 haskell_spec = spec
                 break
 
-        self.assertIsNotNone(haskell_spec, "Haskell custom language spec not found")
-        self.assertEqual(len(haskell_spec.separators_regex), 24)
-        self.assertIn(".hs", haskell_spec.aliases)
-        self.assertIn(".lhs", haskell_spec.aliases)
+        if haskell_spec is not None:
+            self.assertIsNotNone(haskell_spec, "Haskell custom language spec not found")
+            self.assertEqual(len(haskell_spec.separators_regex), 24)
+            self.assertIn(".hs", haskell_spec.aliases)
+            self.assertIn(".lhs", haskell_spec.aliases)
 
-        # Check for specific important separators
-        separators = haskell_spec.separators_regex
-        self.assertIn(r"\n\w+\s*::\s*", separators)  # Type signatures
-        self.assertIn(r"\nmodule\s+", separators)    # Module declarations
-        self.assertIn(r"\nimport\s+", separators)    # Import statements
-        self.assertIn(r"\ndata\s+", separators)      # Data declarations
+            # Check for specific important separators
+            separators = haskell_spec.separators_regex
+            self.assertIn(r"\n\w+\s*::\s*", separators)  # Type signatures
+            self.assertIn(r"\nmodule\s+", separators)    # Module declarations
+            self.assertIn(r"\nimport\s+", separators)    # Import statements
+            self.assertIn(r"\ndata\s+", separators)      # Data declarations
+        else:
+            pytest.fail("no metadata in chunk")
 
     def test_split_recursively_configuration(self):
         """Test that SplitRecursively can be configured with Haskell support."""

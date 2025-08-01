@@ -24,6 +24,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+from pytest_mock.plugin import MockerFixture
 
 pytest_plugins = ["pytest_mock"]
 
@@ -115,7 +116,7 @@ def nested_function():
 class TestMCPServerModuleIntegration:
     """Test that MCP server modules are used during real CocoIndex execution."""
 
-    def test_smart_code_embedding_integration(self, mocker, test_corpus):
+    def test_smart_code_embedding_integration(self, mocker: MockerFixture, test_corpus: str):
         """Test that smart code embedding is used during real flow execution."""
         try:
             # Initialize CocoIndex first
@@ -123,16 +124,16 @@ class TestMCPServerModuleIntegration:
             cocoindex.init()
 
             # Import required modules after cocoindex init
-            import smart_code_embedding
-            from cocoindex_config import code_embedding_flow, update_flow_config
+            import cocoindex_code_mcp_server.smart_code_embedding
+            from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow, update_flow_config
 
             # Spy on the smart embedding function
-            create_spy = mocker.spy(smart_code_embedding, "create_smart_code_embedding")
+            create_spy = mocker.spy(cocoindex_code_mcp_server.smart_code_embedding, "create_smart_code_embedding")
             selector_spy = None
 
             # Try to spy on LanguageModelSelector if available
             try:
-                from smart_code_embedding import LanguageModelSelector
+                from cocoindex_code_mcp_server.smart_code_embedding import LanguageModelSelector
                 selector_spy = mocker.spy(LanguageModelSelector, "select_model")
             except Exception:
                 pass
@@ -175,7 +176,7 @@ class TestMCPServerModuleIntegration:
         except Exception as e:
             pytest.skip(f"CocoIndex flow execution failed: {e}")
 
-    def test_ast_chunking_integration(self, mocker, test_corpus):
+    def test_ast_chunking_integration(self, mocker: MockerFixture, test_corpus: str):
         """Test that AST chunking is used during real flow execution."""
         try:
             # Initialize CocoIndex first
@@ -183,16 +184,16 @@ class TestMCPServerModuleIntegration:
             cocoindex.init()
 
             # Import required modules after cocoindex init
-            import ast_chunking
-            from ast_chunking import CocoIndexASTChunker
-            from cocoindex_config import code_embedding_flow, update_flow_config
+            import cocoindex_code_mcp_server.ast_chunking
+            from cocoindex_code_mcp_server.ast_chunking import CocoIndexASTChunker
+            from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow, update_flow_config
 
             # Spy on AST chunking functions
             chunk_code_spy = mocker.spy(CocoIndexASTChunker, "chunk_code")
 
             # Also spy on the module-level create functions if they exist
             try:
-                create_operation_spy = mocker.spy(ast_chunking, "create_ast_chunking_operation")
+                create_operation_spy = mocker.spy(cocoindex_code_mcp_server.ast_chunking, "create_ast_chunking_operation")
             except AttributeError:
                 create_operation_spy = None
 
@@ -234,7 +235,7 @@ class TestMCPServerModuleIntegration:
         except Exception as e:
             pytest.skip(f"CocoIndex flow execution failed: {e}")
 
-    def test_python_handler_integration(self, mocker, test_corpus):
+    def test_python_handler_integration(self, mocker: MockerFixture, test_corpus: str):
         """Test that Python language handlers are used during real flow execution."""
         try:
             # Initialize CocoIndex first
@@ -302,17 +303,18 @@ class TestMCPServerModuleIntegration:
 class TestMCPServerQueryIntegration:
     """Test extension module usage during actual search queries."""
 
-    def test_hybrid_search_with_extensions(self, mocker, test_corpus):
+    def test_hybrid_search_with_extensions(self, mocker: MockerFixture, test_corpus: str):
         """Test that extensions are used during hybrid search queries."""
         try:
             # Import required modules
-            from cocoindex_config import code_embedding_flow, update_flow_config
+            from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow, update_flow_config
             from psycopg_pool import ConnectionPool
 
             import cocoindex
             from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
                 HybridSearchEngine,
             )
+            from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
 
             # Skip if database not available
             try:
@@ -347,7 +349,7 @@ class TestMCPServerQueryIntegration:
                 import cocoindex_code_mcp_server.ast_chunking
                 from cocoindex_code_mcp_server.ast_chunking import CocoIndexASTChunker
                 spies["ast_chunk_code"] = mocker.spy(CocoIndexASTChunker, "chunk_code")
-                spies["create_ast_operation"] = mocker.spy(ast_chunking, "create_ast_chunking_operation")
+                spies["create_ast_operation"] = mocker.spy(cocoindex_code_mcp_server.ast_chunking, "create_ast_chunking_operation")
             except ImportError:
                 print("AST chunking not available for spying")
 
@@ -381,10 +383,10 @@ class TestMCPServerQueryIntegration:
                 time.sleep(2)
 
                 # Now perform a hybrid search query
-                search_engine = HybridSearchEngine(connection_pool)
+                search_engine = HybridSearchEngine("code_embeddings", KeywordSearchParser(), pool=connection_pool)
 
                 # Search for something that should match our test corpus
-                results = search_engine.hybrid_search(
+                results = search_engine.search(
                     vector_query="process data function",
                     keyword_query="language:python",
                     top_k=5

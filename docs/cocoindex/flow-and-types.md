@@ -194,6 +194,98 @@ def embed_text(text: str) -> Vector[np.float32, Literal[384]]:
     return embedding.astype(np.float32)
 ```
 
+## DataSlice to String Conversion (CRITICAL)
+
+### 1. DataSlice Objects in Database Collection
+
+**⚠️ CRITICAL GOTCHA**: DataSlice objects are not automatically converted to strings when passed to collect() calls, resulting in empty database content.
+
+```python
+# ❌ PROBLEM: DataSlice objects stored as empty strings
+code_embeddings.collect(
+    filename=file["filename"],
+    code=chunk["content"],  # chunk["content"] is a DataSlice object
+    embedding=chunk["embedding"]
+)
+# Result: Database shows code="" for all chunks
+```
+
+**✅ SOLUTION**: Always convert DataSlice objects to strings using transform:
+
+```python
+@cocoindex.op.function()
+def convert_dataslice_to_string(content) -> str:
+    """Convert CocoIndex DataSlice content to string."""
+    try:
+        result = str(content) if content else ""
+        LOGGER.info(f"🔍 DataSlice conversion: input type={type(content)}, output_len={len(result)}")
+        if len(result) == 0:
+            LOGGER.error(f"❌ DataSlice conversion produced empty string! Input: {repr(content)}")
+        return result
+    except Exception as e:
+        LOGGER.error(f"Failed to convert content to string: {e}")
+        return ""
+
+# ✅ CORRECT: Convert DataSlice to string before collection
+code_embeddings.collect(
+    filename=file["filename"],
+    code=chunk["content"].transform(convert_dataslice_to_string),  # Transform DataSlice to string
+    embedding=chunk["embedding"]
+)
+```
+
+**Why this matters:**
+- DataSlice objects represent lazy evaluation pipelines, not immediate values
+- Database storage requires concrete string values
+- Without conversion, database stores empty strings instead of actual code content
+- This breaks hybrid search functionality completely
+
+## Chunking Dictionary Key Compatibility (CRITICAL)
+
+### 1. AST vs Default Chunking Key Differences
+
+**⚠️ CRITICAL GOTCHA**: Different chunking methods use different dictionary keys for content, causing content loss in post-processing functions.
+
+```python
+# AST chunking creates chunks with "content" key:
+{
+    "content": "def function():\n    pass",  # AST chunks use "content"
+    "metadata": {...},
+    "location": "file.py:10"
+}
+
+# Default/recursive chunking creates chunks with "text" key:
+{
+    "text": "def function():\n    pass",      # Default chunking uses "text"
+    "location": "file.py:10",
+    "start": 10,
+    "end": 15
+}
+```
+
+**❌ PROBLEM**: Post-processing functions that assume one key format lose content:
+
+```python
+@cocoindex.op.function()
+def ensure_unique_chunk_locations(chunks) -> list:
+    for chunk in chunks:
+        if isinstance(chunk, dict):
+            text = chunk.get("text", "")  # ❌ Loses AST chunk content (uses "content" key)
+```
+
+**✅ SOLUTION**: Handle both key formats in post-processing functions:
+
+```python
+@cocoindex.op.function()
+def ensure_unique_chunk_locations(chunks) -> list:
+    for chunk in chunks:
+        if isinstance(chunk, dict):
+            # Try "content" first (AST chunks), fallback to "text" (default chunks)
+            text = chunk.get("content", chunk.get("text", ""))  # ✅ Handles both formats
+```
+
+**Key insight:** Any function that processes chunks from multiple chunking methods must handle both "content" and "text" keys to avoid content loss.
+
 ## Chunking and Primary Key Management (CRITICAL)
 
 ### 1. Unique Chunk Locations Required
@@ -327,6 +419,11 @@ chunks = chunks.transform(ensure_unique_chunk_locations)
 |-------|-------|----------|
 | `operator class "vector_cosine_ops" does not accept data type jsonb` | Using Python lists instead of Vector types | Use `Vector[np.float32, Literal[dim]]` and return numpy arrays |
 | `ON CONFLICT DO UPDATE command cannot affect row a second time` | Duplicate chunk locations within same file | Post-process chunks with `ensure_unique_chunk_locations()` |
+| `data did not match any variant of untagged enum ValueType` | Union types in dataclass fields (e.g., `Dict[str, Union[...]]`) | Use `cocoindex.Json` for flexible metadata fields |
+| `Type mismatch for metadata_json: passed in Json, declared <class 'str'>` | Functions expecting `str` but receiving `cocoindex.Json` | Update function signatures to accept `cocoindex.Json` |
+| `Type mismatch for metadata_json: passed in Str, declared typing.Annotated[typing.Any, TypeKind(kind='Json')] (Json)` | Transform functions return different types (str vs Json) that cause type conflicts | Make metadata functions return consistent types (all strings via `json.dumps()`) |
+| `Untyped dict is not accepted as a specific type annotation` | Using generic `dict` or `list` return types | Use specific types like `list[SomeClass]` or `cocoindex.Json` |
+| `regex parse error: repetition quantifier expects a valid decimal` | Unescaped `{` in regex patterns | Escape curly braces: `r"\{-#"` instead of `r"{-#"` |
 | `NameError: name 'lang' is not defined` | Variable name mismatch in function | Check function parameter names match usage |
 | `Unsupported as a specific type annotation: typing.Any` | Using `typing.Any` in return types | Remove or use specific types |
 | `Setup for flow is not up-to-date` | Flow not set up | Run `cocoindex setup src/config.py` |
@@ -380,11 +477,59 @@ except Exception as e:
     # 4. Database schema up to date?
 ```
 
+## Metadata Strategy: Development vs Production
+
+### Development Phase Strategy
+Use `cocoindex.Json` for flexible metadata experimentation without frequent schema migrations:
+
+```python
+@dataclass
+class Chunk:
+    """Development-friendly chunk with flexible metadata."""
+    content: str
+    metadata: cocoindex.Json  # Flexible bag for experimental fields
+    location: str = ""
+    start: int = 0
+    end: int = 0
+```
+
+**Benefits:**
+- **Fast iteration** - no `cocoindex setup` needed for metadata changes
+- **Experimental fields** - test complexity scores, type hints, etc. without schema impact
+- **Rapid prototyping** - validate metadata usefulness before production commitment
+
+### Production Migration Strategy
+Extract proven metadata fields into dedicated PostgreSQL columns:
+
+```python
+# After validating metadata fields in development, promote to production schema
+code_embeddings.collect(
+    filename=file["filename"],
+    content=chunk["content"],
+    location=chunk["location"],
+    # Promoted from metadata to dedicated columns for performance:
+    functions=chunk["functions"],           # str column with indexing
+    classes=chunk["classes"],              # str column with indexing  
+    complexity_score=chunk["complexity"],   # int column for range queries
+    has_type_hints=chunk["has_type_hints"], # bool column for filtering
+    # Keep metadata for remaining experimental fields
+    metadata_json=chunk["metadata"]         # json column for edge cases
+)
+```
+
+**Production advantages:**
+- **Query performance** - dedicated columns enable proper indexing
+- **pgvector integration** - direct column access for vector operations
+- **Type safety** - PostgreSQL enforces column types
+- **Backward compatibility** - metadata_json remains for experimental fields
+
 ## Summary
 
 - **USE Vector types** with fixed dimensions for embeddings: `Vector[np.float32, Literal[384]]`
 - **Return numpy arrays** (`.astype(np.float32)`), NOT Python lists (`.tolist()`)
 - **Type annotations ARE required** for Vector and complex types
+- **Use cocoindex.Json for development metadata** to avoid frequent schema changes
+- **Promote successful metadata to dedicated columns** for production performance
 - **ALWAYS ensure unique chunk locations** with post-processing to prevent PostgreSQL conflicts
 - **Use comprehensive primary keys** including `source_name` to handle multiple sources
 - **Apply `SplitRecursively(custom_languages=CUSTOM_LANGUAGES)`** with proper parameters
@@ -416,3 +561,114 @@ When adding new metadata fields to collection, remember:
 2. Test with `cocoindex evaluate` to verify field population
 3. Check that evaluation outputs show your custom fields
 4. Ensure primary key covers all uniqueness requirements
+
+### ValueType and Type System Debugging
+
+The most complex CocoIndex issues often involve the type system and serialization. Here are key debugging lessons:
+
+#### 1. ValueType Deserialization Errors
+**Root cause:** Union types in dataclass fields cause serialization failures.
+
+```python
+# ❌ PROBLEMATIC: Union types in nested structures
+@dataclass
+class Chunk:
+    metadata: Dict[str, Union[str, int, float, bool]]  # Breaks ValueType enum
+
+# ✅ SOLUTION: Use cocoindex.Json for flexible metadata
+@dataclass  
+class Chunk:
+    metadata: cocoindex.Json  # Handles any JSON-serializable data
+```
+
+#### 2. Function Parameter Type Mismatches
+**Root cause:** Functions expecting one type but receiving another due to schema changes.
+
+```python
+# ❌ PROBLEMATIC: Function expects string but receives Json
+@cocoindex.op.function()
+def extract_field(metadata_json: str) -> str:
+    return json.loads(metadata_json)["field"]
+
+# ✅ SOLUTION: Update to accept cocoindex.Json
+@cocoindex.op.function()
+def extract_field(metadata_json: cocoindex.Json) -> str:
+    metadata_dict = metadata_json if isinstance(metadata_json, dict) else json.loads(str(metadata_json))
+    return str(metadata_dict.get("field", ""))
+```
+
+#### 3. Regex Pattern Issues in Language Configurations
+**Root cause:** Unescaped special characters in regex patterns.
+
+```python
+# ❌ PROBLEMATIC: Unescaped curly braces
+separators = [
+    r"\n{-#\s*[A-Z]+",  # Breaks: { is quantifier syntax
+]
+
+# ✅ SOLUTION: Escape special regex characters  
+separators = [
+    r"\n\{-#\s*[A-Z]+",  # Works: \{ matches literal brace
+]
+```
+
+#### 4. Metadata Transform Function Type Consistency
+**Root cause:** Inconsistent return types between metadata creation functions cause type mismatches in transform chains.
+
+```python
+# ❌ PROBLEMATIC: Inconsistent return types
+@cocoindex.op.function()
+def create_default_metadata(content: str) -> cocoindex.Json:
+    return {"functions": [], "classes": []}  # Returns dict
+
+@cocoindex.op.function() 
+def extract_code_metadata(text: str, language: str) -> str:
+    return json.dumps({"functions": [], "classes": []})  # Returns string
+
+# When used in transforms:
+chunk["metadata"] = chunk["content"].transform(create_default_metadata)  # -> dict
+chunk["metadata"] = chunk["content"].transform(extract_code_metadata)   # -> str
+
+# Later functions expecting consistent types fail:
+@cocoindex.op.function()
+def extract_functions(metadata_json: cocoindex.Json) -> str:  # Expects Json but gets Str
+    return str(metadata_json.get("functions", []))
+```
+
+**✅ SOLUTION:** Make all metadata functions return consistent types (JSON strings):
+
+```python
+@cocoindex.op.function()
+def create_default_metadata(content: str) -> str:
+    default_metadata = {"functions": [], "classes": []}
+    return json.dumps(default_metadata)  # Consistent string output
+
+@cocoindex.op.function()
+def extract_code_metadata(text: str, language: str) -> str:
+    return json.dumps({"functions": [], "classes": []})  # Already string
+
+# Update extract functions to accept strings:
+@cocoindex.op.function()
+def extract_functions(metadata_json: str) -> str:
+    metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
+    return str(metadata_dict.get("functions", []))
+```
+
+**Key insight:** CocoIndex transforms serialize return values, so functions receiving transformed data should expect serialized types (strings for JSON), not the original types (dicts for `cocoindex.Json`).
+
+#### 5. Development Workflow for Type Issues
+When encountering type system errors:
+
+1. **Isolate the problem** - Create minimal reproduction script
+2. **Check union types** - Replace `Union[...]` in dataclasses with `cocoindex.Json`
+3. **Verify function signatures** - Ensure parameter types match data being passed
+4. **Test incrementally** - Fix one type issue at a time
+5. **Use development metadata strategy** - Keep experimental fields in `cocoindex.Json` until proven
+
+#### 6. Type System Best Practices Summary
+- **Avoid unions in dataclass fields** - Use `cocoindex.Json` for flexible metadata
+- **Keep type annotations** - They are required, not optional in modern CocoIndex
+- **Ensure consistent metadata function types** - All metadata creation functions should return the same type (preferably JSON strings)
+- **Handle both dict and string inputs** - Functions may receive either depending on context
+- **Escape regex special characters** - Language configuration regexes need proper escaping
+- **Test with minimal examples** - Isolate type issues before fixing in main codebase

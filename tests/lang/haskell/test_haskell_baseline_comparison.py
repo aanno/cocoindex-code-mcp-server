@@ -9,6 +9,7 @@ Similar to tests/lang/python/test_cocoindex_baseline_comparison.py
 from pathlib import Path
 
 import pytest
+from typing import Dict, List, Union
 
 import_error = None
 try:
@@ -44,7 +45,7 @@ class TestHaskellBaselineComparison:
         with open(self.fixture_path, 'r') as f:
             self.haskell_code = f.read()
 
-    def test_our_haskell_visitor_analysis(self):
+    def test_our_haskell_visitor_analysis(self) -> Dict[str, Union[str, int, List[str], bool, Dict[str, int]]]:
         """Test our specialized Haskell visitor implementation."""
         result = analyze_haskell_code(self.haskell_code, str(self.fixture_path))
 
@@ -78,7 +79,7 @@ class TestHaskellBaselineComparison:
 
         return metrics
 
-    def test_generic_visitor_analysis(self):
+    def test_generic_visitor_analysis(self) -> Dict[str, Union[str, int, List[str], bool, Dict[str, int]]]:
         """Test generic AST visitor with Haskell (should use our specialized visitor)."""
         result = generic_analyze_code(self.haskell_code, 'haskell', str(self.fixture_path))
 
@@ -111,7 +112,7 @@ class TestHaskellBaselineComparison:
         return metrics
 
     @pytest.mark.skipif(not COCOINDEX_AVAILABLE, reason="CocoIndex not available")
-    def test_cocoindex_baseline_analysis(self):
+    def test_cocoindex_baseline_analysis(self) -> Dict[str, Union[str, int, List[str], bool, Dict[str, int]]]:
         """Test CocoIndex's built-in analysis for comparison."""
         try:
             # Use CocoIndex's basic text analysis
@@ -142,7 +143,7 @@ class TestHaskellBaselineComparison:
             functions = sorted(list(set(f for f in functions if f.isidentifier())))
             data_types = sorted(list(set(dt for dt in data_types if dt)))
 
-            metrics = {
+            metrics: Dict[str, Union[str, int, List[str], bool, Dict[str, int]]] = {
                 'analysis_method': 'cocoindex_text_fallback',
                 'functions_found': len(functions),
                 'function_names': functions,
@@ -190,8 +191,10 @@ class TestHaskellBaselineComparison:
             print(f"{key}: {status}")
 
         # Function name comparison
-        our_funcs = set(our_metrics.get('function_names', []))
-        generic_funcs = set(generic_metrics.get('function_names', []))
+        our_func_names = our_metrics.get('function_names', [])
+        generic_func_names = generic_metrics.get('function_names', [])
+        our_funcs = set(our_func_names if isinstance(our_func_names, list) else [])
+        generic_funcs = set(generic_func_names if isinstance(generic_func_names, list) else [])
         if our_funcs == generic_funcs:
             print(f"function_names: ✅ SAME ({len(our_funcs)} functions)")
         else:
@@ -202,8 +205,10 @@ class TestHaskellBaselineComparison:
             print(f"  Only in generic: {sorted(generic_funcs - our_funcs)}")
 
         # Data type comparison
-        our_types = set(our_metrics.get('data_type_names', []))
-        generic_types = set(generic_metrics.get('data_type_names', []))
+        our_type_names = our_metrics.get('data_type_names', [])
+        generic_type_names = generic_metrics.get('data_type_names', [])
+        our_types = set(our_type_names if isinstance(our_type_names, list) else [])
+        generic_types = set(generic_type_names if isinstance(generic_type_names, list) else [])
         if our_types == generic_types:
             print(f"data_type_names: ✅ SAME ({len(our_types)} types)")
         else:
@@ -214,16 +219,20 @@ class TestHaskellBaselineComparison:
         # Compare with baseline if available
         if baseline_metrics:
             print("\\n--- Our Implementation vs CocoIndex Baseline ---")
-            our_funcs = set(our_metrics.get('function_names', []))
-            baseline_funcs = set(baseline_metrics.get('function_names', []))
+            our_func_names = our_metrics.get('function_names', [])
+            baseline_func_names = baseline_metrics.get('function_names', [])
+            our_funcs = set(our_func_names if isinstance(our_func_names, list) else [])
+            baseline_funcs = set(baseline_func_names if isinstance(baseline_func_names, list) else [])
 
             print(f"Functions - Our: {len(our_funcs)}, Baseline: {len(baseline_funcs)}")
             if our_funcs != baseline_funcs:
                 print(f"  Our extra: {sorted(our_funcs - baseline_funcs)}")
                 print(f"  Baseline extra: {sorted(baseline_funcs - our_funcs)}")
 
-            our_types = set(our_metrics.get('data_type_names', []))
-            baseline_types = set(baseline_metrics.get('data_type_names', []))
+            our_type_names = our_metrics.get('data_type_names', [])
+            baseline_type_names = baseline_metrics.get('data_type_names', [])
+            our_types = set(our_type_names if isinstance(our_type_names, list) else [])
+            baseline_types = set(baseline_type_names if isinstance(baseline_type_names, list) else [])
             print(f"Data types - Our: {len(our_types)}, Baseline: {len(baseline_types)}")
             if our_types != baseline_types:
                 print(f"  Our: {sorted(our_types)}")
@@ -234,11 +243,13 @@ class TestHaskellBaselineComparison:
         expected_functions = {'fibonacci', 'sumList', 'treeMap', 'compose', 'addTen', 'multiplyByTwo', 'main'}
         expected_types = {'Person', 'Tree'}
 
-        our_funcs = set(our_metrics.get('function_names', []))
-        our_types = set(our_metrics.get('data_type_names', []))
+        our_func_names = our_metrics.get('function_names', [])
+        our_type_names = our_metrics.get('data_type_names', [])
+        our_funcs = set(our_func_names if isinstance(our_func_names, list) else [])
+        our_types = set(our_type_names if isinstance(our_type_names, list) else [])
 
-        func_recall = len(our_funcs & expected_functions) / len(expected_functions) if expected_functions else 0
-        type_recall = len(our_types & expected_types) / len(expected_types) if expected_types else 0
+        func_recall = len(our_funcs & expected_functions) / max(len(expected_functions), 1)
+        type_recall = len(our_types & expected_types) / max(len(expected_types), 1)
 
         print(f"Function recall: {func_recall:.2%} ({len(our_funcs & expected_functions)}/{len(expected_functions)})")
         print(f"Data type recall: {type_recall:.2%} ({len(our_types & expected_types)}/{len(expected_types)})")
@@ -250,8 +261,13 @@ class TestHaskellBaselineComparison:
         # Assert basic quality thresholds
         assert func_recall >= 0.5, f"Function recall too low: {func_recall:.2%}"
         assert type_recall >= 0.5, f"Data type recall too low: {type_recall:.2%}"
-        assert our_metrics['has_type_signatures'], "Should detect type signatures"
-        assert our_metrics['complexity_score'] > 0, "Should calculate complexity"
+        
+        # Type-safe assertions
+        has_type_signatures = our_metrics.get('has_type_signatures', False)
+        complexity_score = our_metrics.get('complexity_score', 0)
+        
+        assert isinstance(has_type_signatures, bool) and has_type_signatures, "Should detect type signatures"
+        assert isinstance(complexity_score, int) and complexity_score > 0, "Should calculate complexity"
 
 
 if __name__ == "__main__":

@@ -9,6 +9,8 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from ..ast_visitor import GenericMetadataVisitor, NodeContext
+from cocoindex_code_mcp_server.ast_visitor import NodeContext
+from tree_sitter import Node
 
 LOGGER = logging.getLogger(__name__)
 
@@ -16,7 +18,7 @@ LOGGER = logging.getLogger(__name__)
 class JavaASTVisitor(GenericMetadataVisitor):
     """Specialized visitor for Java language AST analysis."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("java")
         self.functions: List[str] = []
         self.classes: List[str] = []
@@ -51,52 +53,60 @@ class JavaASTVisitor(GenericMetadataVisitor):
 
         return None
 
-    def _extract_method(self, node):
+    def _extract_method(self, node: Node) -> None:
         """Extract method name from method_declaration node."""
         try:
             # Java method structure: method_declaration -> identifier
             for child in node.children:
                 if child.type == 'identifier':
-                    method_name = child.text.decode('utf-8')
+                    text = child.text
+                    if text is not None:
+                        method_name = text.decode('utf-8')
                     self.functions.append(method_name)
                     LOGGER.debug(f"Found Java method: {method_name}")
                     break
         except Exception as e:
             LOGGER.warning(f"Error extracting Java method: {e}")
 
-    def _extract_constructor(self, node):
+    def _extract_constructor(self, node: Node) -> None:
         """Extract constructor name from constructor_declaration node."""
         try:
             # Java constructor structure: constructor_declaration -> identifier
             for child in node.children:
                 if child.type == 'identifier':
-                    constructor_name = child.text.decode('utf-8')
+                    text = child.text
+                    if text is not None:
+                        constructor_name = text.decode('utf-8')
                     self.functions.append(constructor_name)  # Treat constructors as functions
                     LOGGER.debug(f"Found Java constructor: {constructor_name}")
                     break
         except Exception as e:
             LOGGER.warning(f"Error extracting Java constructor: {e}")
 
-    def _extract_class(self, node):
+    def _extract_class(self, node: Node) -> None:
         """Extract class name from class_declaration node."""
         try:
             # Look for class name (identifier after 'class' keyword)
             for child in node.children:
                 if child.type == 'identifier':
-                    class_name = child.text.decode('utf-8')
+                    text = child.text
+                    if text is not None:
+                        class_name = text.decode('utf-8')
                     self.classes.append(class_name)
                     LOGGER.debug(f"Found Java class: {class_name}")
                     break
         except Exception as e:
             LOGGER.warning(f"Error extracting Java class: {e}")
 
-    def _extract_interface(self, node):
+    def _extract_interface(self, node: Node) -> None:
         """Extract interface name from interface_declaration node."""
         try:
             # Look for interface name
             for child in node.children:
                 if child.type == 'identifier':
-                    interface_name = child.text.decode('utf-8')
+                    text = child.text
+                    if text is not None:
+                        interface_name = text.decode('utf-8')
                     self.interfaces.append(interface_name)
                     LOGGER.debug(f"Found Java interface: {interface_name}")
                     break

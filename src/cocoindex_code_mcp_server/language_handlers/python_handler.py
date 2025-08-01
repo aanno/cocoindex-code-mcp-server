@@ -15,6 +15,8 @@ from typing import Any, Dict, List, Optional, Set
 from ..ast_visitor import NodeContext
 
 from . import LOGGER
+from cocoindex_code_mcp_server.ast_visitor import NodeContext
+from tree_sitter import Node
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
@@ -27,7 +29,7 @@ class PythonFunction:
     column: int
     parameters: List[Dict[str, Any]] = field(default_factory=list)
     return_type: Optional[str] = None
-    decorators: List[str] = field(default_factory=list)
+    decorators: Set[str] = field(default_factory=set)
     docstring: Optional[str] = None
     is_async: bool = False
     is_private: bool = False
@@ -42,7 +44,7 @@ class PythonClass:
     line: int
     column: int
     bases: List[str] = field(default_factory=list)
-    decorators: List[str] = field(default_factory=list)
+    decorators: Set[str] = field(default_factory=set)
     docstring: Optional[str] = None
     methods: List[str] = field(default_factory=list)
     is_private: bool = False
@@ -107,7 +109,7 @@ class PythonNodeHandler:
         'expression_statement': 'potential_docstring',
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.functions: List[PythonFunction] = []
         self.classes: List[PythonClass] = []
         self.imports: List[PythonImport] = []
@@ -322,7 +324,7 @@ class PythonNodeHandler:
 
     # Helper methods for extracting specific information
 
-    def _extract_function_name(self, node, source_text: str) -> Optional[str]:
+    def _extract_function_name(self, node: Node, source_text: str) -> Optional[str]:
         """Extract function name from function definition node."""
         if not hasattr(node, 'children'):
             return None
@@ -333,7 +335,7 @@ class PythonNodeHandler:
 
         return None
 
-    def _extract_class_name(self, node, source_text: str) -> Optional[str]:
+    def _extract_class_name(self, node: Node, source_text: str) -> Optional[str]:
         """Extract class name from class definition node."""
         if not hasattr(node, 'children'):
             return None
@@ -344,9 +346,9 @@ class PythonNodeHandler:
 
         return None
 
-    def _extract_parameters(self, node, source_text: str) -> List[Dict[str, Any]]:
+    def _extract_parameters(self, node: Node, source_text: str) -> List[Dict[str, Any]]:
         """Extract function parameters with type annotations and defaults."""
-        parameters = []
+        parameters:List[Dict[str, Any]] = []
 
         if not hasattr(node, 'children'):
             return parameters
@@ -359,9 +361,9 @@ class PythonNodeHandler:
 
         return parameters
 
-    def _parse_parameters_node(self, params_node, source_text: str) -> List[Dict[str, Any]]:
+    def _parse_parameters_node(self, params_node: Node, source_text: str) -> List[Dict[str, Any]]:
         """Parse individual parameters from parameters node."""
-        parameters = []
+        parameters: List[Dict[str, Any]] = []
 
         if not hasattr(params_node, 'children'):
             return parameters
@@ -389,7 +391,7 @@ class PythonNodeHandler:
 
         return parameters
 
-    def _parse_typed_parameter(self, param_node, source_text: str) -> Optional[Dict[str, Any]]:
+    def _parse_typed_parameter(self, param_node: Node, source_text: str) -> Optional[Dict[str, Any]]:
         """Parse a typed parameter (name: type)."""
         param_info = {'name': '', 'type_annotation': None, 'default': None}
 
@@ -424,7 +426,7 @@ class PythonNodeHandler:
 
         return param_info if param_info['name'] else None
 
-    def _extract_return_type(self, node, source_text: str) -> Optional[str]:
+    def _extract_return_type(self, node: Node, source_text: str) -> Optional[str]:
         """Extract return type annotation from function definition."""
         if not hasattr(node, 'children'):
             return None
@@ -435,9 +437,9 @@ class PythonNodeHandler:
 
         return None
 
-    def _extract_decorators(self, node, source_text: str) -> List[str]:
+    def _extract_decorators(self, node: Node, source_text: str) -> Set[str]:
         """Extract decorators from function or class definition."""
-        decorators = []
+        decorators: Set[str] = set()
 
         if not hasattr(node, 'children'):
             return decorators
@@ -451,11 +453,11 @@ class PythonNodeHandler:
                     # Handle decorator calls like @decorator()
                     if '(' in decorator_name:
                         decorator_name = decorator_name.split('(')[0]
-                    decorators.append(decorator_name)
+                    decorators.add(decorator_name)
 
         return decorators
 
-    def _extract_docstring(self, node, source_text: str) -> Optional[str]:
+    def _extract_docstring(self, node: Node, source_text: str) -> Optional[str]:
         """Extract docstring from function or class definition."""
         if not hasattr(node, 'children'):
             return None
@@ -467,7 +469,7 @@ class PythonNodeHandler:
 
         return None
 
-    def _find_docstring_in_block(self, block_node, source_text: str) -> Optional[str]:
+    def _find_docstring_in_block(self, block_node: Node, source_text: str) -> Optional[str]:
         """Find docstring in a code block."""
         if not hasattr(block_node, 'children'):
             return None
@@ -485,7 +487,7 @@ class PythonNodeHandler:
 
         return None
 
-    def _extract_string_from_expression(self, expr_node, source_text: str) -> Optional[str]:
+    def _extract_string_from_expression(self, expr_node: Node, source_text: str) -> Optional[str]:
         """Extract string literal from expression statement."""
         if not hasattr(expr_node, 'children'):
             return None
@@ -508,9 +510,9 @@ class PythonNodeHandler:
 
         return string_literal.strip()
 
-    def _extract_base_classes(self, node, source_text: str) -> List[str]:
+    def _extract_base_classes(self, node: Node, source_text: str) -> List[str]:
         """Extract base classes from class definition."""
-        bases = []
+        bases: List[str] = []
 
         if not hasattr(node, 'children'):
             return bases
@@ -522,9 +524,9 @@ class PythonNodeHandler:
 
         return bases
 
-    def _extract_names_from_argument_list(self, arg_list_node, source_text: str) -> List[str]:
+    def _extract_names_from_argument_list(self, arg_list_node: Node, source_text: str) -> List[str]:
         """Extract identifiers from argument list."""
-        names = []
+        names: List[str] = []
 
         if not hasattr(arg_list_node, 'children'):
             return names
@@ -539,7 +541,7 @@ class PythonNodeHandler:
 
         return names
 
-    def _extract_import_parts(self, node, source_text: str) -> tuple[Optional[str], Optional[str]]:
+    def _extract_import_parts(self, node: Node, source_text: str) -> tuple[Optional[str], Optional[str]]:
         """Extract module name and alias from import statement."""
         module_name = None
         alias = None
@@ -558,10 +560,10 @@ class PythonNodeHandler:
 
         return module_name, alias
 
-    def _extract_from_import_parts(self, node, source_text: str) -> tuple[Optional[str], List[str]]:
+    def _extract_from_import_parts(self, node: Node, source_text: str) -> tuple[Optional[str], List[str]]:
         """Extract module and imported names from from...import statement."""
-        module_name = None
-        imported_names = []
+        module_name: Optional[str] = None
+        imported_names: List[str] = []
 
         if not hasattr(node, 'children'):
             return module_name, imported_names
@@ -575,7 +577,7 @@ class PythonNodeHandler:
 
         return module_name, imported_names
 
-    def _extract_aliased_import(self, aliased_node, source_text: str) -> tuple[Optional[str], Optional[str]]:
+    def _extract_aliased_import(self, aliased_node: Node, source_text: str) -> tuple[Optional[str], Optional[str]]:
         """Extract module and alias from aliased import."""
         module_name = None
         alias = None
@@ -595,9 +597,9 @@ class PythonNodeHandler:
 
         return module_name, alias
 
-    def _extract_import_list(self, import_list_node, source_text: str) -> List[str]:
+    def _extract_import_list(self, import_list_node: Node, source_text: str) -> List[str]:
         """Extract list of imported names."""
-        names = []
+        names: List[str] = []
 
         if not hasattr(import_list_node, 'children'):
             return names
@@ -614,9 +616,9 @@ class PythonNodeHandler:
 
         return names
 
-    def _extract_assignment_targets(self, node, source_text: str) -> List[str]:
+    def _extract_assignment_targets(self, node: Node, source_text: str) -> List[str]:
         """Extract variable names from assignment targets."""
-        targets = []
+        targets: List[str] = []
 
         if not hasattr(node, 'children'):
             return targets
@@ -631,9 +633,9 @@ class PythonNodeHandler:
 
         return targets
 
-    def _extract_pattern_names(self, pattern_node, source_text: str) -> List[str]:
+    def _extract_pattern_names(self, pattern_node: Node, source_text: str) -> List[str]:
         """Extract names from assignment patterns."""
-        names = []
+        names: List[str] = []
 
         if not hasattr(pattern_node, 'children'):
             return names
@@ -644,7 +646,7 @@ class PythonNodeHandler:
 
         return names
 
-    def _calculate_function_complexity(self, node, source_text: str) -> int:
+    def _calculate_function_complexity(self, node: Node, source_text: str) -> int:
         """Calculate cyclomatic complexity for a function."""
         complexity = 1  # Base complexity
 

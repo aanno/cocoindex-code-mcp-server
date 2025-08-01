@@ -8,6 +8,8 @@ the PythonNodeHandler through the AST visitor framework.
 
 import json
 import sys
+from types import FunctionType
+from typing import Any, Dict, cast
 
 import pytest
 
@@ -70,52 +72,55 @@ def utility_function(x: int, y: int = 10) -> int:
     # Test the analyzer directly
     analyzer = TreeSitterPythonAnalyzer(prefer_tree_sitter=True)
     metadata = analyzer.analyze_code(sample_code, "test.py")
+    
+    if metadata is None:
+        pytest.fail('metadata is None')
+    else:
+        # Verify that we get enhanced metadata from the PythonNodeHandler
+        assert 'analysis_method' in metadata
+        assert metadata['analysis_method'] in ['tree_sitter', 'tree_sitter+python_ast']
 
-    # Verify that we get enhanced metadata from the PythonNodeHandler
-    assert 'analysis_method' in metadata
-    assert metadata['analysis_method'] in ['tree_sitter', 'tree_sitter+python_ast']
+        # Verify function detection
+        assert 'functions' in metadata
+        print(f"DEBUG: Found functions: {metadata['functions']}")
+        print(f"DEBUG: Full metadata keys: {list(metadata.keys())}")
 
-    # Verify function detection
-    assert 'functions' in metadata
-    print(f"DEBUG: Found functions: {metadata['functions']}")
-    print(f"DEBUG: Full metadata keys: {list(metadata.keys())}")
+        # Check for utility_function which should definitely be found
+        assert 'utility_function' in metadata['functions'], f"utility_function not found in {metadata['functions']}"
 
-    # Check for utility_function which should definitely be found
-    assert 'utility_function' in metadata['functions'], f"utility_function not found in {metadata['functions']}"
+        # Check that we found at least some functions/classes
+        assert len(metadata['functions']) > 0, "No functions found"
 
-    # Check that we found at least some functions/classes
-    assert len(metadata['functions']) > 0, "No functions found"
+        # Verify class detection
+        assert 'classes' in metadata
+        print(f"DEBUG: Found classes: {metadata['classes']}")
+        # Classes should be detected
+        assert len(metadata['classes']) >= 1, f"Expected at least 1 class, found: {metadata['classes']}"
 
-    # Verify class detection
-    assert 'classes' in metadata
-    print(f"DEBUG: Found classes: {metadata['classes']}")
-    # Classes should be detected
-    assert len(metadata['classes']) >= 1, f"Expected at least 1 class, found: {metadata['classes']}"
+        # Verify async detection - might not work if methods aren't in top-level functions
+        print(f"DEBUG: has_async: {metadata.get('has_async', False)}")
 
-    # Verify async detection - might not work if methods aren't in top-level functions
-    print(f"DEBUG: has_async: {metadata.get('has_async', False)}")
+        # Verify type hints detection
+        print(f"DEBUG: has_type_hints: {metadata.get('has_type_hints', False)}")
 
-    # Verify type hints detection
-    print(f"DEBUG: has_type_hints: {metadata.get('has_type_hints', False)}")
+        # Verify decorators detection
+        print(f"DEBUG: has_decorators: {metadata.get('has_decorators', False)}")
+        print(f"DEBUG: decorators: {metadata.get('decorators', [])}")
 
-    # Verify decorators detection
-    print(f"DEBUG: has_decorators: {metadata.get('has_decorators', False)}")
-    print(f"DEBUG: decorators: {metadata.get('decorators', [])}")
+        # Verify private/dunder method detection
+        print(f"DEBUG: private_methods: {metadata.get('private_methods', [])}")
+        print(f"DEBUG: dunder_methods: {metadata.get('dunder_methods', [])}")
 
-    # Verify private/dunder method detection
-    print(f"DEBUG: private_methods: {metadata.get('private_methods', [])}")
-    print(f"DEBUG: dunder_methods: {metadata.get('dunder_methods', [])}")
+        # Basic sanity checks - the analyzer should detect something
+        assert len(metadata['functions']) + len(metadata['classes']) > 0, "Should detect at least some functions or classes"
 
-    # Basic sanity checks - the analyzer should detect something
-    assert len(metadata['functions']) + len(metadata['classes']) > 0, "Should detect at least some functions or classes"
+        # Verify imports
+        assert 'imports' in metadata
+        expected_imports = ['asyncio', 'typing', 'dataclasses']
+        for imp in expected_imports:
+            assert imp in metadata['imports'], f"Import {imp} not found in {metadata['imports']}"
 
-    # Verify imports
-    assert 'imports' in metadata
-    expected_imports = ['asyncio', 'typing', 'dataclasses']
-    for imp in expected_imports:
-        assert imp in metadata['imports'], f"Import {imp} not found in {metadata['imports']}"
-
-    print("✅ TreeSitterPythonAnalyzer integration test passed!")
+        print("✅ TreeSitterPythonAnalyzer integration test passed!")
 
 
 def test_cocoindex_config_python_handler_integration():
@@ -146,7 +151,7 @@ def test_function() -> bool:
 '''
 
     # Test through cocoindex_config integration
-    metadata_json = extract_code_metadata(sample_code, "Python", "test.py")
+    metadata_json = cast(FunctionType, extract_code_metadata)(sample_code, "Python", "test.py")
     metadata = json.loads(metadata_json)
 
     # Verify we get proper metadata through the integration
@@ -176,7 +181,7 @@ def incomplete_function(
 '''
 
     # Should not crash and should provide basic metadata
-    metadata_json = extract_code_metadata(broken_code, "Python", "broken.py")
+    metadata_json = cast(FunctionType, extract_code_metadata)(broken_code, "Python", "broken.py")
     metadata = json.loads(metadata_json)
 
     # Should have basic structure even with broken code

@@ -78,7 +78,7 @@ Add to `~/.config/Claude/claude_desktop_config.json`:
 
 ## Available Tools
 
-### 1. `hybrid_search`
+### 1. `hybrid_search` (search-hybrid)
 Combines vector similarity and keyword metadata filtering.
 
 **Parameters:**
@@ -97,21 +97,21 @@ Combines vector similarity and keyword metadata filtering.
 }
 ```
 
-### 2. `vector_search`
+### 2. `vector_search` (search-vector)
 Pure semantic similarity search using embeddings.
 
 **Parameters:**
 - `query` (required): Text to search for
 - `top_k` (optional): Number of results (default: 10)
 
-### 3. `keyword_search`
+### 3. `keyword_search` (search-keyword)
 Pure metadata-based filtering using Lark parser.
 
 **Parameters:**
 - `query` (required): Keyword query (e.g., `function_name:parse AND language:python`)
 - `top_k` (optional): Number of results (default: 10)
 
-### 4. `analyze_code`
+### 4. `analyze_code` (code-analyze)
 Extract metadata from code for indexing.
 
 **Parameters:**
@@ -119,7 +119,7 @@ Extract metadata from code for indexing.
 - `file_path` (required): File path for context
 - `language` (optional): Programming language (auto-detected if not provided)
 
-### 5. `get_embeddings`
+### 5. `get_embeddings` (code-embeddings)
 Generate embeddings for text using the configured model.
 
 **Parameters:**

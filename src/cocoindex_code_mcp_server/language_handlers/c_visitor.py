@@ -6,9 +6,11 @@ Follows the same pattern as haskell_visitor.py by subclassing GenericMetadataVis
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from ..ast_visitor import GenericMetadataVisitor, NodeContext
+from cocoindex_code_mcp_server.ast_visitor import NodeContext
+from tree_sitter import Node
 
 LOGGER = logging.getLogger(__name__)
 
@@ -16,7 +18,7 @@ LOGGER = logging.getLogger(__name__)
 class CASTVisitor(GenericMetadataVisitor):
     """Specialized visitor for C language AST analysis."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("c")
         self.functions: List[str] = []
         self.structs: List[str] = []
@@ -43,7 +45,7 @@ class CASTVisitor(GenericMetadataVisitor):
 
         return None
 
-    def _extract_function(self, node):
+    def _extract_function(self, node: Node) -> None:
         """Extract function name from function_definition node."""
         try:
             # C function structure: function_definition -> function_declarator -> identifier
@@ -51,19 +53,23 @@ class CASTVisitor(GenericMetadataVisitor):
             if declarator:
                 identifier = self._find_child_by_type(declarator, 'identifier')
                 if identifier:
-                    func_name = identifier.text.decode('utf-8')
+                    text = identifier.text
+                    if text is not None:
+                        func_name = text.decode('utf-8')
                     self.functions.append(func_name)
                     LOGGER.debug(f"Found C function: {func_name}")
         except Exception as e:
             LOGGER.warning(f"Error extracting C function: {e}")
 
-    def _extract_struct(self, node):
+    def _extract_struct(self, node: Node) -> None:
         """Extract struct name from struct_specifier node."""
         try:
             # Look for struct name (identifier after 'struct' keyword)
             for child in node.children:
                 if child.type == 'type_identifier':
-                    struct_name = child.text.decode('utf-8')
+                    text = child.text
+                    if text is not None:
+                        struct_name = text.decode('utf-8')
                     self.structs.append(struct_name)
                     LOGGER.debug(f"Found C struct: {struct_name}")
                     break
@@ -96,7 +102,7 @@ class CASTVisitor(GenericMetadataVisitor):
         except Exception as e:
             LOGGER.warning(f"Error extracting C typedef: {e}")
 
-    def _find_child_by_type(self, node, target_type: str):
+    def _find_child_by_type(self, node: Node, target_type: str) -> Union[Node,None]:
         """Find first child node of specified type."""
         for child in node.children:
             if child.type == target_type:

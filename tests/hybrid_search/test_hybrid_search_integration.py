@@ -5,7 +5,7 @@ Integration tests for the hybrid search workflow.
 """
 
 import tempfile
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -31,7 +31,7 @@ class TestMainHybridSearchIntegration:
 
     @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
     @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
-    def test_argument_parsing_basic(self, mock_load_dotenv, mock_cocoindex_init):
+    def test_argument_parsing_basic(self, mock_load_dotenv: MagicMock, mock_cocoindex_init: MagicMock):
         """Test basic argument parsing."""
         try:
             from cocoindex_code_mcp_server.main_hybrid_search import (
@@ -52,7 +52,7 @@ class TestMainHybridSearchIntegration:
 
     @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
     @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
-    def test_argument_parsing_custom_paths(self, mock_load_dotenv, mock_cocoindex_init):
+    def test_argument_parsing_custom_paths(self, mock_load_dotenv: MagicMock, mock_cocoindex_init: MagicMock):
         """Test argument parsing with custom paths."""
         try:
             from cocoindex_code_mcp_server.main_hybrid_search import (
@@ -71,7 +71,7 @@ class TestMainHybridSearchIntegration:
 
     @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
     @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
-    def test_argument_parsing_no_live(self, mock_load_dotenv, mock_cocoindex_init):
+    def test_argument_parsing_no_live(self, mock_load_dotenv: MagicMock, mock_cocoindex_init: MagicMock):
         """Test argument parsing with live updates disabled."""
         try:
             from cocoindex_code_mcp_server.main_hybrid_search import (
@@ -87,7 +87,7 @@ class TestMainHybridSearchIntegration:
 
     @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
     @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
-    def test_argument_parsing_custom_poll(self, mock_load_dotenv, mock_cocoindex_init):
+    def test_argument_parsing_custom_poll(self, mock_load_dotenv: MagicMock, mock_cocoindex_init: MagicMock):
         """Test argument parsing with custom polling interval."""
         try:
             from cocoindex_code_mcp_server.main_hybrid_search import (
@@ -195,7 +195,7 @@ class TestWorkflowIntegration:
             from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
                 HybridSearchEngine,
             )
-            from cocoindex_code_mcp_server.keyword_search_parser import (
+            from cocoindex_code_mcp_server.keyword_search_parser_lark import (
                 KeywordSearchParser,
             )
 
@@ -206,9 +206,9 @@ class TestWorkflowIntegration:
             def embedding_func(x): return [0.1, 0.2, 0.3]  # Simple mock embedding
 
             engine = HybridSearchEngine(
-                pool=mock_pool,
                 table_name="test_embeddings",
                 parser=parser,
+                pool=mock_pool,
                 embedding_func=embedding_func
             )
 
@@ -251,7 +251,7 @@ class TestWorkflowIntegration:
             from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
                 HybridSearchEngine,
             )
-            from cocoindex_code_mcp_server.keyword_search_parser import (
+            from cocoindex_code_mcp_server.keyword_search_parser_lark import (
                 KeywordSearchParser,
             )
 
@@ -262,9 +262,9 @@ class TestWorkflowIntegration:
             def embedding_func(x): return [0.1, 0.2, 0.3]
 
             engine = HybridSearchEngine(
-                pool=mock_pool,
                 table_name="test_embeddings",
                 parser=parser,
+                pool=mock_pool,
                 embedding_func=embedding_func
             )
 
@@ -298,7 +298,7 @@ class TestConfigurationIntegration:
     """Test configuration and setup integration."""
 
     @patch('cocoindex_code_mcp_server.cocoindex_config.code_embedding_flow')
-    def test_flow_configuration_update(self, mock_flow):
+    def test_flow_configuration_update(self, mock_flow: MagicMock):
         """Test that flow configuration is properly updated."""
         try:
             from cocoindex_code_mcp_server.cocoindex_config import update_flow_config
@@ -320,7 +320,7 @@ class TestConfigurationIntegration:
             pytest.skip("CocoIndex not available in test environment")
 
     @patch('cocoindex_code_mcp_server.cocoindex_config.code_embedding_flow')
-    def test_flow_configuration_defaults(self, mock_flow):
+    def test_flow_configuration_defaults(self, mock_flow: MagicMock):
         """Test flow configuration with default values."""
         try:
             from cocoindex_code_mcp_server.cocoindex_config import update_flow_config
@@ -354,9 +354,12 @@ class TestErrorHandling:
             mock_pool = Mock()
             mock_pool.connection.side_effect = Exception("Database connection failed")
 
+            from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
+            parser = KeywordSearchParser()
             engine = HybridSearchEngine(
-                pool=mock_pool,
                 table_name="test_embeddings",
+                parser=parser,
+                pool=mock_pool,
                 embedding_func=lambda x: [0.1, 0.2, 0.3]
             )
 
@@ -370,10 +373,10 @@ class TestErrorHandling:
     def test_search_with_invalid_keyword_syntax(self):
         """Test search with invalid keyword syntax."""
         try:
-            from cocoindex_code_mcp_server.db.pgvector.cocoindex_code_mcp_server.hybrid_search import (
+            from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
                 HybridSearchEngine,
             )
-            from cocoindex_code_mcp_server.keyword_search_parser import (
+            from cocoindex_code_mcp_server.keyword_search_parser_lark import (
                 KeywordSearchParser,
             )
 
@@ -382,9 +385,9 @@ class TestErrorHandling:
             mock_pool = Mock()
 
             engine = HybridSearchEngine(
-                pool=mock_pool,
                 table_name="test_embeddings",
                 parser=parser,
+                pool=mock_pool,
                 embedding_func=lambda x: [0.1, 0.2, 0.3]
             )
 
@@ -410,9 +413,12 @@ class TestErrorHandling:
 
             mock_pool = Mock()
 
+            from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
+            parser = KeywordSearchParser()
             engine = HybridSearchEngine(
-                pool=mock_pool,
                 table_name="test_embeddings",
+                parser=parser,
+                pool=mock_pool,
                 embedding_func=failing_embedding_func
             )
 

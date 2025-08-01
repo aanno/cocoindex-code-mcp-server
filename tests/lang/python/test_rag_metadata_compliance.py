@@ -8,6 +8,7 @@ from the proposed-rag-metadata.md specification.
 import json
 import logging
 import sys
+import pytest
 
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)
@@ -194,188 +195,193 @@ nested_structure = [
     try:
         metadata = analyze_python_code(test_code, "test_rag_compliance.py")
 
-        print("✅ Analysis completed successfully!")
-        print(f"📊 Analysis Method: {metadata.get('analysis_method', 'unknown')}")
+        if metadata is None:
+            pytest.fail("metadata is None")
+        else:
+            print("✅ Analysis completed successfully!")
+            print(f"📊 Analysis Method: {metadata.get('analysis_method', 'unknown')}")
 
-        # Check all required RAG metadata fields
-        required_fields = {
-            # Basic RAG-pychunk fields
-            "file": str,
-            "node_type": str,
-            "lines_of_code": tuple,
-            "hash": str,
-            "node_relationships": dict,
-            "additional_metadata": dict,
+            # Check all required RAG metadata fields
+            required_fields = {
+                # Basic RAG-pychunk fields
+                "file": str,
+                "node_type": str,
+                "lines_of_code": tuple,
+                "hash": str,
+                "node_relationships": dict,
+                "additional_metadata": dict,
 
-            # Our extended fields
-            "language": str,
-            "filename": str,
-            "line_count": int,
-            "char_count": int,
-            "start_line": int,
-            "end_line": int,
-            "start_column": int,
-            "end_column": int,
-            "content_hash": str,
+                # Our extended fields
+                "language": str,
+                "filename": str,
+                "line_count": int,
+                "char_count": int,
+                "start_line": int,
+                "end_line": int,
+                "start_column": int,
+                "end_column": int,
+                "content_hash": str,
 
-            # Content analysis
-            "functions": list,
-            "classes": list,
-            "imports": list,
-            "variables": list,
-            "decorators": list,
-            "complexity_score": int,
+                # Content analysis
+                "functions": list,
+                "classes": list,
+                "imports": list,
+                "variables": list,
+                "decorators": list,
+                "complexity_score": int,
 
-            # Feature flags
-            "has_async": bool,
-            "has_classes": bool,
-            "has_decorators": bool,
-            "has_type_hints": bool,
-            "has_docstrings": bool,
+                # Feature flags
+                "has_async": bool,
+                "has_classes": bool,
+                "has_decorators": bool,
+                "has_type_hints": bool,
+                "has_docstrings": bool,
 
-            # Detailed information
-            "function_details": list,
-            "class_details": list,
-            "import_details": list,
-            "private_methods": list,
-            "dunder_methods": list,
+                # Detailed information
+                "function_details": list,
+                "class_details": list,
+                "import_details": list,
+                "private_methods": list,
+                "dunder_methods": list,
 
-            # JSON compatibility
-            "metadata_json": str
-        }
+                # JSON compatibility
+                "metadata_json": str
+            }
 
-        print("\n📋 Checking Required RAG Metadata Fields:")
-        print("-" * 40)
+            print("\n📋 Checking Required RAG Metadata Fields:")
+            print("-" * 40)
 
-        all_fields_present = True
-        for field, expected_type in required_fields.items():
-            if field in metadata:
-                actual_type = type(metadata[field])
-                if actual_type == expected_type:
-                    print(f"✅ {field}: {expected_type.__name__}")
+            all_fields_present = True
+            for field, expected_type in required_fields.items():
+                if field in metadata:
+                    actual_type = type(metadata[field])
+                    if actual_type == expected_type:
+                        print(f"✅ {field}: {expected_type.__name__}")
+                    else:
+                        print(f"⚠️  {field}: expected {expected_type.__name__}, got {actual_type.__name__}")
+                        all_fields_present = False
                 else:
-                    print(f"⚠️  {field}: expected {expected_type.__name__}, got {actual_type.__name__}")
+                    print(f"❌ {field}: MISSING")
                     all_fields_present = False
-            else:
-                print(f"❌ {field}: MISSING")
-                all_fields_present = False
 
-        # Check node_relationships structure
-        print("\n🔗 Checking Node Relationships Structure:")
-        print("-" * 40)
+            # Check node_relationships structure
+            print("\n🔗 Checking Node Relationships Structure:")
+            print("-" * 40)
 
-        node_rel = metadata.get('node_relationships', {})
-        expected_rel_fields = ["parent", "children", "scope", "contains", "class_hierarchies", "import_dependencies"]
+            node_rel = metadata.get('node_relationships', {})
+            expected_rel_fields = ["parent", "children", "scope", "contains", "class_hierarchies", "import_dependencies"]
 
-        for rel_field in expected_rel_fields:
-            if rel_field in node_rel:
-                print(f"✅ node_relationships.{rel_field}")
-            else:
-                print(f"❌ node_relationships.{rel_field}: MISSING")
-                all_fields_present = False
-
-        # Check additional_metadata structure
-        print("\n📊 Checking Additional Metadata Structure:")
-        print("-" * 40)
-
-        add_meta = metadata.get('additional_metadata', {})
-        expected_add_fields = ["analysis_method", "parser_version", "extracted_at",
-                               "total_functions", "total_classes", "total_imports", "code_patterns"]
-
-        for add_field in expected_add_fields:
-            if add_field in add_meta:
-                print(f"✅ additional_metadata.{add_field}")
-            else:
-                print(f"❌ additional_metadata.{add_field}: MISSING")
-                all_fields_present = False
-
-        # Test content accuracy
-        print("\n🎯 Checking Content Accuracy:")
-        print("-" * 40)
-
-        expected_content = {
-            "functions": ["standalone_function", "async_standalone_function", "generator_function"],
-            "classes": ["BaseClass", "AdvancedClass"],
-            "imports": ["os", "sys", "typing", "dataclasses", "pathlib", "asyncio", "json"],
-            "has_async": True,
-            "has_classes": True,
-            "has_decorators": True,
-            "has_type_hints": True,
-            "has_docstrings": True
-        }
-
-        content_accurate = True
-        for field, expected in expected_content.items():
-            actual = metadata.get(field)
-            if field.startswith("has_"):
-                if actual == expected:
-                    print(f"✅ {field}: {actual}")
+            for rel_field in expected_rel_fields:
+                if rel_field in node_rel:
+                    print(f"✅ node_relationships.{rel_field}")
                 else:
-                    print(f"❌ {field}: expected {expected}, got {actual}")
-                    content_accurate = False
-            else:  # Lists
-                missing = set(expected) - set(actual or [])
-                if not missing:
-                    print(f"✅ {field}: all {len(expected)} expected items found")
+                    print(f"❌ node_relationships.{rel_field}: MISSING")
+                    all_fields_present = False
+
+            # Check additional_metadata structure
+            print("\n📊 Checking Additional Metadata Structure:")
+            print("-" * 40)
+
+            add_meta = metadata.get('additional_metadata', {})
+            expected_add_fields = ["analysis_method", "parser_version", "extracted_at",
+                                "total_functions", "total_classes", "total_imports", "code_patterns"]
+
+            for add_field in expected_add_fields:
+                if add_field in add_meta:
+                    print(f"✅ additional_metadata.{add_field}")
                 else:
-                    print(f"❌ {field}: missing {missing}")
-                    content_accurate = False
+                    print(f"❌ additional_metadata.{add_field}: MISSING")
+                    all_fields_present = False
 
-        # Check detailed function information
-        print("\n🔍 Checking Detailed Function Information:")
-        print("-" * 40)
+            # Test content accuracy
+            print("\n🎯 Checking Content Accuracy:")
+            print("-" * 40)
 
-        func_details = metadata.get('function_details', [])
-        if func_details:
-            sample_func = func_details[0]
-            required_func_fields = ["name", "line", "end_line", "column", "end_column",
-                                    "lines_of_code", "parameters", "return_type", "decorators", "docstring"]
+            expected_content = {
+                "functions": ["standalone_function", "async_standalone_function", "generator_function"],
+                "classes": ["BaseClass", "AdvancedClass"],
+                "imports": ["os", "sys", "typing", "dataclasses", "pathlib", "asyncio", "json"],
+                "has_async": True,
+                "has_classes": True,
+                "has_decorators": True,
+                "has_type_hints": True,
+                "has_docstrings": True
+            }
 
-            for func_field in required_func_fields:
-                if func_field in sample_func:
-                    print(f"✅ function_details[0].{func_field}")
-                else:
-                    print(f"❌ function_details[0].{func_field}: MISSING")
-        else:
-            print("❌ No function details found")
+            content_accurate = True
+            for field, expected in expected_content.items():
+                actual = metadata.get(field)
+                if field.startswith("has_"):
+                    if actual == expected:
+                        print(f"✅ {field}: {actual}")
+                    else:
+                        print(f"❌ {field}: expected {expected}, got {actual}")
+                        content_accurate = False
+                else:  # Lists
+                    actual_list = actual if isinstance(actual, list) else []
+                    expected_list = expected if isinstance(expected, list) else []
+                    missing = set(expected_list) - set(actual_list)
+                    if not missing:
+                        print(f"✅ {field}: all {len(expected_list)} expected items found")
+                    else:
+                        print(f"❌ {field}: missing {missing}")
+                        content_accurate = False
 
-        # Check JSON serialization
-        print("\n📄 Checking JSON Serialization:")
-        print("-" * 40)
+            # Check detailed function information
+            print("\n🔍 Checking Detailed Function Information:")
+            print("-" * 40)
 
-        try:
-            json_str = metadata.get('metadata_json', '')
-            if json_str:
-                json.loads(json_str)
-                print(f"✅ metadata_json: valid JSON ({len(json_str)} chars)")
+            func_details = metadata.get('function_details', [])
+            if func_details:
+                sample_func = func_details[0]
+                required_func_fields = ["name", "line", "end_line", "column", "end_column",
+                                        "lines_of_code", "parameters", "return_type", "decorators", "docstring"]
+
+                for func_field in required_func_fields:
+                    if func_field in sample_func:
+                        print(f"✅ function_details[0].{func_field}")
+                    else:
+                        print(f"❌ function_details[0].{func_field}: MISSING")
             else:
-                print("❌ metadata_json: empty or missing")
+                print("❌ No function details found")
+
+            # Check JSON serialization
+            print("\n📄 Checking JSON Serialization:")
+            print("-" * 40)
+
+            try:
+                json_str = metadata.get('metadata_json', '')
+                if json_str:
+                    json.loads(json_str)
+                    print(f"✅ metadata_json: valid JSON ({len(json_str)} chars)")
+                else:
+                    print("❌ metadata_json: empty or missing")
+                    all_fields_present = False
+            except json.JSONDecodeError as e:
+                print(f"❌ metadata_json: invalid JSON - {e}")
                 all_fields_present = False
-        except json.JSONDecodeError as e:
-            print(f"❌ metadata_json: invalid JSON - {e}")
-            all_fields_present = False
 
-        # Summary
-        print("\n📊 Summary:")
-        print("=" * 60)
-        print(f"📁 File: {metadata.get('filename', 'unknown')}")
-        print(f"🏷️  Node Type: {metadata.get('node_type', 'unknown')}")
-        print(f"📏 Lines: {metadata.get('line_count', 0)}")
-        print(f"🔧 Functions: {len(metadata.get('functions', []))}")
-        print(f"🏛️  Classes: {len(metadata.get('classes', []))}")
-        print(f"📦 Imports: {len(metadata.get('imports', []))}")
-        print(f"🎯 Complexity: {metadata.get('complexity_score', 0)}")
-        print(f"🔑 Hash: {metadata.get('hash', 'missing')[:8]}...")
+            # Summary
+            print("\n📊 Summary:")
+            print("=" * 60)
+            print(f"📁 File: {metadata.get('filename', 'unknown')}")
+            print(f"🏷️  Node Type: {metadata.get('node_type', 'unknown')}")
+            print(f"📏 Lines: {metadata.get('line_count', 0)}")
+            print(f"🔧 Functions: {len(metadata.get('functions', []))}")
+            print(f"🏛️  Classes: {len(metadata.get('classes', []))}")
+            print(f"📦 Imports: {len(metadata.get('imports', []))}")
+            print(f"🎯 Complexity: {metadata.get('complexity_score', 0)}")
+            print(f"🔑 Hash: {metadata.get('hash', 'missing')[:8]}...")
 
-        if all_fields_present and content_accurate:
-            print("\n🎉 ALL RAG METADATA COMPLIANCE TESTS PASSED!")
-            print("✅ Python analyzer generates complete RAG-compliant metadata")
-            return True
-        else:
-            print("\n⚠️  Some RAG metadata compliance issues found")
-            print(f"📋 Fields Present: {'✅' if all_fields_present else '❌'}")
-            print(f"🎯 Content Accurate: {'✅' if content_accurate else '❌'}")
-            return False
+            if all_fields_present and content_accurate:
+                print("\n🎉 ALL RAG METADATA COMPLIANCE TESTS PASSED!")
+                print("✅ Python analyzer generates complete RAG-compliant metadata")
+                return True
+            else:
+                print("\n⚠️  Some RAG metadata compliance issues found")
+                print(f"📋 Fields Present: {'✅' if all_fields_present else '❌'}")
+                print(f"🎯 Content Accurate: {'✅' if content_accurate else '❌'}")
+                return False
 
     except Exception as e:
         print(f"❌ Error during analysis: {e}")
@@ -413,47 +419,54 @@ def last_function(x: int) -> str:
     try:
         metadata = analyze_python_code(position_test_code, "position_test.py")
 
-        print("📍 Position Information Test:")
-        print("-" * 30)
-
-        func_details = metadata.get('function_details', [])
-        for func in func_details:
-            if func['name'] == 'first_function':
-                expected_line = 1
-                actual_line = func.get('line', 0)
-                if actual_line == expected_line:
-                    print(f"✅ first_function line position: {actual_line}")
-                else:
-                    print(f"❌ first_function line position: expected {expected_line}, got {actual_line}")
-
-            # Check lines_of_code tuple format
-            lines_of_code = func.get('lines_of_code')
-            if isinstance(lines_of_code, tuple) and len(lines_of_code) == 2:
-                print(f"✅ {func['name']} lines_of_code format: {lines_of_code}")
-            else:
-                print(f"❌ {func['name']} lines_of_code format invalid: {lines_of_code}")
-
-        # Test hash uniqueness
-        print("\n🔑 Hash Uniqueness Test:")
-        print("-" * 30)
-
-        hash1 = metadata.get('hash', '')
-
-        # Analyze slightly different code
-        modified_code = position_test_code + "\n# comment\n"
-        metadata2 = analyze_python_code(modified_code, "position_test.py")
-        hash2 = metadata2.get('hash', '')
-
-        if hash1 and hash2 and hash1 != hash2:
-            print("✅ Hashes are unique for different content")
-            print(f"   Original: {hash1}")
-            print(f"   Modified: {hash2}")
+        if metadata is None:
+            pytest.fail("metadata is None")
         else:
-            print("❌ Hash uniqueness test failed")
-            print(f"   Original: {hash1}")
-            print(f"   Modified: {hash2}")
+            print("📍 Position Information Test:")
+            print("-" * 30)
 
-        return True
+            func_details = metadata.get('function_details', [])
+            for func in func_details:
+                if func['name'] == 'first_function':
+                    expected_line = 1
+                    actual_line = func.get('line', 0)
+                    if actual_line == expected_line:
+                        print(f"✅ first_function line position: {actual_line}")
+                    else:
+                        print(f"❌ first_function line position: expected {expected_line}, got {actual_line}")
+
+                # Check lines_of_code tuple format
+                lines_of_code = func.get('lines_of_code')
+                if isinstance(lines_of_code, tuple) and len(lines_of_code) == 2:
+                    print(f"✅ {func['name']} lines_of_code format: {lines_of_code}")
+                else:
+                    print(f"❌ {func['name']} lines_of_code format invalid: {lines_of_code}")
+
+            # Test hash uniqueness
+            print("\n🔑 Hash Uniqueness Test:")
+            print("-" * 30)
+
+            hash1 = metadata.get('hash', '')
+
+            # Analyze slightly different code
+            modified_code = position_test_code + "\n# comment\n"
+            metadata2 = analyze_python_code(modified_code, "position_test.py")
+
+            if metadata2 is None:
+                pytest.fail("metadata2 is None")
+            else:
+                hash2 = metadata2.get('hash', '')
+
+                if hash1 and hash2 and hash1 != hash2:
+                    print("✅ Hashes are unique for different content")
+                    print(f"   Original: {hash1}")
+                    print(f"   Modified: {hash2}")
+                else:
+                    print("❌ Hash uniqueness test failed")
+                    print(f"   Original: {hash1}")
+                    print(f"   Modified: {hash2}")
+
+                return True
 
     except Exception as e:
         print(f"❌ Error in specific features test: {e}")

@@ -10,19 +10,22 @@ import json
 # from __future__ import annotations
 import os
 from dataclasses import dataclass
-from typing import List
+from typing import List, Union, Any, cast
 
 import numpy as np
 from numpy.typing import NDArray
 
 import cocoindex
-from cocoindex_code_mcp_server import LOGGER
+import logging
+# from cocoindex_code_mcp_server import LOGGER
 
 # from sentence_transformers import SentenceTransformer  # Use cocoindex.functions.SentenceTransformerEmbed instead
 from .ast_chunking import ASTChunkOperation, Chunk
 from .lang.haskell.haskell_ast_chunker import get_haskell_language_spec
 from .lang.python.python_code_analyzer import analyze_python_code
 from .smart_code_embedding import LanguageModelSelector
+
+LOGGER = logging.getLogger(__name__)  # root logger
 
 # Models will be instantiated directly (HuggingFace handles caching)
 
@@ -31,7 +34,7 @@ STACKTRACE = False
 
 # Import our custom extensions
 try:
-    from smart_code_embedding import LanguageModelSelector
+    from .smart_code_embedding import LanguageModelSelector
     SMART_EMBEDDING_AVAILABLE = True
     LOGGER.info("Smart code embedding enabled and loaded successfully")
 except ImportError as e:
@@ -96,7 +99,7 @@ TREE_SITTER_LANGUAGE_MAP = {
     ".md": "Markdown", ".mdx": "Markdown",
     ".pas": "Pascal", ".dpr": "Pascal",
     ".php": "PHP",
-    ".py": "Python", ".pyi": "Python",
+    ".py": "Python", # ".pyi": "Python",
     ".r": "R", ".R": "R",
     ".rb": "Ruby",
     ".rs": "Rust",
@@ -246,16 +249,41 @@ def get_chunking_params(language: str) -> ChunkingParams:
 
 
 @cocoindex.op.function()
+def create_default_metadata(content: str) -> str:
+    """Create default metadata structure for default language handler."""
+    default_metadata = {
+        "functions": [],
+        "classes": [],
+        "imports": [],
+        "complexity_score": 0,
+        "has_type_hints": False,
+        "has_async": False,
+        "has_classes": False,
+        "decorators_used": [],
+        "analysis_method": "default_basic",
+    }
+    return json.dumps(default_metadata)
+
+
+@cocoindex.op.function()
 def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
     """Extract rich metadata from code chunks based on language and return as JSON string."""
     # Check if we should use default language handler
     use_default_handler = _global_flow_config.get('use_default_language_handler', False)
+    
+    # DEBUG: Log configuration for specific files
+    if filename and 'cpp_visitor.py' in filename:
+        LOGGER.info(f"🔍 DEBUGGING extract_code_metadata for {filename}")
+        LOGGER.info(f"   language: {language}")
+        LOGGER.info(f"   use_default_handler: {use_default_handler}")
+        LOGGER.info(f"   PYTHON_HANDLER_AVAILABLE: {PYTHON_HANDLER_AVAILABLE}")
+        LOGGER.info(f"   _global_flow_config: {_global_flow_config}")
 
     try:
         if language == "Python" and PYTHON_HANDLER_AVAILABLE and not use_default_handler:
             # Use our advanced Python handler through the tree-sitter analyzer
             try:
-                from lang.python.tree_sitter_python_analyzer import (
+                from .lang.python.tree_sitter_python_analyzer import (
                     TreeSitterPythonAnalyzer,
                 )
                 LOGGER.debug("Using TreeSitterPythonAnalyzer with integrated PythonNodeHandler")
@@ -282,22 +310,30 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
             }
 
         # Return just the JSON string for now
-        result = {
-            "functions": metadata.get("functions", []),
-            "classes": metadata.get("classes", []),
-            "imports": metadata.get("imports", []),
-            "complexity_score": metadata.get("complexity_score", 0),
-            "has_type_hints": metadata.get("has_type_hints", False),
-            "has_async": metadata.get("has_async", False),
-            "has_classes": metadata.get("has_classes", False),
-            "decorators_used": metadata.get("decorators_used", []),
-            "analysis_method": metadata.get("analysis_method", "basic"),
-        }
+        if metadata is not None:
+            result = {
+                "functions": metadata.get("functions", []),
+                "classes": metadata.get("classes", []),
+                "imports": metadata.get("imports", []),
+                "complexity_score": metadata.get("complexity_score", 0),
+                "has_type_hints": metadata.get("has_type_hints", False),
+                "has_async": metadata.get("has_async", False),
+                "has_classes": metadata.get("has_classes", False),
+                "decorators_used": metadata.get("decorators_used", []),
+                "analysis_method": metadata.get("analysis_method", "basic"),
+            }
+        else:
+            result = {}
         return json.dumps(result)
 
     except Exception as e:
         # Fallback to empty metadata if everything fails
-        LOGGER.debug(f"Metadata extraction failed for {filename}, using empty metadata: {e}")
+        if filename and 'cpp_visitor.py' in filename:
+            LOGGER.error(f"❌ EXCEPTION in extract_code_metadata for {filename}: {e}")
+            import traceback
+            LOGGER.error(f"   Traceback: {traceback.format_exc()}")
+        else:
+            LOGGER.debug(f"Metadata extraction failed for {filename}, using empty metadata: {e}")
         fallback_result = {
             "functions": [],
             "classes": [],
@@ -316,9 +352,10 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
 def extract_functions_field(metadata_json: str) -> str:
     """Extract functions field from metadata JSON."""
     try:
-        if not metadata_json or metadata_json.strip() == "":
+        if not metadata_json:
             return "[]"
-        metadata_dict = json.loads(metadata_json)
+        # Parse JSON string to dict
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         functions = metadata_dict.get("functions", [])
         # Ensure it's a list and convert to string representation
         if isinstance(functions, list):
@@ -334,9 +371,10 @@ def extract_functions_field(metadata_json: str) -> str:
 def extract_classes_field(metadata_json: str) -> str:
     """Extract classes field from metadata JSON."""
     try:
-        if not metadata_json or metadata_json.strip() == "":
+        if not metadata_json:
             return "[]"
-        metadata_dict = json.loads(metadata_json)
+        # Parse JSON string to dict
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         classes = metadata_dict.get("classes", [])
         if isinstance(classes, list):
             return str(classes)
@@ -351,9 +389,10 @@ def extract_classes_field(metadata_json: str) -> str:
 def extract_imports_field(metadata_json: str) -> str:
     """Extract imports field from metadata JSON."""
     try:
-        if not metadata_json or metadata_json.strip() == "":
+        if not metadata_json:
             return "[]"
-        metadata_dict = json.loads(metadata_json)
+        # Parse JSON string to dict
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         imports = metadata_dict.get("imports", [])
         if isinstance(imports, list):
             return str(imports)
@@ -368,9 +407,10 @@ def extract_imports_field(metadata_json: str) -> str:
 def extract_complexity_score_field(metadata_json: str) -> int:
     """Extract complexity_score field from metadata JSON."""
     try:
-        if not metadata_json or metadata_json.strip() == "":
+        if not metadata_json:
             return 0
-        metadata_dict = json.loads(metadata_json)
+        # Parse JSON string to dict
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         score = metadata_dict.get("complexity_score", 0)
         return int(score) if isinstance(score, (int, float, str)) and str(score).isdigit() else 0
     except Exception as e:
@@ -382,9 +422,10 @@ def extract_complexity_score_field(metadata_json: str) -> int:
 def extract_has_type_hints_field(metadata_json: str) -> bool:
     """Extract has_type_hints field from metadata JSON."""
     try:
-        if not metadata_json or metadata_json.strip() == "":
+        if not metadata_json:
             return False
-        metadata_dict = json.loads(metadata_json)
+        # Parse JSON string to dict
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         return bool(metadata_dict.get("has_type_hints", False))
     except Exception as e:
         LOGGER.debug(f"Failed to parse metadata JSON for has_type_hints: {e}")
@@ -395,9 +436,10 @@ def extract_has_type_hints_field(metadata_json: str) -> bool:
 def extract_has_async_field(metadata_json: str) -> bool:
     """Extract has_async field from metadata JSON."""
     try:
-        if not metadata_json or metadata_json.strip() == "":
+        if not metadata_json:
             return False
-        metadata_dict = json.loads(metadata_json)
+        # Parse JSON string to dict
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         return bool(metadata_dict.get("has_async", False))
     except Exception as e:
         LOGGER.debug(f"Failed to parse metadata JSON for has_async: {e}")
@@ -425,21 +467,24 @@ def ensure_unique_chunk_locations(chunks) -> List[Chunk]:
         if hasattr(chunk, 'location'):
             # Already a Chunk dataclass
             base_loc = chunk.location
-            text = chunk.text
+            text = chunk.content
             start = chunk.start
             end = chunk.end
+            metadata = chunk.metadata
         elif isinstance(chunk, dict):
             # Dictionary format from SplitRecursively - convert to Chunk
             base_loc = chunk.get("location", f"chunk_{i}")
-            text = chunk.get("text", "")
+            text = chunk.get("content", chunk.get("text", ""))
             start = chunk.get("start", 0)
             end = chunk.get("end", 0)
+            metadata = chunk.get("metadata", {})
         else:
             # Fallback for unexpected types
             base_loc = f"chunk_{i}"
             text = str(chunk) if chunk else ""
             start = 0
             end = 0
+            metadata = {}
 
         # Make location unique
         unique_loc = base_loc
@@ -450,9 +495,10 @@ def ensure_unique_chunk_locations(chunks) -> List[Chunk]:
 
         seen_locations.add(unique_loc)
 
-        # Always create Chunk dataclass with unique location
+        # Always create Chunk dataclass with unique location, preserving metadata
         unique_chunk = Chunk(
-            text=text,
+            content=text,
+            metadata=metadata,  # CRITICAL FIX: Preserve metadata instead of discarding it
             location=unique_loc,
             start=start,
             end=end
@@ -463,12 +509,26 @@ def ensure_unique_chunk_locations(chunks) -> List[Chunk]:
 
 
 @cocoindex.op.function()
+def convert_dataslice_to_string(content) -> str:
+    """Convert CocoIndex DataSlice content to string."""
+    try:
+        result = str(content) if content else ""
+        LOGGER.info(f"🔍 DataSlice conversion: input type={type(content)}, output_len={len(result)}")
+        if len(result) == 0:
+            LOGGER.error(f"❌ DataSlice conversion produced empty string! Input: {repr(content)}")
+        return result
+    except Exception as e:
+        LOGGER.error(f"Failed to convert content to string: {e}")
+        return ""
+
+@cocoindex.op.function()
 def extract_has_classes_field(metadata_json: str) -> bool:
     """Extract has_classes field from metadata JSON."""
     try:
-        if not metadata_json or metadata_json.strip() == "":
+        if not metadata_json:
             return False
-        metadata_dict = json.loads(metadata_json)
+        # Parse JSON string to dict
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         return bool(metadata_dict.get("has_classes", False))
     except Exception as e:
         LOGGER.debug(f"Failed to parse metadata JSON for has_classes: {e}")
@@ -606,8 +666,10 @@ def code_embedding_flow(
     # Add multiple sources - CocoIndex supports this natively!
     all_files_sources = []
 
-    for i, path in enumerate(paths):
-        source_name = f"files_{i}" if len(paths) > 1 else "files"
+    # Cast paths to list to satisfy mypy
+    paths_list = list(paths) if hasattr(paths, '__iter__') else ["cocoindex"]
+    for i, path in enumerate(paths_list):
+        source_name = f"files_{i}" if len(paths_list) > 1 else "files"
         LOGGER.info(f"Adding source: {path} as '{source_name}'")
 
         # Configure LocalFile source with optional polling
@@ -721,12 +783,17 @@ def code_embedding_flow(
                 file["chunks"] = raw_chunks.transform(ensure_unique_chunk_locations)
             else:
                 LOGGER.info("Using AST chunking extension")
-                raw_chunks = file["content"].transform(
-                    ASTChunkOperation,
-                    language=file["language"],
-                    max_chunk_size=file["chunking_params"]["chunk_size"],
-                    chunk_overlap=file["chunking_params"]["chunk_overlap"]
-                )
+                if ASTChunkOperation is not None:
+                    raw_chunks = file["content"].transform(
+                        ASTChunkOperation,
+                        language=file["language"],
+                        max_chunk_size=file["chunking_params"]["chunk_size"],
+                        chunk_overlap=file["chunking_params"]["chunk_overlap"]
+                    )
+                else:
+                    # Fallback to basic chunking if AST operation is not available
+                    # Skip transformation when AST chunking not available
+                    raw_chunks = cast(Any, file["content"])
                 # Ensure unique locations for AST chunking (safety measure)
                 file["chunks"] = raw_chunks.transform(ensure_unique_chunk_locations)
 
@@ -743,65 +810,54 @@ def code_embedding_flow(
             with file["chunks"].row() as chunk:
                 # Smart embedding with language-aware model selection
                 if use_smart_embedding and SMART_EMBEDDING_AVAILABLE:
-                    model_group = chunk["model_group"]
+                    model_group: Any = chunk["model_group"]
                     if model_group == "graphcodebert":
                         LOGGER.info(f"Using GraphCodeBERT for {file['language']}")
-                        chunk["embedding"] = chunk["text"].call(graphcodebert_embedding)
+                        chunk["embedding"] = chunk["content"].call(graphcodebert_embedding)
                     elif model_group == "unixcoder":
                         LOGGER.info(f"Using UniXcode for {file['language']}")
-                        chunk["embedding"] = chunk["text"].call(unixcoder_embedding)
+                        chunk["embedding"] = chunk["content"].call(unixcoder_embedding)
                     else:  # fallback
                         LOGGER.info(f"Using fallback model for {file['language']}")
-                        chunk["embedding"] = chunk["text"].call(fallback_embedding)
+                        chunk["embedding"] = chunk["content"].call(fallback_embedding)
                 else:
                     LOGGER.info("Using default embedding")
-                    chunk["embedding"] = chunk["text"].call(code_to_embedding)
+                    chunk["embedding"] = chunk["content"].call(code_to_embedding)
 
                 # Extract metadata using appropriate method based on configuration
                 use_default_language_handler = _global_flow_config.get('use_default_language_handler', False)
 
                 if use_default_language_handler:
                     LOGGER.info("Using default language handler (--default-language-handler flag set)")
-                    # Use simple default metadata (no custom processing)
-                    default_metadata = {
-                        "functions": [],
-                        "classes": [],
-                        "imports": [],
-                        "complexity_score": 0,
-                        "has_type_hints": False,
-                        "has_async": False,
-                        "has_classes": False,
-                        "decorators_used": [],
-                        "analysis_method": "default_basic",
-                    }
-                    chunk["metadata"] = json.dumps(default_metadata)
+                    # Use transform function to create default metadata properly
+                    chunk["extracted_metadata"] = chunk["content"].transform(create_default_metadata)
                 else:
                     LOGGER.info("Using custom language handler extension")
-                    chunk["metadata"] = chunk["text"].transform(
+                    chunk["extracted_metadata"] = chunk["content"].transform(
                         extract_code_metadata,
                         language=file["language"],
                         filename=file["filename"]
                     )
 
                 # Extract individual metadata fields using CocoIndex transforms
-                chunk["functions"] = chunk["metadata"].transform(extract_functions_field)
-                chunk["classes"] = chunk["metadata"].transform(extract_classes_field)
-                chunk["imports"] = chunk["metadata"].transform(extract_imports_field)
-                chunk["complexity_score"] = chunk["metadata"].transform(extract_complexity_score_field)
-                chunk["has_type_hints"] = chunk["metadata"].transform(extract_has_type_hints_field)
-                chunk["has_async"] = chunk["metadata"].transform(extract_has_async_field)
-                chunk["has_classes"] = chunk["metadata"].transform(extract_has_classes_field)
+                chunk["functions"] = chunk["extracted_metadata"].transform(extract_functions_field)
+                chunk["classes"] = chunk["extracted_metadata"].transform(extract_classes_field)
+                chunk["imports"] = chunk["extracted_metadata"].transform(extract_imports_field)
+                chunk["complexity_score"] = chunk["extracted_metadata"].transform(extract_complexity_score_field)
+                chunk["has_type_hints"] = chunk["extracted_metadata"].transform(extract_has_type_hints_field)
+                chunk["has_async"] = chunk["extracted_metadata"].transform(extract_has_async_field)
+                chunk["has_classes"] = chunk["extracted_metadata"].transform(extract_has_classes_field)
 
                 code_embeddings.collect(
                     filename=file["filename"],
                     language=file["language"],
                     location=chunk["location"],
-                    code=chunk["text"],
+                    code=chunk["content"].transform(convert_dataslice_to_string),
                     embedding=chunk["embedding"],
                     start=chunk["start"],
                     end=chunk["end"],
                     source_name=source_name,  # Add source name for identification
-                    metadata_json=chunk["metadata"],  # Store full JSON
+                    metadata_json=chunk["extracted_metadata"],  # Store full JSON
                     # Individual metadata fields (properly extracted from JSON)
                     functions=chunk["functions"],
                     classes=chunk["classes"],
@@ -825,9 +881,9 @@ def code_embedding_flow(
     )
 
 
-def update_flow_config(paths: List[str] = None, enable_polling: bool = False, poll_interval: int = 30,
+def update_flow_config(paths: Union[List[str], None] = None, enable_polling: bool = False, poll_interval: int = 30,
                        use_default_embedding: bool = False, use_default_chunking: bool = False,
-                       use_default_language_handler: bool = False):
+                       use_default_language_handler: bool = False) -> None:
     """Update the global flow configuration."""
     global _global_flow_config
     _global_flow_config.update({
@@ -840,7 +896,7 @@ def update_flow_config(paths: List[str] = None, enable_polling: bool = False, po
     })
 
 
-def run_flow_update(live_update: bool = False, poll_interval: int = 30):
+def run_flow_update(live_update: bool = False, poll_interval: int = 30) -> None:
     """Run the flow update (one-time or live)."""
     if live_update:
         LOGGER.info("🔄 Starting live update mode...")

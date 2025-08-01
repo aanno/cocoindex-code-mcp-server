@@ -219,7 +219,7 @@ chunk["embedding"] = chunk["text"].transform(
 )
 
 # After (using external smart embedding)
-from src.smart_code_embedding import create_smart_code_embedding
+from cocoindex_code_mcp_server.smart_code_embedding import create_smart_code_embedding
 
 chunk["embedding"] = chunk["text"].transform(
     create_smart_code_embedding(file_extension=file["extension"])
@@ -258,7 +258,7 @@ def main():
     print("   pip install cocoindex[embeddings]")
     print()
     print("2. Import and use:")
-    print("   from src.smart_code_embedding import create_smart_code_embedding")
+    print("   from cocoindex_code_mcp_server.smart_code_embedding import create_smart_code_embedding")
     print("   embedding_func = create_smart_code_embedding(file_extension='.py')")
     print()
     print("3. Use in CocoIndex flows:")

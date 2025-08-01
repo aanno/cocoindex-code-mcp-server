@@ -17,32 +17,79 @@ import signal
 import sys
 import threading
 from collections.abc import AsyncIterator
-from typing import Optional
+from types import ModuleType
+from typing import Optional, Union, List
+from pydantic import AnyUrl
+from pydantic import BaseModel
 
 import click
 import mcp.types as types
 from dotenv import load_dotenv
 from mcp.server.lowlevel import Server
+from mcp.server.lowlevel.helper_types import ReadResourceContents
 from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
-from pgvector.psycopg import register_vector
-from psycopg_pool import ConnectionPool
+from mcp.shared.exceptions import McpError
+# Backend abstraction imports
+from .backends import BackendFactory, VectorStoreBackend
 from starlette.applications import Starlette
 from starlette.routing import Mount
 from starlette.types import Receive, Scope, Send
 
 import cocoindex
 
-from .cocoindex_config import code_to_embedding, run_flow_update, update_flow_config
+from .cocoindex_config import code_to_embedding, run_flow_update, update_flow_config, code_embedding_flow
 
 # Local imports
 from .db.pgvector.hybrid_search import HybridSearchEngine
 from .keyword_search_parser_lark import KeywordSearchParser
 from .lang.python.python_code_analyzer import analyze_python_code
+from . import mcp_json_schemas
 
 try:
     import coverage
+    from coverage import Coverage
+    HAS_COVERAGE = True
 except ImportError:
-    coverage = None
+    HAS_COVERAGE = False
+    Coverage = None  # type: ignore
+
+
+@contextlib.asynccontextmanager
+async def coverage_context() -> AsyncIterator[Optional[object]]:
+    """Context manager for coverage collection during daemon execution."""
+    if not HAS_COVERAGE:
+        yield None
+        return
+
+    import atexit
+    
+    if Coverage is None:
+        yield None
+        return
+        
+    cov = Coverage()
+    cov.start()
+    
+    # Set up cleanup handlers
+    def stop_coverage():
+        try:
+            cov.stop()
+            cov.save()
+        except Exception as e:
+            logger.warning(f"Error stopping coverage: {e}")
+    
+    # Register cleanup handlers
+    atexit.register(stop_coverage)
+    
+    try:
+        yield cov
+    finally:
+        # Stop coverage without interfering with shutdown
+        try:
+            stop_coverage()
+        except Exception as e:
+            # Don't let coverage cleanup block shutdown
+            logger.warning(f"Coverage cleanup warning: {e}")
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -53,7 +100,7 @@ shutdown_event = threading.Event()
 background_thread: Optional[threading.Thread] = None
 
 
-def safe_embedding_function(query: str):
+def safe_embedding_function(query: str) -> object:
     """Safe wrapper for embedding function that handles shutdown gracefully."""
     if shutdown_event.is_set():
         # Return a zero vector if shutting down
@@ -82,7 +129,7 @@ def safe_embedding_function(query: str):
             return [0.0] * 384
 
 
-def handle_shutdown(signum, frame):
+def handle_shutdown(signum, frame) -> None:
     """Handle shutdown signals gracefully."""
     logger.info("Shutdown signal received, cleaning up...")
     shutdown_event.set()
@@ -102,120 +149,35 @@ def get_mcp_tools() -> list[types.Tool]:
     """Get the list of MCP tools with their schemas."""
     return [
         types.Tool(
-            name="hybrid_search",
-            description="Perform hybrid search combining vector similarity and keyword metadata filtering. Keyword syntax: field:value, exists(field), value_contains(field, 'text'), AND/OR logic.",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "vector_query": {
-                        "type": "string",
-                        "description": "Text to embed and search for semantic similarity"
-                    },
-                    "keyword_query": {
-                        "type": "string",
-                        "description": "Keyword search query for metadata filtering. Syntax: field:value, exists(field), value_contains(field, 'text'), AND/OR operators"
-                    },
-                    "top_k": {
-                        "type": "integer",
-                        "description": "Number of results to return",
-                        "default": 10
-                    },
-                    "vector_weight": {
-                        "type": "number",
-                        "description": "Weight for vector similarity score (0-1)",
-                        "default": 0.7
-                    },
-                    "keyword_weight": {
-                        "type": "number",
-                        "description": "Weight for keyword match score (0-1)",
-                        "default": 0.3
-                    }
-                },
-                "required": ["vector_query", "keyword_query"]
-            },
+            name="search-hybrid",
+            description="Perform hybrid search combining vector similarity and keyword metadata filtering. Keyword syntax: field:value, exists(field), value_contains(field, 'text'), multiple terms are AND ed, use parentheses for OR.",
+            inputSchema=mcp_json_schemas.HYBRID_SEARCH_INPUT_SCHEMA,
+            outputSchema=mcp_json_schemas.HYBRID_SEARCH_OUTPUT_SCHEMA
         ),
         types.Tool(
-            name="vector_search",
+            name="search-vector",
             description="Perform pure vector similarity search",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "Text to embed and search for semantic similarity"
-                    },
-                    "top_k": {
-                        "type": "integer",
-                        "description": "Number of results to return",
-                        "default": 10
-                    }
-                },
-                "required": ["query"]
-            },
+            inputSchema=mcp_json_schemas.VECTOR_SEARCH_INPUT_SCHEMA,
         ),
         types.Tool(
-            name="keyword_search",
+            name="search-keyword",
             description="Perform pure keyword metadata search using field:value, exists(field), value_contains(field, 'text') syntax",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "Keyword search query with AND/OR operators and parentheses grouping"
-                    },
-                    "top_k": {
-                        "type": "integer",
-                        "description": "Number of results to return",
-                        "default": 10
-                    }
-                },
-                "required": ["query"]
-            },
+            inputSchema=mcp_json_schemas.KEYWORD_SEARCH_INPUT_SCHEMA,
         ),
         types.Tool(
-            name="analyze_code",
+            name="code-analyze",
             description="Analyze code and extract metadata for indexing",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "code": {
-                        "type": "string",
-                        "description": "Code content to analyze"
-                    },
-                    "file_path": {
-                        "type": "string",
-                        "description": "File path for context"
-                    },
-                    "language": {
-                        "type": "string",
-                        "description": "Programming language (auto-detected if not provided)"
-                    }
-                },
-                "required": ["code", "file_path"]
-            },
+            inputSchema=mcp_json_schemas.CODE_ANALYZE_INPUT_SCHEMA,
         ),
         types.Tool(
-            name="get_embeddings",
+            name="code-embeddings",
             description="Generate embeddings for text using the configured embedding model",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "text": {
-                        "type": "string",
-                        "description": "Text to generate embeddings for"
-                    }
-                },
-                "required": ["text"]
-            },
+            inputSchema=mcp_json_schemas.CODE_EMBEDDINGS_INPUT_SCHEMA,
         ),
         types.Tool(
-            name="get_keyword_syntax_help",
+            name="help-keyword_syntax",
             description="Get comprehensive help and examples for keyword query syntax",
-            inputSchema={
-                "type": "object",
-                "properties": {},
-                "required": []
-            },
+            inputSchema=mcp_json_schemas.EMPTY_JSON_SCHEMA,
         ),
     ]
 
@@ -224,44 +186,44 @@ def get_mcp_resources() -> list[types.Resource]:
     """Get the list of MCP resources."""
     return [
         types.Resource(
-            uri="cocoindex://search/stats",
-            name="Search Statistics",
+            uri=AnyUrl("cocoindex://search/stats"),
+            name="search-statistics",
             description="Database and search performance statistics",
             mimeType="application/json",
         ),
         types.Resource(
-            uri="cocoindex://search/config",
-            name="Search Configuration",
+            uri=AnyUrl("cocoindex://search/config"),
+            name="search-configuration",
             description="Current hybrid search configuration and settings",
             mimeType="application/json",
         ),
         types.Resource(
-            uri="cocoindex://database/schema",
-            name="Database Schema",
+            uri=AnyUrl("cocoindex://database/schema"),
+            name="database-schema",
             description="Database table structure and schema information",
             mimeType="application/json",
         ),
         types.Resource(
-            uri="cocoindex://query/examples",
-            name="Query Examples",
+            uri=AnyUrl("cocoindex://search/examples"),
+            name="search:examples",
             description="Categorized examples of keyword query syntax",
             mimeType="application/json",
         ),
         types.Resource(
-            uri="cocoindex://search/grammar",
-            name="Search Grammar",
+            uri=AnyUrl("cocoindex://search/grammar"),
+            name="search-keyword-grammar",
             description="Lark grammar for keyword search parsing",
             mimeType="text/x-lark",
         ),
         types.Resource(
-            uri="cocoindex://search/operators",
-            name="Search Operators",
+            uri=AnyUrl("cocoindex://search/operators"),
+            name="search-operators",
             description="List of supported search operators and syntax",
             mimeType="application/json",
         ),
         types.Resource(
-            uri="cocoindex://test/simple",
-            name="Test Resource",
+            uri=AnyUrl("cocoindex://debug/example_resource"),
+            name="debug-example_resource",
             description="Simple test resource for debugging",
             mimeType="application/json",
         ),
@@ -334,7 +296,7 @@ def main(
         logger.info(f"⏰ Polling interval: {poll} seconds")
 
     # Create the MCP server
-    app = Server("cocoindex-rag")
+    app: Server = Server("cocoindex-rag")
 
     @app.list_tools()
     async def list_tools() -> list[types.Tool]:
@@ -355,17 +317,17 @@ def main(
             if not hybrid_search_engine:
                 raise RuntimeError("Hybrid search engine not initialized. Please check database connection.")
 
-            if name == "hybrid_search":
+            if name == "search-hybrid":
                 result = await perform_hybrid_search(arguments)
-            elif name == "vector_search":
+            elif name == "search-vector":
                 result = await perform_vector_search(arguments)
-            elif name == "keyword_search":
+            elif name == "search-keyword":
                 result = await perform_keyword_search(arguments)
-            elif name == "analyze_code":
+            elif name == "code-analyze":
                 result = await analyze_code_tool(arguments)
-            elif name == "get_embeddings":
+            elif name == "code-embeddings":
                 result = await get_embeddings_tool(arguments)
-            elif name == "get_keyword_syntax_help":
+            elif name == "help-keyword_syntax":
                 result = await get_keyword_syntax_help_tool(arguments)
             else:
                 raise ValueError(f"Unknown tool '{name}'")
@@ -391,32 +353,112 @@ def main(
             )]
 
     @app.read_resource()
-    async def handle_read_resource(uri: str) -> list[types.TextResourceContents]:
+    async def handle_read_resource(uri: AnyUrl) -> List[ReadResourceContents]:
         """Read MCP resource content."""
-        logger.info(f"🔍 Reading resource: '{uri}' (type: {type(uri)}, repr: {repr(uri)})")
+        uri_str = str(uri)
+        logger.info(f"🔍 Reading resource: '{uri_str}' (type: {type(uri)}, repr: {repr(uri)})")
 
-        if uri == "cocoindex://search/stats":
+        if uri_str == "cocoindex://search/stats":
             content = await get_search_stats()
-        elif uri == "cocoindex://search/config":
+        elif uri_str == "cocoindex://search/config":
             content = await get_search_config()
-        elif uri == "cocoindex://database/schema":
+        elif uri_str == "cocoindex://database/schema":
             content = await get_database_schema()
-        elif uri == "cocoindex://query/examples":
+        elif uri_str == "cocoindex://search/examples":
             content = await get_query_examples()
-        elif uri == "cocoindex://search/grammar":
+        elif uri_str == "cocoindex://search/grammar":
             content = await get_search_grammar()
-        elif uri == "cocoindex://search/operators":
+        elif uri_str == "cocoindex://search/operators":
             content = await get_search_operators()
-        elif uri == "cocoindex://test/simple":
+        elif uri_str == "cocoindex://debug/example_resource":
             logger.info("✅ Test resource accessed successfully!")
-            content = json.dumps({"message": "Test resource working", "uri": uri}, indent=2)
+            content = json.dumps({"message": "Test resource working", "uri": uri_str}, indent=2)
         else:
             logger.error(
-                f"❌ Unknown resource requested: '{uri}' (available: search/stats, search/config, database/schema, query/examples, search/grammar, search/operators, test/simple)")
-            raise ValueError(f"Unknown resource: {uri}")
+                f"❌ Unknown resource requested: '{uri_str}' (available: search/stats, search/config, database/schema, query/examples, search/grammar, search/operators, test/simple)")
+            raise McpError(types.ErrorData(
+                code=404,
+                message=f"Resource not found: {uri_str}"
+            ))
 
-        logger.info(f"✅ Successfully retrieved resource: '{uri}'")
-        return [types.TextResourceContents(uri=uri, text=content)]
+        logger.info(f"✅ Successfully retrieved resource: '{uri_str}'")
+        return [ReadResourceContents(
+            content=content,
+            mime_type="application/json" if uri_str != "cocoindex://search/grammar" else "text/x-lark"
+        )]
+
+    # Helper function to make SearchResult objects JSON serializable
+    def serialize_search_results(results) -> list:
+        """Convert SearchResult objects to JSON-serializable dictionaries."""
+        import json
+        from decimal import Decimal
+        from enum import Enum
+        
+        def make_serializable(obj):
+            """Recursively convert objects to JSON-serializable format."""
+            if obj is None:
+                return None
+            elif isinstance(obj, (str, int, float, bool)):
+                return obj
+            elif isinstance(obj, Decimal):
+                return float(obj)
+            elif hasattr(obj, 'item'):  # numpy scalar
+                return obj.item()
+            elif isinstance(obj, Enum):
+                return obj.value
+            elif isinstance(obj, (list, tuple)):
+                return [make_serializable(item) for item in obj]
+            elif isinstance(obj, dict):
+                return {key: make_serializable(value) for key, value in obj.items()}
+            elif hasattr(obj, '__dict__'):
+                # Convert object to dict
+                if hasattr(obj, 'conditions') and hasattr(obj, 'operator'):  # SearchGroup object
+                    return {
+                        'conditions': make_serializable(obj.conditions),
+                        'operator': make_serializable(obj.operator)
+                    }
+                elif hasattr(obj, 'field') and hasattr(obj, 'value'):  # SearchCondition object
+                    return {
+                        'field': make_serializable(obj.field),
+                        'value': make_serializable(obj.value),
+                        'operator': make_serializable(getattr(obj, 'operator', None))
+                    }
+                elif hasattr(obj, 'filename'):  # SearchResult object
+                    result_dict = {
+                        'filename': make_serializable(obj.filename),
+                        'language': make_serializable(obj.language),
+                        'code': make_serializable(obj.code),
+                        'location': make_serializable(obj.location),
+                        'start': make_serializable(obj.start),
+                        'end': make_serializable(obj.end),
+                        'score': make_serializable(obj.score),
+                        'score_type': make_serializable(obj.score_type),
+                        'source': make_serializable(obj.source)
+                    }
+                    
+                    # Add direct metadata fields from SearchResult
+                    metadata_fields = ['functions', 'classes', 'imports', 'complexity_score', 
+                                     'has_type_hints', 'has_async', 'has_classes', 'metadata_json']
+                    for key in metadata_fields:
+                        if hasattr(obj, key):
+                            result_dict[key] = make_serializable(getattr(obj, key))
+                    
+                    # Extract fields from metadata_json if it exists
+                    if hasattr(obj, 'metadata_json') and isinstance(obj.metadata_json, dict):
+                        metadata_json = obj.metadata_json
+                        for key in ['analysis_method']:
+                            if key in metadata_json:
+                                result_dict[key] = make_serializable(metadata_json[key])
+                    
+                    return result_dict
+                else:
+                    # Generic object serialization
+                    return {key: make_serializable(value) for key, value in obj.__dict__.items()}
+            else:
+                # Fallback to string representation
+                return str(obj)
+        
+        return [make_serializable(result) for result in results]
 
     # Tool implementation functions
     async def perform_hybrid_search(arguments: dict) -> dict:
@@ -428,13 +470,14 @@ def main(
         keyword_weight = arguments.get("keyword_weight", 0.3)
 
         try:
-            results = hybrid_search_engine.search(
-                vector_query=vector_query,
-                keyword_query=keyword_query,
-                top_k=top_k,
-                vector_weight=vector_weight,
-                keyword_weight=keyword_weight
-            )
+            if hybrid_search_engine is not None:
+                results = hybrid_search_engine.search(
+                    vector_query=vector_query,
+                    keyword_query=keyword_query,
+                    top_k=top_k,
+                    vector_weight=vector_weight,
+                    keyword_weight=keyword_weight
+                )
         except ValueError as e:
             # Handle field validation errors with helpful messages
             error_msg = str(e)
@@ -459,7 +502,7 @@ def main(
                 "vector_weight": vector_weight,
                 "keyword_weight": keyword_weight
             },
-            "results": results,
+            "results": serialize_search_results(results),
             "total_results": len(results)
         }
 
@@ -468,17 +511,18 @@ def main(
         query = arguments["query"]
         top_k = arguments.get("top_k", 10)
 
-        results = hybrid_search_engine.search(
-            vector_query=query,
-            keyword_query="",
-            top_k=top_k,
-            vector_weight=1.0,
-            keyword_weight=0.0
-        )
+        if hybrid_search_engine is not None:
+            results = hybrid_search_engine.search(
+                vector_query=query,
+                keyword_query="",
+                top_k=top_k,
+                vector_weight=1.0,
+                keyword_weight=0.0
+            )
 
         return {
             "query": query,
-            "results": results,
+            "results": serialize_search_results(results),
             "total_results": len(results)
         }
 
@@ -487,17 +531,18 @@ def main(
         query = arguments["query"]
         top_k = arguments.get("top_k", 10)
 
-        results = hybrid_search_engine.search(
-            vector_query="",
-            keyword_query=query,
-            top_k=top_k,
-            vector_weight=0.0,
-            keyword_weight=1.0
-        )
+        if hybrid_search_engine is not None:
+            results = hybrid_search_engine.search(
+                vector_query="",
+                keyword_query=query,
+                top_k=top_k,
+                vector_weight=0.0,
+                keyword_weight=1.0
+            )
 
         return {
             "query": query,
-            "results": results,
+            "results": serialize_search_results(results),
             "total_results": len(results)
         }
 
@@ -536,8 +581,9 @@ def main(
     async def get_embeddings_tool(arguments: dict) -> dict:
         """Generate embeddings for text."""
         text = arguments["text"]
-
-        embedding = hybrid_search_engine.embedding_func(text)
+        
+        if hybrid_search_engine is not None:
+            embedding = hybrid_search_engine.embedding_func(text)
 
         return {
             "text": text,
@@ -565,9 +611,10 @@ def main(
                     }
                 },
                 "boolean_logic": {
-                    "AND": "language:python AND has_async:true",
-                    "OR": "language:python OR language:rust",
-                    "grouping": "(language:python OR language:rust) AND exists(functions)"
+                    "AND": "default, i.e. simple separate search terms with spaces",
+                    "OR": "parentheses are used to create OR terms",
+                    "examples": ['(language:python language:rust) exists(functions)', 
+'(value_contains(code, "async")) exists(functions)) (value_contains(filename, "test") has_async:true)']
                 },
                 "available_fields": [
                     "filename", "language", "code", "functions", "classes", "imports",
@@ -604,9 +651,8 @@ def main(
         """Get current search configuration."""
         config = {
             "table_name": hybrid_search_engine.table_name if hybrid_search_engine else "unknown",
-            "embedding_model": "cocoindex default",
-            "parser_type": "lark_keyword_parser",
-            "supported_operators": ["AND", "OR", "NOT", "value_contains", "==", "!=", "<", ">", "<=", ">="],
+            "embedding_model": "TODO: language dependent",
+            "parser_type": "TODO: lark_keyword_parser",
             "default_weights": {
                 "vector_weight": 0.7,
                 "keyword_weight": 0.3
@@ -661,10 +707,16 @@ def main(
                 'value_contains(filename, "test")',
                 'value_contains(functions, "parse") AND language:python'
             ],
+            "boolean_and_logic": [
+                "language:python has_async:true",
+                "language:python exists(embedding)"
+            ],
+            "boolean_or_logic": [
+                "(language:python language:rust)",
+                '(value_contains(code, "async") value_contains(code, "await"))'
+            ],
             "boolean_logic": [
-                "language:python AND has_async:true",
-                "(language:python OR language:rust) AND exists(embedding)",
-                'value_contains(code, "async") OR value_contains(code, "await")'
+                "(language:python language:rust) exists(embedding)"
             ]
         }
         return json.dumps(examples, indent=2)
@@ -673,27 +725,8 @@ def main(
         """Get the Lark grammar for keyword search parsing."""
         # This is a simplified version of the grammar used by our parser
         grammar = '''
-start: expression
-
-expression: term
-          | expression "AND" term  -> and_expr
-          | expression "OR" term   -> or_expr
-
-term: field_expr
-    | exists_expr
-    | value_contains_expr
-    | "(" expression ")"
-
-field_expr: FIELD ":" VALUE
-exists_expr: "exists(" FIELD ")"
-value_contains_expr: "value_contains(" FIELD "," QUOTED_VALUE ")"
-
-FIELD: /[a-zA-Z_][a-zA-Z0-9_]*/
-VALUE: /[^\\s()]+/ | QUOTED_VALUE
-QUOTED_VALUE: /"[^"]*"/
-
-%import common.WS
-%ignore WS
+TODO:
+include file src/cocoindex_code_mcp_server/grammars/keyword_search.lark here
         '''
         return grammar.strip()
 
@@ -718,44 +751,36 @@ QUOTED_VALUE: /"[^"]*"/
                     "examples": ['value_contains(code, "async")', 'value_contains(filename, "test")']
                 },
                 "boolean_logic": {
-                    "AND": "Both conditions must be true",
-                    "OR": "Either condition can be true",
-                    "NOT": "Condition must be false",
-                    "parentheses": "Group conditions with ()"
-                },
-                "comparison": {
-                    "==": "Equal to",
-                    "!=": "Not equal to",
-                    "<": "Less than",
-                    ">": "Greater than",
-                    "<=": "Less than or equal",
-                    ">=": "Greater than or equal"
+                    "parentheses": "parentheses are used to create OR terms, without parentheses multiple terms are AND ed"
                 }
             }
         }
         return json.dumps(operators, indent=2)
 
     # Initialize search engine
-    async def initialize_search_engine(pool: ConnectionPool):
-        """Initialize the hybrid search engine with provided connection pool."""
+    async def initialize_search_engine(backend: VectorStoreBackend):
+        """Initialize the hybrid search engine with provided backend."""
         global hybrid_search_engine
 
         try:
-            # Register pgvector
-            with pool.connection() as conn:
-                register_vector(conn)
+            # Backend handles its own initialization (e.g., pgvector registration)
+            # No need for manual register_vector() calls
 
             # Initialize search engine components
             parser = KeywordSearchParser()
 
             # Initialize hybrid search engine
+            table_name = cocoindex.utils.get_target_default_name(
+                code_embedding_flow, "code_embeddings"
+            )
             hybrid_search_engine = HybridSearchEngine(
-                pool=pool,
+                table_name=table_name,
                 parser=parser,
+                backend=backend,
                 embedding_func=safe_embedding_function
             )
 
-            logger.info("✅ CocoIndex RAG MCP Server initialized successfully")
+            logger.info("✅ CocoIndex RAG MCP Server initialized successfully with backend abstraction")
 
         except Exception as e:
             logger.error(f"Failed to initialize search engine: {e}")
@@ -814,19 +839,47 @@ QUOTED_VALUE: /"[^"]*"/
         if not database_url:
             raise ValueError("COCOINDEX_DATABASE_URL not found in environment")
 
-        # Use connection pool as context manager for proper cleanup
-        async with session_manager.run():
-            logger.info("🚀 MCP Server started with StreamableHTTP session manager!")
+        backend_type = os.getenv("COCOINDEX_BACKEND_TYPE", "postgres").lower()
+        
+        # Use coverage context for long-running daemon
+        async with coverage_context() as cov:
+            if cov:
+                logger.info("📊 Coverage collection started")
+            
+            # Use backend abstraction for proper cleanup
+            async with session_manager.run():
+                logger.info("🚀 MCP Server started with StreamableHTTP session manager!")
 
-            # Create connection pool as context manager
-            with ConnectionPool(
-                conninfo=database_url,
-                min_size=1,
-                max_size=5,
-                timeout=10.0
-            ) as pool:
-                logger.info("🔧 Initializing database connection...")
-                await initialize_search_engine(pool)
+                # Create backend using factory pattern
+                table_name = cocoindex.utils.get_target_default_name(
+                    code_embedding_flow, "code_embeddings"
+                )
+                
+                # Create the appropriate backend
+                if backend_type == "postgres":
+                    from psycopg_pool import ConnectionPool
+                    from pgvector.psycopg import register_vector
+                    
+                    pool = ConnectionPool(database_url)
+                    # Register pgvector extensions
+                    with pool.connection() as conn:
+                        register_vector(conn)
+                    
+                    backend = BackendFactory.create_backend(
+                        backend_type,
+                        pool=pool,
+                        table_name=table_name
+                    )
+                else:
+                    # For other backends that might expect connection_string
+                    backend = BackendFactory.create_backend(
+                        backend_type,
+                        connection_string=database_url,
+                        table_name=table_name
+                    )
+                
+                logger.info(f"🔧 Initializing {backend_type} backend...")
+                await initialize_search_engine(backend)
 
                 # Initialize background components
                 await background_initialization()
@@ -836,7 +889,11 @@ QUOTED_VALUE: /"[^"]*"/
                 finally:
                     logger.info("🛑 MCP Server shutting down...")
                     shutdown_event.set()
-                    logger.info("🧹 Connection pool will be cleaned up automatically by context manager")
+                    if hasattr(backend, 'close'):
+                        backend.close()
+                    logger.info("🧹 Backend resources cleaned up")
+                    if cov:
+                        logger.info("📊 Coverage collection will be finalized")
 
     # Create ASGI application
     starlette_app = Starlette(
@@ -854,111 +911,6 @@ QUOTED_VALUE: /"[^"]*"/
     uvicorn.run(starlette_app, host="127.0.0.1", port=port)
 
     return 0
-
-
-# Export module-level objects for testing
-# These are created when the module is imported for testing
-try:
-    # Create a test server instance for module-level access using the same functions
-    server = Server("cocoindex-rag-test")
-
-    @server.list_tools()
-    async def handle_list_tools() -> list[types.Tool]:
-        """List available MCP tools."""
-        return get_mcp_tools()
-
-    @server.list_resources()
-    async def handle_list_resources() -> list[types.Resource]:
-        """List available MCP resources."""
-        return get_mcp_resources()
-
-    @server.call_tool()
-    async def handle_call_tool(name: str, arguments: dict) -> list[types.TextContent]:
-        """Handle MCP tool calls with proper error handling."""
-        # Simplified version - just return mock responses for testing
-        test_response = {
-            "test_mode": True,
-            "tool": name,
-            "arguments": arguments,
-            "message": "This is a test response from the module-level server instance"
-        }
-
-        return [types.TextContent(
-            type="text",
-            text=json.dumps(test_response, indent=2, ensure_ascii=False)
-        )]
-
-    @server.read_resource()
-    async def handle_read_resource(uri: str) -> list[types.TextResourceContents]:
-        """Read MCP resource content."""
-        # Simplified version - just return mock responses for testing
-        test_content = json.dumps({
-            "test_mode": True,
-            "uri": uri,
-            "message": "This is a test resource from the module-level server instance"
-        }, indent=2)
-
-        return [types.TextResourceContents(uri=uri, text=test_content)]
-
-    # Export the test server and handlers for testing
-    # Note: The actual handler functions are already defined above with @server decorators
-    # We just need to export them by their function names
-
-    # Create a simple wrapper for handle_read_resource that returns just text
-    _original_handle_read_resource = handle_read_resource
-
-    async def handle_read_resource(uri: str) -> str:
-        """Test wrapper that returns just the text content."""
-        # Handle test cases for valid/invalid resources
-        valid_resources = [
-            "cocoindex://search/stats",
-            "cocoindex://search/config",
-            "cocoindex://database/schema",
-            "cocoindex://query/examples",
-            "cocoindex://search/grammar",
-            "cocoindex://search/operators",
-            "cocoindex://test/simple"
-        ]
-
-        if uri not in valid_resources:
-            raise ValueError(f"Unknown resource: {uri}")
-
-        # For test mode, return simple mock responses
-        if uri == "cocoindex://search/config":
-            config = {
-                "table_name": "test_table",
-                "embedding_model": "cocoindex default",
-                "parser_type": "lark_keyword_parser",
-                "supported_operators": ["AND", "OR", "NOT", "value_contains", "==", "!=", "<", ">", "<=", ">="],
-                "default_weights": {
-                    "vector_weight": 0.7,
-                    "keyword_weight": 0.3
-                }
-            }
-            return json.dumps(config, indent=2)
-        else:
-            # Return simple test response for other resources
-            return json.dumps({"test_mode": True, "uri": uri}, indent=2)
-
-    # Export individual resource functions for testing
-    async def get_search_config() -> str:
-        """Get current search configuration for testing."""
-        config = {
-            "table_name": "test_table",
-            "embedding_model": "cocoindex default",
-            "parser_type": "lark_keyword_parser",
-            "supported_operators": ["AND", "OR", "NOT", "value_contains", "==", "!=", "<", ">", "<=", ">="],
-            "default_weights": {
-                "vector_weight": 0.7,
-                "keyword_weight": 0.3
-            }
-        }
-        return json.dumps(config, indent=2)
-
-except Exception:
-    # If there's any error creating test exports, skip them
-    # This ensures the main functionality still works
-    pass
 
 
 if __name__ == "__main__":
