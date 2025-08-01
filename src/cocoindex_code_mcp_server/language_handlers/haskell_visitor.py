@@ -61,7 +61,8 @@ class HaskellASTVisitor(GenericMetadataVisitor):
                 'node_stats': self.node_stats,
                 'complexity_score': self.complexity_score,
                 'parse_errors': 0,  # haskell_tree_sitter handles parse errors internally
-                'tree_language': 'haskell_tree_sitter'
+                'tree_language': 'haskell_tree_sitter',
+                'success': True
             }
 
             # Add Haskell-specific metadata from handler

@@ -387,6 +387,14 @@ class ASTParserFactory:
                     LOGGER.warning("tree-sitter-kotlin not available")
                     return None
 
+            elif language == 'javascript':
+                try:
+                    import tree_sitter_javascript
+                    language_obj = tree_sitter.Language(tree_sitter_javascript.language())
+                except ImportError:
+                    LOGGER.warning("tree-sitter-javascript not available")
+                    return None
+
             elif language == 'haskell':
                 # Haskell uses a specialized visitor, no parser needed here
                 LOGGER.debug("Haskell uses specialized visitor, not generic parser")
