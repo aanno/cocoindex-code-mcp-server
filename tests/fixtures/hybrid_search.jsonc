@@ -12,7 +12,7 @@
       "expected_results": {
         "should_contain": [
           {
-            "filename_pattern": ".*cpp_visitor\\.py$",
+            "filename_pattern": ".*(test_python|cpp_visitor)\\.py$",
             "expected_metadata": {
               "imports": ["logging", "typing"],
               "classes": ["CppASTVisitor"],  
@@ -127,7 +127,7 @@
       "expected_results": {
         "should_contain": [
           {
-            "filename_pattern": ".*test_rust\\.rs$",
+            "filename_pattern": ".*(tmp/)?test_rust\\.rs$",
             "expected_metadata": {
               "functions": "!empty",
               "has_classes": false,
@@ -149,7 +149,7 @@
       "expected_results": {
         "should_contain": [
           {
-            "filename_pattern": ".*test_java\\.java$",
+            "filename_pattern": ".*(tmp/)?test_java\\.java$",
             "expected_metadata": {
               "classes": "!empty",
               "functions": "!empty",
@@ -172,7 +172,7 @@
       "expected_results": {
         "should_contain": [
           {
-            "filename_pattern": ".*test_javascript\\.js$",
+            "filename_pattern": ".*(tmp/)?test_javascript\\.js$",
             "expected_metadata": {
               "functions": "!empty",
               "classes": "!empty",
@@ -194,7 +194,7 @@
       "expected_results": {
         "should_contain": [
           {
-            "filename_pattern": ".*test_typescript\\.ts$",
+            "filename_pattern": ".*(tmp/)?test_typescript\\.ts$",
             "expected_metadata": {
               "functions": "!empty",
               "classes": "!empty",
@@ -217,7 +217,7 @@
       "expected_results": {
         "should_contain": [
           {
-            "filename_pattern": ".*test_cpp\\.cpp$",
+            "filename_pattern": ".*(tmp/)?test_cpp\\.cpp$",
             "expected_metadata": {
               "functions": "!empty",
               "classes": "!empty",
@@ -240,7 +240,7 @@
       "expected_results": {
         "should_contain": [
           {
-            "filename_pattern": ".*test_c\\.c$",
+            "filename_pattern": ".*(tmp/)?test_c\\.c$",
             "expected_metadata": {
               "functions": "!empty",
               "has_classes": false,
@@ -262,7 +262,7 @@
       "expected_results": {
         "should_contain": [
           {
-            "filename_pattern": ".*test_kotlin\\.kt$",
+            "filename_pattern": ".*(tmp/)?test_kotlin\\.kt$",
             "expected_metadata": {
               "functions": "!empty",
               "classes": "!empty",
@@ -285,7 +285,7 @@
       "expected_results": {
         "should_contain": [
           {
-            "filename_pattern": ".*test_haskell\\.hs$",
+            "filename_pattern": ".*(tmp/)?test_haskell\\.hs$",
             "expected_metadata": {
               "functions": "!empty",
               "has_classes": false,

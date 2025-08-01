@@ -3,6 +3,9 @@ __pycache__/
 /rust/target/
 /monkeytype.sqlite3
 /out/
+/test-results/
+!/test-results/search-hybrid/.keep
+/tmp/
 .dmypy.json
 *.pyc
 *.log

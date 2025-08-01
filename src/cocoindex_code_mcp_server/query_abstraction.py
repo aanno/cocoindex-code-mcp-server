@@ -137,7 +137,7 @@ class QueryExecutor:
     while maintaining consistent result format.
     """
     
-    def __init__(self, backend: 'VectorStoreBackend', embedding_func: Optional[Callable[[str], object]] = None):
+    def __init__(self, backend: 'VectorStoreBackend', embedding_func: Optional[Callable[[str], Union[NDArray[np.floating], object]]] = None):
         """
         Initialize with a specific backend.
         
@@ -180,7 +180,7 @@ class QueryExecutor:
     
     async def _execute_vector_search(self, query: ChunkQuery) -> List[SchemaSearchResult]:
         """Execute pure vector similarity search."""
-        embedding = query.get("embedding")
+        embedding: Optional[Union[NDArray[np.floating], object]] = query.get("embedding")
         if embedding is None:
             if query.get("text") is None:
                 raise ValueError("Vector search requires either embedding or text")
@@ -190,7 +190,9 @@ class QueryExecutor:
             text = query.get("text")
             if text is None:
                 raise ValueError("Vector search requires either embedding or text")
-            embedding = self.embedding_func(text)
+            embedding_result = self.embedding_func(text)
+            # Handle the embedding function result which could be numpy array or other object
+            embedding = embedding_result
         
         # Use backend's vector search
         # Convert embedding to numpy array if needed

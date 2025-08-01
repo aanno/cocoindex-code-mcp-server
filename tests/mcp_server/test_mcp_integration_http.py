@@ -377,6 +377,34 @@ async def mcp_server():
 class TestMCPIntegrationHTTP:
     """Integration tests using proper MCP client connection."""
 
+    async def _save_search_results(self, test_name: str, query: dict, search_data: dict):
+        """Save search results to test-results directory with unique naming."""
+        import datetime
+        import os
+        
+        # Create unique filename with timestamp to handle multiple runs
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]  # microseconds to milliseconds
+        filename = f"{test_name}_{timestamp}.json"
+        
+        # Ensure directory exists
+        results_dir = "/workspaces/rust/test-results/search-hybrid"
+        os.makedirs(results_dir, exist_ok=True)
+        
+        # Prepare complete result data
+        result_data = {
+            "test_name": test_name,
+            "timestamp": datetime.datetime.now().isoformat(),
+            "query": query,
+            "search_results": search_data
+        }
+        
+        # Save to file
+        filepath = os.path.join(results_dir, filename)
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(result_data, f, indent=2, ensure_ascii=False)
+        
+        print(f"💾 Saved search results: {filepath}")
+
     async def test_server_initialization(self, mcp_server):
         """Test that MCP server initializes correctly."""
         assert mcp_server.session is not None, "MCP session should be initialized"
@@ -703,6 +731,36 @@ class DataProcessor:
 
     async def test_hybrid_search_validation(self, mcp_server):
         """Test hybrid search functionality against expected results from fixtures."""
+        import shutil
+        import time
+        
+        # Copy test fixtures to /workspaces/rust/tmp/ for indexing
+        fixtures_dir = Path(__file__).parent.parent / "fixtures"
+        tmp_dir = Path("/workspaces/rust/tmp")
+        
+        # Ensure tmp directory exists
+        tmp_dir.mkdir(exist_ok=True)
+        
+        # Copy all test files to /workspaces/rust/tmp/
+        test_files = [
+            "test_rust.rs", "test_java.java", "test_javascript.js", 
+            "test_typescript.ts", "test_cpp.cpp", "test_c.c",
+            "test_kotlin.kt", "test_haskell.hs", "test_python.py"
+        ]
+        
+        print("📁 Copying test fixtures to /workspaces/rust/tmp/ for indexing...")
+        for test_file in test_files:
+            src = fixtures_dir / test_file
+            dst = tmp_dir / test_file
+            if src.exists():
+                shutil.copy2(src, dst)
+                print(f"  ✅ Copied {test_file}")
+        
+        # Wait for RAG processing (approximately 32 seconds)
+        print("⏳ Waiting 35 seconds for RAG processing to complete...")
+        time.sleep(35)
+        print("✅ RAG processing should be complete, proceeding with tests...")
+        
         # Load test cases from fixture file
         fixture_path = Path(__file__).parent.parent / "fixtures" / "hybrid_search.jsonc"
         
@@ -743,6 +801,9 @@ class DataProcessor:
                 
                 results = search_data.get("results", [])
                 total_results = len(results)
+                
+                # Save search results to test-results directory
+                await self._save_search_results(test_name, query, search_data)
                 
                 # Check minimum results requirement
                 min_results = expected_results.get("min_results", 1)
