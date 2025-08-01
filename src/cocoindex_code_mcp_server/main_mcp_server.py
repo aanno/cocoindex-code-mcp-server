@@ -152,7 +152,7 @@ def get_mcp_tools() -> list[types.Tool]:
             name="search-hybrid",
             description="Perform hybrid search combining vector similarity and keyword metadata filtering. Keyword syntax: field:value, exists(field), value_contains(field, 'text'), multiple terms are AND ed, use parentheses for OR.",
             inputSchema=mcp_json_schemas.HYBRID_SEARCH_INPUT_SCHEMA,
-            outputSchema=mcp_json_schemas.HYBRID_SEARCH_OUTPUT_SCHEMA
+            # outputSchema=mcp_json_schemas.HYBRID_SEARCH_OUTPUT_SCHEMA
         ),
         types.Tool(
             name="search-vector",
