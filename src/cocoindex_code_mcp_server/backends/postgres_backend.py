@@ -231,36 +231,29 @@ class PostgresBackend(VectorStoreBackend):
             "location": f"{filename}:{start}-{end}" if start and end else filename,
         }
         
-        # Add rich metadata for Python code using existing analysis
-        if language == "Python":
-            try:
-                analysis_metadata = analyze_python_code(code, filename)
-                if analysis_metadata is not None:
-                    # Add analyzed metadata to the row
-                    pg_row.update({
-                        "functions": analysis_metadata.get("functions", []),
-                        "classes": analysis_metadata.get("classes", []),
-                        "imports": analysis_metadata.get("imports", []),
-                        "complexity_score": analysis_metadata.get("complexity_score", 0),
-                        "has_type_hints": analysis_metadata.get("has_type_hints", False),
-                        "has_async": analysis_metadata.get("has_async", False),
-                        "has_classes": analysis_metadata.get("has_classes", False),
-                        "metadata_json": json.dumps(analysis_metadata, default=str)
-                    })
-                else:
-                    # Add default metadata fields
-                    pg_row.update({
-                        "functions": [],
-                        "classes": [],
-                        "imports": [],
-                        "complexity_score": 0,
-                        "has_type_hints": False,
-                        "has_async": False,
-                        "has_classes": False,
-                        "metadata_json": json.dumps({"analysis_error": "metadata was None"})
-                    })
-            except Exception as e:
-                # Add error metadata
+        # Add rich metadata using multi-language analysis
+        try:
+            # Import the extract_code_metadata function to use our multi-language analyzers
+            from ..cocoindex_config import extract_code_metadata
+            
+            # Extract metadata using our multi-language analyzers
+            metadata_json_str = extract_code_metadata(code, language, filename)
+            analysis_metadata = json.loads(metadata_json_str)
+            
+            if analysis_metadata is not None:
+                # Add analyzed metadata to the row
+                pg_row.update({
+                    "functions": analysis_metadata.get("functions", []),
+                    "classes": analysis_metadata.get("classes", []),
+                    "imports": analysis_metadata.get("imports", []),
+                    "complexity_score": analysis_metadata.get("complexity_score", 0),
+                    "has_type_hints": analysis_metadata.get("has_type_hints", False),
+                    "has_async": analysis_metadata.get("has_async", False),
+                    "has_classes": analysis_metadata.get("has_classes", False),
+                    "metadata_json": json.dumps(analysis_metadata, default=str)
+                })
+            else:
+                # Add default metadata fields
                 pg_row.update({
                     "functions": [],
                     "classes": [],
@@ -269,10 +262,10 @@ class PostgresBackend(VectorStoreBackend):
                     "has_type_hints": False,
                     "has_async": False,
                     "has_classes": False,
-                    "metadata_json": json.dumps({"analysis_error": str(e)})
+                    "metadata_json": json.dumps({"analysis_error": "metadata was None"})
                 })
-        else:
-            # Add default metadata for non-Python code
+        except Exception as e:
+            # Add error metadata
             pg_row.update({
                 "functions": [],
                 "classes": [],
@@ -281,7 +274,7 @@ class PostgresBackend(VectorStoreBackend):
                 "has_type_hints": False,
                 "has_async": False,
                 "has_classes": False,
-                "metadata_json": json.dumps({"analysis_method": "none"})
+                "metadata_json": json.dumps({"analysis_error": str(e)})
             })
         
         # Convert score_type string to SearchResultType enum

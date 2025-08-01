@@ -295,19 +295,58 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
         elif language == "Python":
             metadata = analyze_python_code(text, filename)
         else:
-            # For non-Python languages, return basic metadata
-            metadata = {
-                "language": language,
-                "analysis_method": "basic",
-                "functions": [],
-                "classes": [],
-                "imports": [],
-                "complexity_score": 0,
-                "has_type_hints": False,
-                "has_async": False,
-                "has_classes": False,
-                "decorators_used": [],
-            }
+            # For non-Python languages, use specialized analyzers
+            metadata = None
+            try:
+                # Normalize language string for consistent matching
+                lang_lower = language.lower() if language else ""
+                
+                if lang_lower == "rust":
+                    from .language_handlers.rust_visitor import analyze_rust_code
+                    metadata = analyze_rust_code(text, filename)
+                elif lang_lower == "java": 
+                    from .language_handlers.java_visitor import analyze_java_code
+                    metadata = analyze_java_code(text, filename)
+                elif lang_lower in ["javascript", "js"]:
+                    from .language_handlers.javascript_visitor import analyze_javascript_code
+                    metadata = analyze_javascript_code(text, "javascript", filename)
+                elif lang_lower in ["typescript", "ts"]:
+                    from .language_handlers.typescript_visitor import analyze_typescript_code
+                    metadata = analyze_typescript_code(text, "typescript", filename)
+                elif lang_lower in ["cpp", "c++", "cxx"]:
+                    from .language_handlers.cpp_visitor import analyze_cpp_code
+                    metadata = analyze_cpp_code(text, "cpp", filename)
+                elif lang_lower == "c":
+                    from .language_handlers.c_visitor import analyze_c_code
+                    metadata = analyze_c_code(text, filename)
+                elif lang_lower in ["kotlin", "kt"]:
+                    from .language_handlers.kotlin_visitor import analyze_kotlin_code
+                    metadata = analyze_kotlin_code(text, filename)
+                elif lang_lower in ["haskell", "hs"]:
+                    from .language_handlers.haskell_visitor import analyze_haskell_code
+                    metadata = analyze_haskell_code(text, filename)
+                else:
+                    LOGGER.debug(f"No specialized analyzer for language: {language}")
+                    
+            except ImportError as e:
+                LOGGER.warning(f"Failed to import analyzer for {language}: {e}")
+            except Exception as e:
+                LOGGER.warning(f"Analysis failed for {language}: {e}")
+                
+            # Fallback to basic metadata if analysis failed or no analyzer available
+            if metadata is None or not metadata.get('success', False):
+                metadata = {
+                    "language": language,
+                    "analysis_method": "basic",
+                    "functions": [],
+                    "classes": [],
+                    "imports": [],
+                    "complexity_score": 0,
+                    "has_type_hints": False,
+                    "has_async": False,
+                    "has_classes": False,
+                    "decorators_used": [],
+                }
 
         # Return just the JSON string for now
         if metadata is not None:
