@@ -29,6 +29,8 @@ The typical CocoIndex flow for code analysis follows this pipeline:
 
 **Root Causes:**
 - Bug in `ensure_unique_chunk_locations()` discarding chunk content
+- **CRITICAL**: Wrong dictionary key in `ensure_unique_chunk_locations()` (using "text" instead of "content")
+- DataSlice objects not being converted to strings properly
 - Incorrect chunking operation configuration
 - File reading issues
 
@@ -219,7 +221,33 @@ unique_chunk = Chunk(
 )
 ```
 
-### 2. Chunk Class Dictionary Compatibility
+### 2. Dictionary Key Compatibility Fix
+**CRITICAL FIX**: AST chunks use "content" key while other chunkers use "text" key:
+```python
+# WRONG (loses AST chunk content):
+elif isinstance(chunk, dict):
+    text = chunk.get("text", "")  # ❌ AST chunks use "content" key
+
+# CORRECT (preserves all chunk content):
+elif isinstance(chunk, dict):
+    text = chunk.get("content", chunk.get("text", ""))  # ✅ Try "content" first, fallback to "text"
+```
+
+### 3. DataSlice to String Conversion
+Ensure DataSlice objects are converted to strings before database storage:
+```python
+# In collect() call, use transform to convert DataSlice to string:
+code_embeddings.collect(
+    filename=file["filename"],
+    language=file["language"],
+    location=chunk["location"],
+    code=chunk["content"].transform(convert_dataslice_to_string),  # ✅ Convert DataSlice to string
+    embedding=chunk["embedding"],
+    # ... other fields
+)
+```
+
+### 4. Chunk Class Dictionary Compatibility
 Add missing methods to Chunk class for dictionary-style access:
 ```python
 def __contains__(self, key: str) -> bool:
@@ -279,12 +307,20 @@ def validate_flow_config():
 **Problem:** Hybrid search returning no results despite database containing files.
 
 **Investigation Process:**
-1. Checked database - found `analysis_method: "unknown"` for all entries
+1. Checked database - found `analysis_method: "unknown"` for all entries  
 2. Tested Python analyzer directly - worked correctly
 3. Used CocoIndex evaluation - found all `code: ""` (empty chunks)
-4. Tested AST chunking directly - worked correctly
-5. Identified bug in `ensure_unique_chunk_locations()` discarding metadata
-6. Fixed metadata preservation
-7. Verified fix with evaluation mode
+4. Tested AST chunking directly - worked correctly, chunks had content
+5. **BREAKTHROUGH**: Traced pipeline step-by-step and found `ensure_unique_chunk_locations()` was using wrong dictionary key
+6. **ROOT CAUSE**: Function looked for `chunk.get("text", "")` but AST chunks use `"content"` key
+7. **FIX**: Changed to `chunk.get("content", chunk.get("text", ""))` to handle both formats
+8. **ADDITIONAL FIX**: Added DataSlice to string conversion in collect() call
+9. **VERIFICATION**: Database now shows chunks with substantial content (1684, 1562, 1503+ characters)
+10. **SUCCESS**: Vector search tests pass, hybrid search functional
 
-**Key Lesson:** The issue wasn't in the obvious places (Python analyzer, AST chunking) but in a utility function that was silently discarding data.
+**Key Lessons:**
+- **Systematic debugging** is essential - test each pipeline stage individually
+- **The issue wasn't in obvious places** (Python analyzer, AST chunking) but in a utility function
+- **Different chunking methods use different dictionary keys** - AST uses "content", others use "text"  
+- **DataSlice objects require explicit conversion** to strings before database storage
+- **Pipeline debugging** requires understanding data flow transformations, not just individual components

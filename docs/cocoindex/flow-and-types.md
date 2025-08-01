@@ -194,6 +194,98 @@ def embed_text(text: str) -> Vector[np.float32, Literal[384]]:
     return embedding.astype(np.float32)
 ```
 
+## DataSlice to String Conversion (CRITICAL)
+
+### 1. DataSlice Objects in Database Collection
+
+**⚠️ CRITICAL GOTCHA**: DataSlice objects are not automatically converted to strings when passed to collect() calls, resulting in empty database content.
+
+```python
+# ❌ PROBLEM: DataSlice objects stored as empty strings
+code_embeddings.collect(
+    filename=file["filename"],
+    code=chunk["content"],  # chunk["content"] is a DataSlice object
+    embedding=chunk["embedding"]
+)
+# Result: Database shows code="" for all chunks
+```
+
+**✅ SOLUTION**: Always convert DataSlice objects to strings using transform:
+
+```python
+@cocoindex.op.function()
+def convert_dataslice_to_string(content) -> str:
+    """Convert CocoIndex DataSlice content to string."""
+    try:
+        result = str(content) if content else ""
+        LOGGER.info(f"🔍 DataSlice conversion: input type={type(content)}, output_len={len(result)}")
+        if len(result) == 0:
+            LOGGER.error(f"❌ DataSlice conversion produced empty string! Input: {repr(content)}")
+        return result
+    except Exception as e:
+        LOGGER.error(f"Failed to convert content to string: {e}")
+        return ""
+
+# ✅ CORRECT: Convert DataSlice to string before collection
+code_embeddings.collect(
+    filename=file["filename"],
+    code=chunk["content"].transform(convert_dataslice_to_string),  # Transform DataSlice to string
+    embedding=chunk["embedding"]
+)
+```
+
+**Why this matters:**
+- DataSlice objects represent lazy evaluation pipelines, not immediate values
+- Database storage requires concrete string values
+- Without conversion, database stores empty strings instead of actual code content
+- This breaks hybrid search functionality completely
+
+## Chunking Dictionary Key Compatibility (CRITICAL)
+
+### 1. AST vs Default Chunking Key Differences
+
+**⚠️ CRITICAL GOTCHA**: Different chunking methods use different dictionary keys for content, causing content loss in post-processing functions.
+
+```python
+# AST chunking creates chunks with "content" key:
+{
+    "content": "def function():\n    pass",  # AST chunks use "content"
+    "metadata": {...},
+    "location": "file.py:10"
+}
+
+# Default/recursive chunking creates chunks with "text" key:
+{
+    "text": "def function():\n    pass",      # Default chunking uses "text"
+    "location": "file.py:10",
+    "start": 10,
+    "end": 15
+}
+```
+
+**❌ PROBLEM**: Post-processing functions that assume one key format lose content:
+
+```python
+@cocoindex.op.function()
+def ensure_unique_chunk_locations(chunks) -> list:
+    for chunk in chunks:
+        if isinstance(chunk, dict):
+            text = chunk.get("text", "")  # ❌ Loses AST chunk content (uses "content" key)
+```
+
+**✅ SOLUTION**: Handle both key formats in post-processing functions:
+
+```python
+@cocoindex.op.function()
+def ensure_unique_chunk_locations(chunks) -> list:
+    for chunk in chunks:
+        if isinstance(chunk, dict):
+            # Try "content" first (AST chunks), fallback to "text" (default chunks)
+            text = chunk.get("content", chunk.get("text", ""))  # ✅ Handles both formats
+```
+
+**Key insight:** Any function that processes chunks from multiple chunking methods must handle both "content" and "text" keys to avoid content loss.
+
 ## Chunking and Primary Key Management (CRITICAL)
 
 ### 1. Unique Chunk Locations Required
