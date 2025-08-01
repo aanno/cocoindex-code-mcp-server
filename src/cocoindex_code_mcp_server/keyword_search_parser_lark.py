@@ -305,8 +305,16 @@ def build_sql_where_clause(search_group: SearchGroup, table_alias: str = "") -> 
                     where_parts.append(f"LOWER({prefix}{validated_field}) = LOWER(%s)")
                     params.append(condition.value)
                 else:
-                    where_parts.append(f"{prefix}{validated_field} = %s")
-                    params.append(condition.value)
+                    # Check if this is an array field that needs special handling
+                    array_fields = {"functions", "classes", "imports"}
+                    if validated_field in array_fields:
+                        # These fields are stored as string representations of Python lists
+                        # Use LIKE to find the value within the string representation
+                        where_parts.append(f"{prefix}{validated_field} LIKE %s")
+                        params.append(f"%'{condition.value}'%")
+                    else:
+                        where_parts.append(f"{prefix}{validated_field} = %s")
+                        params.append(condition.value)
         elif isinstance(condition, SearchGroup):
             sub_where, sub_params = build_sql_where_clause(condition, table_alias)
             where_parts.append(f"({sub_where})")
