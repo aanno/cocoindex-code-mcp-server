@@ -377,14 +377,13 @@ async def mcp_server():
 class TestMCPIntegrationHTTP:
     """Integration tests using proper MCP client connection."""
 
-    async def _save_search_results(self, test_name: str, query: dict, search_data: dict):
+    async def _save_search_results(self, test_name: str, query: dict, search_data: dict, run_timestamp: str):
         """Save search results to test-results directory with unique naming."""
         import datetime
         import os
         
-        # Create unique filename with timestamp to handle multiple runs
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]  # microseconds to milliseconds
-        filename = f"{test_name}_{timestamp}.json"
+        # Use the provided run timestamp for consistent naming across the test run
+        filename = f"{test_name}_{run_timestamp}.json"
         
         # Ensure directory exists
         results_dir = "/workspaces/rust/test-results/search-hybrid"
@@ -733,6 +732,10 @@ class DataProcessor:
         """Test hybrid search functionality against expected results from fixtures."""
         import shutil
         import time
+        import datetime
+        
+        # Generate single timestamp for this entire test run
+        run_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]  # microseconds to milliseconds
         
         # Copy test fixtures to /workspaces/rust/tmp/ for indexing
         fixtures_dir = Path(__file__).parent.parent / "fixtures"
@@ -803,7 +806,7 @@ class DataProcessor:
                 total_results = len(results)
                 
                 # Save search results to test-results directory
-                await self._save_search_results(test_name, query, search_data)
+                await self._save_search_results(test_name, query, search_data, run_timestamp)
                 
                 # Check minimum results requirement
                 min_results = expected_results.get("min_results", 1)
