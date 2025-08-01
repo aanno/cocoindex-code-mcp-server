@@ -22,7 +22,7 @@ class CppASTVisitor(CASTVisitor):
 
     def __init__(self) -> None:
         super().__init__()
-        self.language = "cpp"
+        self.language = "CPP"
         # Inherit C functionality: self.functions, self.structs, self.enums, self.typedefs
         # Add C++-specific constructs
         self.classes: List[str] = []

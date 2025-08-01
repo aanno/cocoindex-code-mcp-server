@@ -300,8 +300,13 @@ def build_sql_where_clause(search_group: SearchGroup, table_alias: str = "") -> 
                 where_parts.append(f"{prefix}code ILIKE %s")
                 params.append(f"%{condition.value}%")
             else:
-                where_parts.append(f"{prefix}{validated_field} = %s")
-                params.append(condition.value)
+                # Use case-insensitive comparison for better language matching
+                if validated_field == 'language':
+                    where_parts.append(f"LOWER({prefix}{validated_field}) = LOWER(%s)")
+                    params.append(condition.value)
+                else:
+                    where_parts.append(f"{prefix}{validated_field} = %s")
+                    params.append(condition.value)
         elif isinstance(condition, SearchGroup):
             sub_where, sub_params = build_sql_where_clause(condition, table_alias)
             where_parts.append(f"({sub_where})")
