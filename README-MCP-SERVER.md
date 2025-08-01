@@ -137,7 +137,7 @@ Add to your Claude Code MCP configuration:
 ### Hybrid Search
 ```json
 {
-  "tool": "search:hybrid",
+  "tool": "search-hybrid",
   "arguments": {
     "vector_query": "function to parse JSON data",
     "keyword_query": "function_name:parse AND language:python",
@@ -151,7 +151,7 @@ Add to your Claude Code MCP configuration:
 ### Vector Search
 ```json
 {
-  "tool": "search:vector", 
+  "tool": "search-vector", 
   "arguments": {
     "query": "error handling in async functions",
     "top_k": 10
@@ -162,7 +162,7 @@ Add to your Claude Code MCP configuration:
 ### Keyword Search
 ```json
 {
-  "tool": "search:keyword",
+  "tool": "search-keyword",
   "arguments": {
     "query": "class_name:DatabaseManager AND function_name:connect",
     "top_k": 5

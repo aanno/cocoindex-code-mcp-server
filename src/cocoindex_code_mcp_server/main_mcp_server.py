@@ -149,33 +149,33 @@ def get_mcp_tools() -> list[types.Tool]:
     """Get the list of MCP tools with their schemas."""
     return [
         types.Tool(
-            name="search:hybrid",
+            name="search-hybrid",
             description="Perform hybrid search combining vector similarity and keyword metadata filtering. Keyword syntax: field:value, exists(field), value_contains(field, 'text'), multiple terms are AND ed, use parentheses for OR.",
             inputSchema=mcp_json_schemas.HYBRID_SEARCH_INPUT_SCHEMA,
             outputSchema=mcp_json_schemas.HYBRID_SEARCH_OUTPUT_SCHEMA
         ),
         types.Tool(
-            name="search:vector",
+            name="search-vector",
             description="Perform pure vector similarity search",
             inputSchema=mcp_json_schemas.VECTOR_SEARCH_INPUT_SCHEMA,
         ),
         types.Tool(
-            name="search:keyword",
+            name="search-keyword",
             description="Perform pure keyword metadata search using field:value, exists(field), value_contains(field, 'text') syntax",
             inputSchema=mcp_json_schemas.KEYWORD_SEARCH_INPUT_SCHEMA,
         ),
         types.Tool(
-            name="code:analyse",
+            name="code-analyze",
             description="Analyze code and extract metadata for indexing",
             inputSchema=mcp_json_schemas.CODE_ANALYZE_INPUT_SCHEMA,
         ),
         types.Tool(
-            name="code:embeddings",
+            name="code-embeddings",
             description="Generate embeddings for text using the configured embedding model",
             inputSchema=mcp_json_schemas.CODE_EMBEDDINGS_INPUT_SCHEMA,
         ),
         types.Tool(
-            name="help:keyword_syntax",
+            name="help-keyword_syntax",
             description="Get comprehensive help and examples for keyword query syntax",
             inputSchema=mcp_json_schemas.EMPTY_JSON_SCHEMA,
         ),
@@ -187,19 +187,19 @@ def get_mcp_resources() -> list[types.Resource]:
     return [
         types.Resource(
             uri=AnyUrl("cocoindex://search/stats"),
-            name="search:statistics",
+            name="search-statistics",
             description="Database and search performance statistics",
             mimeType="application/json",
         ),
         types.Resource(
             uri=AnyUrl("cocoindex://search/config"),
-            name="search:configuration",
+            name="search-configuration",
             description="Current hybrid search configuration and settings",
             mimeType="application/json",
         ),
         types.Resource(
             uri=AnyUrl("cocoindex://database/schema"),
-            name="database:schema",
+            name="database-schema",
             description="Database table structure and schema information",
             mimeType="application/json",
         ),
@@ -211,19 +211,19 @@ def get_mcp_resources() -> list[types.Resource]:
         ),
         types.Resource(
             uri=AnyUrl("cocoindex://search/grammar"),
-            name="search:keyword:grammar",
+            name="search-keyword-grammar",
             description="Lark grammar for keyword search parsing",
             mimeType="text/x-lark",
         ),
         types.Resource(
             uri=AnyUrl("cocoindex://search/operators"),
-            name="search:operators",
+            name="search-operators",
             description="List of supported search operators and syntax",
             mimeType="application/json",
         ),
         types.Resource(
             uri=AnyUrl("cocoindex://debug/example_resource"),
-            name="debug:example_resource",
+            name="debug-example_resource",
             description="Simple test resource for debugging",
             mimeType="application/json",
         ),
@@ -317,17 +317,17 @@ def main(
             if not hybrid_search_engine:
                 raise RuntimeError("Hybrid search engine not initialized. Please check database connection.")
 
-            if name == "search:hybrid":
+            if name == "search-hybrid":
                 result = await perform_hybrid_search(arguments)
-            elif name == "search:vector":
+            elif name == "search-vector":
                 result = await perform_vector_search(arguments)
-            elif name == "search:keyword":
+            elif name == "search-keyword":
                 result = await perform_keyword_search(arguments)
-            elif name == "code:analyze":
+            elif name == "code-analyze":
                 result = await analyze_code_tool(arguments)
-            elif name == "code:embeddings":
+            elif name == "code-embeddings":
                 result = await get_embeddings_tool(arguments)
-            elif name == "help:keyword_syntax":
+            elif name == "help-keyword_syntax":
                 result = await get_keyword_syntax_help_tool(arguments)
             else:
                 raise ValueError(f"Unknown tool '{name}'")

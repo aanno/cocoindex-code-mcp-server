@@ -176,11 +176,11 @@ _global_flow_config = {
 - **Combined Ranking**: Merges vector and keyword search results
 
 ### Search Tools (MCP Interface)
-- `search:hybrid` - Combined vector and keyword search
-- `search:vector` - Pure semantic similarity search  
-- `search:keyword` - Text and metadata-based search
-- `code:analyze` - Analyze code snippets
-- `code:embeddings` - Generate embeddings for text
+- `search-hybrid` - Combined vector and keyword search
+- `search-vector` - Pure semantic similarity search  
+- `search-keyword` - Text and metadata-based search
+- `code-analyze` - Analyze code snippets
+- `code-embeddings` - Generate embeddings for text
 
 ## Performance Characteristics
 
