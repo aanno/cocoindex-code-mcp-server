@@ -43,15 +43,6 @@
                 "dlx",
                 "@modelcontextprotocol/server-sequential-thinking"
             ]
-        },
-        "cocoindex-rag": {
-            "command": "pnpm",
-            "args": [
-                "dlx",
-                "supergateway",
-                "--streamableHttp",
-                "http://localhost:3033/mcp"
-            ]
         }
     }
 }

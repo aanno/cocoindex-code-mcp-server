@@ -386,10 +386,16 @@ def create_ast_chunking_operation() -> FunctionSpec:
 
         # Generate chunks from the content
         raw_chunks = chunker.chunk_code(content, detected_language, "")
+        LOGGER.info(f"🔍 AST chunking produced {len(raw_chunks)} raw chunks")
 
         # Convert dictionaries to Chunk dataclass instances
         chunks = []
         for i, chunk in enumerate(raw_chunks):
+            chunk_content = chunk.get("content", "")
+            LOGGER.info(f"  Raw chunk {i+1}: content_len={len(chunk_content)}")
+            if len(chunk_content) == 0:
+                LOGGER.error(f"❌ Raw chunk {i+1} has NO CONTENT! Keys: {list(chunk.keys())}")
+                LOGGER.error(f"   Chunk data: {chunk}")
             metadata = chunk.get("metadata", {})
             # Construct location from file path and line numbers, ensuring uniqueness
             file_path = metadata.get("file_path", "")

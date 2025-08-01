@@ -474,7 +474,7 @@ def ensure_unique_chunk_locations(chunks) -> List[Chunk]:
         elif isinstance(chunk, dict):
             # Dictionary format from SplitRecursively - convert to Chunk
             base_loc = chunk.get("location", f"chunk_{i}")
-            text = chunk.get("text", "")
+            text = chunk.get("content", chunk.get("text", ""))
             start = chunk.get("start", 0)
             end = chunk.get("end", 0)
             metadata = chunk.get("metadata", {})
@@ -507,6 +507,19 @@ def ensure_unique_chunk_locations(chunks) -> List[Chunk]:
 
     return unique_chunks
 
+
+@cocoindex.op.function()
+def convert_dataslice_to_string(content) -> str:
+    """Convert CocoIndex DataSlice content to string."""
+    try:
+        result = str(content) if content else ""
+        LOGGER.info(f"🔍 DataSlice conversion: input type={type(content)}, output_len={len(result)}")
+        if len(result) == 0:
+            LOGGER.error(f"❌ DataSlice conversion produced empty string! Input: {repr(content)}")
+        return result
+    except Exception as e:
+        LOGGER.error(f"Failed to convert content to string: {e}")
+        return ""
 
 @cocoindex.op.function()
 def extract_has_classes_field(metadata_json: str) -> bool:
@@ -839,7 +852,7 @@ def code_embedding_flow(
                     filename=file["filename"],
                     language=file["language"],
                     location=chunk["location"],
-                    code=chunk["content"],
+                    code=chunk["content"].transform(convert_dataslice_to_string),
                     embedding=chunk["embedding"],
                     start=chunk["start"],
                     end=chunk["end"],
