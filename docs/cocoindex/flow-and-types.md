@@ -672,3 +672,298 @@ When encountering type system errors:
 - **Handle both dict and string inputs** - Functions may receive either depending on context
 - **Escape regex special characters** - Language configuration regexes need proper escaping
 - **Test with minimal examples** - Isolate type issues before fixing in main codebase
+
+## Multi-Language Analysis Integration (January 2025)
+
+### 1. Backend vs Frontend Analysis Synchronization
+
+**⚠️ CRITICAL GOTCHA**: Multi-language analyzers may work in CocoIndex flows but fail in MCP server backends due to analysis function location mismatches.
+
+```python
+# ❌ PROBLEM: Backend only uses Python analyzer
+class PostgresBackend:
+    def _format_result(self, row, score_type):
+        if language.lower() == "python":
+            from ..lang.python.python_code_analyzer import analyze_python_code
+            metadata = analyze_python_code(code, filename)
+        else:
+            # All non-Python languages get empty metadata
+            metadata = {"analysis_method": "none", "functions": [], "classes": []}
+```
+
+**✅ SOLUTION**: Ensure backends use the same multi-language analysis as CocoIndex flows:
+
+```python
+class PostgresBackend:
+    def _format_result(self, row, score_type):
+        try:
+            # Use the same multi-language analyzer as CocoIndex flows
+            from ..cocoindex_config import extract_code_metadata
+            metadata_json_str = extract_code_metadata(code, language, filename)
+            analysis_metadata = json.loads(metadata_json_str)
+            
+            if analysis_metadata is not None:
+                pg_row.update({
+                    "functions": analysis_metadata.get("functions", []),
+                    "classes": analysis_metadata.get("classes", []),
+                    "imports": analysis_metadata.get("imports", []),
+                    "analysis_method": analysis_metadata.get("analysis_method", "unknown")
+                })
+        except Exception as e:
+            # Fallback to basic metadata with error logging
+            LOGGER.error(f"Multi-language analysis failed: {e}")
+            pg_row.update({"analysis_method": "error", "functions": [], "classes": []})
+```
+
+### 2. Language Case Sensitivity and Normalization
+
+**⚠️ CRITICAL GOTCHA**: Language strings from different sources use inconsistent casing, causing analyzer selection failures.
+
+```python
+# Sources of language case mismatches:
+"Python" vs "python" vs "PYTHON"    # File extensions vs user input vs database
+"C++" vs "cpp" vs "CPP"             # Database storage vs query parameters  
+"JavaScript" vs "javascript" vs "js" # Full names vs abbreviations
+```
+
+**✅ SOLUTION**: Implement comprehensive case-insensitive language matching:
+
+```python
+def select_language_analyzer(language: str) -> callable:
+    """Select appropriate analyzer with case-insensitive matching."""
+    lang_lower = language.lower() if language else ""
+    
+    # Handle all common variations
+    if lang_lower in ["python", "py"]:
+        from .language_handlers.python_visitor import analyze_python_code
+        return analyze_python_code
+    elif lang_lower == "rust":
+        from .language_handlers.rust_visitor import analyze_rust_code
+        return analyze_rust_code
+    elif lang_lower == "java":
+        from .language_handlers.java_visitor import analyze_java_code
+        return analyze_java_code
+    elif lang_lower in ["javascript", "js"]:
+        from .language_handlers.javascript_visitor import analyze_javascript_code
+        return analyze_javascript_code
+    elif lang_lower in ["typescript", "ts"]:
+        from .language_handlers.typescript_visitor import analyze_typescript_code
+        return analyze_typescript_code
+    elif lang_lower in ["cpp", "c++", "cxx"]:
+        from .language_handlers.cpp_visitor import analyze_cpp_code
+        return analyze_cpp_code
+    elif lang_lower == "c":
+        from .language_handlers.c_visitor import analyze_c_code
+        return analyze_c_code
+    elif lang_lower in ["kotlin", "kt"]:
+        from .language_handlers.kotlin_visitor import analyze_kotlin_code
+        return analyze_kotlin_code
+    elif lang_lower in ["haskell", "hs"]:
+        from .language_handlers.haskell_visitor import analyze_haskell_code
+        return analyze_haskell_code
+    else:
+        return None  # Use fallback basic analysis
+```
+
+### 3. SQL Query Language Matching
+
+**⚠️ CRITICAL GOTCHA**: Database queries with exact language matching fail when user input case differs from stored case.
+
+```python
+# ❌ PROBLEM: Exact case matching fails
+WHERE language = 'cpp'      # Fails if database has 'C++'
+WHERE language = 'CPP'      # Fails if user searches for 'cpp'
+```
+
+**✅ SOLUTION**: Use case-insensitive SQL comparisons for language fields:
+
+```python
+def build_sql_where_clause(search_group, table_alias=""):
+    """Build SQL WHERE clause with case-insensitive language matching."""
+    for condition in search_group.conditions:
+        if condition.field == "language":
+            # Use case-insensitive comparison for language field
+            where_parts.append(f"LOWER({prefix}language) = LOWER(%s)")
+            params.append(condition.value)
+        else:
+            # Use exact matching for other fields
+            where_parts.append(f"{prefix}{condition.field} = %s")
+            params.append(condition.value)
+```
+
+### 4. Language-Specific Dependencies and Fallbacks
+
+**⚠️ CRITICAL GOTCHA**: Missing tree-sitter language parsers cause silent analysis failures without clear error messages.
+
+```python
+# ❌ PROBLEM: Silent fallback when dependencies missing
+try:
+    import tree_sitter_javascript
+    language_obj = tree_sitter.Language(tree_sitter_javascript.language())
+except ImportError:
+    # Silent fallback - no clear indication of missing dependency
+    return None
+```
+
+**✅ SOLUTION**: Explicit dependency management with clear error reporting:
+
+```python
+def get_language_parser(language: str):
+    """Get tree-sitter parser with explicit dependency handling."""
+    try:
+        if language == 'javascript':
+            import tree_sitter_javascript
+            return tree_sitter.Language(tree_sitter_javascript.language())
+        elif language == 'rust':
+            import tree_sitter_rust
+            return tree_sitter.Language(tree_sitter_rust.language())
+        # ... other languages
+    except ImportError as e:
+        LOGGER.error(f"Missing tree-sitter dependency for {language}: {e}")
+        LOGGER.info(f"Install with: pip install tree-sitter-{language}")
+        return None
+    except Exception as e:
+        LOGGER.error(f"Failed to load {language} parser: {e}")
+        return None
+```
+
+**Dependency Management Best Practices:**
+```python
+# In pyproject.toml, ensure all required tree-sitter languages are listed:
+dependencies = [
+    "tree-sitter>=0.20.0",
+    "tree-sitter-python>=0.20.0",
+    "tree-sitter-rust>=0.20.0", 
+    "tree-sitter-java>=0.20.0",
+    "tree-sitter-javascript>=0.23.1",  # Note version requirements
+    "tree-sitter-typescript>=0.20.0",
+    # Add as needed for new language support
+]
+```
+
+### 5. Analysis Result Validation and Fallbacks
+
+**⚠️ CRITICAL GOTCHA**: Language analyzers may return incomplete results without proper success indicators.
+
+```python
+# ❌ PROBLEM: Missing success field causes fallback to basic analysis
+def analyze_language_code(code, language, filename):
+    """Analyzer without success indicator."""
+    return {
+        "functions": ["func1", "func2"],
+        "classes": ["Class1"],
+        "analysis_method": "language_ast_visitor"
+        # Missing: "success": True
+    }
+
+# Later validation fails:
+if not result.get("success", False):
+    # Falls back to basic analysis, losing rich metadata
+    return create_basic_metadata()
+```
+
+**✅ SOLUTION**: Ensure all language analyzers include success indicators:
+
+```python
+def analyze_language_code(code, language, filename):
+    """Language analyzer with proper success indication."""
+    try:
+        # Perform analysis...
+        metadata = {
+            'language': language,
+            'filename': filename,
+            'functions': extracted_functions,
+            'classes': extracted_classes,
+            'analysis_method': f'{language}_ast_visitor',
+            'success': True,  # ✅ Critical success indicator
+            'parse_errors': 0,
+            'complexity_score': calculated_complexity
+        }
+        return metadata
+    except Exception as e:
+        LOGGER.error(f"{language} analysis failed: {e}")
+        return {
+            'success': False,  # ✅ Clear failure indication
+            'error': str(e),
+            'analysis_method': 'basic_fallback'
+        }
+```
+
+### 6. Integration Testing for Multi-Language Support
+
+**✅ BEST PRACTICE**: Create comprehensive test suites that validate multi-language analysis across the entire stack:
+
+```python
+# Test matrix covering all layers:
+@pytest.mark.parametrize("language,file_extension,expected_functions", [
+    ("python", ".py", ["test_function"]),
+    ("rust", ".rs", ["fibonacci", "main"]),
+    ("java", ".java", ["calculateSum", "Person"]),
+    ("javascript", ".js", ["processData"]),
+    ("typescript", ".ts", ["validateInput"]),
+    ("cpp", ".cpp", ["fibonacci", "Person"]),
+    ("c", ".c", ["test_function"]),
+    ("kotlin", ".kt", ["dataProcessor"]),
+    ("haskell", ".hs", ["quicksort"])
+])
+def test_end_to_end_language_analysis(language, file_extension, expected_functions):
+    """Test complete pipeline from file reading to database storage."""
+    # 1. Test CocoIndex flow analysis
+    cocoindex_result = run_cocoindex_analysis(test_code, language)
+    assert cocoindex_result["analysis_method"] != "none"
+    
+    # 2. Test MCP server backend analysis  
+    mcp_result = query_mcp_server(f"language:{language}")
+    assert len(mcp_result["results"]) > 0
+    
+    # 3. Test database storage consistency
+    db_result = query_database(f"language = '{language}'")
+    assert db_result["analysis_method"] != "none"
+    
+    # 4. Test function extraction across all layers
+    for expected_func in expected_functions:
+        assert expected_func in cocoindex_result["functions"]
+        assert expected_func in mcp_result["results"][0]["functions"]
+        assert expected_func in db_result["functions"]
+```
+
+### 7. Multi-Language Analysis Migration Checklist
+
+When adding new language support or fixing existing languages:
+
+- [ ] **Add tree-sitter dependency** to pyproject.toml
+- [ ] **Create language-specific analyzer** in language_handlers/
+- [ ] **Update cocoindex_config.py** with case-insensitive language matching
+- [ ] **Update postgres_backend.py** to use extract_code_metadata
+- [ ] **Add SQL case-insensitive matching** for language queries
+- [ ] **Include success indicators** in analyzer return values
+- [ ] **Add integration tests** covering CocoIndex flow + MCP server + database
+- [ ] **Test with real files** to verify metadata extraction
+- [ ] **Document language-specific quirks** and dependencies
+
+### 8. Language Analysis Performance Considerations
+
+**✅ OPTIMIZATION**: Cache language analyzers and parsers to avoid repeated loading:
+
+```python
+# Global cache for expensive parser initialization
+_LANGUAGE_PARSERS = {}
+_LANGUAGE_ANALYZERS = {}
+
+def get_cached_analyzer(language: str):
+    """Get cached language analyzer to avoid repeated initialization."""
+    lang_key = language.lower()
+    
+    if lang_key not in _LANGUAGE_ANALYZERS:
+        analyzer = select_language_analyzer(language)
+        if analyzer:
+            _LANGUAGE_ANALYZERS[lang_key] = analyzer
+            LOGGER.info(f"Cached analyzer for {language}")
+    
+    return _LANGUAGE_ANALYZERS.get(lang_key)
+```
+
+This caching is particularly important for:
+- **Tree-sitter parser initialization** (expensive grammar loading)
+- **Model loading** for embedding-based analysis
+- **Regex compilation** for pattern-based metadata extraction

@@ -302,7 +302,9 @@ def validate_flow_config():
 - [ ] Is data reaching the database correctly?
 - [ ] Are queries working as expected?
 
-## Real-World Case Study
+## Real-World Case Studies
+
+### Case Study 1: Empty Code Chunks (Resolved)
 
 **Problem:** Hybrid search returning no results despite database containing files.
 
@@ -324,3 +326,116 @@ def validate_flow_config():
 - **Different chunking methods use different dictionary keys** - AST uses "content", others use "text"  
 - **DataSlice objects require explicit conversion** to strings before database storage
 - **Pipeline debugging** requires understanding data flow transformations, not just individual components
+
+### Case Study 2: Multi-Language Analysis Failures (January 2025)
+
+**Problem:** MCP server test suite failing - 10 out of 15 multi-language hybrid search tests failing with missing metadata.
+
+**Investigation Process:**
+1. **Initial Discovery**: Tests showed `analysis_method: "none"` for all non-Python languages
+2. **Database Analysis**: Found files being indexed but with empty metadata arrays:
+   ```json
+   {
+     "functions": [],
+     "classes": [], 
+     "imports": [],
+     "analysis_method": "none"
+   }
+   ```
+3. **Source Code Investigation**: Found multiple root causes:
+   - **Root Cause 1**: `postgres_backend.py` was hardcoded to only use Python analyzer
+   - **Root Cause 2**: Multi-language analyzers existed but weren't being called
+   - **Root Cause 3**: Case sensitivity issues in language matching
+
+**Systematic Fix Process:**
+
+**Fix 1 - PostgreSQL Backend Multi-Language Support:**
+```python
+# BEFORE (postgres_backend.py): Only Python analysis
+if language.lower() == "python":
+    metadata = analyze_python_code(code, filename)
+else:
+    pg_row.update({
+        "analysis_method": "none",  # ❌ Hardcoded for all non-Python
+        "functions": [],
+        "classes": []
+    })
+
+# AFTER: Full multi-language support
+from ..cocoindex_config import extract_code_metadata
+metadata_json_str = extract_code_metadata(code, language, filename)
+analysis_metadata = json.loads(metadata_json_str)
+```
+
+**Fix 2 - Case-Insensitive Language Matching:**
+```python
+# BEFORE (cocoindex_config.py): Case-sensitive matching failed
+if language == "Rust":  # Missed "rust", "RUST" variations
+    from .language_handlers.rust_visitor import analyze_rust_code
+
+# AFTER: Robust case-insensitive matching  
+lang_lower = language.lower() if language else ""
+if lang_lower == "rust":
+    from .language_handlers.rust_visitor import analyze_rust_code
+elif lang_lower in ["cpp", "c++", "cxx"]:
+    from .language_handlers.cpp_visitor import analyze_cpp_code
+```
+
+**Fix 3 - SQL Query Case Sensitivity:**
+```python
+# BEFORE (keyword_search_parser_lark.py): Exact case matching
+where_parts.append(f"{prefix}{validated_field} = %s")
+
+# AFTER: Case-insensitive for language searches
+if validated_field == 'language':
+    where_parts.append(f"LOWER({prefix}{validated_field}) = LOWER(%s)")
+```
+
+**Fix 4 - Language Detection Corrections:**
+- **C++**: Database stores as `"C++"` not `"cpp"` - updated test expectations
+- **JavaScript**: Missing `tree-sitter-javascript` dependency - installed and configured
+- **Haskell**: Missing `'success': True` field - added to analyzer output
+
+**Verification Results:**
+After fixes, tests showed rich metadata extraction:
+```json
+{
+  "filename": "tmp/test_rust.rs",  
+  "language": "Rust",
+  "functions": ["new", "is_adult", "fibonacci", "main"],
+  "classes": [],
+  "analysis_method": "rust_ast_visitor"  // ✅ Proper analysis
+}
+```
+
+**Key Discoveries:**
+- **Backend vs Frontend Analysis**: The backend (postgres_backend.py) wasn't using the same multi-language analysis as the frontend
+- **Language Case Sensitivity**: Database languages don't always match user input case (`"C++"` vs `"cpp"`)
+- **Dependency Management**: Missing tree-sitter language parsers cause silent fallbacks
+- **Test Infrastructure**: Need systematic testing across all supported languages
+- **Integration Testing**: MCP server tests revealed issues not caught by unit tests
+
+### Case Study 3: Test Result File Management (January 2025)
+
+**Problem:** Test result files had different timestamps, making it hard to group results from the same test run.
+
+**Investigation:**
+- Each test case generated its own timestamp: `basename_python_20250801_133633_124.json`, `ast_visitor_20250801_133633_215.json`
+- Made it difficult to identify which 15 files belonged to the same test execution
+
+**Solution - Unified Test Run Timestamps:**
+```python
+# Generate single timestamp at test start
+run_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
+
+# Pass to all result saving operations
+await self._save_search_results(test_name, query, search_data, run_timestamp)
+```
+
+**Result:**
+All files from same test run now share timestamp: `basename_python_20250801_134416_697.json`, `ast_visitor_20250801_134416_697.json`
+
+**Benefits:**
+- Easy identification of test run groups
+- Simplified cleanup of test results
+- Better debugging workflow for batch test analysis
