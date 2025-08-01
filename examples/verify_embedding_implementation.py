@@ -33,7 +33,7 @@ def verify_implementation():
 
         # Test our standalone implementations
         sys.path.insert(0, 'tests')
-        from test_code_embedding_standalone import (
+        from tests.test_code_embedding_standalone import (
             MockCodeEmbeddingExecutor,
             MockSmartCodeEmbeddingExecutor,
         )
