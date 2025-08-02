@@ -1,27 +1,23 @@
 #!/usr/bin/env python3
 
 """
-Integration test for the CocoIndex RAG MCP Server using proper MCP client.
+Integration test for the CocoIndex RAG MCP Server using common MCP client.
 
-This module tests the MCP server by using the official MCP client libraries
-to establish proper MCP connections and test tool execution.
+This module tests the MCP server by using a common reusable MCP client
+that supports both streaming and HTTP transports.
 """
 
-import asyncio
 import json
 import logging
-import os
 import re
-from contextlib import AsyncExitStack
 from pathlib import Path
-from typing import Any, Optional
 
-from pydantic import AnyUrl
 import pytest
 import pytest_asyncio
 from dotenv import load_dotenv
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
+
+# Import our common MCP client
+from tests.mcp_client import MCPTestClient, MCPHTTPClient
 
 # Configure logging
 logging.basicConfig(
@@ -30,346 +26,39 @@ logging.basicConfig(
 )
 
 
-class MCPServer:
-    """Manages MCP server connections and tool execution using proper MCP client."""
-
-    def __init__(self, name: str, command: str, args: list[str], env: Optional[dict[str, str]] = None):
-        self.name: str = name
-        self.command: str = command
-        self.args: list[str] = args
-        self.env: dict[str, str] = env or {}
-        self.session: ClientSession | None = None
-        self._cleanup_lock: asyncio.Lock = asyncio.Lock()
-        self.exit_stack: AsyncExitStack = AsyncExitStack()
-
-    async def initialize(self) -> None:
-        """Initialize the MCP server connection using proper MCP client."""
-        server_params = StdioServerParameters(
-            command=self.command,
-            args=self.args,
-            env={**os.environ, **self.env}
-        )
-
-        try:
-            # Use proper MCP client to connect
-            stdio_transport = await self.exit_stack.enter_async_context(
-                stdio_client(server_params)
-            )
-            read, write = stdio_transport
-
-            # Create MCP client session
-            session = await self.exit_stack.enter_async_context(
-                ClientSession(read, write)
-            )
-
-            # Initialize the MCP connection
-            await session.initialize()
-            self.session = session
-
-            logging.info(f"✅ MCP server '{self.name}' initialized successfully")
-
-        except Exception as e:
-            logging.error(f"❌ Error initializing MCP server {self.name}: {e}")
-            await self.cleanup()
-            raise
-
-    async def list_tools(self) -> list[Any]:
-        """List available tools from the MCP server."""
-        if not self.session:
-            raise RuntimeError(f"MCP Server {self.name} not initialized")
-
-        tools_response = await self.session.list_tools()
-        tools = []
-
-        # Extract tools from MCP response format
-        for item in tools_response:
-            if isinstance(item, tuple) and len(item) == 2 and item[0] == "tools":
-                tools.extend(item[1])
-
-        return tools
-
-    async def list_resources(self) -> list[Any]:
-        """List available resources from the MCP server."""
-        if not self.session:
-            raise RuntimeError(f"MCP Server {self.name} not initialized")
-
-        resources_response = await self.session.list_resources()
-        resources = []
-
-        # Extract resources from MCP response format
-        for item in resources_response:
-            if isinstance(item, tuple) and len(item) == 2 and item[0] == "resources":
-                resources.extend(item[1])
-
-        return resources
-
-    async def read_resource(self, uri: str) -> Any:
-        """Read a resource from the MCP server."""
-        if not self.session:
-            raise RuntimeError(f"MCP Server {self.name} not initialized")
-
-        return await self.session.read_resource(AnyUrl(uri))
-
-    async def execute_tool(
-        self,
-        tool_name: str,
-        arguments: dict[str, Any],
-        retries: int = 2,
-        delay: float = 1.0,
-    ) -> Any:
-        """Execute a tool using proper MCP client with retry mechanism."""
-        if not self.session:
-            raise RuntimeError(f"MCP Server {self.name} not initialized")
-
-        attempt = 0
-        while attempt < retries:
-            try:
-                logging.info(f"🔧 Executing MCP tool '{tool_name}' with args: {arguments}")
-                result = await self.session.call_tool(tool_name, arguments)
-                logging.info(f"✅ Tool '{tool_name}' executed successfully")
-                return result
-
-            except Exception as e:
-                attempt += 1
-                logging.warning(
-                    f"⚠️ Error executing tool: {e}. Attempt {attempt} of {retries}."
-                )
-                if attempt < retries:
-                    logging.info(f"🔄 Retrying in {delay} seconds...")
-                    await asyncio.sleep(delay)
-                else:
-                    logging.error("❌ Max retries reached. Failing.")
-                    raise
-
-    async def cleanup(self) -> None:
-        """Clean up MCP server resources."""
-        async with self._cleanup_lock:
-            try:
-                await self.exit_stack.aclose()
-                self.session = None
-                logging.info(f"🧹 MCP server '{self.name}' cleaned up")
-            except Exception as e:
-                logging.error(f"❌ Error during cleanup of MCP server {self.name}: {e}")
-
-
 @pytest_asyncio.fixture
 async def mcp_server():
     """MCP HTTP client that connects to server running on port 3033."""
     # Load environment variables
     load_dotenv()
 
-    import httpx
-
-    class MCPHTTPClient:
-        def __init__(self):
-            self.base_url = "http://127.0.0.1:3033/mcp/"
-            self.client = httpx.AsyncClient(timeout=30.0)
-            self.session = self  # For compatibility with existing tests
-            self.name = "cocoindex-rag"  # For test compatibility
-
-        def _parse_mcp_response(self, response):
-            """Parse MCP response (either JSON or SSE format)."""
-            if response.status_code != 200:
-                raise Exception(f"HTTP {response.status_code}: {response.text}")
-
-            response_text = response.text
-
-            # Handle Server-Sent Events format
-            if response.headers.get("content-type", "").startswith("text/event-stream"):
-                # Parse SSE format
-                for line in response_text.split('\n'):
-                    if line.startswith('data: '):
-                        data = line[6:]  # Remove 'data: ' prefix
-                        if data.strip():
-                            try:
-                                return json.loads(data)
-                            except json.JSONDecodeError:
-                                continue
-                raise Exception("No valid JSON data found in SSE response")
-            else:
-                # Regular JSON response
-                return response.json()
-
-        async def check_server_running(self):
-            """Check if MCP server is running by calling list_tools."""
-            try:
-                # Test actual MCP protocol with list_tools
-                response = await self.client.post(
-                    self.base_url,
-                    json={
-                        "jsonrpc": "2.0",
-                        "id": 1,
-                        "method": "tools/list",
-                        "params": {}
-                    },
-                    headers={
-                        "Content-Type": "application/json",
-                        "Accept": "application/json, text/event-stream"
-                    }
-                )
-
-                result = self._parse_mcp_response(response)
-                if "error" in result:
-                    raise Exception(f"MCP Error: {result['error']}")
-
-                return "result" in result
-            except Exception as e:
-                print(f"Server check error: {e}")
-                return False
-
-        async def execute_tool(self, tool_name: str, arguments: dict):
-            """Execute MCP tool via HTTP JSON-RPC."""
-            response = await self.client.post(
-                self.base_url,
-                json={
-                    "jsonrpc": "2.0",
-                    "id": 1,
-                    "method": "tools/call",
-                    "params": {
-                        "name": tool_name,
-                        "arguments": arguments
-                    }
-                },
-                headers={
-                    "Content-Type": "application/json",
-                    "Accept": "application/json, text/event-stream"
-                }
-            )
-
-            result = self._parse_mcp_response(response)
-            if "error" in result:
-                raise Exception(f"MCP Error: {result['error']}")
-
-            # Convert MCP result format to expected test format
-            from types import SimpleNamespace
-            mcp_result = result["result"]
-
-            # MCP returns {"content": [{"type": "text", "text": "..."}]}
-            if isinstance(mcp_result, dict) and "content" in mcp_result:
-                content_items = []
-                for item in mcp_result["content"]:
-                    # Check if the content contains an error response
-                    try:
-                        content_data = json.loads(item["text"])
-                        if isinstance(content_data, dict) and "error" in content_data:
-                            raise Exception(f"MCP Tool Error: {content_data['error']['message']}")
-                    except json.JSONDecodeError:
-                        pass  # Not JSON, continue normally
-
-                    content_items.append(
-                        SimpleNamespace(type=item["type"], text=item["text"])
-                    )
-                return ["content", content_items]
-            else:
-                # Fallback format
-                content = SimpleNamespace(type="text", text=str(mcp_result))
-                return ["content", [content]]
-
-        async def list_tools(self):
-            """List MCP tools via HTTP JSON-RPC."""
-            response = await self.client.post(
-                self.base_url,
-                json={
-                    "jsonrpc": "2.0",
-                    "id": 1,
-                    "method": "tools/list",
-                    "params": {}
-                },
-                headers={
-                    "Content-Type": "application/json",
-                    "Accept": "application/json, text/event-stream"
-                }
-            )
-
-            result = self._parse_mcp_response(response)
-            if "error" in result:
-                raise Exception(f"MCP Error: {result['error']}")
-
-            # Convert MCP result to expected test format
-            from types import SimpleNamespace
-            tools = []
-            for tool in result["result"]["tools"]:
-                tools.append(SimpleNamespace(
-                    name=tool["name"],
-                    description=tool["description"],
-                    inputSchema=tool["inputSchema"]
-                ))
-            return tools
-
-        async def list_resources(self):
-            """List MCP resources via HTTP JSON-RPC."""
-            response = await self.client.post(
-                self.base_url,
-                json={
-                    "jsonrpc": "2.0",
-                    "id": 1,
-                    "method": "resources/list",
-                    "params": {}
-                },
-                headers={
-                    "Content-Type": "application/json",
-                    "Accept": "application/json, text/event-stream"
-                }
-            )
-
-            result = self._parse_mcp_response(response)
-            if "error" in result:
-                raise Exception(f"MCP Error: {result['error']}")
-
-            # Convert MCP result to expected test format
-            from types import SimpleNamespace
-            resources = []
-            for resource in result["result"]["resources"]:
-                resources.append(SimpleNamespace(
-                    name=resource["name"],
-                    uri=resource["uri"],
-                    description=resource["description"]
-                ))
-            return resources  # Return just the resources list, not tuple
-
-        async def read_resource(self, uri: str):
-            """Read MCP resource via HTTP JSON-RPC."""
-            response = await self.client.post(
-                self.base_url,
-                json={
-                    "jsonrpc": "2.0",
-                    "id": 1,
-                    "method": "resources/read",
-                    "params": {
-                        "uri": uri
-                    }
-                },
-                headers={
-                    "Content-Type": "application/json",
-                    "Accept": "application/json, text/event-stream"
-                }
-            )
-
-            result = self._parse_mcp_response(response)
-            if "error" in result:
-                raise Exception(f"MCP Error: {result['error']}")
-
-            # Convert MCP result to expected test format
-            from types import SimpleNamespace
-            contents = []
-            for content in result["result"]["contents"]:
-                contents.append(SimpleNamespace(
-                    uri=content.get("uri", uri),
-                    text=content.get("text", "")
-                ))
-            return ("contents", contents)
-
-        async def cleanup(self):
-            await self.client.aclose()
-
-    client = MCPHTTPClient()
+    # Use the legacy wrapper for backward compatibility with existing tests
+    client = MCPHTTPClient(host="127.0.0.1", port=3033)
 
     # Verify server is running
     if not await client.check_server_running():
         pytest.skip("MCP server not running on port 3033")
 
+    # Connect to the server
+    await client.connect()
+
     yield client
     await client.cleanup()
+
+
+@pytest_asyncio.fixture
+async def mcp_client_streaming():
+    """MCP streaming client for testing with official MCP transport."""
+    load_dotenv()
+    
+    client = MCPTestClient(host="127.0.0.1", port=3033, transport='streaming')
+    
+    # Verify server is running
+    if not await client.check_server_running():
+        pytest.skip("MCP server not running on port 3033")
+    
+    yield client
+    await client.close()
 
 
 @pytest.mark.mcp_integration
