@@ -18,6 +18,10 @@ import threading
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+# Load environment variables at module level
+from dotenv import load_dotenv
+load_dotenv()
+
 # CocoIndex and MCP infrastructure imports
 try:
     import cocoindex
