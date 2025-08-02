@@ -9,7 +9,6 @@ that supports both streaming and HTTP transports.
 
 import json
 import logging
-import re
 from pathlib import Path
 
 import pytest
@@ -66,32 +65,6 @@ async def mcp_client_streaming():
 class TestMCPIntegrationHTTP:
     """Integration tests using proper MCP client connection."""
 
-    async def _save_search_results(self, test_name: str, query: dict, search_data: dict, run_timestamp: str):
-        """Save search results to test-results directory with unique naming."""
-        import datetime
-        import os
-        
-        # Use the provided run timestamp for consistent naming across the test run
-        filename = f"{test_name}_{run_timestamp}.json"
-        
-        # Ensure directory exists
-        results_dir = "/workspaces/rust/test-results/search-hybrid"
-        os.makedirs(results_dir, exist_ok=True)
-        
-        # Prepare complete result data
-        result_data = {
-            "test_name": test_name,
-            "timestamp": datetime.datetime.now().isoformat(),
-            "query": query,
-            "search_results": search_data
-        }
-        
-        # Save to file
-        filepath = os.path.join(results_dir, filename)
-        with open(filepath, 'w', encoding='utf-8') as f:
-            json.dump(result_data, f, indent=2, ensure_ascii=False)
-        
-        print(f"💾 Saved search results: {filepath}")
 
     async def test_server_initialization(self, mcp_server):
         """Test that MCP server initializes correctly."""
@@ -419,34 +392,25 @@ class DataProcessor:
 
     async def test_hybrid_search_validation(self, mcp_server):
         """Test hybrid search functionality against expected results from fixtures."""
-        import shutil
         import time
-        import datetime
+        from tests.common import (
+            generate_test_timestamp,
+            copy_directory_structure,
+            parse_jsonc_file,
+            save_search_results,
+            compare_expected_vs_actual,
+            format_test_failure_report
+        )
         
         # Generate single timestamp for this entire test run
-        run_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]  # microseconds to milliseconds
+        run_timestamp = generate_test_timestamp()
         
-        # Copy test fixtures to /workspaces/rust/tmp/ for indexing
+        # Copy complete directory structure from lang_examples to /workspaces/rust/tmp/
         fixtures_dir = Path(__file__).parent.parent / "fixtures" / "lang_examples"
         tmp_dir = Path("/workspaces/rust/tmp")
         
-        # Ensure tmp directory exists
-        tmp_dir.mkdir(exist_ok=True)
-        
-        # Copy all test files to /workspaces/rust/tmp/
-        test_files = [
-            "rust_example_1.rs", "java_example_1.java", "javascript_example_1.js", 
-            "typescript_example_1.ts", "cpp_example_1.cpp", "c_example_1.c",
-            "kotlin_example_1.kt", "haskell_example_1.hs", "python_example_1.py"
-        ]
-        
-        print("📁 Copying test fixtures to /workspaces/rust/tmp/ for indexing...")
-        for test_file in test_files:
-            src = fixtures_dir / test_file
-            dst = tmp_dir / test_file
-            if src.exists():
-                shutil.copy2(src, dst)
-                print(f"  ✅ Copied {test_file}")
+        # Copy complete directory structure to preserve package structure for Java, Haskell, etc.
+        copy_directory_structure(fixtures_dir, tmp_dir)
         
         # Wait for RAG processing (approximately 32 seconds)
         print("⏳ Waiting 35 seconds for RAG processing to complete...")
@@ -455,18 +419,7 @@ class DataProcessor:
         
         # Load test cases from fixture file
         fixture_path = Path(__file__).parent.parent / "fixtures" / "hybrid_search.jsonc"
-        
-        # Parse JSONC (JSON with comments)
-        fixture_content = fixture_path.read_text()
-        # Remove comments for JSON parsing
-        lines = []
-        for line in fixture_content.split('\n'):
-            stripped = line.strip()
-            if not stripped.startswith('//'):
-                lines.append(line)
-        
-        clean_json = '\n'.join(lines)
-        test_data = json.loads(clean_json)
+        test_data = parse_jsonc_file(fixture_path)
         
         failed_tests = []
         
@@ -494,8 +447,8 @@ class DataProcessor:
                 results = search_data.get("results", [])
                 total_results = len(results)
                 
-                # Save search results to test-results directory
-                await self._save_search_results(test_name, query, search_data, run_timestamp)
+                # Save search results to test-results directory using common helper
+                save_search_results(test_name, query, search_data, run_timestamp)
                 
                 # Check minimum results requirement
                 min_results = expected_results.get("min_results", 1)
@@ -507,95 +460,31 @@ class DataProcessor:
                     })
                     continue
                 
-                # Check expected results
+                # Check expected results using common helper
                 if "should_contain" in expected_results:
                     for expected_item in expected_results["should_contain"]:
                         found_match = False
                         
                         for result_item in results:
-                            # Check filename pattern if specified
-                            if "filename_pattern" in expected_item:
-                                pattern = expected_item["filename_pattern"]
-                                filename = result_item.get("filename", "")
-                                if not re.match(pattern, filename):
-                                    continue
-                            
-                            # Check expected metadata
-                            if "expected_metadata" in expected_item:
-                                metadata_errors = []
-                                expected_metadata = expected_item["expected_metadata"]
-                                
-                                # Get metadata from both flattened fields and metadata_json
-                                combined_metadata = dict(result_item)
-                                if "metadata_json" in result_item and isinstance(result_item["metadata_json"], dict):
-                                    combined_metadata.update(result_item["metadata_json"])
-                                
-                                for field, expected_value in expected_metadata.items():
-                                    actual_value = combined_metadata.get(field)
-                                    
-                                    # Handle special comparison operators
-                                    if isinstance(expected_value, str):
-                                        if expected_value.startswith("!"):
-                                            # Not equal comparison
-                                            not_expected = expected_value[1:]
-                                            if str(actual_value) == not_expected:
-                                                metadata_errors.append(f"{field}: expected not '{not_expected}', got '{actual_value}'")
-                                        elif expected_value.startswith(">"):
-                                            # Greater than comparison
-                                            try:
-                                                threshold = float(expected_value[1:])
-                                                if not (isinstance(actual_value, (int, float)) and actual_value > threshold):
-                                                    metadata_errors.append(f"{field}: expected > {threshold}, got '{actual_value}'")
-                                            except ValueError:
-                                                metadata_errors.append(f"{field}: invalid threshold '{expected_value}'")
-                                        elif expected_value == "!empty":
-                                            # Not empty check
-                                            if not actual_value or (isinstance(actual_value, list) and len(actual_value) == 0):
-                                                metadata_errors.append(f"{field}: expected non-empty, got '{actual_value}'")
-                                        else:
-                                            # Direct equality
-                                            if str(actual_value) != expected_value:
-                                                metadata_errors.append(f"{field}: expected '{expected_value}', got '{actual_value}'")
-                                    elif isinstance(expected_value, bool):
-                                        if actual_value != expected_value:
-                                            metadata_errors.append(f"{field}: expected {expected_value}, got {actual_value}")
-                                    elif isinstance(expected_value, list):
-                                        if actual_value != expected_value:
-                                            metadata_errors.append(f"{field}: expected {expected_value}, got {actual_value}")
-                                
-                                if not metadata_errors:
-                                    found_match = True
-                                    break
-                            else:
-                                # No specific metadata requirements, just filename pattern match
+                            match_found, errors = compare_expected_vs_actual(expected_item, result_item)
+                            if match_found:
                                 found_match = True
                                 break
-                            
-                            # Check should_not_be_empty fields
-                            if "should_not_be_empty" in expected_item:
-                                empty_fields = []
-                                for field in expected_item["should_not_be_empty"]:
-                                    field_value = combined_metadata.get(field)
-                                    if not field_value or (isinstance(field_value, list) and len(field_value) == 0):
-                                        empty_fields.append(field)
-                                
-                                if empty_fields:
-                                    metadata_errors.append(f"Fields should not be empty: {empty_fields}")
-                                else:
-                                    found_match = True
-                                    break
                         
                         if not found_match:
                             failed_tests.append({
                                 "test": test_name,
                                 "error": f"No matching result found for expected item: {expected_item}",
                                 "query": query,
-                                "actual_results": [{"filename": r.get("filename"), "metadata_summary": {
-                                    "classes": r.get("classes", []),
-                                    "functions": r.get("functions", []),
-                                    "imports": r.get("imports", []),
-                                    "analysis_method": r.get("metadata_json", {}).get("analysis_method", "unknown")
-                                }} for r in results[:3]]  # Show first 3 results for debugging
+                                "actual_results": [{
+                                    "filename": r.get("filename"),
+                                    "metadata_summary": {
+                                        "classes": r.get("classes", []),
+                                        "functions": r.get("functions", []),
+                                        "imports": r.get("imports", []),
+                                        "analysis_method": r.get("metadata_json", {}).get("analysis_method", "unknown")
+                                    }
+                                } for r in results[:3]]  # Show first 3 results for debugging
                             })
                 
             except Exception as e:
@@ -605,19 +494,11 @@ class DataProcessor:
                     "query": query
                 })
         
-        # Report results
+        # Report results using common helper
         if failed_tests:
-            error_msg = f"Hybrid search validation failed for {len(failed_tests)} test(s):\n"
-            failed = error_msg
-            for failure in failed_tests:
-                error_msg += f"\n  Test: {failure['test']}\n"
-                error_msg += f"  Query: {failure['query']}\n"
-                error_msg += f"  Error: {failure['error']}\n"
-                if "actual_results" in failure:
-                    error_msg += f"  Sample Results: {json.dumps(failure['actual_results'], indent=2)}\n"
-            
+            error_msg = format_test_failure_report(failed_tests)
             logging.info(error_msg)
-            pytest.fail(failed)
+            pytest.fail(error_msg)
         else:
             logging.info(f"✅ All {len(test_data['tests'])} hybrid search validation tests passed!")
 

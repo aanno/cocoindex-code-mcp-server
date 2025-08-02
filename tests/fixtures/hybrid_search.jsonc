@@ -163,6 +163,29 @@
       }
     },
     {
+      "name": "java_package_structure_search",
+      "description": "Search for Java files with package structure and generics",
+      "query": {
+        "vector_query": "package structure generics abstract class",
+        "keyword_query": "language:java filename:Main1"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "filename_pattern": ".*(tmp/)?.*Main1\\.java$",
+            "expected_metadata": {
+              "classes": "!empty",
+              "functions": "!empty",
+              "has_classes": true,
+              "complexity_score": ">3",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
       "name": "javascript_arrow_functions_search",
       "description": "Search for JavaScript arrow functions and closures",
       "query": {
