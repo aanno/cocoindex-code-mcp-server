@@ -249,44 +249,44 @@ class MultiLanguageBaseline:
     def __init__(self):
         self.languages = {
             'python': LanguageBaseline(
-                'python', 'test_python.py',
+                'python', 'python_example_1.py',
                 expected_functions={'fibonacci', 'is_prime'},
                 expected_constructs={'classes': {'MathUtils'}}
             ),
             'haskell': LanguageBaseline(
-                'haskell', 'test_haskell.hs',
+                'haskell', 'haskell_example_1.hs',
                 expected_functions={'fibonacci', 'sumList', 'treeMap', 'compose', 'addTen', 'multiplyByTwo', 'main'},
                 expected_constructs={'data_types': {'Person', 'Tree'}}
             ),
             'c': LanguageBaseline(
-                'c', 'test_c.c',
+                'c', 'c_example_1.c',
                 expected_functions={'add', 'print_point', 'create_point', 'get_default_color', 'main'},
                 expected_constructs={'structs': {'Point'}, 'enums': {'Color'}}
             ),
             'rust': LanguageBaseline(
-                'rust', 'test_rust.rs',
+                'rust', 'rust_example_1.rs',
                 expected_functions={'new', 'is_adult', 'fibonacci', 'main'},
                 expected_constructs={'structs': {'Person'}}
             ),
             'cpp': LanguageBaseline(
-                'cpp', 'test_c.c',  # Using C file for now as it's valid C++
+                'cpp', 'c_example_1.c',  # Using C file for now as it's valid C++
                 expected_functions={'add', 'print_point', 'create_point', 'get_default_color', 'main'},
                 expected_constructs={'structs': {'Point'}}
             ),
             'kotlin': LanguageBaseline(
-                'kotlin', 'test_kotlin.kt',
+                'kotlin', 'kotlin_example_1.kt',
                 expected_functions={'fibonacci', 'processResult', 'calculateSum',
                                     'isAdult', 'greet', 'add', 'multiply', 'getHistory', 'main'},
                 expected_constructs={'classes': {'Person', 'Result', 'Calculator'}}
             ),
             'java': LanguageBaseline(
-                'java', 'test_java.java',
+                'java', 'java_example_1.java',
                 expected_functions={'fibonacci', 'calculateSum', 'printList', 'isPrime', 'isAdult',
                                     'greet', 'getName', 'getAge', 'getArea', 'getPerimeter', 'getColor', 'main'},
                 expected_constructs={'classes': {'TestJava', 'Person', 'Shape', 'Rectangle'}}
             ),
             'typescript': LanguageBaseline(
-                'typescript', 'test_typescript.ts',
+                'typescript', 'typescript_example_1.ts',
                 expected_functions={'fibonacci', 'greet', 'isAdult', 'getName',
                                     'getAge', 'calculateSum', 'processUsers', 'main'},
                 expected_constructs={'classes': {'Person'}}

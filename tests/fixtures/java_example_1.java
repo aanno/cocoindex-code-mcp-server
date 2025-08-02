@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class TestJava {
+public class java_example_1 {
     
     public static class Person {
         private String name;

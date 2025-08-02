@@ -746,9 +746,9 @@ class DataProcessor:
         
         # Copy all test files to /workspaces/rust/tmp/
         test_files = [
-            "test_rust.rs", "test_java.java", "test_javascript.js", 
-            "test_typescript.ts", "test_cpp.cpp", "test_c.c",
-            "test_kotlin.kt", "test_haskell.hs", "test_python.py"
+            "rust_example_1.rs", "java_example_1.java", "javascript_example_1.js", 
+            "typescript_example_1.ts", "cpp_example_1.cpp", "c_example_1.c",
+            "kotlin_example_1.kt", "haskell_example_1.hs", "python_example_1.py"
         ]
         
         print("📁 Copying test fixtures to /workspaces/rust/tmp/ for indexing...")

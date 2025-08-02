@@ -40,7 +40,7 @@ class HaskellBaselineComparison:
     def __init__(self):
         """Initialize with test fixture."""
         # Load the test Haskell file
-        self.fixture_path = Path(__file__).parent.parent.parent / 'fixtures' / 'test_haskell.hs'
+        self.fixture_path = Path(__file__).parent.parent.parent / 'fixtures' / 'haskell_example_1.hs'
 
         if not self.fixture_path.exists():
             raise FileNotFoundError(f"Test fixture not found: {self.fixture_path}")

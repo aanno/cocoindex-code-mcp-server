@@ -400,7 +400,7 @@ if validated_field == 'language':
 After fixes, tests showed rich metadata extraction:
 ```json
 {
-  "filename": "tmp/test_rust.rs",  
+  "filename": "tmp/rust_example_1.rs",  
   "language": "Rust",
   "functions": ["new", "is_adult", "fibonacci", "main"],
   "classes": [],

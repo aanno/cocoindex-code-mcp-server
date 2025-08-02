@@ -31,7 +31,7 @@ See `docs/claude/DB-Abstraction.md` for complete usage and extension documentati
 ## Phase 3: Current Priority Tasks 🎯
 
 ### Testing & Integration Coverage
-- **Create baseline comparison test for Haskell** - Using fixtures/test_haskell.hs and RAG analysis
+- **Create baseline comparison test for Haskell** - Using fixtures/haskell_example_1.hs and RAG analysis
 - **Debug MCP server logging** - Missing expected log messages:
   - 'Selected embedding model:' from `smart_code_embedding.py`
   - 'AST chunking created' from `ast_chunking.py` 

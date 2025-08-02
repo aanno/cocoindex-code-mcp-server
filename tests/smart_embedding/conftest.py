@@ -144,11 +144,11 @@ def fixture_files():
     fixtures_dir = os.path.join(os.path.dirname(__file__), '../fixtures')
 
     return {
-        'python': os.path.join(fixtures_dir, 'test_python.py'),
-        'rust': os.path.join(fixtures_dir, 'test_rust.rs'),
-        'javascript': os.path.join(fixtures_dir, 'test_javascript.js'),
-        'typescript': os.path.join(fixtures_dir, 'test_typescript.ts'),
-        'haskell': os.path.join(fixtures_dir, 'test_haskell.hs'),
+        'python': os.path.join(fixtures_dir, 'python_example_1.py'),
+        'rust': os.path.join(fixtures_dir, 'rust_example_1.rs'),
+        'javascript': os.path.join(fixtures_dir, 'javascript_example_1.js'),
+        'typescript': os.path.join(fixtures_dir, 'typescript_example_1.ts'),
+        'haskell': os.path.join(fixtures_dir, 'haskell_example_1.hs'),
     }
 
 

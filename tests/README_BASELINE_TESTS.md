@@ -19,7 +19,7 @@ The test compares three analysis methods:
 
 ### Test Fixture
 
-The test uses `tests/fixtures/test_haskell.hs` which contains:
+The test uses `tests/fixtures/haskell_example_1.hs` which contains:
 - **7 functions**: `fibonacci`, `sumList`, `treeMap`, `compose`, `addTen`, `multiplyByTwo`, `main`
 - **2 data types**: `Person`, `Tree`
 

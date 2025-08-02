@@ -37,7 +37,7 @@ class TestHaskellBaselineComparison:
     def setup_method(self):
         """Set up test fixtures."""
         # Load the test Haskell file
-        self.fixture_path = Path(__file__).parent.parent.parent / 'fixtures' / 'test_haskell.hs'
+        self.fixture_path = Path(__file__).parent.parent.parent / 'fixtures' / 'haskell_example_1.hs'
 
         if not self.fixture_path.exists():
             pytest.skip(f"Test fixture not found: {self.fixture_path}")
