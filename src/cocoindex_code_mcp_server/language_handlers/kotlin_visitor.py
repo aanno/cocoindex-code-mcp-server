@@ -58,9 +58,9 @@ class KotlinASTVisitor(GenericMetadataVisitor):
                     text = child.text
                     if text is not None:
                         func_name = text.decode('utf-8')
-                    self.functions.append(func_name)
-                    LOGGER.debug(f"Found Kotlin function: {func_name}")
-                    break  # Take the first identifier (function name)
+                        self.functions.append(func_name)
+                        LOGGER.debug(f"Found Kotlin function: {func_name}")
+                        break  # Take the first identifier (function name)
         except Exception as e:
             LOGGER.warning(f"Error extracting Kotlin function: {e}")
 
