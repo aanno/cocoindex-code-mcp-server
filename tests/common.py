@@ -152,10 +152,10 @@ def save_search_results(
         "search_results": search_data
     }
     
-    # Save to file
+    # Save to file with proper JSON serialization
     filepath = os.path.join(results_dir, filename)
     with open(filepath, 'w', encoding='utf-8') as f:
-        json.dump(result_data, f, indent=2, ensure_ascii=False)
+        json.dump(result_data, f, indent=2, ensure_ascii=False, default=str)
     
     print(f"💾 Saved search results: {filepath}")
 
@@ -441,10 +441,12 @@ class CocoIndexTestInfrastructure:
             
             # Run initial flow update to process files
             self.logger.info("🔄 Running initial flow update...")
-            run_flow_update(
+            stats = run_flow_update(
                 live_update=self.enable_polling,
                 poll_interval=self.poll_interval
             )
+            self.logger.info(f"✅ Flow update completed - Stats: {stats}")
+            self.logger.info("📚 CocoIndex indexing completed and ready for searches")
             
             # Initialize backend and search engine
             await self._initialize_backend()
@@ -462,9 +464,12 @@ class CocoIndexTestInfrastructure:
     
     async def _initialize_backend(self) -> None:
         """Initialize the database backend."""
-        # Get database configuration from environment
-        database_url = os.getenv("DATABASE_URL", "postgresql://localhost:5432/cocoindex")
-        backend_type = os.getenv("BACKEND_TYPE", "pgvector")
+        # Get database configuration from environment (should already be loaded)
+        database_url = os.getenv("DATABASE_URL") or os.getenv("COCOINDEX_DATABASE_URL")
+        if not database_url:
+            raise ValueError("DATABASE_URL or COCOINDEX_DATABASE_URL not found in environment")
+        
+        backend_type = os.getenv("BACKEND_TYPE", "postgres")
         
         # Get table name from flow configuration
         table_name = cocoindex.utils.get_target_default_name(
@@ -474,7 +479,7 @@ class CocoIndexTestInfrastructure:
         self.logger.info(f"🔧 Initializing {backend_type} backend with table: {table_name}")
         
         # Create backend based on type
-        if backend_type == "pgvector":
+        if backend_type == "postgres":
             from psycopg_pool import ConnectionPool
             from pgvector.psycopg import register_vector
             

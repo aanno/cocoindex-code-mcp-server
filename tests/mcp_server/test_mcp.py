@@ -9,11 +9,9 @@ and more control over the infrastructure setup.
 """
 
 import logging
-import time
 from pathlib import Path
 
 import pytest
-import pytest_asyncio
 from dotenv import load_dotenv
 
 from tests.common import (
@@ -56,22 +54,20 @@ class TestMCPDirect:
         
         # Set up CocoIndex infrastructure with configurable parameters
         infrastructure_config = {
-            "paths": [str(tmp_dir)],  # Use tmp directory with copied test files
+            "paths": ["/workspaces/rust"],  # Use main workspace directory  
             "default_embedding": False,  # Use smart embedding by default
             "default_chunking": False,   # Use custom chunking by default
             "default_language_handler": False,  # Use enhanced language handlers
             "chunk_factor_percent": 100,  # Normal chunk size (can be configured)
-            "enable_polling": False,   # Disable live updates for tests
+            "enable_polling": False,   # --no-live: Disable live updates for tests
             "poll_interval": 30
         }
         
         # Create and initialize infrastructure
         async with CocoIndexTestInfrastructure(**infrastructure_config) as infrastructure:
             
-            # Wait for processing to complete (shorter than integration test)
-            print("⏳ Waiting 20 seconds for CocoIndex processing to complete...")
-            time.sleep(20)
-            print("✅ CocoIndex processing should be complete, proceeding with tests...")
+            # CocoIndex indexing completes synchronously during infrastructure setup
+            # No need to wait - infrastructure is ready for searches
             
             # Load test cases from fixture file
             fixture_path = Path(__file__).parent.parent / "fixtures" / "hybrid_search.jsonc"
