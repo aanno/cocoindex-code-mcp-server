@@ -13,8 +13,27 @@ import os
 import re
 import shutil
 import datetime
+import asyncio
+import threading
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+# CocoIndex and MCP infrastructure imports
+try:
+    import cocoindex
+    from cocoindex_code_mcp_server.backends import BackendFactory
+    from cocoindex_code_mcp_server.db.pgvector.hybrid_search import HybridSearchEngine
+    from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
+    from cocoindex_code_mcp_server.cocoindex_config import (
+        update_flow_config, 
+        run_flow_update, 
+        code_embedding_flow
+    )
+    from cocoindex_code_mcp_server.main_mcp_server import safe_embedding_function
+    COCOINDEX_AVAILABLE = True
+except ImportError as e:
+    logging.warning(f"CocoIndex infrastructure not available: {e}")
+    COCOINDEX_AVAILABLE = False
 
 
 def generate_test_timestamp() -> str:
@@ -336,3 +355,334 @@ def format_test_failure_report(failed_tests: List[Dict[str, Any]]) -> str:
             error_msg += f"  Sample Results: {json.dumps(failure['actual_results'], indent=2)}\n"
     
     return error_msg
+
+
+# CocoIndex Infrastructure Setup
+class CocoIndexTestInfrastructure:
+    """
+    Test infrastructure for running CocoIndex tests directly without integration server.
+    
+    This class sets up the complete CocoIndex infrastructure including:
+    - Flow configuration and updates
+    - Database backend initialization  
+    - Search engine setup
+    - Background processes
+    """
+    
+    def __init__(
+        self,
+        paths: Optional[List[str]] = None,
+        default_embedding: bool = False,
+        default_chunking: bool = False,
+        default_language_handler: bool = False,
+        chunk_factor_percent: int = 100,
+        enable_polling: bool = False,
+        poll_interval: int = 30
+    ):
+        if not COCOINDEX_AVAILABLE:
+            raise RuntimeError("CocoIndex infrastructure not available. Check imports.")
+            
+        self.paths = paths or ["tmp"]  # Default to tmp directory for tests
+        self.default_embedding = default_embedding
+        self.default_chunking = default_chunking
+        self.default_language_handler = default_language_handler
+        self.chunk_factor_percent = chunk_factor_percent
+        self.enable_polling = enable_polling
+        self.poll_interval = poll_interval
+        
+        # Infrastructure components
+        self.hybrid_search_engine: Optional[HybridSearchEngine] = None
+        self.backend = None
+        self.shutdown_event = threading.Event()
+        self.background_thread: Optional[threading.Thread] = None
+        
+        # Logging
+        self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
+    
+    async def setup(self) -> None:
+        """Set up the complete CocoIndex infrastructure."""
+        try:
+            self.logger.info("🚀 Setting up CocoIndex test infrastructure...")
+            
+            # Load environment variables
+            from dotenv import load_dotenv
+            load_dotenv()
+            
+            # Initialize CocoIndex library with database settings
+            database_url = os.getenv("DATABASE_URL") or os.getenv("COCOINDEX_DATABASE_URL")
+            if not database_url:
+                raise ValueError("DATABASE_URL or COCOINDEX_DATABASE_URL not found in environment")
+            
+            # Set COCOINDEX_DATABASE_URL for CocoIndex if not already set
+            if not os.getenv("COCOINDEX_DATABASE_URL"):
+                os.environ["COCOINDEX_DATABASE_URL"] = database_url
+            
+            cocoindex.init()
+            self.logger.info("✅ CocoIndex library initialized with database")
+            
+            # Update flow configuration with test parameters
+            update_flow_config(
+                paths=self.paths,
+                enable_polling=self.enable_polling,
+                poll_interval=self.poll_interval,
+                use_default_embedding=self.default_embedding,
+                use_default_chunking=self.default_chunking,
+                use_default_language_handler=self.default_language_handler,
+                chunk_factor_percent=self.chunk_factor_percent
+            )
+            
+            # Log configuration
+            self.logger.info(f"📁 Paths: {self.paths}")
+            self.logger.info(f"🔴 Live updates: {'ENABLED' if self.enable_polling else 'DISABLED'}")
+            if self.enable_polling:
+                self.logger.info(f"⏰ Polling interval: {self.poll_interval} seconds")
+            if self.chunk_factor_percent != 100:
+                self.logger.info(f"📏 Chunk size scaling: {self.chunk_factor_percent}%")
+            
+            # Run initial flow update to process files
+            self.logger.info("🔄 Running initial flow update...")
+            run_flow_update(
+                live_update=self.enable_polling,
+                poll_interval=self.poll_interval
+            )
+            
+            # Initialize backend and search engine
+            await self._initialize_backend()
+            await self._initialize_search_engine()
+            
+            # Start background processes if needed
+            if self.enable_polling:
+                await self._start_background_processes()
+            
+            self.logger.info("✅ CocoIndex test infrastructure initialized successfully")
+            
+        except Exception as e:
+            self.logger.error(f"❌ Failed to set up CocoIndex infrastructure: {e}")
+            raise
+    
+    async def _initialize_backend(self) -> None:
+        """Initialize the database backend."""
+        # Get database configuration from environment
+        database_url = os.getenv("DATABASE_URL", "postgresql://localhost:5432/cocoindex")
+        backend_type = os.getenv("BACKEND_TYPE", "pgvector")
+        
+        # Get table name from flow configuration
+        table_name = cocoindex.utils.get_target_default_name(
+            code_embedding_flow, "code_embeddings"
+        )
+        
+        self.logger.info(f"🔧 Initializing {backend_type} backend with table: {table_name}")
+        
+        # Create backend based on type
+        if backend_type == "pgvector":
+            from psycopg_pool import ConnectionPool
+            from pgvector.psycopg import register_vector
+            
+            pool = ConnectionPool(database_url)
+            # Register pgvector extensions
+            with pool.connection() as conn:
+                register_vector(conn)
+            
+            self.backend = BackendFactory.create_backend(
+                backend_type,
+                pool=pool,
+                table_name=table_name
+            )
+        else:
+            # For other backends that might expect connection_string
+            self.backend = BackendFactory.create_backend(
+                backend_type,
+                connection_string=database_url,
+                table_name=table_name
+            )
+        
+        self.logger.info(f"✅ Backend initialized: {backend_type}")
+    
+    async def _initialize_search_engine(self) -> None:
+        """Initialize the hybrid search engine."""
+        # Create parser
+        parser = KeywordSearchParser()
+        
+        # Get table name from flow configuration
+        table_name = cocoindex.utils.get_target_default_name(
+            code_embedding_flow, "code_embeddings"
+        )
+        
+        # Initialize hybrid search engine
+        self.hybrid_search_engine = HybridSearchEngine(
+            table_name=table_name,
+            parser=parser,
+            backend=self.backend,
+            embedding_func=safe_embedding_function
+        )
+        
+        self.logger.info("✅ Hybrid search engine initialized")
+    
+    async def _start_background_processes(self) -> None:
+        """Start background processes for live updates."""
+        # For direct testing, we'll handle background processes differently
+        # In integration tests, this would start the full background initialization
+        # For now, we'll just log that background processes would start
+        self.logger.info("✅ Background processes would start (skipped in direct tests)")
+    
+    async def perform_hybrid_search(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Perform hybrid search using the initialized infrastructure.
+        
+        Args:
+            arguments: Search arguments containing vector_query, keyword_query, etc.
+            
+        Returns:
+            Search results dictionary
+        """
+        if not self.hybrid_search_engine:
+            raise RuntimeError("Hybrid search engine not initialized")
+        
+        vector_query = arguments["vector_query"]
+        keyword_query = arguments["keyword_query"]
+        top_k = arguments.get("top_k", 10)
+        vector_weight = arguments.get("vector_weight", 0.7)
+        keyword_weight = arguments.get("keyword_weight", 0.3)
+        
+        try:
+            results = self.hybrid_search_engine.search(
+                vector_query=vector_query,
+                keyword_query=keyword_query,
+                top_k=top_k,
+                vector_weight=vector_weight,
+                keyword_weight=keyword_weight
+            )
+            
+            return {
+                "query": {
+                    "vector_query": vector_query,
+                    "keyword_query": keyword_query,
+                    "top_k": top_k,
+                    "vector_weight": vector_weight,
+                    "keyword_weight": keyword_weight
+                },
+                "results": results,
+                "total_results": len(results)
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Hybrid search failed: {e}")
+            raise
+    
+    async def cleanup(self) -> None:
+        """Clean up the infrastructure."""
+        self.logger.info("🧹 Cleaning up CocoIndex test infrastructure...")
+        
+        # Signal shutdown
+        self.shutdown_event.set()
+        
+        # Wait for background thread to finish
+        if self.background_thread and self.background_thread.is_alive():
+            self.background_thread.join(timeout=5)
+        
+        # Clean up backend
+        if self.backend:
+            # Backend cleanup if needed
+            pass
+        
+        # Stop CocoIndex library
+        try:
+            cocoindex.stop()
+            self.logger.info("✅ CocoIndex library stopped")
+        except Exception as e:
+            self.logger.warning(f"Error stopping CocoIndex: {e}")
+        
+        self.logger.info("✅ CocoIndex test infrastructure cleaned up")
+    
+    async def __aenter__(self):
+        """Async context manager entry."""
+        await self.setup()
+        return self
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit."""
+        await self.cleanup()
+
+
+async def run_cocoindex_hybrid_search_tests(
+    test_cases: List[Dict[str, Any]],
+    infrastructure: CocoIndexTestInfrastructure,
+    run_timestamp: str
+) -> List[Dict[str, Any]]:
+    """
+    Run hybrid search tests using CocoIndex infrastructure directly.
+    
+    Args:
+        test_cases: List of test case definitions
+        infrastructure: Initialized CocoIndex infrastructure
+        run_timestamp: Timestamp for result saving
+        
+    Returns:
+        List of failed test cases with error details
+    """
+    failed_tests = []
+    
+    for test_case in test_cases:
+        test_name = test_case["name"]
+        description = test_case["description"]
+        query = test_case["query"]
+        expected_results = test_case["expected_results"]
+        
+        logging.info(f"Running hybrid search test: {test_name}")
+        logging.info(f"Description: {description}")
+        
+        try:
+            # Execute search using infrastructure
+            search_data = await infrastructure.perform_hybrid_search(query)
+            
+            results = search_data.get("results", [])
+            total_results = len(results)
+            
+            # Save search results to test-results directory
+            save_search_results(test_name, query, search_data, run_timestamp)
+            
+            # Check minimum results requirement
+            min_results = expected_results.get("min_results", 1)
+            if total_results < min_results:
+                failed_tests.append({
+                    "test": test_name,
+                    "error": f"Expected at least {min_results} results, got {total_results}",
+                    "query": query
+                })
+                continue
+            
+            # Check expected results using common helper
+            if "should_contain" in expected_results:
+                for expected_item in expected_results["should_contain"]:
+                    found_match = False
+                    
+                    for result_item in results:
+                        match_found, errors = compare_expected_vs_actual(expected_item, result_item)
+                        if match_found:
+                            found_match = True
+                            break
+                    
+                    if not found_match:
+                        failed_tests.append({
+                            "test": test_name,
+                            "error": f"No matching result found for expected item: {expected_item}",
+                            "query": query,
+                            "actual_results": [{
+                                "filename": r.get("filename"),
+                                "metadata_summary": {
+                                    "classes": r.get("classes", []),
+                                    "functions": r.get("functions", []),
+                                    "imports": r.get("imports", []),
+                                    "analysis_method": r.get("metadata_json", {}).get("analysis_method", "unknown")
+                                }
+                            } for r in results[:3]]  # Show first 3 results for debugging
+                        })
+            
+        except Exception as e:
+            failed_tests.append({
+                "test": test_name,
+                "error": f"Test execution failed: {str(e)}",
+                "query": query
+            })
+    
+    return failed_tests
