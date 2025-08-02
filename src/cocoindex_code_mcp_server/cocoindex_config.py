@@ -158,6 +158,10 @@ CHUNKING_PARAMS = {
     "_DEFAULT": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200),
 }
 
+# Effective chunking parameters (potentially scaled)
+import copy
+EFFECTIVE_CHUNKING_PARAMS = copy.deepcopy(CHUNKING_PARAMS)
+
 
 # Custom language configurations for files not supported by tree-sitter
 CUSTOM_LANGUAGES = [
@@ -245,7 +249,7 @@ def extract_language(filename: str) -> str:
 @cocoindex.op.function()
 def get_chunking_params(language: str) -> ChunkingParams:
     """Get language-specific chunking parameters."""
-    return CHUNKING_PARAMS.get(language, CHUNKING_PARAMS["_DEFAULT"])
+    return EFFECTIVE_CHUNKING_PARAMS.get(language, EFFECTIVE_CHUNKING_PARAMS["_DEFAULT"])
 
 
 @cocoindex.op.function()
@@ -920,11 +924,39 @@ def code_embedding_flow(
     )
 
 
+def scale_chunking_params(chunk_factor_percent: int) -> None:
+    """Scale all chunking parameters by the given percentage factor."""
+    global EFFECTIVE_CHUNKING_PARAMS
+    
+    if chunk_factor_percent == 100:
+        # No scaling needed, use original parameters
+        EFFECTIVE_CHUNKING_PARAMS = copy.deepcopy(CHUNKING_PARAMS)
+        return
+    
+    # Create scaled versions of all chunking parameters based on original values
+    scaled_params = {}
+    for language, params in CHUNKING_PARAMS.items():
+        scaled_params[language] = ChunkingParams(
+            chunk_size=params.chunk_size * chunk_factor_percent // 100,
+            min_chunk_size=params.min_chunk_size * chunk_factor_percent // 100,
+            chunk_overlap=params.chunk_overlap * chunk_factor_percent // 100
+        )
+    
+    # Update the global EFFECTIVE_CHUNKING_PARAMS
+    EFFECTIVE_CHUNKING_PARAMS = scaled_params
+    
+    LOGGER.info(f"Scaled chunking parameters by {chunk_factor_percent}%")
+
+
 def update_flow_config(paths: Union[List[str], None] = None, enable_polling: bool = False, poll_interval: int = 30,
                        use_default_embedding: bool = False, use_default_chunking: bool = False,
-                       use_default_language_handler: bool = False) -> None:
+                       use_default_language_handler: bool = False, chunk_factor_percent: int = 100) -> None:
     """Update the global flow configuration."""
     global _global_flow_config
+    
+    # Scale chunking parameters if needed
+    scale_chunking_params(chunk_factor_percent)
+    
     _global_flow_config.update({
         'paths': paths or ["cocoindex"],
         'enable_polling': enable_polling,

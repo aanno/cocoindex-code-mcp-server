@@ -238,6 +238,7 @@ def get_mcp_resources() -> list[types.Resource]:
 @click.option("--default-embedding", is_flag=True, help="Use default CocoIndex embedding")
 @click.option("--default-chunking", is_flag=True, help="Use default CocoIndex chunking")
 @click.option("--default-language-handler", is_flag=True, help="Use default CocoIndex language handling")
+@click.option("--chunk-factor-percent", default=100, help="Chunk size scaling factor as percentage (100=default, <100=smaller, >100=larger)")
 @click.option("--port", default=3000, help="Port to listen on for HTTP")
 @click.option("--log-level", default="INFO", help="Logging level")
 @click.option("--json-response", is_flag=True, default=False, help="Enable JSON responses instead of SSE streams")
@@ -249,6 +250,7 @@ def main(
     default_embedding: bool,
     default_chunking: bool,
     default_language_handler: bool,
+    chunk_factor_percent: int,
     port: int,
     log_level: str,
     json_response: bool,
@@ -286,7 +288,8 @@ def main(
         poll_interval=poll,
         use_default_embedding=default_embedding,
         use_default_chunking=default_chunking,
-        use_default_language_handler=default_language_handler
+        use_default_language_handler=default_language_handler,
+        chunk_factor_percent=chunk_factor_percent
     )
 
     logger.info("🚀 CocoIndex RAG MCP Server starting...")
@@ -294,6 +297,8 @@ def main(
     logger.info(f"🔴 Live updates: {'ENABLED' if live_enabled else 'DISABLED'}")
     if live_enabled:
         logger.info(f"⏰ Polling interval: {poll} seconds")
+    if chunk_factor_percent != 100:
+        logger.info(f"📏 Chunk size scaling: {chunk_factor_percent}%")
 
     # Create the MCP server
     app: Server = Server("cocoindex-rag")
