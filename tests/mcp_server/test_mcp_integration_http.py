@@ -427,7 +427,7 @@ class DataProcessor:
         run_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]  # microseconds to milliseconds
         
         # Copy test fixtures to /workspaces/rust/tmp/ for indexing
-        fixtures_dir = Path(__file__).parent.parent / "fixtures"
+        fixtures_dir = Path(__file__).parent.parent / "fixtures" / "lang_examples"
         tmp_dir = Path("/workspaces/rust/tmp")
         
         # Ensure tmp directory exists
