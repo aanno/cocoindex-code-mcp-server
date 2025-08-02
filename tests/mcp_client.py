@@ -43,10 +43,10 @@ class MCPTestClient:
         self.transport = transport
         
         if transport == 'http':
-            self.server_url = f"http://{host}:{port}/mcp"
+            self.server_url = f"http://{host}:{port}/mcp/"
             self.http_client = httpx.AsyncClient(timeout=30.0)
         else:
-            self.server_url = None
+            self.server_url = f"http://{host}:{port}/mcp/"
             self.http_client = None
             
         # For streaming HTTP MCP client
@@ -424,8 +424,31 @@ class MCPTestClient:
     async def check_server_running(self) -> bool:
         """Check if MCP server is running."""
         try:
-            tools = await self.list_tools()
-            return len(tools) > 0
+            if self.transport == 'http':
+                if not self.http_client:
+                    return False
+                    
+                # Test with a simple tools/list request
+                response = await self.http_client.post(
+                    self.server_url,
+                    json={
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "method": "tools/list",
+                        "params": {}
+                    },
+                    headers={
+                        "Content-Type": "application/json",
+                        "Accept": "application/json, text/event-stream"
+                    }
+                )
+                return response.status_code == 200
+            else:
+                # For streaming transport, create a temporary connection
+                temp_client = MCPTestClient(self.host, self.port, 'streaming')
+                async with temp_client:
+                    tools = await temp_client.list_tools()
+                    return len(tools) > 0
         except Exception as e:
             logger.debug(f"Server check error: {e}")
             return False
