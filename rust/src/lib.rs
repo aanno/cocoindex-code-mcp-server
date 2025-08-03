@@ -185,6 +185,64 @@ pub struct ChunkingResult {
     pub coverage_complete: bool,
 }
 
+/// Context information passed down during recursive splitting
+#[derive(Clone, Debug)]
+pub struct ChunkingContext {
+    pub ancestors: Vec<ContextNode>,
+    pub max_chunk_size: usize,
+    pub current_module: Option<String>,
+    pub current_class: Option<String>,
+    pub current_function: Option<String>,
+}
+
+/// Represents a contextual ancestor node
+#[derive(Clone, Debug)]
+pub struct ContextNode {
+    pub node_type: String,
+    pub name: Option<String>,
+    pub start_byte: usize,
+    pub end_byte: usize,
+}
+
+/// Enhanced chunking parameters from Python config
+#[pyclass]
+#[derive(Clone)]
+pub struct ChunkingParams {
+    pub chunk_size: usize,
+    pub min_chunk_size: usize,
+    pub chunk_overlap: usize,
+    pub max_chunk_size: usize,
+}
+
+#[pymethods]
+impl ChunkingParams {
+    #[new]
+    fn new(chunk_size: usize, min_chunk_size: usize, chunk_overlap: usize, max_chunk_size: usize) -> Self {
+        ChunkingParams {
+            chunk_size,
+            min_chunk_size, 
+            chunk_overlap,
+            max_chunk_size,
+        }
+    }
+    
+    fn chunk_size(&self) -> usize {
+        self.chunk_size
+    }
+    
+    fn min_chunk_size(&self) -> usize {
+        self.min_chunk_size
+    }
+    
+    fn chunk_overlap(&self) -> usize {
+        self.chunk_overlap
+    }
+    
+    fn max_chunk_size(&self) -> usize {
+        self.max_chunk_size
+    }
+}
+
 #[pymethods]
 impl ChunkingResult {
     fn chunks(&self) -> Vec<HaskellChunk> {
@@ -246,6 +304,65 @@ fn extract_semantic_chunks(tree: &Tree, source: &str) -> Vec<HaskellChunk> {
     chunks
 }
 
+fn extract_semantic_chunks_with_recursive_splitting(tree: &Tree, source: &str, params: &ChunkingParams) -> ChunkingResult {
+    let root_node = tree.root_node();
+    
+    // Initialize context with empty ancestors
+    let context = ChunkingContext {
+        ancestors: Vec::new(),
+        max_chunk_size: params.max_chunk_size,
+        current_module: None,
+        current_class: None,
+        current_function: None,
+    };
+    
+    // First, count error nodes
+    let mut error_stats = ErrorNodeStats {
+        error_count: 0,
+        nodes_with_errors: 0,
+        uncovered_ranges: Vec::new(),
+        should_fallback: false,
+    };
+    
+    let mut cursor = root_node.walk();
+    count_error_nodes(&mut cursor, &mut error_stats);
+    
+    // Check if we should bail out to regex fallback
+    error_stats.should_fallback = error_stats.error_count >= ERROR_FALLBACK_THRESHOLD;
+    
+    if error_stats.should_fallback {
+        // Use regex fallback chunking
+        let regex_chunks = create_regex_fallback_chunks(source);
+        return ChunkingResult {
+            chunks: regex_chunks,
+            error_stats,
+            chunking_method: "regex_fallback".to_string(),
+            coverage_complete: true,
+        };
+    }
+    
+    // Use ASTChunk-style recursive splitting
+    let mut chunks = Vec::new();
+    let mut cursor = root_node.walk();
+    extract_chunks_with_recursive_splitting(&mut cursor, source, &mut chunks, &context, &mut error_stats);
+    
+    // Merge adjacent small chunks if possible
+    let merged_chunks = merge_adjacent_chunks(chunks, params.max_chunk_size);
+    
+    let chunking_method = if error_stats.error_count > 0 {
+        "ast_recursive_with_errors".to_string()
+    } else {
+        "ast_recursive".to_string()
+    };
+    
+    ChunkingResult {
+        chunks: merged_chunks,
+        error_stats,
+        chunking_method,
+        coverage_complete: true,
+    }
+}
+
 fn extract_semantic_chunks_with_error_handling(tree: &Tree, source: &str) -> ChunkingResult {
     let root_node = tree.root_node();
     
@@ -294,6 +411,305 @@ fn extract_semantic_chunks_with_error_handling(tree: &Tree, source: &str) -> Chu
         chunking_method,
         coverage_complete: true,
     }
+}
+
+fn extract_chunks_with_recursive_splitting(
+    cursor: &mut TreeCursor,
+    source: &str,
+    chunks: &mut Vec<HaskellChunk>,
+    context: &ChunkingContext,
+    error_stats: &mut ErrorNodeStats,
+) {
+    let node = cursor.node();
+    let node_type = node.kind();
+    
+    // Handle error nodes
+    if node.is_error() {
+        handle_error_node_with_context(cursor, source, chunks, context, error_stats);
+        return;
+    }
+    
+    // Update context with current node information
+    let mut new_context = context.clone();
+    update_context_for_node(&node, source, &mut new_context);
+    
+    // Define semantic chunk types
+    let chunk_node_types = [
+        "signature", "function", "bind", "data_type", "class", 
+        "instance", "import", "haddock", "module",
+    ];
+    
+    if chunk_node_types.contains(&node_type) {
+        let start_byte = node.start_byte();
+        let end_byte = node.end_byte();
+        let chunk_size = end_byte - start_byte;
+        
+        // Check if this node is too large and needs recursive splitting
+        if chunk_size > new_context.max_chunk_size {
+            // Recursively process children
+            if cursor.goto_first_child() {
+                loop {
+                    extract_chunks_with_recursive_splitting(cursor, source, chunks, &new_context, error_stats);
+                    if !cursor.goto_next_sibling() {
+                        break;
+                    }
+                }
+                cursor.goto_parent();
+            }
+        } else {
+            // Create chunk with context information
+            let chunk = create_chunk_with_context(&node, source, &new_context, node_type);
+            chunks.push(chunk);
+        }
+    } else {
+        // For non-chunk nodes, process children
+        if cursor.goto_first_child() {
+            loop {
+                extract_chunks_with_recursive_splitting(cursor, source, chunks, &new_context, error_stats);
+                if !cursor.goto_next_sibling() {
+                    break;
+                }
+            }
+            cursor.goto_parent();
+        }
+    }
+}
+
+fn update_context_for_node(node: &Node, source: &str, context: &mut ChunkingContext) {
+    let node_type = node.kind();
+    
+    match node_type {
+        "module" => {
+            if let Some(name) = extract_module_name(node, source) {
+                context.current_module = Some(name.clone());
+                context.ancestors.push(ContextNode {
+                    node_type: "module".to_string(),
+                    name: Some(name),
+                    start_byte: node.start_byte(),
+                    end_byte: node.end_byte(),
+                });
+            }
+        }
+        "class" => {
+            if let Some(name) = extract_class_name(node, source) {
+                context.current_class = Some(name.clone());
+                context.ancestors.push(ContextNode {
+                    node_type: "class".to_string(),
+                    name: Some(name),
+                    start_byte: node.start_byte(),
+                    end_byte: node.end_byte(),
+                });
+            }
+        }
+        "function" | "bind" => {
+            if let Some(name) = extract_function_name(node, source) {
+                context.current_function = Some(name.clone());
+                context.ancestors.push(ContextNode {
+                    node_type: "function".to_string(),
+                    name: Some(name),
+                    start_byte: node.start_byte(),
+                    end_byte: node.end_byte(),
+                });
+            }
+        }
+        _ => {}
+    }
+}
+
+fn create_chunk_with_context(node: &Node, source: &str, context: &ChunkingContext, node_type: &str) -> HaskellChunk {
+    let start_byte = node.start_byte();
+    let end_byte = node.end_byte();
+    let start_pos = node.start_position();
+    let end_pos = node.end_position();
+    let text = source[start_byte..end_byte].to_string();
+    
+    let mut metadata = HashMap::new();
+    
+    // Add context information
+    if let Some(ref module) = context.current_module {
+        metadata.insert("module_name".to_string(), module.clone());
+    }
+    if let Some(ref class) = context.current_class {
+        metadata.insert("class_name".to_string(), class.clone());
+    }
+    if let Some(ref function) = context.current_function {
+        metadata.insert("parent_function".to_string(), function.clone());
+    }
+    
+    // Add ancestor path for semantic context
+    let ancestor_path: Vec<String> = context.ancestors.iter()
+        .filter_map(|a| a.name.as_ref())
+        .cloned()
+        .collect();
+    if !ancestor_path.is_empty() {
+        metadata.insert("ancestor_path".to_string(), ancestor_path.join("::"));
+    }
+    
+    // Add chunking method
+    metadata.insert("chunking_method".to_string(), "ast_recursive".to_string());
+    
+    // Node-specific metadata
+    match node_type {
+        "function" | "bind" => {
+            if let Some(name) = extract_function_name(node, source) {
+                metadata.insert("function_name".to_string(), name);
+            }
+            metadata.insert("category".to_string(), "function".to_string());
+        }
+        "signature" => {
+            if let Some(name) = extract_function_name(node, source) {
+                metadata.insert("function_name".to_string(), name);
+            }
+            metadata.insert("category".to_string(), "signature".to_string());
+        }
+        "data_type" => {
+            if let Some(name) = extract_type_name(node, source) {
+                metadata.insert("type_name".to_string(), name);
+            }
+            metadata.insert("category".to_string(), "data_type".to_string());
+        }
+        "class" => {
+            if let Some(name) = extract_class_name(node, source) {
+                metadata.insert("class_name".to_string(), name);
+            }
+            metadata.insert("category".to_string(), "class".to_string());
+        }
+        "instance" => {
+            if let Some(name) = extract_class_name(node, source) {
+                metadata.insert("class_name".to_string(), name);
+            }
+            metadata.insert("category".to_string(), "instance".to_string());
+        }
+        "import" => {
+            if let Some(name) = extract_import_name(node, source) {
+                metadata.insert("import_name".to_string(), name);
+            }
+            metadata.insert("category".to_string(), "import".to_string());
+        }
+        "module" => {
+            if let Some(name) = extract_module_name(node, source) {
+                metadata.insert("module_name".to_string(), name);
+            }
+            metadata.insert("category".to_string(), "module".to_string());
+        }
+        _ => {
+            metadata.insert("category".to_string(), "other".to_string());
+        }
+    }
+    
+    HaskellChunk {
+        text,
+        start_byte,
+        end_byte,
+        start_line: start_pos.row,
+        end_line: end_pos.row,
+        node_type: node_type.to_string(),
+        metadata,
+    }
+}
+
+fn merge_adjacent_chunks(chunks: Vec<HaskellChunk>, max_size: usize) -> Vec<HaskellChunk> {
+    if chunks.is_empty() {
+        return chunks;
+    }
+    
+    let mut merged = Vec::new();
+    let mut current_chunk = chunks[0].clone();
+    
+    for chunk in chunks.into_iter().skip(1) {
+        let combined_size = current_chunk.text.len() + chunk.text.len();
+        
+        // Check if chunks can be merged (same category and within size limit)
+        let can_merge = combined_size <= max_size
+            && current_chunk.metadata.get("category") == chunk.metadata.get("category")
+            && current_chunk.end_byte == chunk.start_byte;
+            
+        if can_merge {
+            // Merge chunks
+            current_chunk.text.push('\n');
+            current_chunk.text.push_str(&chunk.text);
+            current_chunk.end_byte = chunk.end_byte;
+            current_chunk.end_line = chunk.end_line;
+        } else {
+            merged.push(current_chunk);
+            current_chunk = chunk;
+        }
+    }
+    
+    merged.push(current_chunk);
+    merged
+}
+
+fn handle_error_node_with_context(
+    cursor: &mut TreeCursor,
+    source: &str,
+    chunks: &mut Vec<HaskellChunk>,
+    context: &ChunkingContext,
+    error_stats: &mut ErrorNodeStats,
+) {
+    let node = cursor.node();
+    let start_byte = node.start_byte();
+    let end_byte = node.end_byte();
+    
+    // Try to process children of error node
+    if cursor.goto_first_child() {
+        loop {
+            let child_node = cursor.node();
+            if !child_node.is_error() {
+                extract_chunks_with_recursive_splitting(cursor, source, chunks, context, error_stats);
+            }
+            if !cursor.goto_next_sibling() {
+                break;
+            }
+        }
+        cursor.goto_parent();
+    }
+    
+    // Create error chunk for uncovered ranges
+    let error_chunk = create_error_chunk_with_context(start_byte, end_byte, source, context);
+    chunks.push(error_chunk);
+    error_stats.uncovered_ranges.push((start_byte, end_byte));
+}
+
+fn create_error_chunk_with_context(start_byte: usize, end_byte: usize, source: &str, context: &ChunkingContext) -> HaskellChunk {
+    let text = source[start_byte..end_byte].to_string();
+    let start_line = source[..start_byte].matches('\n').count();
+    let end_line = source[..end_byte].matches('\n').count();
+    
+    let mut metadata = HashMap::new();
+    metadata.insert("category".to_string(), "error_recovery".to_string());
+    metadata.insert("chunking_method".to_string(), "error_recovery".to_string());
+    metadata.insert("is_error_chunk".to_string(), "true".to_string());
+    
+    // Add context information even for error chunks
+    if let Some(ref module) = context.current_module {
+        metadata.insert("module_name".to_string(), module.clone());
+    }
+    if let Some(ref class) = context.current_class {
+        metadata.insert("class_name".to_string(), class.clone());
+    }
+    
+    HaskellChunk {
+        text,
+        start_byte,
+        end_byte,
+        start_line,
+        end_line,
+        node_type: "error_recovery".to_string(),
+        metadata,
+    }
+}
+
+fn extract_module_name(node: &Node, source: &str) -> Option<String> {
+    for child in node.children(&mut node.walk()) {
+        if child.kind() == "module_id" {
+            let name = source[child.start_byte()..child.end_byte()].trim();
+            if !name.is_empty() {
+                return Some(name.to_string());
+            }
+        }
+    }
+    None
 }
 
 fn count_error_nodes(cursor: &mut TreeCursor, stats: &mut ErrorNodeStats) {
@@ -586,7 +1002,6 @@ fn extract_class_name(node: &Node, source: &str) -> Option<String> {
     None
 }
 
-// Removed extract_module_name function as it was unused
 
 fn extract_import_name(node: &Node, source: &str) -> Option<String> {
     // Look for module nodes in imports
@@ -619,6 +1034,26 @@ fn get_haskell_ast_chunks(source: &str) -> PyResult<Vec<HaskellChunk>> {
         Some(tree) => {
             let chunks = extract_semantic_chunks(&tree, source);
             Ok(chunks)
+        }
+        None => Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
+            "Failed to parse Haskell source"
+        )),
+    }
+}
+
+#[pyfunction]
+fn get_haskell_ast_chunks_with_params(source: &str, params: ChunkingParams) -> PyResult<ChunkingResult> {
+    let mut parser = Parser::new();
+    let language = tree_sitter_haskell::LANGUAGE.into();
+    parser.set_language(&language)
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
+            format!("Failed to set Haskell language: {}", e)
+        ))?;
+    
+    match parser.parse(source, None) {
+        Some(tree) => {
+            let result = extract_semantic_chunks_with_recursive_splitting(&tree, source, &params);
+            Ok(result)
         }
         None => Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
             "Failed to parse Haskell source"
@@ -884,11 +1319,13 @@ fn haskell_tree_sitter(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<HaskellChunk>()?;
     m.add_class::<ErrorNodeStats>()?;
     m.add_class::<ChunkingResult>()?;
+    m.add_class::<ChunkingParams>()?;
     m.add_function(wrap_pyfunction!(parse_haskell, m)?)?;
     m.add_function(wrap_pyfunction!(get_haskell_separators, m)?)?;
     m.add_function(wrap_pyfunction!(get_haskell_ast_chunks, m)?)?;
     m.add_function(wrap_pyfunction!(get_haskell_ast_chunks_enhanced, m)?)?;
     m.add_function(wrap_pyfunction!(get_haskell_ast_chunks_with_fallback, m)?)?;
+    m.add_function(wrap_pyfunction!(get_haskell_ast_chunks_with_params, m)?)?;
     m.add_function(wrap_pyfunction!(debug_haskell_ast_nodes, m)?)?;
     Ok(())
 }

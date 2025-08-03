@@ -117,9 +117,24 @@ class EnhancedHaskellChunker:
             return self._fallback_chunking(content, file_path)
 
     def _ast_based_chunking(self, content: str, file_path: str) -> List[Dict[str, Any]]:
-        """AST-based chunking using tree-sitter."""
-        # Use the tree-sitter AST chunking
-        ast_chunks = haskell_tree_sitter.get_haskell_ast_chunks_with_fallback(content)
+        """AST-based chunking using tree-sitter with configurable parameters."""
+        try:
+            # Create chunking parameters from config
+            params = haskell_tree_sitter.ChunkingParams(
+                chunk_size=self.config.max_chunk_size,
+                min_chunk_size=min(self.config.max_chunk_size // 4, 400),  # Conservative min size
+                chunk_overlap=self.config.chunk_overlap,
+                max_chunk_size=self.config.max_chunk_size
+            )
+            
+            # Use the new parameterized AST chunking with recursive splitting
+            chunking_result = haskell_tree_sitter.get_haskell_ast_chunks_with_params(content, params)
+            ast_chunks = chunking_result.chunks()
+            
+        except Exception as e:
+            # Fallback to the original method if parameterized version fails
+            LOGGER.warning(f"Parameterized chunking failed, using fallback: {e}")
+            ast_chunks = haskell_tree_sitter.get_haskell_ast_chunks_with_fallback(content)
 
         result = []
         for i, chunk in enumerate(ast_chunks):
@@ -131,7 +146,7 @@ class EnhancedHaskellChunker:
                 "end_byte": chunk.end_byte(),
                 "node_type": chunk.node_type(),
                 "chunk_id": i,
-                "method": "haskell_ast",
+                "method": "haskell_ast_with_context",
                 "original_metadata": chunk.metadata(),
             }
             result.append(chunk_dict)

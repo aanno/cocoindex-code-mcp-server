@@ -66,6 +66,7 @@ class ChunkingParams:
     chunk_size: int
     min_chunk_size: int
     chunk_overlap: int
+    max_chunk_size: int = None  # For recursive splitting (defaults to chunk_size * 2)
 
 
 @dataclass
@@ -152,10 +153,10 @@ CHUNKING_PARAMS = {
     # Others
     "Pascal": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200),
     "Swift": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200),
-    "Haskell": ChunkingParams(chunk_size=1200, min_chunk_size=300, chunk_overlap=200),
+    "Haskell": ChunkingParams(chunk_size=1200, min_chunk_size=300, chunk_overlap=200, max_chunk_size=2500),
 
     # Default fallback
-    "_DEFAULT": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200),
+    "_DEFAULT": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200, max_chunk_size=2000),
 }
 
 # Effective chunking parameters (potentially scaled)
@@ -939,7 +940,8 @@ def scale_chunking_params(chunk_factor_percent: int) -> None:
         scaled_params[language] = ChunkingParams(
             chunk_size=params.chunk_size * chunk_factor_percent // 100,
             min_chunk_size=params.min_chunk_size * chunk_factor_percent // 100,
-            chunk_overlap=params.chunk_overlap * chunk_factor_percent // 100
+            chunk_overlap=params.chunk_overlap * chunk_factor_percent // 100,
+            max_chunk_size=(params.max_chunk_size * chunk_factor_percent // 100) if params.max_chunk_size else None
         )
     
     # Update the global EFFECTIVE_CHUNKING_PARAMS

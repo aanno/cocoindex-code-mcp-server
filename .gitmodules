@@ -7,3 +7,6 @@
 [submodule "ai-enhanced-app-dev"]
 	path = ai-enhanced-app-dev
 	url = git@github.com:aanno/ai-enhanced-app-dev.git
+[submodule "astchunk"]
+	path = astchunk
+	url = git@github.com:yilinjz/astchunk.git
