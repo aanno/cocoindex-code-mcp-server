@@ -52,6 +52,12 @@ class ChunkMetadata(TypedDict, total=False):
     has_async: bool
     has_classes: bool
     
+    # Analysis tracking metadata (promoted from metadata_json)
+    analysis_method: str
+    chunking_method: str
+    tree_sitter_chunking_error: bool
+    tree_sitter_analyze_error: bool
+    
     # Raw metadata (backend-specific storage)
     metadata_json: Dict[str, Any]
     
@@ -74,6 +80,9 @@ class ExtractedMetadata(TypedDict):
     has_classes: bool
     decorators_used: List[str]
     analysis_method: str
+    chunking_method: str
+    tree_sitter_chunking_error: bool
+    tree_sitter_analyze_error: bool
 
 
 # =============================================================================
@@ -277,6 +286,12 @@ def validate_chunk_metadata(metadata: Dict[str, Any]) -> ChunkMetadata:
     validated["has_type_hints"] = bool(metadata.get("has_type_hints", False))
     validated["has_async"] = bool(metadata.get("has_async", False))
     validated["has_classes"] = bool(metadata.get("has_classes", False))
+    
+    # Analysis tracking metadata with defaults
+    validated["analysis_method"] = str(metadata.get("analysis_method", "unknown"))
+    validated["chunking_method"] = str(metadata.get("chunking_method", "unknown"))
+    validated["tree_sitter_chunking_error"] = bool(metadata.get("tree_sitter_chunking_error", False))
+    validated["tree_sitter_analyze_error"] = bool(metadata.get("tree_sitter_analyze_error", False))
     
     if "start" in metadata:
         validated["start"] = int(metadata["start"])

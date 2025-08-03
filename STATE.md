@@ -1,36 +1,38 @@
 # Current Project State
 
 ## Session Summary
-Successfully investigated and partially resolved Kotlin/Haskell language analyzer issues in the CocoIndex code MCP server.
+Working on database schema enhancement to promote metadata fields from `metadata_json` to dedicated database columns, addressing issues where important fields like `chunking_method`, `analysis_method`, and `decorators_used` are only available in JSON format.
 
 ## Completed Work
 
-### ✅ Kotlin Language Analyzer - FIXED
-- **Issue**: Functions and imports not detected (0 results in hybrid search)
-- **Root Cause**: Indentation bug in `/workspaces/rust/src/cocoindex_code_mcp_server/language_handlers/kotlin_visitor.py:60-61`
-- **Fix**: Moved `self.functions.append(func_name)` inside the `if text is not None:` conditional block
-- **Result**: Now correctly detects 9 functions, 2 classes, 3 data classes with `analysis_method: 'kotlin_ast_visitor'`
-- **Status**: ✅ **COMPLETELY RESOLVED**
+### ✅ Database Schema Enhancement - IN PROGRESS
+- **Issue**: Important metadata fields only available in `metadata_json` JSONB column, making queries inefficient
+- **User Request**: Promote `chunking_method`, `tree_sitter_chunking_error`, `tree_sitter_analyze_error`, `analysis_method` to dedicated columns
+- **Approach**: Comprehensive metadata field promotion from JSON to typed database columns
 
-### 🔍 Haskell Language Analyzer - ROOT CAUSE IDENTIFIED
-- **Issue**: Functions and imports not detected despite `analysis_method: 'haskell_chunk_visitor'` being set
-- **Root Cause**: Custom Rust parser with tree-sitter-haskell creates ERROR nodes in AST for complex files
-- **Evidence**: 47 ERROR nodes in `haskell_example_1.hs` parse tree prevent semantic chunk extraction
-- **Technical**: `extract_chunks_recursive()` in `/workspaces/rust/rust/src/lib.rs:190-298` fails on ERROR nodes
-- **Fallback**: Falls back to regex chunking producing `regex_chunk` types that handler cannot process
-- **Status**: 🔧 **REQUIRES RUST PARSER FIXES** (documented in `TODO-haskell.md`)
+### ✅ Schema Updates (schemas.py) - COMPLETED
+- **Added new fields to ChunkMetadata TypedDict**:
+  - `analysis_method: str` 
+  - `chunking_method: str`
+  - `tree_sitter_chunking_error: bool`
+  - `tree_sitter_analyze_error: bool`
+- **Updated ExtractedMetadata** with same new fields
+- **Enhanced validation function** with proper defaults for new fields
 
-### 📋 Testing Infrastructure Created
-- **`tests/test_haskell_kotlin_analysis_issues.py`**: Demonstrates Kotlin fix and Haskell issue (expected failure)
-- **`tests/test_ast_chunk_operations.py`**: Tests AST chunking functionality
-- **`tests/test_metadata_extraction.py`**: Tests metadata extraction (needs minor fixes)
-- **`examples/debugging/`**: Converted debug scripts into reusable examples
+### ✅ CocoIndex Configuration Updates (cocoindex_config.py) - COMPLETED
+- **Created field extractors** using lambda functions for new fields:
+  - `analysis_method`: extracted from metadata_json with "unknown" default
+  - `chunking_method`: extracted from metadata_json with "unknown" default
+  - `tree_sitter_chunking_error`: extracted with False default  
+  - `tree_sitter_analyze_error`: extracted with False default
+  - `decorators_used`: extracted with [] default (was missing before)
+- **Type-safe extraction** with JSON parsing and proper fallbacks
 
-### 🧹 Project Organization
-- Cleaned up all stray debug files from root directory
-- Moved valuable debugging scripts to `examples/debugging/`
-- Converted ad-hoc scripts into proper pytest test cases
-- Removed nested `/workspaces/rust/workspaces/` directory structure
+### ✅ Previous Session Work - COMPLETED
+- **Kotlin Language Analyzer**: Fixed indentation bug, now works correctly
+- **Haskell Language Analyzer**: Root cause identified (Rust parser ERROR nodes)
+- **Chunking Method Tracking**: Implemented comprehensive tracking throughout codebase
+- **Tree-sitter Error Tracking**: Added error detection for both chunking and analysis phases
 
 ## Current File Structure
 ```

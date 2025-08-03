@@ -579,6 +579,84 @@ def extract_has_classes_field(metadata_json: str) -> bool:
         return False
 
 
+@cocoindex.op.function()
+def promote_metadata_fields(metadata_json: str) -> Dict[str, Any]:
+    """
+    Promote all fields from metadata_json to top-level fields with appropriate type conversion.
+    This replaces individual extract_*_field functions with a single comprehensive promotion.
+    """
+    try:
+        if not metadata_json:
+            return {}
+        
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
+        if not isinstance(metadata_dict, dict):
+            return {}
+        
+        promoted = {}
+        
+        # Define type conversions for known fields
+        field_conversions = {
+            # String fields
+            'analysis_method': lambda x: str(x) if x is not None else "unknown",
+            'chunking_method': lambda x: str(x) if x is not None else "unknown",
+            'language': lambda x: str(x) if x is not None else "unknown",
+            'filename': lambda x: str(x) if x is not None else "",
+            
+            # Boolean fields (handle string "true"/"false" values)
+            'tree_sitter_chunking_error': lambda x: x.lower() == "true" if isinstance(x, str) else bool(x) if x is not None else False,
+            'tree_sitter_analyze_error': lambda x: x.lower() == "true" if isinstance(x, str) else bool(x) if x is not None else False,
+            'has_type_hints': lambda x: bool(x) if x is not None else False,
+            'has_async': lambda x: bool(x) if x is not None else False,
+            'has_classes': lambda x: bool(x) if x is not None else False,
+            'success': lambda x: bool(x) if x is not None else False,
+            
+            # Integer fields
+            'complexity_score': lambda x: int(x) if x is not None and str(x).isdigit() else 0,
+            'line_count': lambda x: int(x) if x is not None and str(x).isdigit() else 0,
+            'char_count': lambda x: int(x) if x is not None and str(x).isdigit() else 0,
+            'parse_errors': lambda x: int(x) if x is not None and str(x).isdigit() else 0,
+            
+            # List fields
+            'functions': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
+            'classes': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
+            'imports': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
+            'decorators_used': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
+            'errors': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
+        }
+        
+        # Apply conversions for known fields
+        for field, converter in field_conversions.items():
+            if field in metadata_dict:
+                try:
+                    promoted[field] = converter(metadata_dict[field])
+                except Exception as e:
+                    LOGGER.debug(f"Failed to convert field {field}: {e}")
+                    # Set safe defaults based on field type
+                    if field in ['analysis_method', 'chunking_method', 'language', 'filename']:
+                        promoted[field] = "unknown" if field != 'filename' else ""
+                    elif field in ['tree_sitter_chunking_error', 'tree_sitter_analyze_error', 'has_type_hints', 'has_async', 'has_classes', 'success']:
+                        promoted[field] = False
+                    elif field in ['complexity_score', 'line_count', 'char_count', 'parse_errors']:
+                        promoted[field] = 0
+                    elif field in ['functions', 'classes', 'imports', 'decorators_used', 'errors']:
+                        promoted[field] = []
+        
+        # For any remaining fields not in our conversion map, pass them through with basic type safety
+        for field, value in metadata_dict.items():
+            if field not in promoted and field not in ['metadata_json']:  # Avoid infinite recursion
+                if isinstance(value, (str, int, float, bool, list, dict)):
+                    promoted[field] = value
+                else:
+                    promoted[field] = str(value)  # Convert unknown types to string
+        
+        return promoted
+        
+    except Exception as e:
+        LOGGER.debug(f"Failed to promote metadata fields: {e}")
+        return {}
+
+
 @cocoindex.transform_flow()
 def code_to_embedding(
     text: cocoindex.DataSlice[str],
@@ -883,7 +961,8 @@ def code_embedding_flow(
                         filename=file["filename"]
                     )
 
-                # Extract individual metadata fields using CocoIndex transforms
+                # Promote all metadata fields from JSON to top-level fields using individual extractors
+                # (We need individual extractors for CocoIndex to properly type and transform each field)
                 chunk["functions"] = chunk["extracted_metadata"].transform(extract_functions_field)
                 chunk["classes"] = chunk["extracted_metadata"].transform(extract_classes_field)
                 chunk["imports"] = chunk["extracted_metadata"].transform(extract_imports_field)
@@ -891,6 +970,15 @@ def code_embedding_flow(
                 chunk["has_type_hints"] = chunk["extracted_metadata"].transform(extract_has_type_hints_field)
                 chunk["has_async"] = chunk["extracted_metadata"].transform(extract_has_async_field)
                 chunk["has_classes"] = chunk["extracted_metadata"].transform(extract_has_classes_field)
+                
+                # New analysis tracking fields - create simple extractors
+                chunk["analysis_method"] = chunk["extracted_metadata"].transform(lambda x: json.loads(x).get("analysis_method", "unknown") if x else "unknown")
+                chunk["chunking_method"] = chunk["extracted_metadata"].transform(lambda x: json.loads(x).get("chunking_method", "unknown") if x else "unknown")
+                chunk["tree_sitter_chunking_error"] = chunk["extracted_metadata"].transform(lambda x: json.loads(x).get("tree_sitter_chunking_error", False) if x else False)
+                chunk["tree_sitter_analyze_error"] = chunk["extracted_metadata"].transform(lambda x: json.loads(x).get("tree_sitter_analyze_error", False) if x else False)
+                
+                # Include decorators_used which was missing before
+                chunk["decorators_used"] = chunk["extracted_metadata"].transform(lambda x: json.loads(x).get("decorators_used", []) if x else [])
 
                 code_embeddings.collect(
                     filename=file["filename"],
@@ -910,6 +998,13 @@ def code_embedding_flow(
                     has_type_hints=chunk["has_type_hints"],
                     has_async=chunk["has_async"],
                     has_classes=chunk["has_classes"],
+                    # New analysis tracking fields
+                    analysis_method=chunk["analysis_method"],
+                    chunking_method=chunk["chunking_method"],
+                    tree_sitter_chunking_error=chunk["tree_sitter_chunking_error"],
+                    tree_sitter_analyze_error=chunk["tree_sitter_analyze_error"],
+                    # Include decorators_used which was missing before
+                    decorators_used=chunk["decorators_used"],
                 )
 
     code_embeddings.export(
