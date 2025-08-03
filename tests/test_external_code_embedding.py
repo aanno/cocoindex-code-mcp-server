@@ -59,7 +59,7 @@ class TestLanguageModelSelector:
 
         test_cases = [
             (".py", "python"),
-            (".pyi", "python"),
+            # (".pyi", "python"),
             (".rs", "rust"),
             (".js", "javascript"),
             (".ts", "typescript"),

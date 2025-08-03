@@ -7,7 +7,7 @@ Converted from test_ast_chunk_operation.py and test_cocoindex_chunking.py
 import pytest
 from pathlib import Path
 import sys
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+# sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from cocoindex_code_mcp_server.ast_chunking import CocoIndexASTChunker, Chunk, create_ast_chunking_operation
 

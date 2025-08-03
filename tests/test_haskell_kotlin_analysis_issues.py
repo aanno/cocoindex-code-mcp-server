@@ -13,7 +13,7 @@ from pathlib import Path
 
 # Add src to path for imports
 import sys
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+# sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from cocoindex_code_mcp_server.language_handlers.kotlin_visitor import analyze_kotlin_code
 from cocoindex_code_mcp_server.language_handlers.haskell_visitor import analyze_haskell_code

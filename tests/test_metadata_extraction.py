@@ -7,7 +7,8 @@ Converted from debug_metadata_extraction.py and related debugging scripts.
 import pytest
 from pathlib import Path
 import sys
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+import json
+# sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from cocoindex_code_mcp_server.cocoindex_config import extract_code_metadata
 
@@ -44,7 +45,6 @@ async def async_function():
     await some_operation()
 '''
         
-        import json
         metadata_json = extract_code_metadata(python_code, "python", "test.py")
         metadata = json.loads(metadata_json)
         

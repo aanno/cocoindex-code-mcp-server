@@ -11,8 +11,8 @@ import os
 from pathlib import Path
 
 # Add rust and src paths for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / 'rust'))
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
+# sys.path.insert(0, str(Path(__file__).parent.parent / 'rust'))
+# sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 # Error threshold constants (should match those in the implementation)
 ERROR_FALLBACK_THRESHOLD = 10

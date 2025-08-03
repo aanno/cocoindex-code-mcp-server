@@ -93,7 +93,7 @@ You can import and run the test programmatically:
 
 ```python
 import sys
-sys.path.append('tests/lang/haskell')
+# sys.path.append('tests/lang/haskell')
 from test_haskell_comprehensive_baseline import TestHaskellComprehensiveBaseline
 
 # Create test instance and run comparison
