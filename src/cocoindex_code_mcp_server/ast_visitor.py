@@ -591,6 +591,9 @@ class MultiLevelAnalyzer:
             if tree_metadata:
                 metadata.update(tree_metadata)
                 metadata['analysis_method'] = 'tree_sitter'
+                # Tree-sitter analyze error tracking is already included in tree_metadata
+                if 'tree_sitter_analyze_error' not in metadata:
+                    metadata['tree_sitter_analyze_error'] = 'false'
                 return metadata
 
         # Strategy 2: Language-specific AST (Python only for now)
@@ -600,6 +603,8 @@ class MultiLevelAnalyzer:
             if python_metadata:
                 metadata.update(python_metadata)
                 metadata['analysis_method'] = 'python_ast'
+                # Tree-sitter not used for Python AST, so no tree-sitter error
+                metadata['tree_sitter_analyze_error'] = 'false'
                 return metadata
 
         # Strategy 3: Enhanced regex patterns
@@ -608,6 +613,8 @@ class MultiLevelAnalyzer:
             LOGGER.debug(f"Strategy 3: Regex analysis result for {filename}: {regex_metadata}")
             metadata.update(regex_metadata)
             metadata['analysis_method'] = 'enhanced_regex'
+            # No tree-sitter used for regex analysis
+            metadata['tree_sitter_analyze_error'] = 'false'
             return metadata
 
         # Strategy 4: Basic text analysis
@@ -615,6 +622,8 @@ class MultiLevelAnalyzer:
         LOGGER.debug(f"Strategy 4: Basic text analysis result for {filename}: {basic_metadata}")
         metadata.update(basic_metadata)
         metadata['analysis_method'] = 'basic_text'
+        # No tree-sitter used for basic text analysis
+        metadata['tree_sitter_analyze_error'] = 'false'
 
         return metadata
 
@@ -734,6 +743,13 @@ class MultiLevelAnalyzer:
 
             walker = TreeWalker(code, tree)
             metadata = walker.walk(visitor)
+
+            # Add tree-sitter analyze error tracking
+            visitor_error_count = getattr(visitor, 'error_stats', None)
+            if visitor_error_count and hasattr(visitor_error_count, 'error_count'):
+                metadata['tree_sitter_analyze_error'] = 'true' if visitor_error_count.error_count > 0 else 'false'
+            else:
+                metadata['tree_sitter_analyze_error'] = 'false'
 
             # Add language-specific summary if handler was used
             if handler:

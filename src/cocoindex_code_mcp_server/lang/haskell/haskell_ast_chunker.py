@@ -362,6 +362,13 @@ class EnhancedHaskellChunker:
                 # AST info
                 "node_type": chunk.get("node_type", "unknown"),
                 "is_split": chunk.get("is_split", False),
+                
+                # Chunking method tracking
+                "chunking_method": chunk.get("method", "haskell_ast_enhanced"),
+                
+                # Tree-sitter error tracking
+                "tree_sitter_chunking_error": chunk.get("original_metadata", {}).get("tree_sitter_chunking_error", "false"),
+                "has_tree_sitter_error": chunk.get("original_metadata", {}).get("has_error", "false") == "true",
 
                 # Context info
                 "has_imports": "import " in chunk["content"],
@@ -559,6 +566,7 @@ def create_enhanced_regex_fallback_chunks(content: str, file_path: str,
                 metadata = {
                     "chunk_id": len(chunks),
                     "chunk_method": "enhanced_regex_fallback",
+                    "chunking_method": "enhanced_regex_fallback",
                     "language": "Haskell",
                     "file_path": file_path,
                     "chunk_size": len(chunk_text),
@@ -568,6 +576,10 @@ def create_enhanced_regex_fallback_chunks(content: str, file_path: str,
                     "end_line": i,
                     "separator_priority": separator_priority,
                     "was_force_split": force_split and not is_separator,
+                    
+                    # Tree-sitter error tracking (false for regex fallback)
+                    "tree_sitter_chunking_error": "false",
+                    "has_tree_sitter_error": False,
 
                     # Haskell-specific content analysis
                     "has_imports": "import " in chunk_text,
@@ -598,6 +610,7 @@ def create_enhanced_regex_fallback_chunks(content: str, file_path: str,
             metadata = {
                 "chunk_id": len(chunks),
                 "chunk_method": "enhanced_regex_fallback",
+                "chunking_method": "enhanced_regex_fallback",
                 "language": "Haskell",
                 "file_path": file_path,
                 "chunk_size": len(chunk_text),
@@ -608,6 +621,10 @@ def create_enhanced_regex_fallback_chunks(content: str, file_path: str,
                 "separator_priority": 0,
                 "was_force_split": False,
                 "is_final_chunk": True,
+                
+                # Tree-sitter error tracking (false for regex fallback)
+                "tree_sitter_chunking_error": "false",
+                "has_tree_sitter_error": False,
 
                 # Haskell-specific content analysis
                 "has_imports": "import " in chunk_text,

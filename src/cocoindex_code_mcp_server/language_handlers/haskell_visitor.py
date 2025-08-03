@@ -68,6 +68,7 @@ class HaskellASTVisitor(GenericMetadataVisitor):
                 'should_fallback': error_stats.should_fallback(),
                 'coverage_complete': chunking_result.coverage_complete(),
                 'tree_language': 'haskell_tree_sitter',
+                'tree_sitter_analyze_error': 'true' if error_stats.error_count() > 0 else 'false',
                 'success': True
             }
 
@@ -121,6 +122,7 @@ class HaskellASTVisitor(GenericMetadataVisitor):
             'complexity_score': 0,
             'parse_errors': 0,
             'tree_language': 'fallback',
+            'tree_sitter_analyze_error': 'false',  # No tree-sitter used in fallback
 
             # Basic Haskell-specific analysis
             'module': None,

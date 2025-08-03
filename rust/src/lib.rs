@@ -548,6 +548,14 @@ fn create_chunk_with_context(node: &Node, source: &str, context: &ChunkingContex
     // Add chunking method
     metadata.insert("chunking_method".to_string(), "ast_recursive".to_string());
     
+    // Add tree-sitter error tracking for chunking
+    if node.is_error() {
+        metadata.insert("tree_sitter_chunking_error".to_string(), "true".to_string());
+        metadata.insert("has_error".to_string(), "true".to_string());
+    } else {
+        metadata.insert("tree_sitter_chunking_error".to_string(), "false".to_string());
+    }
+    
     // Node-specific metadata
     match node_type {
         "function" | "bind" => {
@@ -680,6 +688,8 @@ fn create_error_chunk_with_context(start_byte: usize, end_byte: usize, source: &
     metadata.insert("category".to_string(), "error_recovery".to_string());
     metadata.insert("chunking_method".to_string(), "error_recovery".to_string());
     metadata.insert("is_error_chunk".to_string(), "true".to_string());
+    metadata.insert("tree_sitter_chunking_error".to_string(), "true".to_string());
+    metadata.insert("has_error".to_string(), "true".to_string());
     
     // Add context information even for error chunks
     if let Some(ref module) = context.current_module {
@@ -1221,6 +1231,7 @@ fn create_error_chunk(start_byte: usize, end_byte: usize, source: &str, depth: u
     metadata.insert("category".to_string(), "error_recovery".to_string());
     metadata.insert("chunking_method".to_string(), "error_recovery".to_string());
     metadata.insert("is_error_chunk".to_string(), "true".to_string());
+    metadata.insert("tree_sitter_chunking_error".to_string(), "true".to_string());
     metadata.insert("has_error".to_string(), "true".to_string());
     
     HaskellChunk {
@@ -1266,7 +1277,8 @@ fn create_regex_fallback_chunks(source: &str) -> Vec<HaskellChunk> {
             if !chunk_text.trim().is_empty() {
                 let mut metadata = HashMap::new();
                 metadata.insert("category".to_string(), "regex_fallback".to_string());
-                metadata.insert("method".to_string(), "regex".to_string());
+                metadata.insert("chunking_method".to_string(), "regex_fallback".to_string());
+                metadata.insert("tree_sitter_chunking_error".to_string(), "false".to_string());
                 
                 let chunk_len = chunk_text.len();
                 chunks.push(HaskellChunk {
@@ -1293,7 +1305,8 @@ fn create_regex_fallback_chunks(source: &str) -> Vec<HaskellChunk> {
         if !chunk_text.trim().is_empty() {
             let mut metadata = HashMap::new();
             metadata.insert("category".to_string(), "regex_fallback".to_string());
-            metadata.insert("method".to_string(), "regex".to_string());
+            metadata.insert("chunking_method".to_string(), "regex_fallback".to_string());
+            metadata.insert("tree_sitter_chunking_error".to_string(), "false".to_string());
             
             let chunk_len = chunk_text.len();
             chunks.push(HaskellChunk {

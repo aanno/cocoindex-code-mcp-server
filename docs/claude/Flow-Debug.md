@@ -25,6 +25,7 @@ The typical CocoIndex flow for code analysis follows this pipeline:
 **Symptoms:**
 - Database shows `code: ""` for all chunks
 - Metadata shows `analysis_method: "unknown"`
+- Metadata shows `chunking_method: "unknown"` 
 - Hybrid search fails because there's no content to search
 
 **Root Causes:**
@@ -120,7 +121,50 @@ The typical CocoIndex flow for code analysis follows this pipeline:
    LIMIT 10;
    ```
 
-### 4. Flow Configuration Issues
+### 4. Chunking Method and Error Tracking
+
+**New Features (2025):**
+CocoIndex now tracks comprehensive metadata about chunking methods and tree-sitter error handling.
+
+**Key Metadata Properties:**
+- `chunking_method`: Tracks the actual chunking method used (`ast_recursive`, `ast_recursive_with_errors`, `regex_fallback`, etc.)
+- `tree_sitter_chunking_error`: Boolean indicating if tree-sitter error nodes were encountered during chunking
+- `tree_sitter_analyze_error`: Boolean indicating if tree-sitter errors occurred during analysis
+- `analysis_method`: Existing field now complemented by chunking-specific tracking
+
+**Debugging chunking issues:**
+```sql
+-- Check chunking method distribution
+SELECT 
+    JSON_EXTRACT(metadata_json, '$.chunking_method') as method,
+    COUNT(*) as count
+FROM code_embeddings 
+GROUP BY method;
+
+-- Find chunks with tree-sitter errors
+SELECT filename, location,
+    JSON_EXTRACT(metadata_json, '$.tree_sitter_chunking_error') as chunk_errors,
+    JSON_EXTRACT(metadata_json, '$.tree_sitter_analyze_error') as analyze_errors
+FROM code_embeddings 
+WHERE JSON_EXTRACT(metadata_json, '$.tree_sitter_chunking_error') = 'true'
+   OR JSON_EXTRACT(metadata_json, '$.tree_sitter_analyze_error') = 'true';
+```
+
+**Testing chunking method tracking:**
+```python
+from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import EnhancedHaskellChunker, HaskellChunkConfig
+
+config = HaskellChunkConfig(max_chunk_size=500)
+chunker = EnhancedHaskellChunker(config)
+chunks = chunker.chunk_code(code, 'test.hs')
+
+for chunk in chunks:
+    metadata = chunk.get('metadata', {})
+    print(f"chunking_method: {metadata.get('chunking_method', 'unknown')}")
+    print(f"tree_sitter_chunking_error: {metadata.get('tree_sitter_chunking_error', 'unknown')}")
+```
+
+### 5. Flow Configuration Issues
 
 **Symptoms:**
 - Wrong chunking method being used
@@ -185,10 +229,11 @@ SELECT COUNT(*) as empty_chunks FROM code_embeddings WHERE code = '';
 
 -- Check analysis methods
 SELECT 
-    JSON_EXTRACT(metadata_json, '$.analysis_method') as method,
+    JSON_EXTRACT(metadata_json, '$.analysis_method') as analysis_method,
+    JSON_EXTRACT(metadata_json, '$.chunking_method') as chunking_method,
     COUNT(*) as count
 FROM code_embeddings 
-GROUP BY method;
+GROUP BY analysis_method, chunking_method;
 
 -- Sample content
 SELECT filename, LEFT(code, 200) as preview 
@@ -439,3 +484,63 @@ All files from same test run now share timestamp: `basename_python_20250801_1344
 - Easy identification of test run groups
 - Simplified cleanup of test results
 - Better debugging workflow for batch test analysis
+
+### Case Study 4: Chunking Method and Error Tracking Implementation (2025)
+
+**Enhancement:** Extended the existing `analysis_method` concept to include comprehensive chunking method tracking and tree-sitter error detection.
+
+**Implementation Details:**
+
+**1. Chunking Method Tracking:**
+- **Rust Implementation**: Added `chunking_method` to all chunk creation functions in `/workspaces/rust/rust/src/lib.rs`
+- **Python Integration**: Updated `/workspaces/rust/src/cocoindex_code_mcp_server/lang/haskell/haskell_ast_chunker.py` to propagate chunking method metadata
+- **Consistent Tracking**: Ensures every chunk includes information about the method used (`ast_recursive`, `regex_fallback`, etc.)
+
+**2. Tree-sitter Error Tracking:**
+- **Chunking Errors**: `tree_sitter_chunking_error` tracks when error nodes are encountered during parsing for chunking
+- **Analysis Errors**: `tree_sitter_analyze_error` tracks when tree-sitter errors occur during code analysis
+- **Rust Integration**: Added error detection based on `node.is_error()` in tree-sitter parsing
+
+**Example Output:**
+```json
+{
+  "analysis_method": "haskell_chunk_visitor",
+  "chunking_method": "ast_recursive", 
+  "tree_sitter_chunking_error": "false",
+  "tree_sitter_analyze_error": "false"
+}
+```
+
+**Debugging Value:**
+- **Method Verification**: Confirm that advanced chunking methods (`ast_recursive`) are being used vs fallbacks (`regex_fallback`)
+- **Error Detection**: Identify problematic code sections that cause tree-sitter parsing failures
+- **Quality Assurance**: Track the success rate of different chunking strategies across the codebase
+- **Performance Optimization**: Identify files that consistently trigger fallback methods
+
+**Testing:**
+```python
+# Test chunking method tracking
+from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import EnhancedHaskellChunker, HaskellChunkConfig
+
+clean_code = '''
+module Test where
+factorial :: Int -> Int
+factorial 0 = 1
+factorial n = n * factorial (n - 1)
+'''
+
+config = HaskellChunkConfig(max_chunk_size=500)
+chunker = EnhancedHaskellChunker(config)
+chunks = chunker.chunk_code(clean_code, 'test.hs')
+
+# Expected results:
+# chunking_method: "haskell_ast_with_context"
+# tree_sitter_chunking_error: "false"
+```
+
+**Integration with Existing Debugging:**
+The new tracking properties integrate seamlessly with existing CocoIndex debugging workflows:
+- SQL queries can filter by chunking method
+- Evaluation mode captures detailed method information
+- Database inspection reveals chunking strategy distribution
+- Error analysis identifies parsing issues at both chunking and analysis phases
