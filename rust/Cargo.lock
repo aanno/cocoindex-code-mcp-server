@@ -27,7 +27,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "cocoindex_code_mcp_server"
+name = "haskell_tree_sitter"
 version = "0.1.0"
 dependencies = [
  "pyo3",

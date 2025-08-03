@@ -1,10 +1,10 @@
 [package]
-name = "cocoindex_code_mcp_server"
+name = "haskell_tree_sitter"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "cocoindex_code_mcp_server"
+name = "haskell_tree_sitter"
 crate-type = ["cdylib"]
 
 [dependencies]

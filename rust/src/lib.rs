@@ -3,6 +3,9 @@ use pyo3::types::PyModule;
 use tree_sitter::{Parser, Tree, Node, TreeCursor};
 use std::collections::HashMap;
 
+/// Threshold for error count above which we bail out to regex fallback parsing
+const ERROR_FALLBACK_THRESHOLD: usize = 10;
+
 #[pyclass]
 pub struct HaskellParser {
     parser: Parser,
@@ -257,8 +260,8 @@ fn extract_semantic_chunks_with_error_handling(tree: &Tree, source: &str) -> Chu
     let mut cursor = root_node.walk();
     count_error_nodes(&mut cursor, &mut error_stats);
     
-    // Check if we should bail out to regex fallback (3+ error nodes)
-    error_stats.should_fallback = error_stats.error_count >= 3;
+    // Check if we should bail out to regex fallback
+    error_stats.should_fallback = error_stats.error_count >= ERROR_FALLBACK_THRESHOLD;
     
     if error_stats.should_fallback {
         // Use regex fallback chunking
@@ -874,7 +877,7 @@ fn create_regex_fallback_chunks(source: &str) -> Vec<HaskellChunk> {
 }
 
 #[pymodule]
-fn cocoindex_code_mcp_server(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn haskell_tree_sitter(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<HaskellParser>()?;
     m.add_class::<HaskellTree>()?;
     m.add_class::<HaskellNode>()?;

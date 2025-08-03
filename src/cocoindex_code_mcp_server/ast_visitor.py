@@ -17,6 +17,9 @@ from tree_sitter import Language, Node, Parser, Tree
 TREE_SITTER_AVAILABLE = True
 LOGGER = logging.getLogger(__name__)
 
+# Threshold for error count above which we bail out to regex fallback parsing
+ERROR_FALLBACK_THRESHOLD = 10
+
 @dataclass
 class Position:
     """Represents a position in source code."""
@@ -62,7 +65,7 @@ class ErrorStats:
     should_fallback: bool = False
     error_nodes: List[ErrorNodeInfo] = field(default_factory=list)
     
-    def should_use_regex_fallback(self, threshold: int = 3) -> bool:
+    def should_use_regex_fallback(self, threshold: int = ERROR_FALLBACK_THRESHOLD) -> bool:
         """Check if we should bail out to regex parsing."""
         return self.error_count >= threshold
 
@@ -255,7 +258,7 @@ class GenericMetadataVisitor(ASTVisitor):
     
     def _determine_chunking_method(self) -> str:
         """Determine the appropriate chunking method based on error stats."""
-        if self.error_stats.error_count >= 3:
+        if self.error_stats.error_count >= ERROR_FALLBACK_THRESHOLD:
             return "regex_fallback"
         elif self.error_stats.error_count > 0:
             return "ast_with_errors"

@@ -21,7 +21,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 
 try:
-    import cocoindex_code_mcp_server as haskell_tree_sitter
+    import haskell_tree_sitter
     HASKELL_TREE_SITTER_AVAILABLE = True
 except ImportError:
     HASKELL_TREE_SITTER_AVAILABLE = False
