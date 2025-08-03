@@ -10,7 +10,7 @@ import json
 # from __future__ import annotations
 import os
 from dataclasses import dataclass
-from typing import List, Union, Any, cast
+from typing import Dict, List, Union, Any, cast
 
 import numpy as np
 from numpy.typing import NDArray
