@@ -21,7 +21,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 
 try:
-    import haskell_tree_sitter
+    import cocoindex_code_mcp_server as haskell_tree_sitter
     HASKELL_TREE_SITTER_AVAILABLE = True
 except ImportError:
     HASKELL_TREE_SITTER_AVAILABLE = False
@@ -43,24 +43,30 @@ class HaskellASTVisitor(GenericMetadataVisitor):
             return self._fallback_analysis(code, filename)
 
         try:
-            # Get chunks directly from haskell_tree_sitter
-            chunks = haskell_tree_sitter.get_haskell_ast_chunks_with_fallback(code)
-
+            # Use enhanced error-aware chunking
+            chunking_result = haskell_tree_sitter.get_haskell_ast_chunks_enhanced(code)
+            
             # Process each chunk using our handler
-            for chunk in chunks:
+            for chunk in chunking_result.chunks():
                 self._process_chunk(chunk, code)
 
-            # Build metadata result
+            # Build metadata result with error information
+            error_stats = chunking_result.error_stats()
             metadata = {
                 'language': 'haskell',
                 'filename': filename,
                 'line_count': len(code.split('\n')),
                 'char_count': len(code),
                 'analysis_method': 'haskell_chunk_visitor',
+                'chunking_method': chunking_result.chunking_method(),
                 'errors': self.errors,
                 'node_stats': self.node_stats,
                 'complexity_score': self.complexity_score,
-                'parse_errors': 0,  # haskell_tree_sitter handles parse errors internally
+                'parse_errors': error_stats.error_count(),
+                'error_count': error_stats.error_count(),
+                'nodes_with_errors': error_stats.nodes_with_errors(),
+                'should_fallback': error_stats.should_fallback(),
+                'coverage_complete': chunking_result.coverage_complete(),
                 'tree_language': 'haskell_tree_sitter',
                 'success': True
             }

@@ -34,6 +34,40 @@ class CodeSpan:
 
 
 @dataclass
+class ErrorNodeInfo:
+    """Information about an error node found during AST parsing."""
+    start_byte: int
+    end_byte: int
+    start_line: int
+    end_line: int
+    text: str
+    parent_node_type: Optional[str] = None
+    severity: str = "error"  # "error", "warning", "partial"
+    
+    def get_span(self) -> CodeSpan:
+        """Get the code span for this error."""
+        return CodeSpan(
+            start=Position(self.start_line, 0, self.start_byte),
+            end=Position(self.end_line, 0, self.end_byte),
+            text=self.text
+        )
+
+
+@dataclass  
+class ErrorStats:
+    """Statistics about error nodes found during parsing."""
+    error_count: int = 0
+    nodes_with_errors: int = 0
+    uncovered_ranges: List[tuple[int, int]] = field(default_factory=list)
+    should_fallback: bool = False
+    error_nodes: List[ErrorNodeInfo] = field(default_factory=list)
+    
+    def should_use_regex_fallback(self, threshold: int = 3) -> bool:
+        """Check if we should bail out to regex parsing."""
+        return self.error_count >= threshold
+
+
+@dataclass
 class NodeContext:
     """Context information for AST node processing."""
     node: Node
@@ -107,6 +141,8 @@ class GenericMetadataVisitor(ASTVisitor):
         self.handlers: List[NodeHandler] = []
         self.node_stats: Dict[str, int] = {}
         self.complexity_score: float = 0
+        self.error_stats: ErrorStats = ErrorStats()
+        self.parse_errors: int = 0
 
     def add_handler(self, handler: NodeHandler) -> None:
         """Add a node handler to the visitor."""
@@ -115,6 +151,9 @@ class GenericMetadataVisitor(ASTVisitor):
     def visit_node(self, context: NodeContext) -> Optional[Dict[str, Any]]:
         """Visit a node using registered handlers."""
         node_type = context.node.type if hasattr(context.node, 'type') else str(type(context.node))
+
+        # Track error nodes
+        self._check_for_errors(context)
 
         # Track node statistics
         self.node_stats[node_type] = self.node_stats.get(node_type, 0) + 1
@@ -136,6 +175,92 @@ class GenericMetadataVisitor(ASTVisitor):
         self._update_complexity(node_type)
 
         return metadata if metadata else None
+    
+    def _check_for_errors(self, context: NodeContext) -> None:
+        """Check if the current node is an error node and track it."""
+        node = context.node
+        
+        # Check if this is an error node
+        if hasattr(node, 'is_error') and node.is_error:
+            self.error_stats.error_count += 1
+            self.parse_errors += 1
+            
+            # Create error node info
+            error_info = ErrorNodeInfo(
+                start_byte=getattr(node, 'start_byte', 0),
+                end_byte=getattr(node, 'end_byte', 0),
+                start_line=getattr(node, 'start_point', (1, 0))[0] + 1,
+                end_line=getattr(node, 'end_point', (1, 0))[0] + 1,
+                text=context.get_node_text(),
+                parent_node_type=getattr(context.parent, 'type', None) if context.parent else None,
+                severity="error"
+            )
+            self.error_stats.error_nodes.append(error_info)
+            
+        # Check if this node has errors (propagated from children)
+        if hasattr(node, 'has_error') and node.has_error:
+            self.error_stats.nodes_with_errors += 1
+            
+    def get_error_stats(self) -> ErrorStats:
+        """Get error statistics collected during parsing."""
+        self.error_stats.should_fallback = self.error_stats.should_use_regex_fallback()
+        return self.error_stats
+    
+    def analyze_tree_with_error_handling(self, tree: Tree, source_text: str) -> Dict[str, Any]:
+        """Analyze a tree with comprehensive error handling."""
+        root_node = tree.root_node
+        
+        # Walk the tree and collect metadata
+        self._visit_tree_recursive(root_node, source_text)
+        
+        # Determine chunking method based on errors
+        chunking_method = self._determine_chunking_method()
+        
+        # Build result metadata
+        metadata = {
+            'language': self.language,
+            'line_count': len(source_text.split('\n')),
+            'char_count': len(source_text),
+            'analysis_method': 'ast_with_error_handling',
+            'chunking_method': chunking_method,
+            'errors': self.errors,
+            'node_stats': self.node_stats,
+            'complexity_score': self.complexity_score,
+            'parse_errors': self.parse_errors,
+            'error_count': self.error_stats.error_count,
+            'nodes_with_errors': self.error_stats.nodes_with_errors,
+            'should_fallback': self.error_stats.should_fallback,
+            'tree_language': f'{self.language}_tree_sitter',
+            'success': True
+        }
+        
+        return metadata
+    
+    def _visit_tree_recursive(self, node: Node, source_text: str, parent: Optional[Node] = None, depth: int = 0) -> None:
+        """Recursively visit tree nodes with error tracking."""
+        context = NodeContext(
+            node=node,
+            parent=parent,
+            depth=depth,
+            scope_stack=[],
+            source_text=source_text
+        )
+        
+        # Visit this node
+        self.visit_node(context)
+        
+        # Visit children
+        for child in node.children:
+            self._visit_tree_recursive(child, source_text, node, depth + 1)
+    
+    def _determine_chunking_method(self) -> str:
+        """Determine the appropriate chunking method based on error stats."""
+        if self.error_stats.error_count >= 3:
+            return "regex_fallback"
+        elif self.error_stats.error_count > 0:
+            return "ast_with_errors"
+        else:
+            return "ast"
 
     def _update_complexity(self, node_type: str) -> None:
         """Update complexity score based on node type."""
