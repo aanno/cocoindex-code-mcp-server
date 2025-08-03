@@ -2,13 +2,13 @@
  * Test Java file for language analysis verification.
  * Tests function and class detection in Java code.
  */
-package my.package.
+package my.packages.structure;
 
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class java_example_1 {
+public class Main1 {
     
     public static class Person {
         private String name;

@@ -1,7 +1,7 @@
 -- Test Haskell file for fallback embedding verification.
 -- This should use sentence-transformers/all-MiniLM-L6-v2 model.
 
-module haskell_example_1 where
+module HaskellExample1 where
 
 -- Simple data types
 data Person = Person

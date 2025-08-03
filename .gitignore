@@ -7,9 +7,12 @@ __pycache__/
 !/test-results/search-hybrid/.keep
 /tmp/
 .dmypy.json
+
+# Python (and python cache)
 *.pyc
 *.log
 *.pyo
+*.pywc
 *.pyd
 *.egg
 *.egg-info/
@@ -19,10 +22,23 @@ __pycache__/
 *.cache
 *.pytest_cache/
 .venv/
+
+# Python test artifacts
+.pytest_cache/
+.coverage*
+htmlcov/
+
+# Claude
 /.claude/*.local.*
+
+# CocoIndex
 /eval_CodeEmbedding_*
+
+# Log files
 /log
 *.log*
+
+# Test output
 /tests/all_languages_baseline_results.json
 /tests/lang/haskell/haskell_baseline_results.json
 
@@ -33,11 +49,9 @@ __pycache__/
 dist/
 build/
 
-# Test artifacts
-.pytest_cache/
-.coverage*
-htmlcov/
-
-# Python cache
-*.pyo
-*.pywc
+# Other languages
+a.out
+*.hi
+*.o
+*.class
+rust_example_1
