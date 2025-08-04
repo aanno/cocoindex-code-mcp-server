@@ -63,7 +63,22 @@ class ChunkMetadata(TypedDict, total=False):
     
     # Vector embedding (when available)
     embedding: Optional[NDArray[np.float32]]
-
+    
+    tree_sitter_analyze_error: bool
+    tree_sitter_chunking_error: bool
+    
+    has_docstrings: bool
+    docstring: str
+    
+    decorators_used: List[str]
+    dunder_methods: List[str]
+    private_methods: List[str]
+    
+    variables: List[str]
+    decorators: List[str]
+    
+    function_details: Dict[str, Any]
+    class_details: Dict[str, Any]
 
 class ExtractedMetadata(TypedDict):
     """
@@ -293,6 +308,18 @@ def validate_chunk_metadata(metadata: Dict[str, Any]) -> ChunkMetadata:
     validated["tree_sitter_chunking_error"] = bool(metadata.get("tree_sitter_chunking_error", False))
     validated["tree_sitter_analyze_error"] = bool(metadata.get("tree_sitter_analyze_error", False))
     
+    validated["has_docstrings"] = bool(metadata.get("has_docstrings", False))
+    validated["docstring"] = str(metadata.get("docstring", ""))
+    
+    validated["decorators_used"] = metadata.get("decorators_used", [])
+    validated["dunder_methods"] = metadata.get("dunder_methods", [])
+    validated["private_methods"] = metadata.get("private_methods", [])
+    
+    if "function_details" in metadata:
+        validated["function_details"] = metadata.get("function_details", [])
+    if "class_details" in metadata:
+        validated["class_details"] = metadata.get("class_details", [])
+
     if "start" in metadata:
         validated["start"] = int(metadata["start"])
     if "end" in metadata:

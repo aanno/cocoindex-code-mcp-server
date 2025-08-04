@@ -263,7 +263,20 @@ class PostgresBackend(VectorStoreBackend):
                     "has_type_hints": False,
                     "has_async": False,
                     "has_classes": False,
-                    "metadata_json": json.dumps({"analysis_error": "metadata was None"})
+                    "metadata_json": json.dumps({"analysis_error": "metadata was None"}),
+                    "analysis_method": None,
+                    "chunking_method": None,
+                    "tree_sitter_analyze_error:": False,
+                    "tree_sitter_chunking_error": False,
+                    "has_docstrings": False,
+                    "docstring": "",
+                    "decorators_used": [],
+                    "dunder_methods": [],
+                    "private_methods": [],
+                    "variables": [],
+                    "decorators": [],
+                    "function_details": json.dumps({"error": "no function_details"}),
+                    "class_details": json.dumps({"error": "no class_details"})
                 })
         except Exception as e:
             # Add error metadata
@@ -276,6 +289,19 @@ class PostgresBackend(VectorStoreBackend):
                 "has_async": False,
                 "has_classes": False,
                 "metadata_json": json.dumps({"analysis_error": str(e)})
+                "analysis_method": None,
+                "chunking_method": None,
+                "tree_sitter_analyze_error:": False,
+                "tree_sitter_chunking_error": False,
+                "has_docstrings": False,
+                "docstring": "",
+                "decorators_used": [],
+                "dunder_methods": [],
+                "private_methods": [],
+                "variables": [],
+                "decorators": [],
+                "function_details": json.dumps({"error": str(e)}),
+                "class_details": json.dumps({"error": str(e)})
             })
         
         # Convert score_type string to SearchResultType enum

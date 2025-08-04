@@ -13,6 +13,61 @@ import json
 
 from .schemas import ChunkMetadata, QueryFilter, FilterOperator, SearchResult, SearchResultType
 
+# Mapping between schema fields and PostgreSQL column names
+FIELD_MAPPINGS = {
+    "filename": "filename",
+    "language": "language", 
+    "location": "location",
+    "code": "code",
+    "start": "start",
+    "end": "end",
+    "source_name": "source_name",
+    "functions": "functions",
+    "classes": "classes",
+    "imports": "imports", 
+    "complexity_score": "complexity_score",
+    "has_type_hints": "has_type_hints",
+    "has_async": "has_async",
+    "has_classes": "has_classes",
+    "metadata_json": "metadata_json",
+    "embedding": "embedding",
+    "analysis_method": "analysis_method",
+    "chunking_method": "chunking_method",
+    "tree_sitter_analyze_error": "tree_sitter_analyze_error",
+    "tree_sitter_chunking_error": "tree_sitter_chunking_error",
+    "has_docstrings": "has_docstrings",
+    "decorators_used": "decorators_used",
+    "dunder_methods": "dunder_methods",
+    "private_methods": "private_methods",
+    "variables": "variables",
+    "decorators": "decorators",
+    "function_details": "function_details",
+    "class_details": "class_details",
+    "docstring": "docstring"
+}
+
+# Fields stored in JSONB vs individual columns
+JSONB_FIELDS = {"metadata_json"}
+INDIVIDUAL_COLUMNS = {
+    "filename", "language", "location", "code", "start", "end", 
+    "source_name", "functions", "classes", "imports", 
+    "complexity_score", "has_type_hints", "has_async", "has_classes",
+    "embedding", "analysis_method", "chunking_method",
+    "tree_sitter_analyze_error", "tree_sitter_chunking_error",
+    "has_docstrings", "decorators_used", "dunder_methods", "private_methods",
+    "variables", "decorators",
+    "function_details", "class_details",
+    "docstring"
+}
+
+
+
+# Fields that should be indexed in Qdrant for fast filtering
+INDEXED_FIELDS = {
+    "filename", "language", "source_name", "complexity_score",
+    "has_type_hints", "has_async", "has_classes"
+}
+
 
 T = TypeVar('T')
 
@@ -43,35 +98,6 @@ class PostgresFieldMapper(FieldMapper[Dict[str, Any]]):
     PostgreSQL stores metadata in JSONB columns and individual fields
     as separate columns for performance.
     """
-    
-    # Mapping between schema fields and PostgreSQL column names
-    FIELD_MAPPINGS = {
-        "filename": "filename",
-        "language": "language", 
-        "location": "location",
-        "code": "code",
-        "start": "start",
-        "end": "end",
-        "source_name": "source_name",
-        "functions": "functions",
-        "classes": "classes",
-        "imports": "imports", 
-        "complexity_score": "complexity_score",
-        "has_type_hints": "has_type_hints",
-        "has_async": "has_async",
-        "has_classes": "has_classes",
-        "metadata_json": "metadata_json",
-        "embedding": "embedding"
-    }
-    
-    # Fields stored in JSONB vs individual columns
-    JSONB_FIELDS = {"metadata_json"}
-    INDIVIDUAL_COLUMNS = {
-        "filename", "language", "location", "code", "start", "end", 
-        "source_name", "functions", "classes", "imports", 
-        "complexity_score", "has_type_hints", "has_async", "has_classes",
-        "embedding"
-    }
     
     def to_backend_format(self, metadata: ChunkMetadata) -> Dict[str, Any]:
         """
@@ -218,13 +244,7 @@ class QdrantFieldMapper(FieldMapper[Dict[str, Any]]):
     Qdrant stores all metadata in the payload object, with some fields
     potentially indexed for filtering performance.
     """
-    
-    # Fields that should be indexed in Qdrant for fast filtering
-    INDEXED_FIELDS = {
-        "filename", "language", "source_name", "complexity_score",
-        "has_type_hints", "has_async", "has_classes"
-    }
-    
+
     def to_backend_format(self, metadata: ChunkMetadata) -> Dict[str, Any]:
         """
         Convert ChunkMetadata to Qdrant payload format.

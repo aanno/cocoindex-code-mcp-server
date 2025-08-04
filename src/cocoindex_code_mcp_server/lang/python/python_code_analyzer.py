@@ -510,7 +510,7 @@ class PythonCodeAnalyzer:
             "has_async": has_async,
             "has_classes": has_classes,
             "decorators_used": [],  # Could regex for @decorator if needed
-            "analysis_method": "regex_fallback",
+            "analysis_method": "python_regex_fallback",
         }
 
         # Add metadata_json field for compatibility

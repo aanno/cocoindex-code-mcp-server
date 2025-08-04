@@ -54,6 +54,16 @@ except ImportError:
     HAS_COVERAGE = False
     Coverage = None  # type: ignore
 
+METADATA_FIELDS = [
+    'functions', 'classes', 'imports', 'complexity_score', 
+    'has_type_hints', 'has_async', 'has_classes', 'metadata_json',
+    'analysis_method', 'chunking_method',
+    'tree_sitter_analyze_error', 'tree_sitter_chunking_error',
+    'has_docstrings', 'decorators_used', 'dunder_methods', 'private_methods',
+    'variables', 'decorators',
+    'function_details', 'class_details',
+    'docstring'
+]
 
 @contextlib.asynccontextmanager
 async def coverage_context() -> AsyncIterator[Optional[object]]:
@@ -443,8 +453,7 @@ def main(
                     }
                     
                     # Add direct metadata fields from SearchResult
-                    metadata_fields = ['functions', 'classes', 'imports', 'complexity_score', 
-                                     'has_type_hints', 'has_async', 'has_classes', 'metadata_json']
+                    metadata_fields = list(METADATA_FIELDS)
                     for key in metadata_fields:
                         if hasattr(obj, key):
                             result_dict[key] = make_serializable(getattr(obj, key))

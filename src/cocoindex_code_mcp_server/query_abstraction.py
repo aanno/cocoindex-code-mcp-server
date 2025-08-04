@@ -100,6 +100,32 @@ class QueryBuilder:
         """Filter for code with async functions (convenience method)."""
         return self.where("has_async", True)
     
+#    def where_analysis_method(self, analysis_method: str) -> 'QueryBuilder':
+#        return self.where("analysis_method", analysis_method)
+    
+    def where_chunking_method(self, chunking_method: str) -> 'QueryBuilder':
+        return self.where("chunking_method", chunking_method)
+    
+    def where_tree_sitter_analyze_error(self) -> 'QueryBuilder':
+        return self.where("tree_sitter_analyze_error", True)
+    
+    def where_tree_sitter_chunking_error(self) -> 'QueryBuilder':
+        return self.where("tree_sitter_chunking_error", True)
+    
+    def where_has_docstrings(self) -> 'QueryBuilder':
+        return self.where("has_docstrings", True)
+    
+    def where_docstring(self, docstring: str) -> 'QueryBuilder':
+        return self.where("docstring", docstring)
+    
+    def contains_decorator_used(self, decorator_used: str) -> 'QueryBuilder':
+        return self.filter_by(decorator_used, FilterOperator.IN, "decorators_used") 
+    
+    def contains_decorator(self, decorator: str) -> 'QueryBuilder':
+        return self.filter_by(decorator, FilterOperator.IN, "decorators") 
+    
+    # TODO: dunder_methods, private_methods, variables, function_details, class_details
+
     def filter_logic_and(self) -> 'QueryBuilder':
         """Use AND logic for combining filters."""
         self._filter_logic = "AND"

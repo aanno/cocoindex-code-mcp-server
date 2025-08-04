@@ -715,6 +715,7 @@ def promote_metadata_fields(metadata_json: str) -> Dict[str, Any]:
             'chunking_method': lambda x: str(x) if x is not None else "unknown",
             'language': lambda x: str(x) if x is not None else "unknown",
             'filename': lambda x: str(x) if x is not None else "",
+            'docstring': lambda x: str(x) if x is not None else "",
             
             # Boolean fields (handle string "true"/"false" values)
             'tree_sitter_chunking_error': lambda x: x.lower() == "true" if isinstance(x, str) else bool(x) if x is not None else False,
@@ -723,6 +724,9 @@ def promote_metadata_fields(metadata_json: str) -> Dict[str, Any]:
             'has_async': lambda x: bool(x) if x is not None else False,
             'has_classes': lambda x: bool(x) if x is not None else False,
             'success': lambda x: bool(x) if x is not None else False,
+            'tree_sitter_analyze_error': lambda x: bool(x) if x is not None else False,
+            'tree_sitter_chunking_error': lambda x: bool(x) if x is not None else False,
+            'has_docstrings': lambda x: bool(x) if x is not None else False,
             
             # Integer fields
             'complexity_score': lambda x: int(x) if x is not None and str(x).isdigit() else 0,
@@ -736,6 +740,12 @@ def promote_metadata_fields(metadata_json: str) -> Dict[str, Any]:
             'imports': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
             'decorators_used': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
             'errors': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
+            'dunder_methods': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
+            'private_methods': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
+            'variables': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
+            'de': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
+            'variables': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
+            'decorators': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
         }
         
         # Apply conversions for known fields
