@@ -20,6 +20,9 @@ from cocoindex_code_mcp_server.keyword_search_parser_lark import SearchCondition
 # Import our standardized SearchResult from Phase 2 schemas
 from ..schemas import SearchResult
 
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class QueryFilters:

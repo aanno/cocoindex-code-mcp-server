@@ -1,4 +1,4 @@
-# Main package for haskell-tree-sitter project
+# Test package for haskell-tree-sitter project
 
 import logging
 import os
@@ -7,7 +7,7 @@ from logging.handlers import RotatingFileHandler
 # Get WORKSPACE environment variable, fallback to current directory if not set
 workspace_dir = os.environ.get('WORKSPACE', '.')
 
-log_file_path = os.path.join(workspace_dir, 'cocoindex_code_mcp_server.log')
+log_file_path = os.path.join(workspace_dir, 'cocoindex_code_mcp_server-examples.log')
 
 # Create a rotating file handler
 rotating_handler = RotatingFileHandler(
