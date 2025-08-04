@@ -38,15 +38,15 @@ CONST_FIELD_MAPPINGS = {
     "chunking_method": "chunking_method",
     "tree_sitter_analyze_error": "tree_sitter_analyze_error",
     "tree_sitter_chunking_error": "tree_sitter_chunking_error",
-    "has_docstrings": "has_docstrings",
+    # "has_docstrings": "has_docstrings",
     "decorators_used": "decorators_used",
     "dunder_methods": "dunder_methods",
-    "private_methods": "private_methods",
-    "variables": "variables",
-    "decorators": "decorators",
+    # "private_methods": "private_methods",
+    # "variables": "variables",
+    # "decorators": "decorators",
     "function_details": "function_details",
-    "class_details": "class_details",
-    "docstring": "docstring"
+    # "class_details": "class_details",
+    # "docstring": "docstring",
 }
 
 # Derived configurations from single source of truth
