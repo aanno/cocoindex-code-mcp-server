@@ -7,8 +7,9 @@ This module wraps the existing PostgreSQL/pgvector functionality from hybrid_sea
 into the standardized VectorStoreBackend interface.
 """
 
+from ast import FunctionDef, FunctionType
 import json
-from typing import Any, Dict, List, Union, Tuple
+from typing import Any, Dict, List, Union, Tuple, cast
 
 import numpy as np
 from numpy.typing import NDArray
