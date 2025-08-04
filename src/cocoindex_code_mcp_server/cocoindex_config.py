@@ -360,7 +360,7 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
             # Fallback to basic metadata if analysis failed or no analyzer available
             if metadata is None:
                 metadata = {}
-            if metadata.get('success', False):
+            if not metadata.get('success', True):  # Fixed: Apply fallback when analysis FAILED
                 update_defaults(metadata, {
                     "language": language,
                     "analysis_method": "no_success_analyze",
@@ -1084,14 +1084,8 @@ def code_embedding_flow(
                 chunk["has_async"] = chunk["extracted_metadata"].transform(extract_has_async_field)
                 chunk["has_classes"] = chunk["extracted_metadata"].transform(extract_has_classes_field)
                 
-                # New analysis tracking fields - use proper CocoIndex extractors
-                chunk["analysis_method"] = chunk["extracted_metadata"].transform(extract_analysis_method_field)
-                chunk["chunking_method"] = chunk["extracted_metadata"].transform(extract_chunking_method_field)
-                chunk["tree_sitter_chunking_error"] = chunk["extracted_metadata"].transform(extract_tree_sitter_chunking_error_field)
-                chunk["tree_sitter_analyze_error"] = chunk["extracted_metadata"].transform(extract_tree_sitter_analyze_error_field)
-                
-                # Include decorators_used which was missing before
-                chunk["decorators_used"] = chunk["extracted_metadata"].transform(extract_decorators_used_field)
+                # Promoted metadata fields are now handled automatically by generalized promotion in main_mcp_server.py
+                # No need for chunk-level assignments - fields from metadata_json get promoted to top-level automatically
 
                 code_embeddings.collect(
                     filename=file["filename"],
@@ -1111,13 +1105,6 @@ def code_embedding_flow(
                     has_type_hints=chunk["has_type_hints"],
                     has_async=chunk["has_async"],
                     has_classes=chunk["has_classes"],
-                    # New analysis tracking fields
-                    analysis_method=chunk["analysis_method"],
-                    chunking_method=chunk["chunking_method"],
-                    tree_sitter_chunking_error=chunk["tree_sitter_chunking_error"],
-                    tree_sitter_analyze_error=chunk["tree_sitter_analyze_error"],
-                    # Include decorators_used which was missing before
-                    decorators_used=chunk["decorators_used"],
                 )
 
     code_embeddings.export(
