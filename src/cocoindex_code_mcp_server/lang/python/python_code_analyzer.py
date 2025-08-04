@@ -398,6 +398,13 @@ class PythonCodeAnalyzer:
             "has_type_hints": any(f.get('return_type') or any(p.get('type_annotation') for p in f.get('parameters', [])) for f in self.functions),
             "private_methods": [f['name'] for f in self.functions if f['is_private']],
             "dunder_methods": [f['name'] for f in self.functions if f['is_dunder']],
+            
+            # Promoted metadata fields for database columns
+            "analysis_method": "python_ast",
+            "chunking_method": "ast_tree_sitter", 
+            "tree_sitter_chunking_error": False,
+            "tree_sitter_analyze_error": False,
+            "decorators_used": list(set(self.decorators)),
 
             # Additional metadata (RAG-pychunk: additional_metadata)
             "additional_metadata": {

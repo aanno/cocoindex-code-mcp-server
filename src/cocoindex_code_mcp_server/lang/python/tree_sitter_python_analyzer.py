@@ -164,7 +164,12 @@ class TreeSitterPythonAnalyzer:
                     'language': 'python',
                     'filename': filename,
                     'line_count': len(code.split('\n')),
-                    'char_count': len(code)
+                    'char_count': len(code),
+                    # Promoted metadata fields for database columns
+                    'chunking_method': 'ast_tree_sitter',
+                    'tree_sitter_chunking_error': False,
+                    'tree_sitter_analyze_error': False,
+                    'decorators_used': metadata.get('decorators', [])
                 })
 
                 return metadata
