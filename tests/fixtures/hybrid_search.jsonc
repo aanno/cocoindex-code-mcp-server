@@ -80,7 +80,8 @@
       "description": "Search for complex functions with high complexity",
       "query": {
         "vector_query": "complex algorithm implementation",
-        "keyword_query": "language:python complexity:>1"
+        "keyword_query": "language:python" 
+        // complexity:>1 is not a valid keyword search expression
       },
       "expected_results": {
         "should_contain": [

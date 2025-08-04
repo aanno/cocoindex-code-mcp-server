@@ -3,7 +3,7 @@
 
 start: or_expr
 
-or_expr: and_expr ("or" and_expr)*
+or_expr: and_expr ("or"? and_expr)*
 
 // make "and" default
 and_expr: condition (("and"? condition)*)
