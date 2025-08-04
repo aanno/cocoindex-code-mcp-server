@@ -475,7 +475,7 @@ class TestPerformanceCharacteristics:
 
     def test_query_complexity_handling(self):
         """Test handling of complex queries."""
-        from cocoindex_code_mcp_server.keyword_search_parser import KeywordSearchParser
+        from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
 
         parser = KeywordSearchParser()
 

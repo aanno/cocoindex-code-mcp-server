@@ -16,7 +16,7 @@ from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
 )
 from cocoindex_code_mcp_server.backends import QueryFilters, VectorStoreBackend, SearchResult
 from cocoindex_code_mcp_server.schemas import SearchResultType
-from cocoindex_code_mcp_server.keyword_search_parser import SearchCondition, SearchGroup
+from cocoindex_code_mcp_server.keyword_search_parser_lark import SearchCondition, SearchGroup
 from numpy import ndarray
 from typing import Any, Dict, List
 

@@ -11,19 +11,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, List, Union
 
-try:
-    from lark import Lark, Token, Transformer
-    from lark.exceptions import LarkError, ParseError
-    LARK_AVAILABLE = True
-except ImportError:
-    LARK_AVAILABLE = False
-
-# Import the fallback parser components
-from .keyword_search_parser import KeywordSearchParser as FallbackParser
-from .keyword_search_parser import (
-    build_sql_where_clause as fallback_build_sql_where_clause,
-)
-FALLBACK_AVAILABLE = True
+from lark import Lark, Token, Transformer
+from lark.exceptions import LarkError, ParseError
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -133,36 +122,27 @@ class KeywordSearchParser:
         self.transformer = KeywordSearchTransformer()
         self.fallback_parser = None
 
-        if LARK_AVAILABLE:
-            try:
-                # Load the grammar file
-                grammar_path = Path(__file__).parent / "grammars" / "keyword_search.lark"
-                if grammar_path.exists():
-                    with open(grammar_path, 'r') as f:
-                        grammar = f.read()
+        try:
+            # Load the grammar file
+            grammar_path = Path(__file__).parent / "grammars" / "keyword_search.lark"
+            if grammar_path.exists():
+                with open(grammar_path, 'r') as f:
+                    grammar = f.read()
 
-                    self.lark_parser = Lark(
-                        grammar,
-                        parser='lalr',
-                        transformer=self.transformer,
-                        # Make keywords case insensitive
-                        lexer_callbacks={
-                            'UNQUOTED_VALUE': lambda t: Token('UNQUOTED_VALUE', t.value),
-                        }
-                    )
-                else:
-                    logger.warning(f"Grammar file not found at {grammar_path}, falling back to regex parser")
-            except Exception as e:
-                logger.warning(f"Failed to initialize Lark parser ({e}), falling back to regex parser")
-
-        # Initialize fallback parser if Lark is not available or failed
-        if self.lark_parser is None:
-            if FALLBACK_AVAILABLE:
-                self.fallback_parser = FallbackParser()
-                if not LARK_AVAILABLE:
-                    logger.warning("Lark not available, using regex-based parser")
+                self.lark_parser = Lark(
+                    grammar,
+                    parser='lalr',
+                    transformer=self.transformer,
+                    # Make keywords case insensitive
+                    lexer_callbacks={
+                        'UNQUOTED_VALUE': lambda t: Token('UNQUOTED_VALUE', t.value),
+                    }
+                )
             else:
-                logger.error("No parser available - neither Lark nor fallback parser could be loaded")
+                logger.warning(f"Grammar file not found at {grammar_path}, falling back to regex parser")
+        except Exception as e:
+            logger.warning(f"Failed to initialize Lark parser ({e}), falling back to regex parser")
+            raise
 
     def parse(self, query: str) -> SearchGroup:
         """
@@ -185,26 +165,15 @@ class KeywordSearchParser:
         if not query or not query.strip():
             return SearchGroup(conditions=[])
 
-        # Try Lark parser first
-        if self.lark_parser is not None:
-            try:
-                # Normalize case for keywords
-                normalized_query = self._normalize_keywords(query.strip())
-                tree = self.lark_parser.parse(normalized_query)
-                # The tree is already transformed to SearchGroup during parsing
-                return tree  # type: ignore
-            except (LarkError, ParseError) as e:
-                logger.warning(f"Lark parser failed ({e}), falling back to regex parser")
-
-        # Fall back to regex parser
-        if self.fallback_parser is not None:
-            fallback_result = self.fallback_parser.parse(query)
-            # Convert fallback SearchGroup to our SearchGroup
-            return self._convert_from_fallback(fallback_result)
-        else:
-            # Last resort: return empty group
-            logger.error("No parser available")
-            return SearchGroup(conditions=[])
+        try:
+            # Normalize case for keywords
+            normalized_query = self._normalize_keywords(query.strip())
+            tree = self.lark_parser.parse(normalized_query)
+            # The tree is already transformed to SearchGroup during parsing
+            return tree  # type: ignore
+        except (LarkError, ParseError) as e:
+            logger.warning(f"Lark parser failed ({e}), falling back to regex parser")
+            raise
 
     def _normalize_keywords(self, query: str) -> str:
         """Normalize keywords to lowercase for case-insensitive parsing."""
@@ -228,36 +197,6 @@ class KeywordSearchParser:
             result = re.sub(pattern, replacement, result, flags=re.IGNORECASE)
 
         return result
-
-    def _convert_from_fallback(self, fallback_group: Any) -> SearchGroup:
-        """Convert fallback SearchGroup to our SearchGroup."""
-        from .keyword_search_parser import SearchGroup as FallbackSearchGroup, SearchCondition as FallbackSearchCondition
-        
-        if not isinstance(fallback_group, FallbackSearchGroup):
-            return SearchGroup(conditions=[])
-            
-        conditions: List[Union[SearchCondition, SearchGroup]] = []
-        for condition in fallback_group.conditions:
-            if isinstance(condition, FallbackSearchCondition):
-                # Convert SearchCondition
-                new_condition = SearchCondition(
-                    field=condition.field,
-                    value=condition.value,
-                    is_exists_check=getattr(condition, 'is_exists_check', False),
-                    is_value_contains_check=getattr(condition, 'is_value_contains_check', False)
-                )
-                conditions.append(new_condition)
-            elif isinstance(condition, FallbackSearchGroup):
-                # Recursively convert nested groups
-                converted_group = self._convert_from_fallback(condition)
-                conditions.append(converted_group)
-                
-        operator = Operator.AND
-        if hasattr(fallback_group, 'operator'):
-            if fallback_group.operator == "or":
-                operator = Operator.OR
-                
-        return SearchGroup(conditions=conditions, operator=operator)
 
 
 def build_sql_where_clause(search_group: SearchGroup, table_alias: str = "") -> tuple[str, List[Any]]:
@@ -343,7 +282,6 @@ if __name__ == "__main__":
     ]
 
     print(f"Using Lark parser: {parser.lark_parser is not None}")
-    print(f"LARK_AVAILABLE: {LARK_AVAILABLE}")
 
     for query in test_queries:
         print(f"\nQuery: {query}")
