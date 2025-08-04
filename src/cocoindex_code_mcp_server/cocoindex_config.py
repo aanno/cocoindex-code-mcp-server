@@ -369,6 +369,10 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
                     "has_async": False,
                     "has_classes": False,
                     "decorators_used": [],
+                    # Promoted metadata fields for database columns
+                    "chunking_method": "fallback_basic",
+                    "tree_sitter_chunking_error": True,  # True because we failed to use tree-sitter
+                    "tree_sitter_analyze_error": True,   # True because we failed to analyze properly
                 }
 
         # Return just the JSON string for now
@@ -406,6 +410,10 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
             "has_classes": False,
             "decorators_used": [],
             "analysis_method": "error_fallback",
+            # Promoted metadata fields for database columns
+            "chunking_method": "error_fallback",
+            "tree_sitter_chunking_error": True,  # True because we had an error
+            "tree_sitter_analyze_error": True,   # True because we had an error
         }
         return json.dumps(fallback_result)
 
