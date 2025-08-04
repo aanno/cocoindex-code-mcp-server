@@ -24,6 +24,7 @@ from .ast_chunking import ASTChunkOperation, Chunk
 from .lang.haskell.haskell_ast_chunker import get_haskell_language_spec
 from .lang.python.python_code_analyzer import analyze_python_code
 from .smart_code_embedding import LanguageModelSelector
+from .parser_util import update_defaults
 
 LOGGER = logging.getLogger(__name__)  # root logger
 
@@ -381,7 +382,7 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
             result = dict(metadata)  # Copy all fields
             
             # Ensure essential fields have proper defaults if missing
-            essential_defaults = {
+            update_defaults(result, {
                 "functions": [],
                 "classes": [],
                 "imports": [],
@@ -395,12 +396,7 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
                 "tree_sitter_chunking_error": False,
                 "tree_sitter_analyze_error": False,
                 "dunder_methods": [],
-            }
-            
-            # Apply defaults only for missing fields
-            for key, default_value in essential_defaults.items():
-                if key not in result:
-                    result[key] = default_value
+            })
         else:
             result = {}
         return json.dumps(result)

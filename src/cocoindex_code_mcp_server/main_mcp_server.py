@@ -31,6 +31,7 @@ from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
 from mcp.shared.exceptions import McpError
 # Backend abstraction imports
 from .backends import BackendFactory, VectorStoreBackend
+from .parser_util import update_defaults
 from starlette.applications import Starlette
 from starlette.routing import Mount
 from starlette.types import Receive, Scope, Send
