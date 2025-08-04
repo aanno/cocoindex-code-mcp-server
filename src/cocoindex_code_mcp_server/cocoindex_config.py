@@ -243,8 +243,15 @@ def extract_language(filename: str) -> str:
     # Get extension
     ext = os.path.splitext(filename)[1].lower()
 
-    # Map to tree-sitter language
-    return TREE_SITTER_LANGUAGE_MAP.get(ext, ext)
+    # Map to tree-sitter language, with "unknown" fallback for unsupported extensions
+    if ext in TREE_SITTER_LANGUAGE_MAP:
+        return TREE_SITTER_LANGUAGE_MAP[ext]
+    elif ext:
+        # Return the extension without the dot for unknown but valid extensions
+        return ext[1:] if ext.startswith('.') else ext
+    else:
+        # No extension found
+        return "unknown"
 
 
 @cocoindex.op.function()

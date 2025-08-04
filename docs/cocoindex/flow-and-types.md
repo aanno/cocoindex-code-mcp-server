@@ -967,3 +967,234 @@ This caching is particularly important for:
 - **Tree-sitter parser initialization** (expensive grammar loading)
 - **Model loading** for embedding-based analysis
 - **Regex compilation** for pattern-based metadata extraction
+
+## CocoIndex Type Inference and Fallback Models (January 2025)
+
+### 1. Understanding Fallback Model Warnings
+
+**⚠️ INFORMATIONAL GOTCHA**: CocoIndex may log "Using fallback model for DataSlice" warnings that appear concerning but are actually informational messages about the type inference system.
+
+```python
+# Example warning message that appears during flow compilation:
+cocoindex_code_mcp_server.cocoindex_config: INFO     Using fallback model for DataSlice(Str; [_root] [files AS files_1] .language)
+```
+
+**What this means:**
+- CocoIndex's static type analysis cannot determine the exact string type of certain fields during flow compilation
+- The engine falls back to a generic model for type inference rather than using specialized type handlers
+- This is a limitation of CocoIndex's static analysis, not an error in your code
+- The actual functionality (language detection, processing) works correctly regardless
+
+### 2. Common Scenarios Triggering Fallback Models
+
+**Language Detection Fields:**
+```python
+# This pattern often triggers fallback model warnings:
+file["language"] = file["filename"].transform(extract_language)
+
+# Even with proper function definition:
+@cocoindex.op.function()
+def extract_language(filename: str) -> str:
+    """Extract language from filename - works correctly."""
+    ext = os.path.splitext(filename)[1].lower()
+    return LANGUAGE_MAP.get(ext, "unknown")
+```
+
+**Dynamic Field Creation:**
+- Fields created through transform operations on DataSlices
+- String fields with values determined at runtime
+- Fields that depend on file content analysis
+
+### 3. Fallback Model Impact and Mitigation
+
+**✅ FUNCTIONAL IMPACT**: Minimal to none
+- Your flows execute correctly
+- Data is processed and stored properly  
+- Type checking still works at runtime
+
+**✅ PERFORMANCE IMPACT**: Generally negligible
+- Fallback models are typically just less optimized code paths
+- No significant performance degradation observed
+
+**⚠️ WHEN TO INVESTIGATE**: Only if you notice:
+- Actual processing failures
+- Incorrect data in outputs
+- Significant performance issues
+
+### 4. Improving Language Detection to Reduce Fallbacks
+
+**Enhanced language detection with better fallback handling:**
+
+```python
+@cocoindex.op.function()
+def extract_language(filename: str) -> str:
+    """Extract language with explicit fallback handling."""
+    basename = os.path.basename(filename)
+    
+    # Handle special files without extensions
+    if basename.lower() in ["makefile", "dockerfile", "jenkinsfile"]:
+        return basename.lower()
+    
+    # Handle special patterns
+    special_patterns = {
+        "cmakelists": "cmake",
+        "build.gradle": "gradle", 
+        "pom.xml": "maven",
+        "docker-compose": "dockerfile",
+        "go.": "go"
+    }
+    
+    for pattern, lang in special_patterns.items():
+        if pattern in basename.lower():
+            return lang
+    
+    # Get extension and map to language
+    ext = os.path.splitext(filename)[1].lower()
+    
+    if ext in TREE_SITTER_LANGUAGE_MAP:
+        return TREE_SITTER_LANGUAGE_MAP[ext]
+    elif ext:
+        # Return clean extension name for unknown extensions
+        return ext[1:] if ext.startswith('.') else ext
+    else:
+        # Explicit fallback for files without extensions
+        return "unknown"
+```
+
+**Benefits of explicit fallback handling:**
+- Consistent return values
+- Better debugging information
+- Reduced ambiguity in type inference
+
+### 5. Transform() Function Requirements for Type Safety
+
+**⚠️ CRITICAL GOTCHA**: CocoIndex's `transform()` method requires functions decorated with `@cocoindex.op.function()`, not lambda functions.
+
+```python
+# ❌ WRONG: Lambda functions cause "transform() can only be called on a CocoIndex function" errors
+chunk["analysis_method"] = chunk["metadata"].transform(
+    lambda x: json.loads(x).get("analysis_method", "unknown") if x else "unknown"
+)
+
+# ✅ CORRECT: Use proper CocoIndex function decorators
+@cocoindex.op.function()
+def extract_analysis_method_field(metadata_json: str) -> str:
+    """Extract analysis_method field from metadata JSON."""
+    try:
+        if not metadata_json:
+            return "unknown"
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
+        return str(metadata_dict.get("analysis_method", "unknown"))
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for analysis_method: {e}")
+        return "unknown"
+
+# Use the proper function:
+chunk["analysis_method"] = chunk["metadata"].transform(extract_analysis_method_field)
+```
+
+**Why this matters:**
+- CocoIndex needs to serialize and track function dependencies
+- Lambda functions cannot be properly serialized by the flow system
+- Decorated functions provide proper type information for the engine
+
+### 6. Creating Extractor Functions for Metadata Fields
+
+**Pattern for creating metadata field extractors:**
+
+```python
+# Template for metadata field extractors:
+@cocoindex.op.function()
+def extract_[field_name]_field(metadata_json: str) -> [return_type]:
+    """Extract [field_name] field from metadata JSON."""
+    try:
+        if not metadata_json:
+            return [default_value]
+        # Parse JSON string to dict
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
+        value = metadata_dict.get("[field_name]", [default_value])
+        return [type_conversion](value) if value is not None else [default_value]
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for [field_name]: {e}")
+        return [default_value]
+
+# Examples:
+@cocoindex.op.function()
+def extract_functions_field(metadata_json: str) -> str:
+    """Extract functions field from metadata JSON."""
+    try:
+        if not metadata_json:
+            return "[]"
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
+        functions = metadata_dict.get("functions", [])
+        return str(functions) if isinstance(functions, list) else str([functions]) if functions else "[]"
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for functions: {e}")
+        return "[]"
+
+@cocoindex.op.function()
+def extract_complexity_score_field(metadata_json: str) -> int:
+    """Extract complexity_score field from metadata JSON."""
+    try:
+        if not metadata_json:
+            return 0
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
+        score = metadata_dict.get("complexity_score", 0)
+        return int(score) if isinstance(score, (int, float, str)) and str(score).isdigit() else 0
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for complexity_score: {e}")
+        return 0
+```
+
+### 7. Debugging Type Inference Issues
+
+**When encountering fallback model warnings:**
+
+1. **Verify functionality first** - Check if your flow actually works despite warnings
+2. **Check function decorators** - Ensure all transform functions use `@cocoindex.op.function()`
+3. **Validate return types** - Make sure function return types are consistent
+4. **Test with minimal examples** - Isolate the specific field causing issues
+5. **Consider if action is needed** - Most fallback warnings can be safely ignored
+
+**Debugging workflow:**
+```python
+# Test individual functions outside of flows:
+def test_language_extraction():
+    test_files = ['test.py', 'example.rs', 'README.md', 'unknown.xyz']
+    for filename in test_files:
+        result = extract_language(filename)
+        print(f"{filename} -> {result} (type: {type(result)})")
+
+# Verify the function works before worrying about type inference warnings
+```
+
+### 8. Best Practices for Type-Safe CocoIndex Functions
+
+**✅ Type Safety Checklist:**
+- Always use `@cocoindex.op.function()` decorators for transform functions
+- Provide explicit type annotations for parameters and return values
+- Handle edge cases with explicit default values
+- Use try-catch blocks for JSON parsing operations
+- Return consistent types from similar functions
+- Test functions independently before integration
+
+**✅ Acceptable Fallback Scenarios:**
+- Language detection from dynamic file analysis
+- Fields derived from runtime content analysis
+- Transform chains with complex data dependencies
+
+**⚠️ Investigate Further When:**
+- Functions fail to execute (not just warnings)
+- Data appears incorrectly in database
+- Performance significantly degrades
+- Type mismatches cause flow failures
+
+### Summary: Fallback Model Warnings
+
+- **Fallback model warnings are usually informational**, not errors
+- **Functionality typically works correctly** despite warnings
+- **Focus on actual failures** rather than warning messages
+- **Use proper `@cocoindex.op.function()` decorators** for all transform functions
+- **Improve language detection logic** with explicit fallback handling
+- **Create dedicated extractor functions** for metadata fields instead of lambda functions
+- **Test individual components** to verify they work before worrying about type inference
