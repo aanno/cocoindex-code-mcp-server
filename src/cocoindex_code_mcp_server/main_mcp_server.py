@@ -448,12 +448,14 @@ def main(
                         if hasattr(obj, key):
                             result_dict[key] = make_serializable(getattr(obj, key))
                     
-                    # Extract fields from metadata_json if it exists
+                    # Extract ALL fields from metadata_json if it exists (generalized promotion)
                     if hasattr(obj, 'metadata_json') and isinstance(obj.metadata_json, dict):
                         metadata_json = obj.metadata_json
-                        for key in ['analysis_method']:
-                            if key in metadata_json:
-                                result_dict[key] = make_serializable(metadata_json[key])
+                        # Promote all fields from metadata_json to top-level, avoiding conflicts
+                        for key, value in metadata_json.items():
+                            # Skip if already exists as top-level field to avoid overwriting
+                            if key not in result_dict:
+                                result_dict[key] = make_serializable(value)
                     
                     return result_dict
                 else:

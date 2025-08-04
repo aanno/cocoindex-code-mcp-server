@@ -325,6 +325,23 @@ def create_default_chunk_query(
 
 
 # =============================================================================
+# Promoted Metadata Fields Configuration
+# =============================================================================
+
+# GENERALIZED PROMOTION: All fields from metadata_json are automatically promoted
+# to top-level in search results. This makes the system flexible and future-proof.
+# No need to maintain hardcoded lists of promoted fields.
+
+# Fields that are always extracted as individual database columns
+STANDARD_METADATA_FIELDS = [
+    'functions', 'classes', 'imports', 'complexity_score',
+    'has_type_hints', 'has_async', 'has_classes', 'metadata_json'
+]
+
+# Note: Any additional fields in metadata_json will be automatically promoted
+# to top-level in search results without needing configuration changes.
+
+# =============================================================================
 # Export for convenience
 # =============================================================================
 
@@ -347,5 +364,8 @@ __all__ = [
     
     # Validation functions
     "validate_chunk_metadata",
-    "create_default_chunk_query"
+    "create_default_chunk_query",
+    
+    # Configuration constants
+    "STANDARD_METADATA_FIELDS"
 ]

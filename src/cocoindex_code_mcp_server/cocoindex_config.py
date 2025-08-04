@@ -375,19 +375,32 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
                     "tree_sitter_analyze_error": True,   # True because we failed to analyze properly
                 }
 
-        # Return just the JSON string for now
+        # Return ALL fields from metadata (generalized approach)
         if metadata is not None:
-            result = {
-                "functions": metadata.get("functions", []),
-                "classes": metadata.get("classes", []),
-                "imports": metadata.get("imports", []),
-                "complexity_score": metadata.get("complexity_score", 0),
-                "has_type_hints": metadata.get("has_type_hints", False),
-                "has_async": metadata.get("has_async", False),
-                "has_classes": metadata.get("has_classes", False),
-                "decorators_used": metadata.get("decorators_used", []),
-                "analysis_method": metadata.get("analysis_method", "basic"),
+            # Start with all metadata fields and ensure critical ones have defaults
+            result = dict(metadata)  # Copy all fields
+            
+            # Ensure essential fields have proper defaults if missing
+            essential_defaults = {
+                "functions": [],
+                "classes": [],
+                "imports": [],
+                "complexity_score": 0,
+                "has_type_hints": False,
+                "has_async": False,
+                "has_classes": False,
+                "decorators_used": [],
+                "analysis_method": "basic",
+                "chunking_method": "unknown",
+                "tree_sitter_chunking_error": False,
+                "tree_sitter_analyze_error": False,
+                "dunder_methods": [],
             }
+            
+            # Apply defaults only for missing fields
+            for key, default_value in essential_defaults.items():
+                if key not in result:
+                    result[key] = default_value
         else:
             result = {}
         return json.dumps(result)
@@ -683,8 +696,9 @@ def extract_has_classes_field(metadata_json: str) -> bool:
 @cocoindex.op.function()
 def promote_metadata_fields(metadata_json: str) -> Dict[str, Any]:
     """
-    Promote all fields from metadata_json to top-level fields with appropriate type conversion.
-    This replaces individual extract_*_field functions with a single comprehensive promotion.
+    Promote ALL fields from metadata_json to top-level fields with appropriate type conversion.
+    This generalized approach automatically promotes any field found in metadata_json,
+    making the system flexible and future-proof without needing to update field lists.
     """
     try:
         if not metadata_json:
