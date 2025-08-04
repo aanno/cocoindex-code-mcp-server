@@ -491,6 +491,81 @@ def extract_has_async_field(metadata_json: str) -> bool:
 
 
 @cocoindex.op.function()
+def extract_analysis_method_field(metadata_json: str) -> str:
+    """Extract analysis_method field from metadata JSON."""
+    try:
+        if not metadata_json:
+            return "unknown"
+        # Parse JSON string to dict
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
+        return str(metadata_dict.get("analysis_method", "unknown"))
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for analysis_method: {e}")
+        return "unknown"
+
+
+@cocoindex.op.function()
+def extract_chunking_method_field(metadata_json: str) -> str:
+    """Extract chunking_method field from metadata JSON."""
+    try:
+        if not metadata_json:
+            return "unknown"
+        # Parse JSON string to dict
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
+        return str(metadata_dict.get("chunking_method", "unknown"))
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for chunking_method: {e}")
+        return "unknown"
+
+
+@cocoindex.op.function()
+def extract_tree_sitter_chunking_error_field(metadata_json: str) -> bool:
+    """Extract tree_sitter_chunking_error field from metadata JSON."""
+    try:
+        if not metadata_json:
+            return False
+        # Parse JSON string to dict
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
+        return bool(metadata_dict.get("tree_sitter_chunking_error", False))
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for tree_sitter_chunking_error: {e}")
+        return False
+
+
+@cocoindex.op.function()
+def extract_tree_sitter_analyze_error_field(metadata_json: str) -> bool:
+    """Extract tree_sitter_analyze_error field from metadata JSON."""
+    try:
+        if not metadata_json:
+            return False
+        # Parse JSON string to dict
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
+        return bool(metadata_dict.get("tree_sitter_analyze_error", False))
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for tree_sitter_analyze_error: {e}")
+        return False
+
+
+@cocoindex.op.function()
+def extract_decorators_used_field(metadata_json: str) -> str:
+    """Extract decorators_used field from metadata JSON."""
+    try:
+        if not metadata_json:
+            return "[]"
+        # Parse JSON string to dict
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
+        decorators = metadata_dict.get("decorators_used", [])
+        # Ensure it's a list and convert to string representation
+        if isinstance(decorators, list):
+            return str(decorators)
+        else:
+            return str([decorators]) if decorators else "[]"
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for decorators_used: {e}")
+        return "[]"
+
+
+@cocoindex.op.function()
 def ensure_unique_chunk_locations(chunks) -> List[Chunk]:
     """
     Post-process chunks to ensure location fields are unique within the file.
@@ -971,14 +1046,14 @@ def code_embedding_flow(
                 chunk["has_async"] = chunk["extracted_metadata"].transform(extract_has_async_field)
                 chunk["has_classes"] = chunk["extracted_metadata"].transform(extract_has_classes_field)
                 
-                # New analysis tracking fields - create simple extractors
-                chunk["analysis_method"] = chunk["extracted_metadata"].transform(lambda x: json.loads(x).get("analysis_method", "unknown") if x else "unknown")
-                chunk["chunking_method"] = chunk["extracted_metadata"].transform(lambda x: json.loads(x).get("chunking_method", "unknown") if x else "unknown")
-                chunk["tree_sitter_chunking_error"] = chunk["extracted_metadata"].transform(lambda x: json.loads(x).get("tree_sitter_chunking_error", False) if x else False)
-                chunk["tree_sitter_analyze_error"] = chunk["extracted_metadata"].transform(lambda x: json.loads(x).get("tree_sitter_analyze_error", False) if x else False)
+                # New analysis tracking fields - use proper CocoIndex extractors
+                chunk["analysis_method"] = chunk["extracted_metadata"].transform(extract_analysis_method_field)
+                chunk["chunking_method"] = chunk["extracted_metadata"].transform(extract_chunking_method_field)
+                chunk["tree_sitter_chunking_error"] = chunk["extracted_metadata"].transform(extract_tree_sitter_chunking_error_field)
+                chunk["tree_sitter_analyze_error"] = chunk["extracted_metadata"].transform(extract_tree_sitter_analyze_error_field)
                 
                 # Include decorators_used which was missing before
-                chunk["decorators_used"] = chunk["extracted_metadata"].transform(lambda x: json.loads(x).get("decorators_used", []) if x else [])
+                chunk["decorators_used"] = chunk["extracted_metadata"].transform(extract_decorators_used_field)
 
                 code_embeddings.collect(
                     filename=file["filename"],
