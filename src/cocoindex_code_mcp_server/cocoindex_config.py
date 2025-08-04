@@ -1105,6 +1105,12 @@ def code_embedding_flow(
                     has_type_hints=chunk["has_type_hints"],
                     has_async=chunk["has_async"],
                     has_classes=chunk["has_classes"],
+                    # Promoted metadata fields - defaults here, real values promoted from metadata_json
+                    analysis_method="unknown",  # Will be overridden by metadata_json promotion
+                    chunking_method="unknown",  # Will be overridden by metadata_json promotion  
+                    tree_sitter_chunking_error=False,  # Will be overridden by metadata_json promotion
+                    tree_sitter_analyze_error=False,   # Will be overridden by metadata_json promotion
+                    decorators_used="[]",  # Will be overridden by metadata_json promotion
                 )
 
     code_embeddings.export(
