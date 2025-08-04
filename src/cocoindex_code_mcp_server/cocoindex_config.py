@@ -66,7 +66,7 @@ class ChunkingParams:
     chunk_size: int
     min_chunk_size: int
     chunk_overlap: int
-    max_chunk_size: int = None  # For recursive splitting (defaults to chunk_size * 2)
+    max_chunk_size: int = 0  # For recursive splitting (will be set to chunk_size * 2 if 0)
 
 
 @dataclass
@@ -257,7 +257,18 @@ def extract_language(filename: str) -> str:
 @cocoindex.op.function()
 def get_chunking_params(language: str) -> ChunkingParams:
     """Get language-specific chunking parameters."""
-    return EFFECTIVE_CHUNKING_PARAMS.get(language, EFFECTIVE_CHUNKING_PARAMS["_DEFAULT"])
+    params = EFFECTIVE_CHUNKING_PARAMS.get(language, EFFECTIVE_CHUNKING_PARAMS["_DEFAULT"])
+    
+    # Ensure max_chunk_size is properly set
+    if params.max_chunk_size <= 0:
+        params = ChunkingParams(
+            chunk_size=params.chunk_size,
+            min_chunk_size=params.min_chunk_size,
+            chunk_overlap=params.chunk_overlap,
+            max_chunk_size=params.chunk_size * 2
+        )
+    
+    return params
 
 
 @cocoindex.op.function()
@@ -1118,7 +1129,7 @@ def scale_chunking_params(chunk_factor_percent: int) -> None:
             chunk_size=params.chunk_size * chunk_factor_percent // 100,
             min_chunk_size=params.min_chunk_size * chunk_factor_percent // 100,
             chunk_overlap=params.chunk_overlap * chunk_factor_percent // 100,
-            max_chunk_size=(params.max_chunk_size * chunk_factor_percent // 100) if params.max_chunk_size else None
+            max_chunk_size=max(params.max_chunk_size * chunk_factor_percent // 100, params.chunk_size * 2) if params.max_chunk_size > 0 else params.chunk_size * 2
         )
     
     # Update the global EFFECTIVE_CHUNKING_PARAMS

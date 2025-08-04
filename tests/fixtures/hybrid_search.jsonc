@@ -360,6 +360,31 @@
         ],
         "min_results": 2
       }
+    },
+    {
+      "name": "promoted_metadata_fields_validation",
+      "description": "Validate that promoted metadata fields are properly populated",
+      "query": {
+        "vector_query": "python class functions",
+        "keyword_query": "language:python has_classes:true"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "analysis_method": "!unknown",
+              "chunking_method": "ast_tree_sitter",
+              "tree_sitter_chunking_error": false,
+              "tree_sitter_analyze_error": false,
+              "decorators_used": "!null",
+              "has_type_hints": "!null",
+              "has_async": "!null",
+              "has_classes": true
+            }
+          }
+        ],
+        "min_results": 1
+      }
     }
   ],
   "test_metadata": {
