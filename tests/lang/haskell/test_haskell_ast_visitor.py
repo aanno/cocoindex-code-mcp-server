@@ -204,7 +204,7 @@ _helperFunction s = "Helper: " ++ s
     def test_real_haskell_file_analysis(self):
         """Test analysis of a real Haskell file if available."""
         # Look for the test fixture
-        test_file_path = Path(__file__).parent.parent.parent / 'fixtures' / 'haskell_example_1.hs'
+        test_file_path = Path(__file__).parent.parent.parent / 'fixtures' / 'lang_examples' / 'HaskellExample1.hs'
 
         if test_file_path.exists():
             with open(test_file_path, 'r') as f:

@@ -141,14 +141,14 @@ main = do
 @pytest.fixture(scope="session")
 def fixture_files():
     """Provide paths to test fixture files for different languages."""
-    fixtures_dir = os.path.join(os.path.dirname(__file__), '../fixtures')
+    fixtures_dir = os.path.join(os.path.dirname(__file__), '../fixtures/lang_examples')
 
     return {
         'python': os.path.join(fixtures_dir, 'python_example_1.py'),
         'rust': os.path.join(fixtures_dir, 'rust_example_1.rs'),
         'javascript': os.path.join(fixtures_dir, 'javascript_example_1.js'),
         'typescript': os.path.join(fixtures_dir, 'typescript_example_1.ts'),
-        'haskell': os.path.join(fixtures_dir, 'haskell_example_1.hs'),
+        'haskell': os.path.join(fixtures_dir, 'HaskellExample1.hs'),
     }
 
 

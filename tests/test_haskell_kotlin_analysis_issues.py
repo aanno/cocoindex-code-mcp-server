@@ -117,7 +117,7 @@ add x y = x + y
         chunking that the handler can't process.
         """
         # Load the actual test file that's failing
-        test_file = Path(__file__).parent / "fixtures" / "lang_examples" / "haskell_example_1.hs"
+        test_file = Path(__file__).parent / "fixtures" / "lang_examples" / "HaskellExample1.hs"
         if not test_file.exists():
             pytest.skip("Test file not found")
             
@@ -139,7 +139,7 @@ add x y = x + y
         assert has_proper_types, f"Should have proper chunk types, got: {set(chunk_types)}"
         
         # Full analysis should detect the functions/imports in the file
-        result = analyze_haskell_code(complex_haskell, 'haskell_example_1.hs')
+        result = analyze_haskell_code(complex_haskell, 'HaskellExample1.hs')
         assert result['success'] is True
         
         # The file has clear functions that should be detected

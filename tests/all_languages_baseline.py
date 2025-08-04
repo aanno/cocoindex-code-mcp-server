@@ -254,7 +254,7 @@ class MultiLanguageBaseline:
                 expected_constructs={'classes': {'MathUtils'}}
             ),
             'haskell': LanguageBaseline(
-                'haskell', 'haskell_example_1.hs',
+                'haskell', 'HaskellExample1.hs',
                 expected_functions={'fibonacci', 'sumList', 'treeMap', 'compose', 'addTen', 'multiplyByTwo', 'main'},
                 expected_constructs={'data_types': {'Person', 'Tree'}}
             ),

@@ -128,7 +128,7 @@ main = do
 
     def test_specialized_haskell_visitor(self, haskell_code: str, expected_functions: Set[str], expected_data_types: Set[str]):
         """Test our specialized Haskell visitor."""
-        result = analyze_haskell_code(haskell_code, "haskell_example_1.hs")
+        result = analyze_haskell_code(haskell_code, "HaskellExample1.hs")
 
         assert result.get('success', False), f"Analysis failed: {result}"
         assert 'analysis_method' in result, "Analysis method should be reported"
@@ -147,7 +147,7 @@ main = do
 
     def test_generic_ast_visitor(self, haskell_code: str):
         """Test generic AST visitor fallback."""
-        result = analyze_code(haskell_code, 'haskell', "haskell_example_1.hs")
+        result = analyze_code(haskell_code, 'haskell', "HaskellExample1.hs")
 
         assert result.get('success', False), f"Analysis failed: {result}"
         assert 'analysis_method' in result, "Analysis method should be reported"
