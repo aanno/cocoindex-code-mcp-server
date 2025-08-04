@@ -18,7 +18,7 @@ from psycopg_pool import ConnectionPool
 
 from . import VectorStoreBackend, QueryFilters
 from ..schemas import ChunkMetadata, SearchResult, SearchResultType, validate_chunk_metadata
-from ..mappers import PostgresFieldMapper, ResultMapper
+from ..mappers import PostgresFieldMapper, ResultMapper, CONST_SELECTABLE_FIELDS
 from ..keyword_search_parser_lark import build_sql_where_clause
 from ..lang.python.python_code_analyzer import analyze_python_code
 
@@ -37,6 +37,22 @@ class PostgresBackend(VectorStoreBackend):
         self.pool = pool
         self.table_name = table_name
         self.mapper = PostgresFieldMapper()
+        
+    def _build_select_clause(self, include_distance: bool = False, distance_alias: str = "distance") -> str:
+        """Build SELECT clause dynamically from single source of truth."""
+        # Use all selectable fields from the consolidated configuration
+        fields = []
+        for field in CONST_SELECTABLE_FIELDS:
+            # Quote PostgreSQL reserved keywords
+            if field == "end":
+                fields.append('"end"')
+            else:
+                fields.append(field)
+        
+        if include_distance:
+            fields.append(f"embedding <=> %s AS {distance_alias}")
+            
+        return ", ".join(fields)
     
     def vector_search(
         self, 
@@ -47,10 +63,10 @@ class PostgresBackend(VectorStoreBackend):
         with self.pool.connection() as conn:
             register_vector(conn)
             with conn.cursor() as cur:
+                select_clause = self._build_select_clause(include_distance=True, distance_alias="distance")
                 cur.execute(
                     f"""
-                    SELECT filename, language, code, embedding <=> %s AS distance,
-                           start, "end", source_name
+                    SELECT {select_clause}
                     FROM {self.table_name}
                     ORDER BY distance
                     LIMIT %s
@@ -73,10 +89,10 @@ class PostgresBackend(VectorStoreBackend):
         
         with self.pool.connection() as conn:
             with conn.cursor() as cur:
+                select_clause = self._build_select_clause()
                 cur.execute(
                     f"""
-                    SELECT filename, language, code, 0.0 as distance,
-                           start, "end", source_name
+                    SELECT {select_clause}, 0.0 as distance
                     FROM {self.table_name}
                     WHERE {where_clause}
                     ORDER BY filename, start
@@ -103,12 +119,12 @@ class PostgresBackend(VectorStoreBackend):
         with self.pool.connection() as conn:
             register_vector(conn)
             with conn.cursor() as cur:
-                # Hybrid search: vector similarity with keyword filtering
+                # Hybrid search: vector similarity with keyword filtering  
+                select_clause = self._build_select_clause()
                 cur.execute(
                     f"""
                     WITH vector_scores AS (
-                        SELECT filename, language, code, embedding <=> %s AS vector_distance,
-                               start, "end", source_name,
+                        SELECT {select_clause}, embedding <=> %s AS vector_distance,
                                (1.0 - (embedding <=> %s)) AS vector_similarity
                         FROM {self.table_name}
                         WHERE {where_clause}
@@ -118,7 +134,7 @@ class PostgresBackend(VectorStoreBackend):
                                (vector_similarity * %s) AS hybrid_score
                         FROM vector_scores
                     )
-                    SELECT filename, language, code, vector_distance, start, "end", source_name, hybrid_score
+                    SELECT *, hybrid_score
                     FROM ranked_results
                     ORDER BY hybrid_score DESC
                     LIMIT %s
@@ -210,97 +226,36 @@ class PostgresBackend(VectorStoreBackend):
         return build_sql_where_clause(search_group)  # type: ignore
     
     def _format_result(self, row: Tuple[Any, ...], score_type: str = "vector") -> SearchResult:
-        """Format PostgreSQL database row into SearchResult using new schema system."""
-        # Handle different row formats based on score type
+        """Format PostgreSQL database row into SearchResult using dynamic field mapping."""
+        # Get ordered list of selected fields to map row values
+        selectable_fields = list(CONST_SELECTABLE_FIELDS)
+        
+        # Build dictionary from row values using dynamic field mapping
+        pg_row = {}
+        for i, field in enumerate(selectable_fields):
+            if i < len(row):
+                pg_row[field] = row[i]
+        
+        # Handle distance/score fields based on search type
         if score_type == "hybrid":
-            filename, language, code, vector_distance, start, end, source_name, hybrid_score = row
-            score = float(hybrid_score)
-        else:
-            filename, language, code, distance, start, end, source_name = row
-            score = 1.0 - float(distance) if score_type == "vector" else 1.0
-        
-        # Create PostgreSQL row dict compatible with our mapper
-        pg_row = {
-            "filename": filename,
-            "language": language,
-            "code": code,
-            "start": start,
-            "end": end,
-            "source_name": source_name or "default",
-            "location": f"{filename}:{start}-{end}" if start and end else filename,
-        }
-        
-        # Add rich metadata using multi-language analysis
-        try:
-            # Import the extract_code_metadata function to use our multi-language analyzers
-            from ..cocoindex_config import extract_code_metadata
-            
-            # Extract metadata using our multi-language analyzers
-            metadata_json_str = extract_code_metadata(code, language, filename)
-            analysis_metadata = json.loads(metadata_json_str)
-            
-            if analysis_metadata is not None:
-                # Add analyzed metadata to the row
-                pg_row.update({
-                    "functions": analysis_metadata.get("functions", []),
-                    "classes": analysis_metadata.get("classes", []),
-                    "imports": analysis_metadata.get("imports", []),
-                    "complexity_score": analysis_metadata.get("complexity_score", 0),
-                    "has_type_hints": analysis_metadata.get("has_type_hints", False),
-                    "has_async": analysis_metadata.get("has_async", False),
-                    "has_classes": analysis_metadata.get("has_classes", False),
-                    "metadata_json": json.dumps(analysis_metadata, default=str)
-                })
+            # Row includes hybrid_score at the end
+            score = float(row[-1]) if len(row) > len(selectable_fields) else 1.0
+        elif score_type == "vector":
+            # Row includes distance field 
+            distance_idx = len(selectable_fields)  # distance is after selectable fields
+            if len(row) > distance_idx:
+                distance = float(row[distance_idx])
+                score = 1.0 - distance
             else:
-                # Add default metadata fields
-                pg_row.update({
-                    "functions": [],
-                    "classes": [],
-                    "imports": [],
-                    "complexity_score": 0,
-                    "has_type_hints": False,
-                    "has_async": False,
-                    "has_classes": False,
-                    "metadata_json": json.dumps({"analysis_error": "metadata was None"}),
-                    "analysis_method": None,
-                    "chunking_method": None,
-                    "tree_sitter_analyze_error:": False,
-                    "tree_sitter_chunking_error": False,
-                    "has_docstrings": False,
-                    "docstring": "",
-                    "decorators_used": [],
-                    "dunder_methods": [],
-                    "private_methods": [],
-                    "variables": [],
-                    "decorators": [],
-                    "function_details": json.dumps({"error": "no function_details"}),
-                    "class_details": json.dumps({"error": "no class_details"})
-                })
-        except Exception as e:
-            # Add error metadata
-            pg_row.update({
-                "functions": [],
-                "classes": [],
-                "imports": [],
-                "complexity_score": 0,
-                "has_type_hints": False,
-                "has_async": False,
-                "has_classes": False,
-                "metadata_json": json.dumps({"analysis_error": str(e)}),
-                "analysis_method": None,
-                "chunking_method": None,
-                "tree_sitter_analyze_error:": False,
-                "tree_sitter_chunking_error": False,
-                "has_docstrings": False,
-                "docstring": "",
-                "decorators_used": [],
-                "dunder_methods": [],
-                "private_methods": [],
-                "variables": [],
-                "decorators": [],
-                "function_details": json.dumps({"error": str(e)}),
-                "class_details": json.dumps({"error": str(e)})
-            })
+                score = 1.0
+        else:  # keyword
+            # Row includes distance field (0.0)
+            score = 1.0
+        
+        # Ensure required fields have defaults
+        pg_row.setdefault("source_name", "default")
+        if "location" not in pg_row and "filename" in pg_row and "start" in pg_row and "end" in pg_row:
+            pg_row["location"] = f"{pg_row['filename']}:{pg_row['start']}-{pg_row['end']}" if pg_row.get('start') and pg_row.get('end') else pg_row['filename']
         
         # Convert score_type string to SearchResultType enum
         if score_type == "vector":

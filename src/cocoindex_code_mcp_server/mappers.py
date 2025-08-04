@@ -13,8 +13,9 @@ import json
 
 from .schemas import ChunkMetadata, QueryFilter, FilterOperator, SearchResult, SearchResultType
 
-# Mapping between schema fields and PostgreSQL column names
+# SINGLE SOURCE OF TRUTH: All database columns and field mappings
 CONST_FIELD_MAPPINGS = {
+    # Core search result fields
     "filename": "filename",
     "language": "language", 
     "location": "location",
@@ -22,6 +23,9 @@ CONST_FIELD_MAPPINGS = {
     "start": "start",
     "end": "end",
     "source_name": "source_name",
+    "embedding": "embedding",
+    
+    # Metadata fields (promoted from metadata_json)
     "functions": "functions",
     "classes": "classes",
     "imports": "imports", 
@@ -30,7 +34,6 @@ CONST_FIELD_MAPPINGS = {
     "has_async": "has_async",
     "has_classes": "has_classes",
     "metadata_json": "metadata_json",
-    "embedding": "embedding",
     "analysis_method": "analysis_method",
     "chunking_method": "chunking_method",
     "tree_sitter_analyze_error": "tree_sitter_analyze_error",
@@ -46,19 +49,14 @@ CONST_FIELD_MAPPINGS = {
     "docstring": "docstring"
 }
 
+# Derived configurations from single source of truth
+CONST_CORE_FIELDS = {"filename", "language", "location", "code", "start", "end", "source_name", "embedding"}
+CONST_METADATA_FIELDS = {k for k in CONST_FIELD_MAPPINGS.keys() if k not in CONST_CORE_FIELDS}
+CONST_SELECTABLE_FIELDS = {k for k in CONST_FIELD_MAPPINGS.keys() if k != "embedding"}  # embedding handled separately
+
 # Fields stored in JSONB vs individual columns
 CONST_JSONB_FIELDS = {"metadata_json"}
-CONST_INDIVIDUAL_COLUMNS = {
-    "filename", "language", "location", "code", "start", "end", 
-    "source_name", "functions", "classes", "imports", 
-    "complexity_score", "has_type_hints", "has_async", "has_classes",
-    "embedding", "analysis_method", "chunking_method",
-    "tree_sitter_analyze_error", "tree_sitter_chunking_error",
-    "has_docstrings", "decorators_used", "dunder_methods", "private_methods",
-    "variables", "decorators",
-    "function_details", "class_details",
-    "docstring"
-}
+CONST_INDIVIDUAL_COLUMNS = CONST_FIELD_MAPPINGS.keys() - CONST_JSONB_FIELDS
 
 
 
@@ -370,7 +368,7 @@ class ResultMapper:
         mapper = PostgresFieldMapper()
         metadata = mapper.from_backend_format(pg_row)
         
-        return SearchResult(
+        result = SearchResult(
             filename=metadata.get("filename", ""),
             language=metadata.get("language", ""),
             code=metadata.get("code", ""),
@@ -382,6 +380,16 @@ class ResultMapper:
             source=metadata.get("source_name", ""),
             metadata=metadata
         )
+        
+        # Dynamically add all metadata fields as attributes to the SearchResult object
+        # This allows the MCP server to access them via hasattr() and getattr()
+        for key, value in metadata.items():
+            # Skip core fields that are already set as SearchResult attributes
+            if key not in {"filename", "language", "code", "location", "start", "end", "source_name", "embedding"}:
+                setattr(result, key, value)
+        
+        
+        return result
     
     @staticmethod
     def from_qdrant_result(

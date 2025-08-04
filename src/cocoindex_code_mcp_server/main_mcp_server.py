@@ -54,16 +54,9 @@ except ImportError:
     HAS_COVERAGE = False
     Coverage = None  # type: ignore
 
-METADATA_FIELDS = [
-    'functions', 'classes', 'imports', 'complexity_score', 
-    'has_type_hints', 'has_async', 'has_classes', 'metadata_json',
-    'analysis_method', 'chunking_method',
-    'tree_sitter_analyze_error', 'tree_sitter_chunking_error',
-    'has_docstrings', 'decorators_used', 'dunder_methods', 'private_methods',
-    'variables', 'decorators',
-    'function_details', 'class_details',
-    'docstring'
-]
+# Import metadata fields from single source of truth
+from .mappers import CONST_METADATA_FIELDS
+METADATA_FIELDS = list(CONST_METADATA_FIELDS)
 
 @contextlib.asynccontextmanager
 async def coverage_context() -> AsyncIterator[Optional[object]]:
@@ -456,7 +449,8 @@ def main(
                     metadata_fields = list(METADATA_FIELDS)
                     for key in metadata_fields:
                         if hasattr(obj, key):
-                            result_dict[key] = make_serializable(getattr(obj, key))
+                            value = getattr(obj, key)
+                            result_dict[key] = make_serializable(value)
                     
                     # Extract ALL fields from metadata_json if it exists (generalized promotion)
                     if hasattr(obj, 'metadata_json') and isinstance(obj.metadata_json, dict):

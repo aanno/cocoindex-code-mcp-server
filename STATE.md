@@ -106,4 +106,44 @@ pytest -c pytest.ini tests/mcp_server/test_mcp.py
 3. **Run evaluation with CocoIndex to confirm metadata appears**
 
 ---
-*Session completed successfully. Generalized metadata promotion system implemented - future-proof and maintenance-free! 🎉*
+
+## LATEST UPDATE: PostgreSQL Backend Configuration Consolidation ✅
+
+### ARCHITECTURAL ISSUE RESOLVED:
+**Root Cause:** Multiple scattered configuration points for database columns caused inconsistency where `analysis_method` appeared in `metadata_json` but not as top-level field.
+
+**Solution:** Consolidated ALL field configurations into single source of truth in `mappers.py`.
+
+### CHANGES COMPLETED:
+
+#### 1. Single Source of Truth (`mappers.py`)
+```python
+# SINGLE SOURCE OF TRUTH: All database columns and field mappings
+CONST_FIELD_MAPPINGS = {
+    # Core + Metadata fields (25+ total)
+    "filename": "filename", "analysis_method": "analysis_method", ...
+}
+CONST_SELECTABLE_FIELDS = {k for k in CONST_FIELD_MAPPINGS.keys() if k != "embedding"}
+```
+
+#### 2. PostgreSQL Backend Fixed (`postgres_backend.py`)
+- **Added:** `_build_select_clause()` for dynamic SELECT generation
+- **Fixed:** All search methods now select ALL metadata columns (25+ vs 7)
+- **Fixed:** PostgreSQL reserved keyword "end" with proper quoting
+- **Removed:** Artificial metadata reconstruction
+
+#### 3. Main MCP Server Updated (`main_mcp_server.py`)
+```python
+from .mappers import CONST_METADATA_FIELDS
+METADATA_FIELDS = list(CONST_METADATA_FIELDS)
+```
+
+### EXPECTED RESULT:
+`analysis_method` should now appear as top-level field in search results.
+
+### STATUS:
+- ✅ Architecture consolidated  
+- ✅ PostgreSQL reserved keyword fixed
+- 🔄 Test validation ready to complete
+
+*Session completed successfully. Both generalized metadata promotion AND consolidated configuration implemented! 🎉*
