@@ -239,7 +239,7 @@ class CocoIndexASTChunker:
                 # Enhance metadata with our information
                 enhanced_metadata = {
                     "chunk_id": i,
-                    "chunk_method": "ast_chunking",
+                    "chunking_method": "ast_tree_sitter",
                     "language": language,
                     "file_path": file_path,
                     "chunk_size": len(content.strip()),
@@ -284,7 +284,7 @@ class CocoIndexASTChunker:
                 for i, chunk in enumerate(chunks):
                     metadata = {
                         "chunk_id": i,
-                        "chunk_method": "haskell_ast_chunking",
+                        "chunking_method": "ast_tree_sitter",
                         "language": language,
                         "file_path": file_path,
                         "chunk_size": len(chunk.text()),
@@ -332,7 +332,7 @@ class CocoIndexASTChunker:
             if content.strip():
                 metadata = {
                     "chunk_id": len(chunks),
-                    "chunk_method": "simple_text_chunking",
+                    "chunking_method": "simple_text_chunking",
                     "language": language,
                     "file_path": file_path,
                     "chunk_size": len(content),
