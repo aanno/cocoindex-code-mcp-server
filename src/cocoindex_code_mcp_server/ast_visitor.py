@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Protocol
 import tree_sitter
 from tree_sitter import Language, Node, Parser, Tree
+from .parser_util import update_defaults
 
 TREE_SITTER_AVAILABLE = True
 LOGGER = logging.getLogger(__name__)
@@ -220,7 +221,7 @@ class GenericMetadataVisitor(ASTVisitor):
         chunking_method = self._determine_chunking_method()
         
         # Build result metadata
-        metadata = {
+        update_defaults(self.metadata, {
             'language': self.language,
             'line_count': len(source_text.split('\n')),
             'char_count': len(source_text),
@@ -235,9 +236,9 @@ class GenericMetadataVisitor(ASTVisitor):
             'should_fallback': self.error_stats.should_fallback,
             'tree_language': f'{self.language}_tree_sitter',
             'success': True
-        }
+        })
         
-        return metadata
+        return self.metadata
     
     def _visit_tree_recursive(self, node: Node, source_text: str, parent: Optional[Node] = None, depth: int = 0) -> None:
         """Recursively visit tree nodes with error tracking."""
@@ -258,12 +259,16 @@ class GenericMetadataVisitor(ASTVisitor):
     
     def _determine_chunking_method(self) -> str:
         """Determine the appropriate chunking method based on error stats."""
-        if self.error_stats.error_count >= ERROR_FALLBACK_THRESHOLD:
-            return "regex_fallback"
-        elif self.error_stats.error_count > 0:
-            return "ast_with_errors"
+
+        if self.metadata['chunking_method'] is None:
+            if self.error_stats.error_count >= ERROR_FALLBACK_THRESHOLD:
+                return "guessing_regex_fallback_because_of_error_count"
+            elif self.error_stats.error_count > 0:
+                return "guessing_ast_with_errors"
+            else:
+                return "guessing_ast"
         else:
-            return "ast"
+            return self.metadata['chunking_method']
 
     def _update_complexity(self, node_type: str) -> None:
         """Update complexity score based on node type."""

@@ -336,7 +336,7 @@ fn extract_semantic_chunks_with_recursive_splitting(tree: &Tree, source: &str, p
         return ChunkingResult {
             chunks: regex_chunks,
             error_stats,
-            chunking_method: "regex_fallback".to_string(),
+            chunking_method: "rust_haskell_regex_fallback".to_string(),
             coverage_complete: true,
         };
     }
@@ -386,7 +386,7 @@ fn extract_semantic_chunks_with_error_handling(tree: &Tree, source: &str) -> Chu
         return ChunkingResult {
             chunks: regex_chunks,
             error_stats,
-            chunking_method: "regex_fallback".to_string(),
+            chunking_method: "rust_haskell_regex_fallback_2".to_string(),
             coverage_complete: true, // Regex fallback covers all lines
         };
     }
@@ -546,7 +546,7 @@ fn create_chunk_with_context(node: &Node, source: &str, context: &ChunkingContex
     }
     
     // Add chunking method
-    metadata.insert("chunking_method".to_string(), "ast_recursive".to_string());
+    metadata.insert("chunking_method".to_string(), "rust_haskell_ast_recursive".to_string());
     
     // Add tree-sitter error tracking for chunking
     if node.is_error() {
@@ -686,7 +686,7 @@ fn create_error_chunk_with_context(start_byte: usize, end_byte: usize, source: &
     
     let mut metadata = HashMap::new();
     metadata.insert("category".to_string(), "error_recovery".to_string());
-    metadata.insert("chunking_method".to_string(), "error_recovery".to_string());
+    metadata.insert("chunking_method".to_string(), "rust_haskell_error_recovery".to_string());
     metadata.insert("is_error_chunk".to_string(), "true".to_string());
     metadata.insert("tree_sitter_chunking_error".to_string(), "true".to_string());
     metadata.insert("has_error".to_string(), "true".to_string());
@@ -786,7 +786,7 @@ fn extract_chunks_recursive_with_errors(
         metadata.insert("has_children".to_string(), (node.child_count() > 0).to_string());
         metadata.insert("is_named".to_string(), node.is_named().to_string());
         metadata.insert("has_error".to_string(), node.has_error().to_string());
-        metadata.insert("chunking_method".to_string(), "ast_with_errors".to_string());
+        metadata.insert("chunking_method".to_string(), "rust_haskell_ast_with_errors".to_string());
         
         // Extract additional metadata based on node type
         match node_type {
@@ -1229,7 +1229,7 @@ fn create_error_chunk(start_byte: usize, end_byte: usize, source: &str, depth: u
     let mut metadata = HashMap::new();
     metadata.insert("depth".to_string(), depth.to_string());
     metadata.insert("category".to_string(), "error_recovery".to_string());
-    metadata.insert("chunking_method".to_string(), "error_recovery".to_string());
+    metadata.insert("chunking_method".to_string(), "rust_haskell_error_recovery_2".to_string());
     metadata.insert("is_error_chunk".to_string(), "true".to_string());
     metadata.insert("tree_sitter_chunking_error".to_string(), "true".to_string());
     metadata.insert("has_error".to_string(), "true".to_string());
@@ -1277,7 +1277,7 @@ fn create_regex_fallback_chunks(source: &str) -> Vec<HaskellChunk> {
             if !chunk_text.trim().is_empty() {
                 let mut metadata = HashMap::new();
                 metadata.insert("category".to_string(), "regex_fallback".to_string());
-                metadata.insert("chunking_method".to_string(), "regex_fallback".to_string());
+                metadata.insert("chunking_method".to_string(), "rust_haskell_regex_fallback_3".to_string());
                 metadata.insert("tree_sitter_chunking_error".to_string(), "false".to_string());
                 
                 let chunk_len = chunk_text.len();
@@ -1305,7 +1305,7 @@ fn create_regex_fallback_chunks(source: &str) -> Vec<HaskellChunk> {
         if !chunk_text.trim().is_empty() {
             let mut metadata = HashMap::new();
             metadata.insert("category".to_string(), "regex_fallback".to_string());
-            metadata.insert("chunking_method".to_string(), "regex_fallback".to_string());
+            metadata.insert("chunking_method".to_string(), "rust_haskell_regex_fallback_4".to_string());
             metadata.insert("tree_sitter_chunking_error".to_string(), "false".to_string());
             
             let chunk_len = chunk_text.len();

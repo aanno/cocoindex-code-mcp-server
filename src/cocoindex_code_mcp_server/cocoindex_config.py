@@ -358,10 +358,12 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
                 LOGGER.warning(f"Analysis failed for {language}: {e}")
                 
             # Fallback to basic metadata if analysis failed or no analyzer available
-            if metadata is None or not metadata.get('success', False):
-                metadata = {
+            if metadata is None:
+                metadata = {}
+            if metadata.get('success', False):
+                update_defaults(metadata, {
                     "language": language,
-                    "analysis_method": "basic",
+                    "analysis_method": "no_success_analyze",
                     "functions": [],
                     "classes": [],
                     "imports": [],
@@ -371,10 +373,10 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
                     "has_classes": False,
                     "decorators_used": [],
                     # Promoted metadata fields for database columns
-                    "chunking_method": "fallback_basic",
+                    "chunking_method": "no_success_chunking",
                     "tree_sitter_chunking_error": True,  # True because we failed to use tree-sitter
                     "tree_sitter_analyze_error": True,   # True because we failed to analyze properly
-                }
+                })
 
         # Return ALL fields from metadata (generalized approach)
         if metadata is not None:
