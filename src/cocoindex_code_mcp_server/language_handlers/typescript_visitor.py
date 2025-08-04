@@ -186,7 +186,15 @@ def analyze_typescript_code(code: str, language: str = "typescript", filename: s
             'line_count': code.count('\n') + 1,
             'char_count': len(code),
             'parse_errors': 0,
-            'tree_language': str(parser.language) if parser else None
+            'tree_language': str(parser.language) if parser else None,
+            # Required metadata fields for promoted column implementation
+            'chunking_method': 'ast_tree_sitter',
+            'tree_sitter_chunking_error': False,
+            'tree_sitter_analyze_error': False,
+            'decorators_used': result.get('decorators', []),  # TypeScript supports decorators
+            'has_type_hints': True,  # TypeScript has strong typing
+            'has_async': any('async' in func.lower() for func in result.get('functions', [])),
+            'has_classes': len(result.get('classes', [])) > 0
         })
 
         LOGGER.debug(

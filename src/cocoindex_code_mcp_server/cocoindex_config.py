@@ -118,41 +118,41 @@ TREE_SITTER_LANGUAGE_MAP = {
 # Language-specific chunking parameters
 CHUNKING_PARAMS = {
     # Larger chunks for documentation and config files
-    "Markdown": ChunkingParams(chunk_size=2000, min_chunk_size=500, chunk_overlap=200),
-    # "YAML": ChunkingParams(chunk_size=800, min_chunk_size=200, chunk_overlap=100),
-    "JSON": ChunkingParams(chunk_size=1500, min_chunk_size=300, chunk_overlap=200),
-    "XML": ChunkingParams(chunk_size=1500, min_chunk_size=300, chunk_overlap=200),
-    "TOML": ChunkingParams(chunk_size=800, min_chunk_size=200, chunk_overlap=100),
+    "Markdown": ChunkingParams(chunk_size=2000, min_chunk_size=500, chunk_overlap=200, max_chunk_size=3000),
+    # "YAML": ChunkingParams(chunk_size=800, min_chunk_size=200, chunk_overlap=100, max_chunk_size=1200),
+    "JSON": ChunkingParams(chunk_size=1500, min_chunk_size=300, chunk_overlap=200, max_chunk_size=2200),
+    "XML": ChunkingParams(chunk_size=1500, min_chunk_size=300, chunk_overlap=200, max_chunk_size=2200),
+    "TOML": ChunkingParams(chunk_size=800, min_chunk_size=200, chunk_overlap=100, max_chunk_size=1200),
 
     # Smaller chunks for dense code
-    "C": ChunkingParams(chunk_size=800, min_chunk_size=200, chunk_overlap=150),
-    "C++": ChunkingParams(chunk_size=800, min_chunk_size=200, chunk_overlap=150),
-    "Rust": ChunkingParams(chunk_size=1000, min_chunk_size=250, chunk_overlap=200),
-    "Go": ChunkingParams(chunk_size=1000, min_chunk_size=250, chunk_overlap=200),
-    "Java": ChunkingParams(chunk_size=1200, min_chunk_size=300, chunk_overlap=250),
-    "C#": ChunkingParams(chunk_size=1200, min_chunk_size=300, chunk_overlap=250),
-    "Scala": ChunkingParams(chunk_size=1000, min_chunk_size=250, chunk_overlap=200),
+    "C": ChunkingParams(chunk_size=800, min_chunk_size=200, chunk_overlap=150, max_chunk_size=1200),
+    "C++": ChunkingParams(chunk_size=800, min_chunk_size=200, chunk_overlap=150, max_chunk_size=1200),
+    "Rust": ChunkingParams(chunk_size=1000, min_chunk_size=250, chunk_overlap=200, max_chunk_size=1500),
+    "Go": ChunkingParams(chunk_size=1000, min_chunk_size=250, chunk_overlap=200, max_chunk_size=1500),
+    "Java": ChunkingParams(chunk_size=1200, min_chunk_size=300, chunk_overlap=250, max_chunk_size=1800),
+    "C#": ChunkingParams(chunk_size=1200, min_chunk_size=300, chunk_overlap=250, max_chunk_size=1800),
+    "Scala": ChunkingParams(chunk_size=1000, min_chunk_size=250, chunk_overlap=200, max_chunk_size=1500),
 
     # Medium chunks for scripting languages
-    "Python": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=250),
-    "JavaScript": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=250),
-    "TypeScript": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=250),
-    "TSX": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=250),
-    "Ruby": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=250),
-    "PHP": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=250),
+    "Python": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=250, max_chunk_size=1500),
+    "JavaScript": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=250, max_chunk_size=1500),
+    "TypeScript": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=250, max_chunk_size=1500),
+    "TSX": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=250, max_chunk_size=1500),
+    "Ruby": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=250, max_chunk_size=1500),
+    "PHP": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=250, max_chunk_size=1500),
 
     # Web and styling
-    "HTML": ChunkingParams(chunk_size=1500, min_chunk_size=400, chunk_overlap=200),
-    "CSS": ChunkingParams(chunk_size=1000, min_chunk_size=250, chunk_overlap=150),
+    "HTML": ChunkingParams(chunk_size=1500, min_chunk_size=400, chunk_overlap=200, max_chunk_size=2200),
+    "CSS": ChunkingParams(chunk_size=1000, min_chunk_size=250, chunk_overlap=150, max_chunk_size=1500),
 
     # Data and scientific
-    "SQL": ChunkingParams(chunk_size=1200, min_chunk_size=300, chunk_overlap=200),
-    "R": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200),
-    "Fortran": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200),
+    "SQL": ChunkingParams(chunk_size=1200, min_chunk_size=300, chunk_overlap=200, max_chunk_size=1800),
+    "R": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200, max_chunk_size=1500),
+    "Fortran": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200, max_chunk_size=1500),
 
     # Others
-    "Pascal": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200),
-    "Swift": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200),
+    "Pascal": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200, max_chunk_size=1500),
+    "Swift": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200, max_chunk_size=1500),
     "Haskell": ChunkingParams(chunk_size=1200, min_chunk_size=300, chunk_overlap=200, max_chunk_size=2500),
 
     # Default fallback

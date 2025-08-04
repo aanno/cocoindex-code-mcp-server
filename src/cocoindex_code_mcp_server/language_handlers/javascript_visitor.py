@@ -210,7 +210,15 @@ def analyze_javascript_code(code: str, language: str = "javascript", filename: s
             'line_count': code.count('\n') + 1,
             'char_count': len(code),
             'parse_errors': 0,
-            'tree_language': str(parser.language) if parser else None
+            'tree_language': str(parser.language) if parser else None,
+            # Required metadata fields for promoted column implementation
+            'chunking_method': 'ast_tree_sitter',
+            'tree_sitter_chunking_error': False,
+            'tree_sitter_analyze_error': False,
+            'decorators_used': [],  # JavaScript doesn't commonly use decorators
+            'has_type_hints': language.lower() in ['typescript', 'ts'],  # TypeScript has type hints
+            'has_async': any('async' in func.lower() for func in result.get('functions', [])),
+            'has_classes': len(result.get('classes', [])) > 0
         })
 
         LOGGER.debug(

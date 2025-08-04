@@ -181,7 +181,15 @@ def analyze_rust_code(code: str, filename: str = "") -> Dict[str, Any]:
             'line_count': code.count('\n') + 1,
             'char_count': len(code),
             'parse_errors': 0,
-            'tree_language': str(parser.language) if parser else None
+            'tree_language': str(parser.language) if parser else None,
+            # Required metadata fields for promoted column implementation
+            'chunking_method': 'ast_tree_sitter',
+            'tree_sitter_chunking_error': False,
+            'tree_sitter_analyze_error': False,
+            'decorators_used': [],  # Rust doesn't have decorators
+            'has_type_hints': True,  # Rust has strong typing
+            'has_async': any('async' in func.lower() for func in result.get('functions', [])),
+            'has_classes': len(result.get('structs', [])) > 0 or len(result.get('traits', [])) > 0
         })
 
         LOGGER.debug(f"Rust analysis completed: {len(result.get('functions', []))} functions found")

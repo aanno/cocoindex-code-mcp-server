@@ -183,7 +183,15 @@ def analyze_kotlin_code(code: str, filename: str = "") -> Dict[str, Any]:
             'line_count': code.count('\n') + 1,
             'char_count': len(code),
             'parse_errors': 0,
-            'tree_language': str(parser.language) if parser else None
+            'tree_language': str(parser.language) if parser else None,
+            # Required metadata fields for promoted column implementation
+            'chunking_method': 'ast_tree_sitter',
+            'tree_sitter_chunking_error': False,
+            'tree_sitter_analyze_error': False,
+            'decorators_used': result.get('annotations', []),  # Kotlin uses annotations like Java
+            'has_type_hints': True,  # Kotlin has strong typing
+            'has_async': any('suspend' in func.lower() for func in result.get('functions', [])),  # Kotlin uses 'suspend' for async
+            'has_classes': len(result.get('classes', [])) > 0
         })
 
         LOGGER.debug(
