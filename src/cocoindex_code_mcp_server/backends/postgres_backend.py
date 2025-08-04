@@ -288,7 +288,7 @@ class PostgresBackend(VectorStoreBackend):
                 "has_type_hints": False,
                 "has_async": False,
                 "has_classes": False,
-                "metadata_json": json.dumps({"analysis_error": str(e)})
+                "metadata_json": json.dumps({"analysis_error": str(e)}),
                 "analysis_method": None,
                 "chunking_method": None,
                 "tree_sitter_analyze_error:": False,

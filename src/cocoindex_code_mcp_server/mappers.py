@@ -14,7 +14,7 @@ import json
 from .schemas import ChunkMetadata, QueryFilter, FilterOperator, SearchResult, SearchResultType
 
 # Mapping between schema fields and PostgreSQL column names
-FIELD_MAPPINGS = {
+CONST_FIELD_MAPPINGS = {
     "filename": "filename",
     "language": "language", 
     "location": "location",
@@ -47,8 +47,8 @@ FIELD_MAPPINGS = {
 }
 
 # Fields stored in JSONB vs individual columns
-JSONB_FIELDS = {"metadata_json"}
-INDIVIDUAL_COLUMNS = {
+CONST_JSONB_FIELDS = {"metadata_json"}
+CONST_INDIVIDUAL_COLUMNS = {
     "filename", "language", "location", "code", "start", "end", 
     "source_name", "functions", "classes", "imports", 
     "complexity_score", "has_type_hints", "has_async", "has_classes",
@@ -63,7 +63,7 @@ INDIVIDUAL_COLUMNS = {
 
 
 # Fields that should be indexed in Qdrant for fast filtering
-INDEXED_FIELDS = {
+CONST_INDEXED_FIELDS = {
     "filename", "language", "source_name", "complexity_score",
     "has_type_hints", "has_async", "has_classes"
 }
@@ -98,6 +98,10 @@ class PostgresFieldMapper(FieldMapper[Dict[str, Any]]):
     PostgreSQL stores metadata in JSONB columns and individual fields
     as separate columns for performance.
     """
+    
+    FIELD_MAPPINGS = dict(CONST_FIELD_MAPPINGS)
+    JSONB_FIELDS = set(CONST_JSONB_FIELDS)
+    INDIVIDUAL_COLUMNS = set(CONST_INDIVIDUAL_COLUMNS)
     
     def to_backend_format(self, metadata: ChunkMetadata) -> Dict[str, Any]:
         """
@@ -244,6 +248,8 @@ class QdrantFieldMapper(FieldMapper[Dict[str, Any]]):
     Qdrant stores all metadata in the payload object, with some fields
     potentially indexed for filtering performance.
     """
+    
+    INDEXED_FIELDS = set(CONST_INDEXED_FIELDS)
 
     def to_backend_format(self, metadata: ChunkMetadata) -> Dict[str, Any]:
         """
