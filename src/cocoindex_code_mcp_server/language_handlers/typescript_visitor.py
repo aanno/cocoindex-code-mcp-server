@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 
 from ..ast_visitor import NodeContext
 from .javascript_visitor import JavaScriptASTVisitor
+from ..parser_util import update_defaults
 
 LOGGER = logging.getLogger(__name__)
 
@@ -179,7 +180,8 @@ def analyze_typescript_code(code: str, language: str = "typescript", filename: s
 
         # Get results from visitor
         result = visitor.get_summary()
-        result.update({
+        # result.update({
+        update_defaults(result, {
             'success': True,
             'language': language,
             'filename': filename,
@@ -188,9 +190,9 @@ def analyze_typescript_code(code: str, language: str = "typescript", filename: s
             'parse_errors': 0,
             'tree_language': str(parser.language) if parser else None,
             # Required metadata fields for promoted column implementation
-            'chunking_method': 'ast_tree_sitter',
-            'tree_sitter_chunking_error': False,
-            'tree_sitter_analyze_error': False,
+            # don't set chunking method in analyzer
+            # "chunking_method": "ast_tree_sitter", 
+            # "tree_sitter_chunking_error": False,
             'decorators_used': result.get('decorators', []),  # TypeScript supports decorators
             'has_type_hints': True,  # TypeScript has strong typing
             'has_async': any('async' in func.lower() for func in result.get('functions', [])),

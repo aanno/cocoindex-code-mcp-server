@@ -17,6 +17,7 @@ from ...ast_visitor import (
     TreeWalker,
 )
 from ...language_handlers import get_handler_for_language
+from ...parser_util import update_defaults
 from . import LOGGER
 
 
@@ -144,7 +145,7 @@ class TreeSitterPythonAnalyzer:
 
             if metadata:
                 # Ensure analysis method is set correctly
-                metadata['analysis_method'] = 'python_ast'
+                metadata['analysis_method'] = 'python_code_analyzer'
                 return metadata
             else:
                 return None
@@ -159,15 +160,18 @@ class TreeSitterPythonAnalyzer:
                 visitor.visit(tree)
 
                 metadata = visitor.get_metadata()
-                metadata.update({
+                # metadata.update({
+                update_defaults(metadata, {
                     'analysis_method': 'python_ast',
                     'language': 'python',
                     'filename': filename,
                     'line_count': len(code.split('\n')),
                     'char_count': len(code),
                     # Promoted metadata fields for database columns
-                    'chunking_method': 'ast_tree_sitter',
-                    'tree_sitter_chunking_error': False,
+                    "analysis_method": "tree_sitter_python_analyzer",
+                    # don't set chunking method in analyzer
+                    # "chunking_method": "ast_tree_sitter", 
+                    # "tree_sitter_chunking_error": False,
                     'tree_sitter_analyze_error': False,
                     'decorators_used': metadata.get('decorators', [])
                 })

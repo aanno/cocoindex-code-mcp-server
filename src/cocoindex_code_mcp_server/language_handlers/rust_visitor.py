@@ -9,6 +9,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from ..ast_visitor import GenericMetadataVisitor, NodeContext
+from ..parser_util import update_defaults
 from cocoindex_code_mcp_server.ast_visitor import NodeContext
 from tree_sitter import Node
 
@@ -174,7 +175,8 @@ def analyze_rust_code(code: str, filename: str = "") -> Dict[str, Any]:
 
         # Get results from visitor
         result = visitor.get_summary()
-        result.update({
+        # result.update({
+        update_defaults(result, {
             'success': True,
             'language': 'rust',
             'filename': filename,
@@ -183,8 +185,9 @@ def analyze_rust_code(code: str, filename: str = "") -> Dict[str, Any]:
             'parse_errors': 0,
             'tree_language': str(parser.language) if parser else None,
             # Required metadata fields for promoted column implementation
-            'chunking_method': 'ast_tree_sitter',
-            'tree_sitter_chunking_error': False,
+            # don't set chunking method in analyzer
+            # "chunking_method": "ast_tree_sitter", 
+            # "tree_sitter_chunking_error": False,
             'tree_sitter_analyze_error': False,
             'decorators_used': [],  # Rust doesn't have decorators
             'has_type_hints': True,  # Rust has strong typing

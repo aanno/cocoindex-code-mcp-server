@@ -13,6 +13,8 @@ from typing import Any, Dict, List, Set, Optional, Union
 from tree_sitter import Node
 
 from cocoindex_code_mcp_server.language_handlers.python_handler import PythonClass, PythonFunction, PythonImport
+from ...parser_util import update_defaults
+
 
 from . import LOGGER
 
@@ -400,9 +402,10 @@ class PythonCodeAnalyzer:
             "dunder_methods": [f['name'] for f in self.functions if f['is_dunder']],
             
             # Promoted metadata fields for database columns
-            "analysis_method": "python_ast",
-            "chunking_method": "ast_tree_sitter", 
-            "tree_sitter_chunking_error": False,
+            "analysis_method": "python_code_analyzer",
+            # don't set chunking method in analyzer
+            # "chunking_method": "ast_tree_sitter", 
+            # "tree_sitter_chunking_error": False,
             "tree_sitter_analyze_error": False,
             "decorators_used": list(set(self.decorators)),
 
