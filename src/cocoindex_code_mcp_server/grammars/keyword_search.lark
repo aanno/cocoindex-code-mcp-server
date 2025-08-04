@@ -5,7 +5,8 @@ start: or_expr
 
 or_expr: and_expr ("or" and_expr)*
 
-and_expr: condition ("and" condition)*
+// make "and" default
+and_expr: condition (("and"? condition)*)
 
 ?condition: field_condition
           | exists_condition  
