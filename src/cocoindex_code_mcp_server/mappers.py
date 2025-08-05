@@ -38,15 +38,31 @@ CONST_FIELD_MAPPINGS = {
     "chunking_method": "chunking_method",
     "tree_sitter_analyze_error": "tree_sitter_analyze_error",
     "tree_sitter_chunking_error": "tree_sitter_chunking_error",
-    # "has_docstrings": "has_docstrings",
     "decorators_used": "decorators_used",
     "dunder_methods": "dunder_methods",
-    # "private_methods": "private_methods",
-    # "variables": "variables",
-    # "decorators": "decorators",
     "function_details": "function_details",
-    # "class_details": "class_details",
     "docstring": "docstring",
+    
+    # Additional metadata fields
+    "success": "success",
+    "parse_errors": "parse_errors",
+    "char_count": "char_count",
+    
+    # Language-specific fields
+    "nodes_with_errors": "nodes_with_errors",  # Haskell
+    "data_types": "data_types",  # Haskell
+    "instances": "instances",  # Haskell
+    "type_classes": "type_classes",  # Haskell
+    "modules": "modules",  # Haskell, Rust
+    "has_module": "has_module",  # Haskell
+    "data_type_details": "data_type_details",  # Haskell
+    "structs": "structs",  # Rust
+    "traits": "traits",  # Rust
+    "impls": "impls",  # Rust
+    "exports": "exports",  # TypeScript/JavaScript
+    "types": "types",  # TypeScript
+    "enums": "enums",  # TypeScript
+    "namespaces": "namespaces",  # TypeScript/JavaScript/C++
 }
 
 # Derived configurations from single source of truth
