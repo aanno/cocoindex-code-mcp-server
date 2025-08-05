@@ -85,36 +85,7 @@ class CodeMetadata:
     analysis_method: str
 
 
-# Tree-sitter supported languages mapping (from CocoIndex implementation)
-TREE_SITTER_LANGUAGE_MAP = {
-    # Core languages with tree-sitter support
-    ".c": "C",
-    ".cpp": "C++", ".cc": "C++", ".cxx": "C++", ".h": "C++", ".hpp": "C++",
-    ".cs": "C#",
-    ".css": "CSS", ".scss": "CSS",
-    ".f": "Fortran", ".f90": "Fortran", ".f95": "Fortran", ".f03": "Fortran",
-    ".go": "Go",
-    ".html": "HTML", ".htm": "HTML",
-    ".java": "Java",
-    ".js": "JavaScript", ".mjs": "JavaScript", ".cjs": "JavaScript",
-    ".json": "JSON",
-    ".md": "Markdown", ".mdx": "Markdown",
-    ".pas": "Pascal", ".dpr": "Pascal",
-    ".php": "PHP",
-    ".py": "Python", # ".pyi": "Python",
-    ".r": "R", ".R": "R",
-    ".rb": "Ruby",
-    ".rs": "Rust",
-    ".scala": "Scala",
-    ".sql": "SQL", ".ddl": "SQL", ".dml": "SQL",
-    ".swift": "Swift",
-    ".toml": "TOML",
-    ".tsx": "TSX",
-    ".ts": "TypeScript",
-    ".xml": "XML",
-    # ".yaml": "YAML", ".yml": "YAML",
-    ".hs": "Haskell", ".lhs": "Haskell",
-}
+# Language mappings moved to mappers.py as single source of truth
 
 # Language-specific chunking parameters
 CHUNKING_PARAMS = {
@@ -221,38 +192,8 @@ CUSTOM_LANGUAGES = [
 @cocoindex.op.function()
 def extract_language(filename: str) -> str:
     """Extract the language from a filename for tree-sitter processing."""
-    basename = os.path.basename(filename)
-
-    # Handle special files without extensions
-    if basename.lower() in ["makefile", "dockerfile", "jenkinsfile"]:
-        return basename.lower()
-
-    # Handle special patterns
-    if basename.lower().startswith("cmakelists"):
-        return "cmake"
-    if basename.lower().startswith("build.gradle"):
-        return "gradle"
-    if basename.lower().startswith("pom.xml"):
-        return "maven"
-    if "docker-compose" in basename.lower():
-        return "dockerfile"
-    if basename.startswith("go."):
-        return "go"
-    if basename.lower() in ["stack.yaml", "cabal.project"]:
-        return "haskell"
-
-    # Get extension
-    ext = os.path.splitext(filename)[1].lower()
-
-    # Map to tree-sitter language, with "unknown" fallback for unsupported extensions
-    if ext in TREE_SITTER_LANGUAGE_MAP:
-        return TREE_SITTER_LANGUAGE_MAP[ext]
-    elif ext:
-        # Return the extension without the dot for unknown but valid extensions
-        return ext[1:] if ext.startswith('.') else ext
-    else:
-        # No extension found
-        return "unknown"
+    from .mappers import get_language_from_extension
+    return get_language_from_extension(filename)
 
 
 @cocoindex.op.function()

@@ -40,35 +40,7 @@ class LanguageModelSelector:
         "unixcode": "microsoft/unixcoder-base",
     }
 
-    # File extension to language mapping
-    EXTENSION_TO_LANGUAGE = {
-        ".py": "python",
-        # ".pyi": "python",
-        ".rs": "rust",
-        ".js": "javascript",
-        ".mjs": "javascript",
-        ".cjs": "javascript",
-        ".ts": "typescript",
-        ".tsx": "typescript",
-        ".java": "java",
-        ".kt": "kotlin",
-        ".kts": "kotlin",
-        ".scala": "scala",
-        ".cs": "csharp",
-        ".cpp": "cpp",
-        ".cxx": "cpp",
-        ".cc": "cpp",
-        ".c": "c",
-        ".h": "c",
-        ".hpp": "cpp",
-        ".go": "go",
-        ".php": "php",
-        ".rb": "ruby",
-        ".swift": "swift",
-        ".dart": "dart",
-        ".hs": "haskell",
-        ".lhs": "haskell",
-    }
+    # File extension to language mapping - uses centralized mapping from mappers.py
 
     def __init__(self, fallback_model: str = "sentence-transformers/all-MiniLM-L6-v2") -> None:
         """
@@ -106,10 +78,18 @@ class LanguageModelSelector:
         if not file_extension:
             return None
 
-        ext = file_extension.lower()
-        if not ext.startswith('.'):
-            ext = '.' + ext
-        return self.EXTENSION_TO_LANGUAGE.get(ext)
+        # Create a dummy filename to use the centralized mapping
+        dummy_filename = f"dummy{file_extension.lower()}"
+        if not file_extension.startswith('.'):
+            dummy_filename = f"dummy.{file_extension.lower()}"
+            
+        from .mappers import get_language_from_extension, get_internal_language_name
+        display_language = get_language_from_extension(dummy_filename)
+        if display_language == "Unknown":
+            return None
+            
+        # Convert to internal processing name for embedding model selection
+        return get_internal_language_name(display_language)
 
     def select_model(self, language: str | None = None,
                      file_extension: str | None = None,

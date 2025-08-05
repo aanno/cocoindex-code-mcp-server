@@ -97,39 +97,10 @@ except ImportError:
 
 def detect_language_from_filename(filename: str) -> str:
     """
-    Detect programming language from filename.
-    Simplified version to avoid circular imports.
+    Detect programming language from filename using centralized mapping.
     """
-    # Tree-sitter language mapping
-    LANGUAGE_MAP = {
-        ".c": "C",
-        ".cpp": "C++", ".cc": "C++", ".cxx": "C++", ".h": "C++", ".hpp": "C++",
-        ".cs": "C#",
-        ".go": "Go",
-        ".java": "Java",
-        ".js": "JavaScript", ".mjs": "JavaScript", ".cjs": "JavaScript",
-        ".py": "Python", # ".pyi": "Python",
-        ".rb": "Ruby",
-        ".rs": "Rust",
-        ".scala": "Scala",
-        ".swift": "Swift",
-        ".tsx": "TSX",
-        ".ts": "TypeScript",
-        ".hs": "Haskell", ".lhs": "Haskell",
-        ".kt": "Kotlin", ".kts": "Kotlin",
-    }
-
-    basename = os.path.basename(filename)
-
-    # Handle special files
-    if basename.lower() in ["makefile", "dockerfile", "jenkinsfile"]:
-        return basename.lower()
-
-    # Get extension
-    ext = os.path.splitext(filename)[1].lower()
-
-    # Map to language
-    return LANGUAGE_MAP.get(ext, "Unknown")
+    from .mappers import get_language_from_extension
+    return get_language_from_extension(filename)
 
 
 class CocoIndexASTChunker:

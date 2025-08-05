@@ -390,31 +390,7 @@ class TreeWalker:
 class ASTParserFactory:
     """Factory for creating language-specific tree-sitter parsers."""
 
-    # Language mapping from file extensions to tree-sitter languages
-    LANGUAGE_MAP = {
-        '.c': 'c',
-        '.cpp': 'cpp', '.cc': 'cpp', '.cxx': 'cpp', '.h': 'cpp', '.hpp': 'cpp',
-        '.cs': 'c_sharp',
-        '.css': 'css', '.scss': 'css',
-        '.go': 'go',
-        '.hs': 'haskell', '.lhs': 'haskell',
-        '.html': 'html', '.htm': 'html',
-        '.java': 'java',
-        '.js': 'javascript', '.mjs': 'javascript', '.cjs': 'javascript',
-        '.json': 'json',
-        '.kt': 'kotlin', '.kts': 'kotlin',
-        '.md': 'markdown', '.mdx': 'markdown',
-        '.php': 'php',
-        '.py': 'python', # '.pyi': 'python',
-        '.rb': 'ruby',
-        '.rs': 'rust',
-        '.scala': 'scala',
-        '.sql': 'sql',
-        '.swift': 'swift',
-        '.ts': 'typescript', '.tsx': 'tsx',
-        '.xml': 'xml',
-        '.yaml': 'yaml', '.yml': 'yaml',
-    }
+    # Language mapping uses single source of truth from mappers.py
 
     def __init__(self):
         self._parsers = {}  # Cache parsers
@@ -422,19 +398,14 @@ class ASTParserFactory:
 
     def get_language_for_file(self, filename: str) -> Optional[str]:
         """Detect language from filename."""
-        path = Path(filename)
-        extension = path.suffix.lower()
-
-        # Check extension mapping
-        if extension in self.LANGUAGE_MAP:
-            return self.LANGUAGE_MAP[extension]
-
-        # Check special filenames
-        basename = path.name.lower()
-        if basename in ['makefile', 'dockerfile', 'jenkinsfile']:
-            return basename
-
-        return None
+        from .mappers import get_language_from_extension, get_internal_language_name
+        
+        display_language = get_language_from_extension(filename)
+        if display_language == "Unknown":
+            return None
+        
+        # Convert to internal processing name
+        return get_internal_language_name(display_language)
 
     def create_parser(self, language: str) -> Optional[Parser]:
         """Create a tree-sitter parser for the given language."""
@@ -579,9 +550,16 @@ class MultiLevelAnalyzer:
             detected = self.parser_factory.get_language_for_file(filename)
             if detected:
                 language = detected
+        else:
+            # Convert display language name to internal processing name if needed
+            from .mappers import get_internal_language_name
+            language = get_internal_language_name(language)
 
+        # Store display language name in metadata for database storage
+        from .mappers import get_display_language_name
+        
         metadata = {
-            'language': language,
+            'language': get_display_language_name(language),
             'filename': filename,
             'line_count': len(code.split('\n')),
             'char_count': len(code),

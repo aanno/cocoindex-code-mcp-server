@@ -75,6 +75,112 @@ CONST_JSONB_FIELDS = {"metadata_json"}
 CONST_INDIVIDUAL_COLUMNS = CONST_FIELD_MAPPINGS.keys() - CONST_JSONB_FIELDS
 
 
+# SINGLE SOURCE OF TRUTH: Language mappings from file extensions to normalized language names
+CONST_LANGUAGE_MAPPINGS = {
+    # Core programming languages
+    ".c": "C",
+    ".cpp": "C++", ".cc": "C++", ".cxx": "C++", ".h": "C++", ".hpp": "C++",
+    ".cs": "C#",
+    ".css": "CSS", ".scss": "CSS",
+    ".f": "Fortran", ".f90": "Fortran", ".f95": "Fortran", ".f03": "Fortran",
+    ".go": "Go",
+    ".html": "HTML", ".htm": "HTML",
+    ".java": "Java",
+    ".js": "JavaScript", ".mjs": "JavaScript", ".cjs": "JavaScript",
+    ".json": "JSON",
+    ".kt": "Kotlin", ".kts": "Kotlin",  # FIX: Use title case "Kotlin"
+    ".md": "Markdown", ".mdx": "Markdown",
+    ".pas": "Pascal", ".dpr": "Pascal",
+    ".php": "PHP",
+    ".py": "Python", # ".pyi": "Python",
+    ".r": "R", ".R": "R",
+    ".rb": "Ruby",
+    ".rs": "Rust",
+    ".scala": "Scala",
+    ".sql": "SQL", ".ddl": "SQL", ".dml": "SQL",
+    ".swift": "Swift",
+    ".toml": "TOML",
+    ".tsx": "TSX",
+    ".ts": "TypeScript",
+    ".xml": "XML",
+    ".hs": "Haskell", ".lhs": "Haskell",
+    ".yaml": "YAML", ".yml": "YAML",
+}
+
+# Language name normalization for internal processing (tree-sitter, handlers, etc.)
+# Maps normalized display names to internal processing names
+CONST_LANGUAGE_INTERNAL_NAMES = {
+    "C": "c",
+    "C++": "cpp", 
+    "C#": "c_sharp",
+    "CSS": "css",
+    "Fortran": "fortran",
+    "Go": "go",
+    "HTML": "html",
+    "Java": "java",
+    "JavaScript": "javascript",
+    "JSON": "json",
+    "Kotlin": "kotlin",  # FIX: Internal processing uses lowercase
+    "Markdown": "markdown",
+    "Pascal": "pascal",
+    "PHP": "php",
+    "Python": "python",
+    "R": "r",
+    "Ruby": "ruby", 
+    "Rust": "rust",
+    "Scala": "scala",
+    "SQL": "sql",
+    "Swift": "swift",
+    "TOML": "toml",
+    "TSX": "tsx",
+    "TypeScript": "typescript",
+    "XML": "xml",
+    "Haskell": "haskell",
+    "YAML": "yaml",
+}
+
+
+# Helper functions for language mapping
+def get_language_from_extension(filename: str) -> str:
+    """Get normalized language name from file extension."""
+    import os
+    basename = os.path.basename(filename)
+    
+    # Handle special files without extensions
+    if basename.lower() in ["makefile", "dockerfile", "jenkinsfile"]:
+        return basename.lower().title()
+    
+    # Handle special patterns
+    if basename.lower().startswith("cmakelists"):
+        return "CMake"
+    if basename.lower().startswith("build.gradle"):
+        return "Gradle"
+    if basename.lower().startswith("pom.xml"):
+        return "Maven"
+    if "docker-compose" in basename.lower():
+        return "Dockerfile"
+    if basename.startswith("go."):
+        return "Go"
+    if basename.lower() in ["stack.yaml", "cabal.project"]:
+        return "Haskell"
+    
+    # Get extension and map to language
+    ext = os.path.splitext(filename)[1].lower()
+    return CONST_LANGUAGE_MAPPINGS.get(ext, ext[1:] if ext.startswith('.') else "Unknown")
+
+
+def get_internal_language_name(display_name: str) -> str:
+    """Get internal processing name from display language name."""
+    return CONST_LANGUAGE_INTERNAL_NAMES.get(display_name, display_name.lower())
+
+
+def get_display_language_name(internal_name: str) -> str:
+    """Get display language name from internal processing name."""
+    for display, internal in CONST_LANGUAGE_INTERNAL_NAMES.items():
+        if internal == internal_name:
+            return display
+    return internal_name.title()  # Fallback: capitalize first letter
+
 
 # Fields that should be indexed in Qdrant for fast filtering
 CONST_INDEXED_FIELDS = {
