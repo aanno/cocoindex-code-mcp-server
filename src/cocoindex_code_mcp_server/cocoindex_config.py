@@ -1434,51 +1434,27 @@ def code_embedding_flow(
                 # Promoted metadata fields are now handled automatically by generalized promotion in main_mcp_server.py
                 # No need for chunk-level assignments - fields from metadata_json get promoted to top-level automatically
 
-                code_embeddings.collect(
-                    filename=file["filename"],
-                    language=file["language"],
-                    location=chunk["location"],
-                    code=chunk["content"].transform(convert_dataslice_to_string),
-                    embedding=chunk["embedding"],
-                    start=chunk["start"],
-                    end=chunk["end"],
-                    source_name=source_name,  # Add source name for identification
-                    metadata_json=chunk["extracted_metadata"],  # Store full JSON
-                    # Individual metadata fields (properly extracted from JSON)
-                    functions=chunk["functions"],
-                    classes=chunk["classes"],
-                    imports=chunk["imports"],
-                    complexity_score=chunk["complexity_score"],
-                    has_type_hints=chunk["has_type_hints"],
-                    has_async=chunk["has_async"],
-                    has_classes=chunk["has_classes"],
-                    # Promoted metadata fields using static extractors
-                    analysis_method=chunk["analysis_method"],
-                    chunking_method=chunk["chunking_method"],
-                    tree_sitter_chunking_error=chunk["tree_sitter_chunking_error"],
-                    tree_sitter_analyze_error=chunk["tree_sitter_analyze_error"],
-                    decorators_used=chunk["decorators_used"],
-                    dunder_methods=chunk["dunder_methods"],
-                    success=chunk["success"],
-                    parse_errors=chunk["parse_errors"],
-                    char_count=chunk["char_count"],
-                    # Language-specific fields
-                    nodes_with_errors=chunk["nodes_with_errors"],
-                    data_types=chunk["data_types"],
-                    instances=chunk["instances"],
-                    type_classes=chunk["type_classes"],
-                    modules=chunk["modules"],
-                    has_module=chunk["has_module"],
-                    function_details=chunk["function_details"],
-                    data_type_details=chunk["data_type_details"],
-                    structs=chunk["structs"],
-                    traits=chunk["traits"],
-                    impls=chunk["impls"],
-                    exports=chunk["exports"],
-                    types=chunk["types"],
-                    enums=chunk["enums"],
-                    namespaces=chunk["namespaces"],
-                )
+                # Build collect arguments dynamically from CONST_FIELD_MAPPINGS
+                collect_args: Dict[str, Any] = {}
+                
+                # Core fields with special handling
+                collect_args["filename"] = file["filename"]
+                collect_args["language"] = file["language"] 
+                collect_args["location"] = chunk["location"]
+                collect_args["code"] = chunk["content"].transform(convert_dataslice_to_string)
+                collect_args["embedding"] = chunk["embedding"]
+                collect_args["start"] = chunk["start"]
+                collect_args["end"] = chunk["end"]
+                collect_args["source_name"] = source_name
+                collect_args["metadata_json"] = chunk["extracted_metadata"]
+                
+                # Add all other fields from CONST_FIELD_MAPPINGS that exist in chunk
+                from .mappers import CONST_FIELD_MAPPINGS
+                for field_name in CONST_FIELD_MAPPINGS:
+                    if field_name not in collect_args and hasattr(chunk, field_name):
+                        collect_args[field_name] = chunk[field_name]
+                
+                code_embeddings.collect(**collect_args)
 
     code_embeddings.export(
         "code_embeddings",
