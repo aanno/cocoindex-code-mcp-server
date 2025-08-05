@@ -31,7 +31,7 @@ console.setFormatter(console_formatter)
 
 # Get root logger and configure it
 LOGGER = logging.getLogger()  # root logger
-# LOGGER.setLevel(logging.DEBUG)  # or whatever level you want
+LOGGER.setLevel(logging.DEBUG)  # or whatever level you want
 
 # Remove all existing handlers
 LOGGER.handlers.clear()

@@ -1450,9 +1450,20 @@ def code_embedding_flow(
                 
                 # Add all other fields from CONST_FIELD_MAPPINGS that exist in chunk
                 from .mappers import CONST_FIELD_MAPPINGS
+                available_fields = []
+                missing_fields = []
                 for field_name in CONST_FIELD_MAPPINGS:
-                    if field_name not in collect_args and hasattr(chunk, field_name):
-                        collect_args[field_name] = chunk[field_name]
+                    if field_name not in collect_args:
+                        if hasattr(chunk, field_name):
+                            collect_args[field_name] = chunk[field_name]
+                            available_fields.append(field_name)
+                        else:
+                            missing_fields.append(field_name)
+                
+                LOGGER.debug(f"🔍 Dynamic collection: found {len(available_fields)} fields, missing {len(missing_fields)} fields")
+                LOGGER.debug(f"🔍 Available fields: {available_fields[:10]}{'...' if len(available_fields) > 10 else ''}")
+                LOGGER.debug(f"🔍 Missing fields: {missing_fields[:10]}{'...' if len(missing_fields) > 10 else ''}")
+                LOGGER.debug(f"🔍 Total collect_args: {len(collect_args)} fields")
                 
                 code_embeddings.collect(**collect_args)
 

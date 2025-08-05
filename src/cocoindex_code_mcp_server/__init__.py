@@ -7,7 +7,7 @@ from logging.handlers import RotatingFileHandler
 # Get WORKSPACE environment variable, fallback to current directory if not set
 workspace_dir = os.environ.get('WORKSPACE', '.')
 
-log_file_path = os.path.join(workspace_dir, 'cocoindex_code_mcp_server.log')
+log_file_path = os.path.join(workspace_dir, 'cocoindex_code_mcp_server-test.log')
 
 # Create a rotating file handler
 rotating_handler = RotatingFileHandler(
@@ -21,6 +21,7 @@ rotating_handler.setLevel(logging.DEBUG)
 file_formatter = logging.Formatter(
     '[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s', datefmt='%H:%M:%S')
 rotating_handler.setFormatter(file_formatter)
+rotating_handler.setLevel(logging.DEBUG)
 
 # Set up console handler separately
 console = logging.StreamHandler()
