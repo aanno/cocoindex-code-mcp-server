@@ -20,14 +20,14 @@ class TestCocoIndexIntegration(unittest.TestCase):
 
     def setUp(self):
         self.fixtures_dir = Path(__file__).parent / "fixtures"
-        self.sample_file = self.fixtures_dir / "test_sample.hs"
+        self.sample_file = self.fixtures_dir / "lang_examples" / "HaskellExample1.hs"
 
     def test_language_detection(self):
         """Test that .hs files are detected as Haskell."""
-        language = cast(FunctionType, extract_language)("test_sample.hs")
+        language = cast(FunctionType, extract_language)("HaskellExample1.hs")
         self.assertEqual(language, "Haskell")
 
-        language = cast(FunctionType, extract_language)("test_sample.lhs")
+        language = cast(FunctionType, extract_language)("HaskellExample1.hs")
         self.assertEqual(language, "Haskell")
 
     def test_chunking_parameters(self):

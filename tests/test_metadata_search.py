@@ -11,20 +11,14 @@ import os
 import pytest
 from dotenv import load_dotenv
 from psycopg_pool import ConnectionPool
+from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
+    HybridSearchEngine,
+    format_results_readable,
+)
+from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
 
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)
-
-try:
-    from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
-        HybridSearchEngine,
-        format_results_readable,
-    )
-    from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
-except ImportError as e:
-    LOGGER.warning(f"Could not import hybrid_search module: {e}")
-    print("⚠️  Warning: These are integration tests that require the full application setup.")
-
 
 @pytest.mark.integration
 class TestMetadataSearch:

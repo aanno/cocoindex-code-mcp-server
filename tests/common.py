@@ -202,7 +202,11 @@ def compare_expected_vs_actual(
             
             # Handle special comparison operators
             if isinstance(expected_value, str):
-                if expected_value.startswith("!"):
+                if expected_value == "!empty":
+                    # Not empty check
+                    if not actual_value or (isinstance(actual_value, list) and len(actual_value) == 0):
+                        metadata_errors.append(f"{field}: expected non-empty, got '{actual_value}'")
+                elif expected_value.startswith("!"):
                     # Not equal comparison
                     not_expected = expected_value[1:]
                     if str(actual_value) == not_expected:
@@ -215,14 +219,11 @@ def compare_expected_vs_actual(
                             metadata_errors.append(f"{field}: expected > {threshold}, got '{actual_value}'")
                     except ValueError:
                         metadata_errors.append(f"{field}: invalid threshold '{expected_value}'")
-                elif expected_value == "!empty":
-                    # Not empty check
-                    if not actual_value or (isinstance(actual_value, list) and len(actual_value) == 0):
-                        metadata_errors.append(f"{field}: expected non-empty, got '{actual_value}'")
                 else:
                     # Direct equality
                     if str(actual_value) != expected_value:
                         metadata_errors.append(f"{field}: expected '{expected_value}', got '{actual_value}'")
+
             elif isinstance(expected_value, bool):
                 if actual_value != expected_value:
                     metadata_errors.append(f"{field}: expected {expected_value}, got {actual_value}")
