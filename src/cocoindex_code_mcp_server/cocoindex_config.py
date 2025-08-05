@@ -429,194 +429,192 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
         return json.dumps(fallback_result)
 
 
+# =============================================================================
+# Generalized Metadata Extraction Functions
+# =============================================================================
+
+@cocoindex.op.function()
+def extract_string_field(metadata_json: str, field_name: str = "field", default_value: str = "") -> str:
+    """
+    Generic string field extractor from metadata JSON.
+    
+    Args:
+        metadata_json: JSON string or dict containing metadata
+        field_name: Name of the field to extract
+        default_value: Default value if field is missing or extraction fails
+        
+    Returns:
+        String value of the field
+    """
+    try:
+        if not metadata_json:
+            return default_value
+        # Parse JSON string to dict
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
+        return str(metadata_dict.get(field_name, default_value))
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for {field_name}: {e}")
+        return default_value
+
+
+@cocoindex.op.function()
+def extract_list_as_string_field(metadata_json: str, field_name: str = "field", default_value: str = "[]") -> str:
+    """
+    Generic list field extractor from metadata JSON, returned as string representation.
+    
+    Args:
+        metadata_json: JSON string or dict containing metadata
+        field_name: Name of the field to extract
+        default_value: Default value if field is missing or extraction fails
+        
+    Returns:
+        String representation of the list field
+    """
+    try:
+        if not metadata_json:
+            return default_value
+        # Parse JSON string to dict
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
+        field_value = metadata_dict.get(field_name, [])
+        # Ensure it's a list and convert to string representation
+        if isinstance(field_value, list):
+            return str(field_value)
+        else:
+            return str([field_value]) if field_value else default_value
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for {field_name}: {e}")
+        return default_value
+
+
+@cocoindex.op.function()
+def extract_bool_field(metadata_json: str, field_name: str = "field", default_value: bool = False) -> bool:
+    """
+    Generic boolean field extractor from metadata JSON.
+    
+    Args:
+        metadata_json: JSON string or dict containing metadata
+        field_name: Name of the field to extract
+        default_value: Default value if field is missing or extraction fails
+        
+    Returns:
+        Boolean value of the field
+    """
+    try:
+        if not metadata_json:
+            return default_value
+        # Parse JSON string to dict
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
+        return bool(metadata_dict.get(field_name, default_value))
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for {field_name}: {e}")
+        return default_value
+
+
+@cocoindex.op.function()
+def extract_int_field(metadata_json: str, field_name: str = "field", default_value: int = 0) -> int:
+    """
+    Generic integer field extractor from metadata JSON.
+    
+    Args:
+        metadata_json: JSON string or dict containing metadata
+        field_name: Name of the field to extract
+        default_value: Default value if field is missing or extraction fails
+        
+    Returns:
+        Integer value of the field
+    """
+    try:
+        if not metadata_json:
+            return default_value
+        # Parse JSON string to dict
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
+        field_value = metadata_dict.get(field_name, default_value)
+        return int(field_value) if isinstance(field_value, (int, float, str)) and str(field_value).replace('.', '').replace('-', '').isdigit() else default_value
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for {field_name}: {e}")
+        return default_value
+
+
+# =============================================================================
+# Specific Field Extraction Functions (using generalized extractors)
+# =============================================================================
+
 @cocoindex.op.function()
 def extract_functions_field(metadata_json: str) -> str:
     """Extract functions field from metadata JSON."""
-    try:
-        if not metadata_json:
-            return "[]"
-        # Parse JSON string to dict
-        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
-        functions = metadata_dict.get("functions", [])
-        # Ensure it's a list and convert to string representation
-        if isinstance(functions, list):
-            return str(functions)
-        else:
-            return str([functions]) if functions else "[]"
-    except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for functions: {e}")
-        return "[]"
+    return extract_list_as_string_field(metadata_json, "functions", "[]")
+
+
+@cocoindex.op.function()
+def extract_docstring_field(metadata_json: str) -> str:
+    """Extract docstring field from metadata JSON."""
+    return extract_string_field(metadata_json, "docstring", "")
 
 
 @cocoindex.op.function()
 def extract_classes_field(metadata_json: str) -> str:
     """Extract classes field from metadata JSON."""
-    try:
-        if not metadata_json:
-            return "[]"
-        # Parse JSON string to dict
-        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
-        classes = metadata_dict.get("classes", [])
-        if isinstance(classes, list):
-            return str(classes)
-        else:
-            return str([classes]) if classes else "[]"
-    except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for classes: {e}")
-        return "[]"
+    return extract_list_as_string_field(metadata_json, "classes", "[]")
 
 
 @cocoindex.op.function()
 def extract_imports_field(metadata_json: str) -> str:
     """Extract imports field from metadata JSON."""
-    try:
-        if not metadata_json:
-            return "[]"
-        # Parse JSON string to dict
-        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
-        imports = metadata_dict.get("imports", [])
-        if isinstance(imports, list):
-            return str(imports)
-        else:
-            return str([imports]) if imports else "[]"
-    except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for imports: {e}")
-        return "[]"
+    return extract_list_as_string_field(metadata_json, "imports", "[]")
 
 
 @cocoindex.op.function()
 def extract_complexity_score_field(metadata_json: str) -> int:
     """Extract complexity_score field from metadata JSON."""
-    try:
-        if not metadata_json:
-            return 0
-        # Parse JSON string to dict
-        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
-        score = metadata_dict.get("complexity_score", 0)
-        return int(score) if isinstance(score, (int, float, str)) and str(score).isdigit() else 0
-    except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for complexity_score: {e}")
-        return 0
+    return extract_int_field(metadata_json, "complexity_score", 0)
 
 
 @cocoindex.op.function()
 def extract_has_type_hints_field(metadata_json: str) -> bool:
     """Extract has_type_hints field from metadata JSON."""
-    try:
-        if not metadata_json:
-            return False
-        # Parse JSON string to dict
-        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
-        return bool(metadata_dict.get("has_type_hints", False))
-    except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for has_type_hints: {e}")
-        return False
+    return extract_bool_field(metadata_json, "has_type_hints", False)
 
 
 @cocoindex.op.function()
 def extract_has_async_field(metadata_json: str) -> bool:
     """Extract has_async field from metadata JSON."""
-    try:
-        if not metadata_json:
-            return False
-        # Parse JSON string to dict
-        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
-        return bool(metadata_dict.get("has_async", False))
-    except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for has_async: {e}")
-        return False
+    return extract_bool_field(metadata_json, "has_async", False)
 
 
 @cocoindex.op.function()
 def extract_analysis_method_field(metadata_json: str) -> str:
     """Extract analysis_method field from metadata JSON."""
-    try:
-        if not metadata_json:
-            return "unknown"
-        # Parse JSON string to dict
-        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
-        return str(metadata_dict.get("analysis_method", "unknown"))
-    except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for analysis_method: {e}")
-        return "unknown"
+    return extract_string_field(metadata_json, "analysis_method", "unknown")
 
 
 @cocoindex.op.function()
 def extract_chunking_method_field(metadata_json: str) -> str:
     """Extract chunking_method field from metadata JSON."""
-    try:
-        if not metadata_json:
-            return "unknown"
-        # Parse JSON string to dict
-        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
-        return str(metadata_dict.get("chunking_method", "unknown"))
-    except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for chunking_method: {e}")
-        return "unknown"
+    return extract_string_field(metadata_json, "chunking_method", "unknown")
 
 
 @cocoindex.op.function()
 def extract_tree_sitter_chunking_error_field(metadata_json: str) -> bool:
     """Extract tree_sitter_chunking_error field from metadata JSON."""
-    try:
-        if not metadata_json:
-            return False
-        # Parse JSON string to dict
-        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
-        return bool(metadata_dict.get("tree_sitter_chunking_error", False))
-    except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for tree_sitter_chunking_error: {e}")
-        return False
+    return extract_bool_field(metadata_json, "tree_sitter_chunking_error", False)
 
 
 @cocoindex.op.function()
 def extract_tree_sitter_analyze_error_field(metadata_json: str) -> bool:
     """Extract tree_sitter_analyze_error field from metadata JSON."""
-    try:
-        if not metadata_json:
-            return False
-        # Parse JSON string to dict
-        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
-        return bool(metadata_dict.get("tree_sitter_analyze_error", False))
-    except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for tree_sitter_analyze_error: {e}")
-        return False
+    return extract_bool_field(metadata_json, "tree_sitter_analyze_error", False)
 
 
 @cocoindex.op.function()
 def extract_decorators_used_field(metadata_json: str) -> str:
     """Extract decorators_used field from metadata JSON."""
-    try:
-        if not metadata_json:
-            return "[]"
-        # Parse JSON string to dict
-        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
-        decorators = metadata_dict.get("decorators_used", [])
-        # Ensure it's a list and convert to string representation
-        if isinstance(decorators, list):
-            return str(decorators)
-        else:
-            return str([decorators]) if decorators else "[]"
-    except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for decorators_used: {e}")
-        return "[]"
+    return extract_list_as_string_field(metadata_json, "decorators_used", "[]")
 
 
 @cocoindex.op.function()
 def extract_dunder_methods_field(metadata_json: str) -> str:
     """Extract dunder_methods field from metadata JSON."""
-    try:
-        if not metadata_json:
-            return "[]"
-        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
-        dunder_methods = metadata_dict.get("dunder_methods", [])
-        if isinstance(dunder_methods, list):
-            return str(dunder_methods)
-        else:
-            return str([dunder_methods]) if dunder_methods else "[]"
-    except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for dunder_methods: {e}")
-        return "[]"
+    return extract_list_as_string_field(metadata_json, "dunder_methods", "[]")
 
 
 @cocoindex.op.function()
@@ -1403,6 +1401,7 @@ def code_embedding_flow(
                 chunk["has_type_hints"] = chunk["extracted_metadata"].transform(extract_has_type_hints_field)
                 chunk["has_async"] = chunk["extracted_metadata"].transform(extract_has_async_field)
                 chunk["has_classes"] = chunk["extracted_metadata"].transform(extract_has_classes_field)
+                chunk["docstring"] = chunk["extracted_metadata"].transform(extract_docstring_field)
                 
                 # Additional promoted metadata fields
                 chunk["analysis_method"] = chunk["extracted_metadata"].transform(extract_analysis_method_field)
