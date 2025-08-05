@@ -17,6 +17,7 @@ import asyncio
 import threading
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
+from .cocoindex_util import get_default_db_name
 
 # Load environment variables at module level
 from dotenv import load_dotenv
@@ -477,9 +478,7 @@ class CocoIndexTestInfrastructure:
         backend_type = os.getenv("BACKEND_TYPE", "postgres")
         
         # Get table name from flow configuration
-        table_name = cocoindex.utils.get_target_default_name(
-            code_embedding_flow, "code_embeddings"
-        )
+        table_name = get_default_db_name()
         
         self.logger.info(f"🔧 Initializing {backend_type} backend with table: {table_name}")
         
@@ -514,9 +513,7 @@ class CocoIndexTestInfrastructure:
         parser = KeywordSearchParser()
         
         # Get table name from flow configuration
-        table_name = cocoindex.utils.get_target_default_name(
-            code_embedding_flow, "code_embeddings"
-        )
+        table_name = get_default_db_name()
         
         # Initialize hybrid search engine
         self.hybrid_search_engine = HybridSearchEngine(
