@@ -46,7 +46,7 @@ CONST_FIELD_MAPPINGS = {
     # "decorators": "decorators",
     "function_details": "function_details",
     # "class_details": "class_details",
-    # "docstring": "docstring",
+    "docstring": "docstring",
 }
 
 # Derived configurations from single source of truth
