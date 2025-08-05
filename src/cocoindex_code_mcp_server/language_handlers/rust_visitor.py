@@ -175,10 +175,11 @@ def analyze_rust_code(code: str, filename: str = "") -> Dict[str, Any]:
 
         # Get results from visitor
         result = visitor.get_summary()
-        # result.update({
+        # Use display language name for database storage
+        from ..mappers import get_display_language_name
         update_defaults(result, {
             'success': True,
-            'language': 'rust',
+            'language': get_display_language_name('rust'),
             'filename': filename,
             'line_count': code.count('\n') + 1,
             'char_count': len(code),

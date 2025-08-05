@@ -150,9 +150,11 @@ def analyze_c_code(code: str, filename: str = "") -> Dict[str, Any]:
 
         # Get results from visitor
         result = visitor.get_summary()
+        # Use display language name for database storage
+        from ..mappers import get_display_language_name
         result.update({
             'success': True,
-            'language': 'c',
+            'language': get_display_language_name('c'),
             'filename': filename,
             'line_count': code.count('\n') + 1,
             'char_count': len(code),

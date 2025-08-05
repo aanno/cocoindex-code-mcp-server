@@ -195,10 +195,11 @@ def analyze_java_code(code: str, filename: str = "") -> Dict[str, Any]:
 
         # Get results from visitor
         result = visitor.get_summary()
-        # result.update({
+        # Use display language name for database storage
+        from ..mappers import get_display_language_name
         update_defaults(result, {
             'success': True,
-            'language': 'java',
+            'language': get_display_language_name('java'),
             'filename': filename,
             'line_count': code.count('\n') + 1,
             'char_count': len(code),

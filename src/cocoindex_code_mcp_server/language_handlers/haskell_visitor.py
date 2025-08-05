@@ -52,8 +52,10 @@ class HaskellASTVisitor(GenericMetadataVisitor):
 
             # Build metadata result with error information
             error_stats = chunking_result.error_stats()
+            # Use display language name for database storage
+            from ..mappers import get_display_language_name
             metadata = {
-                'language': 'haskell',
+                'language': get_display_language_name('haskell'),
                 'filename': filename,
                 'line_count': len(code.split('\n')),
                 'char_count': len(code),
@@ -111,8 +113,10 @@ class HaskellASTVisitor(GenericMetadataVisitor):
         """Fallback to basic text analysis when haskell_tree_sitter isn't available."""
         lines = code.split('\n')
 
+        # Use display language name for database storage
+        from ..mappers import get_display_language_name
         return {
-            'language': 'haskell',
+            'language': get_display_language_name('haskell'),
             'filename': filename,
             'line_count': len(lines),
             'char_count': len(code),
