@@ -1160,19 +1160,9 @@ def get_file_chunking_method(chunking_method_used: str) -> str:
 
 
 @cocoindex.op.function()
-def get_preferred_chunking_method(metadata_json: str, chunking_method_used: str) -> str:
-    """Return the chunking method from metadata if available, otherwise use file-level method."""
-    import json
-    try:
-        metadata = json.loads(metadata_json)
-        # Check if metadata has a chunking_method that's not the default
-        metadata_chunking_method = metadata.get("chunking_method")
-        if metadata_chunking_method and metadata_chunking_method not in ["unknown_chunking", ""]:
-            return metadata_chunking_method
-    except (json.JSONDecodeError, TypeError, AttributeError):
-        pass
-    # Fallback to file-level chunking method
-    return chunking_method_used
+def get_chunking_method_from_metadata(metadata_json: str) -> str:
+    """Extract chunking method directly from metadata without preference logic."""
+    return extract_string_field(metadata_json, "chunking_method", "unknown_chunking")
 
 
 
@@ -1393,7 +1383,7 @@ def code_embedding_flow(
                 
                 # Additional promoted metadata fields
                 chunk["analysis_method"] = chunk["extracted_metadata"].transform(extract_analysis_method_field)
-                chunk["chunking_method"] = chunk["extracted_metadata"].transform(get_preferred_chunking_method, chunking_method_used=file["chunking_method_used"])
+                chunk["chunking_method"] = chunk["extracted_metadata"].transform(get_chunking_method_from_metadata)
                 
                 chunk["tree_sitter_chunking_error"] = chunk["extracted_metadata"].transform(extract_tree_sitter_chunking_error_field)
                 chunk["tree_sitter_analyze_error"] = chunk["extracted_metadata"].transform(extract_tree_sitter_analyze_error_field)

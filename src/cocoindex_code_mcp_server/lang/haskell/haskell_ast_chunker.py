@@ -138,6 +138,9 @@ class EnhancedHaskellChunker:
 
         result = []
         for i, chunk in enumerate(ast_chunks):
+            # Get original metadata from Rust including proper chunking method
+            original_metadata = chunk.metadata()
+            
             chunk_dict = {
                 "content": chunk.text(),
                 "start_line": chunk.start_line(),
@@ -146,8 +149,8 @@ class EnhancedHaskellChunker:
                 "end_byte": chunk.end_byte(),
                 "node_type": chunk.node_type(),
                 "chunk_id": i,
-                "method": "haskell_ast_with_context",
-                "original_metadata": chunk.metadata(),
+                "method": original_metadata.get("chunking_method", "haskell_ast_with_context"),
+                "original_metadata": original_metadata,
             }
             result.append(chunk_dict)
 
@@ -363,8 +366,8 @@ class EnhancedHaskellChunker:
                 "node_type": chunk.get("node_type", "unknown"),
                 "is_split": chunk.get("is_split", False),
                 
-                # Chunking method tracking
-                "chunking_method": chunk.get("method", "haskell_ast_enhanced"),
+                # Chunking method tracking - preserve Rust chunking method names
+                "chunking_method": chunk.get("original_metadata", {}).get("chunking_method", chunk.get("method", "haskell_ast_enhanced")),
                 
                 # Tree-sitter error tracking
                 "tree_sitter_chunking_error": chunk.get("original_metadata", {}).get("tree_sitter_chunking_error", "false"),
@@ -565,8 +568,8 @@ def create_enhanced_regex_fallback_chunks(content: str, file_path: str,
             if chunk_text.strip():
                 metadata = {
                     "chunk_id": len(chunks),
-                    "chunk_method": "enhanced_regex_fallback",
-                    "chunking_method": "enhanced_regex_fallback",
+                    "chunk_method": "rust_haskell_regex_fallback_python",
+                    "chunking_method": "rust_haskell_regex_fallback_python",
                     "language": "Haskell",
                     "file_path": file_path,
                     "chunk_size": len(chunk_text),
@@ -609,8 +612,8 @@ def create_enhanced_regex_fallback_chunks(content: str, file_path: str,
         if chunk_text.strip():
             metadata = {
                 "chunk_id": len(chunks),
-                "chunk_method": "enhanced_regex_fallback",
-                "chunking_method": "enhanced_regex_fallback",
+                "chunk_method": "rust_haskell_regex_fallback_python",
+                "chunking_method": "rust_haskell_regex_fallback_python",
                 "language": "Haskell",
                 "file_path": file_path,
                 "chunk_size": len(chunk_text),

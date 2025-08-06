@@ -210,7 +210,7 @@ class CocoIndexASTChunker:
                 # Enhance metadata with our information
                 enhanced_metadata = {
                     "chunk_id": i,
-                    "chunking_method": "ast_tree_sitter",
+                    "chunking_method": "astchunk_library",
                     "language": language,
                     "file_path": file_path,
                     "chunk_size": len(content.strip()),
@@ -255,7 +255,7 @@ class CocoIndexASTChunker:
                 for i, chunk in enumerate(chunks):
                     metadata = {
                         "chunk_id": i,
-                        "chunking_method": "ast_tree_sitter",
+                        "chunking_method": "astchunk_library",
                         "language": language,
                         "file_path": file_path,
                         "chunk_size": len(chunk.text()),
