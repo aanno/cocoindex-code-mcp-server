@@ -252,26 +252,27 @@ class CocoIndexASTChunker:
                 chunks = extract_func(code)
 
                 result_chunks: List[Chunk] = []
-                for i, chunk in enumerate(chunks):
-                    # Get original metadata from Rust including proper chunking method
-                    original_metadata = chunk.metadata()
+                for i, chunk_dict in enumerate(chunks):
+                    # Extract data from the chunk dictionary returned by Haskell chunker
+                    content = chunk_dict.get("text", "")
+                    original_metadata = chunk_dict.get("metadata", {})
                     
+                    # Build metadata preserving the original Rust chunking method
                     metadata = {
                         "chunk_id": i,
                         "language": language,
                         "file_path": file_path,
-                        "chunk_size": len(chunk.text()),
-                        "line_count": chunk.end_line() - chunk.start_line() + 1,
-                        "start_line": chunk.start_line(),
-                        "end_line": chunk.end_line(),
-                        "node_type": chunk.node_type(),
-                        # Preserve original chunking method from Rust instead of overriding
-                        "chunking_method": original_metadata.get("chunking_method", "haskell_ast_fallback"),
+                        "chunk_size": len(content),
+                        "line_count": chunk_dict.get("end", 0) - chunk_dict.get("start", 0) + 1,
+                        "start_line": chunk_dict.get("start", 0),
+                        "end_line": chunk_dict.get("end", 0),
+                        "node_type": chunk_dict.get("node_type", "unknown"),
+                        # Preserve the Rust chunking method names like 'ast_recursive', 'regex_fallback'
                         **original_metadata
                     }
 
                     result_chunks.append(Chunk(
-                        content=chunk.text(),
+                        content=content,
                         metadata=metadata
                     ))
 

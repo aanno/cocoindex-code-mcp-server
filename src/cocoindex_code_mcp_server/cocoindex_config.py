@@ -417,11 +417,11 @@ def extract_list_as_string_field(metadata_json: str, field_name: str = "field", 
         # Parse JSON string to dict
         metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         field_value = metadata_dict.get(field_name, [])
-        # Ensure it's a list and convert to string representation
+        # Ensure it's a list and convert to proper JSON array string
         if isinstance(field_value, list):
-            return str(field_value)
+            return json.dumps(field_value)
         else:
-            return str([field_value]) if field_value else default_value
+            return json.dumps([field_value]) if field_value else default_value
     except Exception as e:
         LOGGER.debug(f"Failed to parse metadata JSON for {field_name}: {e}")
         return default_value
@@ -607,9 +607,9 @@ def extract_nodes_with_errors_field(metadata_json: str) -> str:
         metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         nodes_with_errors = metadata_dict.get("nodes_with_errors", [])
         if isinstance(nodes_with_errors, list):
-            return str(nodes_with_errors)
+            return json.dumps(nodes_with_errors)
         else:
-            return str([nodes_with_errors]) if nodes_with_errors else "[]"
+            return json.dumps([nodes_with_errors]) if nodes_with_errors else "[]"
     except Exception as e:
         LOGGER.debug(f"Failed to parse metadata JSON for nodes_with_errors: {e}")
         return "[]"
@@ -624,9 +624,9 @@ def extract_data_types_field(metadata_json: str) -> str:
         metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         data_types = metadata_dict.get("data_types", [])
         if isinstance(data_types, list):
-            return str(data_types)
+            return json.dumps(data_types)
         else:
-            return str([data_types]) if data_types else "[]"
+            return json.dumps([data_types]) if data_types else "[]"
     except Exception as e:
         LOGGER.debug(f"Failed to parse metadata JSON for data_types: {e}")
         return "[]"
@@ -641,9 +641,9 @@ def extract_instances_field(metadata_json: str) -> str:
         metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         instances = metadata_dict.get("instances", [])
         if isinstance(instances, list):
-            return str(instances)
+            return json.dumps(instances)
         else:
-            return str([instances]) if instances else "[]"
+            return json.dumps([instances]) if instances else "[]"
     except Exception as e:
         LOGGER.debug(f"Failed to parse metadata JSON for instances: {e}")
         return "[]"
@@ -658,9 +658,9 @@ def extract_type_classes_field(metadata_json: str) -> str:
         metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         type_classes = metadata_dict.get("type_classes", [])
         if isinstance(type_classes, list):
-            return str(type_classes)
+            return json.dumps(type_classes)
         else:
-            return str([type_classes]) if type_classes else "[]"
+            return json.dumps([type_classes]) if type_classes else "[]"
     except Exception as e:
         LOGGER.debug(f"Failed to parse metadata JSON for type_classes: {e}")
         return "[]"
