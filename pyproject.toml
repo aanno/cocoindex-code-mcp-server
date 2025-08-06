@@ -116,5 +116,5 @@ ignore_missing_imports = false
 local_partial_types = false
 
 [[tool.mypy.overrides]]
-module = ["pgvector.*", "mypy-astchunk.*", "astchunk.*"]
+module = ["pgvector.*", "mypy-astchunk.*", "astchunk.*", "cachetools.*"]
 ignore_missing_imports = true

@@ -8,6 +8,7 @@ Incorporates techniques from ASTChunk for improved chunking quality.
 import re
 from types import FunctionType
 from typing import Any, Dict, List, Optional
+from warnings import deprecated
 
 from cocoindex.op import FunctionSpec
 import haskell_tree_sitter
@@ -76,7 +77,7 @@ def get_enhanced_haskell_separators() -> List[str]:
 
     return enhanced_separators
 
-
+@deprecated("Use haskell_tree_sitter.get_haskell_ast_chunks from maturin/rust")
 class EnhancedHaskellChunker:
     """
     Enhanced Haskell chunker inspired by ASTChunk techniques.

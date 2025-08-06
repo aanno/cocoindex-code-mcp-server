@@ -64,9 +64,6 @@ class ChunkMetadata(TypedDict, total=False):
     # Vector embedding (when available)
     embedding: Optional[NDArray[np.float32]]
     
-    tree_sitter_analyze_error: bool
-    tree_sitter_chunking_error: bool
-    
     has_docstrings: bool
     docstring: str
     

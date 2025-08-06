@@ -242,7 +242,7 @@ class CocoIndexASTChunker:
         Returns:
             List of chunk dictionaries
         """
-        # Use our existing Haskell chunking for Haskell code
+        # Use our FIXED Haskell chunking for Haskell code with rust_haskell_* methods
         if language == "Haskell":
             try:
                 # Import and call Haskell chunker

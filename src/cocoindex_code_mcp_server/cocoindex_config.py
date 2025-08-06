@@ -10,6 +10,7 @@ import json
 # from __future__ import annotations
 import os
 from dataclasses import dataclass
+from types import FunctionType
 from typing import Dict, List, Union, Any, cast
 
 import numpy as np
@@ -483,79 +484,79 @@ def extract_int_field(metadata_json: str, field_name: str = "field", default_val
 @cocoindex.op.function()
 def extract_functions_field(metadata_json: str) -> str:
     """Extract functions field from metadata JSON."""
-    return extract_list_as_string_field(metadata_json, "functions", "[]")
+    return cast(FunctionType, extract_list_as_string_field)(metadata_json, "functions", "[]")
 
 
 @cocoindex.op.function()
 def extract_docstring_field(metadata_json: str) -> str:
     """Extract docstring field from metadata JSON."""
-    return extract_string_field(metadata_json, "docstring", "")
+    return cast(FunctionType, extract_string_field)(metadata_json, "docstring", "")
 
 
 @cocoindex.op.function()
 def extract_classes_field(metadata_json: str) -> str:
     """Extract classes field from metadata JSON."""
-    return extract_list_as_string_field(metadata_json, "classes", "[]")
+    return cast(FunctionType, extract_list_as_string_field)(metadata_json, "classes", "[]")
 
 
 @cocoindex.op.function()
 def extract_imports_field(metadata_json: str) -> str:
     """Extract imports field from metadata JSON."""
-    return extract_list_as_string_field(metadata_json, "imports", "[]")
+    return cast(FunctionType, extract_list_as_string_field)(metadata_json, "imports", "[]")
 
 
 @cocoindex.op.function()
 def extract_complexity_score_field(metadata_json: str) -> int:
     """Extract complexity_score field from metadata JSON."""
-    return extract_int_field(metadata_json, "complexity_score", 0)
+    return cast(FunctionType, extract_int_field)(metadata_json, "complexity_score", 0)
 
 
 @cocoindex.op.function()
 def extract_has_type_hints_field(metadata_json: str) -> bool:
     """Extract has_type_hints field from metadata JSON."""
-    return extract_bool_field(metadata_json, "has_type_hints", False)
+    return cast(FunctionType, extract_bool_field)(metadata_json, "has_type_hints", False)
 
 
 @cocoindex.op.function()
 def extract_has_async_field(metadata_json: str) -> bool:
     """Extract has_async field from metadata JSON."""
-    return extract_bool_field(metadata_json, "has_async", False)
+    return cast(FunctionType, extract_bool_field)(metadata_json, "has_async", False)
 
 
 @cocoindex.op.function()
 def extract_analysis_method_field(metadata_json: str) -> str:
     """Extract analysis_method field from metadata JSON."""
-    return extract_string_field(metadata_json, "analysis_method", "unknown")
+    return cast(FunctionType, extract_string_field)(metadata_json, "analysis_method", "unknown")
 
 
 @cocoindex.op.function()
 def extract_chunking_method_field(metadata_json: str) -> str:
     """Extract chunking_method field from metadata JSON."""
-    return extract_string_field(metadata_json, "chunking_method", "unknown")
+    return cast(FunctionType, extract_string_field)(metadata_json, "chunking_method", "unknown")
 
 
 @cocoindex.op.function()
 def extract_tree_sitter_chunking_error_field(metadata_json: str) -> bool:
     """Extract tree_sitter_chunking_error field from metadata JSON."""
-    return extract_bool_field(metadata_json, "tree_sitter_chunking_error", False)
+    return cast(FunctionType, extract_bool_field)(metadata_json, "tree_sitter_chunking_error", False)
 
 
 @cocoindex.op.function()
 def extract_tree_sitter_analyze_error_field(metadata_json: str) -> bool:
     """Extract tree_sitter_analyze_error field from metadata JSON."""
-    return extract_bool_field(metadata_json, "tree_sitter_analyze_error", False)
+    return cast(FunctionType, extract_bool_field)(metadata_json, "tree_sitter_analyze_error", False)
 
 
 @cocoindex.op.function()
 def extract_decorators_used_field(metadata_json: str) -> str:
     """Extract decorators_used field from metadata JSON."""
-    return extract_list_as_string_field(metadata_json, "decorators_used", "[]")
+    return cast(FunctionType, extract_list_as_string_field)(metadata_json, "decorators_used", "[]")
 
 
 @cocoindex.op.function()
 def extract_dunder_methods_field(metadata_json: str) -> str:
     """Extract dunder_methods field from metadata JSON."""
-    return extract_list_as_string_field(metadata_json, "dunder_methods", "[]")
+    return cast(FunctionType, extract_list_as_string_field)(metadata_json, "dunder_methods", "[]")
 
 
 @cocoindex.op.function()
@@ -1162,7 +1163,7 @@ def get_file_chunking_method(chunking_method_used: str) -> str:
 @cocoindex.op.function()
 def get_chunking_method_from_metadata(metadata_json: str) -> str:
     """Extract chunking method directly from metadata without preference logic."""
-    return extract_string_field(metadata_json, "chunking_method", "unknown_chunking")
+    return cast(FunctionType, extract_string_field)(metadata_json, "chunking_method", "unknown_chunking")
 
 
 @cocoindex.op.function()

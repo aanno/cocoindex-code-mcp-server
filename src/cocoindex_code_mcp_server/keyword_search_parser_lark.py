@@ -168,9 +168,13 @@ class KeywordSearchParser:
         try:
             # Normalize case for keywords
             normalized_query = self._normalize_keywords(query.strip())
-            tree = self.lark_parser.parse(normalized_query)
-            # The tree is already transformed to SearchGroup during parsing
-            return tree  # type: ignore
+            if self.lark_parser is not None:
+                tree = self.lark_parser.parse(normalized_query)
+                # The tree is already transformed to SearchGroup during parsing
+                return tree  # type: ignore
+            else:
+                logger.warning(f"No lark parser found, falling back to regex parser")
+                raise LarkError("No lark parser found")
         except (LarkError, ParseError) as e:
             logger.warning(f"Lark parser failed ({e}), falling back to regex parser")
             raise
