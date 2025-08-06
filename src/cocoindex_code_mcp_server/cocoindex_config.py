@@ -666,22 +666,27 @@ def extract_type_classes_field(metadata_json: str) -> str:
         LOGGER.debug(f"Failed to parse metadata JSON for type_classes: {e}")
         return "[]"
 
+@cocoindex.op.function()
+def list_to_space_separated_str(items: List[str]) -> str:
+    return " ".join(items) if items else ""
 
 @cocoindex.op.function()
-def extract_modules_field(metadata_json: str) -> str:
-    """Extract modules field from metadata JSON (Haskell, Rust)."""
+def extract_list_str(name: str, metadata_json: str) -> List[str]:
     try:
         if not metadata_json:
-            return "[]"
+            return []
         metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
-        modules = metadata_dict.get("modules", [])
-        if isinstance(modules, list):
-            return str(modules)
-        else:
-            return str([modules]) if modules else "[]"
+        structs = metadata_dict.get(name, [])
+        return structs if isinstance(structs, list) else [structs]
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for modules: {e}")
-        return "[]"
+        LOGGER.debug(f"Failed to parse metadata JSON for {name}: {e}")
+        return []
+    
+
+@cocoindex.op.function()
+def extract_modules_field(metadata_json: str) -> List[str]:
+    """Extract modules field from metadata JSON (Haskell, Rust)."""
+    return extract_list_str("modules", metadata_json)
 
 
 @cocoindex.op.function()
@@ -706,9 +711,9 @@ def extract_function_details_field(metadata_json: str) -> str:
         metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         function_details = metadata_dict.get("function_details", [])
         if isinstance(function_details, list):
-            return str(function_details)
+            return json.dumps(function_details)
         else:
-            return str([function_details]) if function_details else "[]"
+            return json.dumps([function_details]) if function_details else json.dumps([])
     except Exception as e:
         LOGGER.debug(f"Failed to parse metadata JSON for function_details: {e}")
         return "[]"
@@ -723,9 +728,9 @@ def extract_data_type_details_field(metadata_json: str) -> str:
         metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         data_type_details = metadata_dict.get("data_type_details", [])
         if isinstance(data_type_details, list):
-            return str(data_type_details)
+            return json.dumps(data_type_details)
         else:
-            return str([data_type_details]) if data_type_details else "[]"
+            return json.dumps([data_type_details]) if data_type_details else json.dumps([])
     except Exception as e:
         LOGGER.debug(f"Failed to parse metadata JSON for data_type_details: {e}")
         return "[]"
@@ -733,89 +738,33 @@ def extract_data_type_details_field(metadata_json: str) -> str:
 
 # Rust-specific fields
 @cocoindex.op.function()
-def extract_structs_field(metadata_json: str) -> str:
+def extract_structs_field(metadata_json: str) -> List[str]:
     """Extract structs field from metadata JSON (Rust only)."""
-    try:
-        if not metadata_json:
-            return "[]"
-        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
-        structs = metadata_dict.get("structs", [])
-        if isinstance(structs, list):
-            return str(structs)
-        else:
-            return str([structs]) if structs else "[]"
-    except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for structs: {e}")
-        return "[]"
-
+    return extract_list_str("structs", metadata_json)
 
 @cocoindex.op.function()
-def extract_traits_field(metadata_json: str) -> str:
+def extract_traits_field(metadata_json: str) -> List[str]:
     """Extract traits field from metadata JSON (Rust only)."""
-    try:
-        if not metadata_json:
-            return "[]"
-        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
-        traits = metadata_dict.get("traits", [])
-        if isinstance(traits, list):
-            return str(traits)
-        else:
-            return str([traits]) if traits else "[]"
-    except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for traits: {e}")
-        return "[]"
+    return extract_list_str("traits", metadata_json)
 
 
 @cocoindex.op.function()
-def extract_impls_field(metadata_json: str) -> str:
+def extract_impls_field(metadata_json: str) -> List[str]:
     """Extract impls field from metadata JSON (Rust only)."""
-    try:
-        if not metadata_json:
-            return "[]"
-        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
-        impls = metadata_dict.get("impls", [])
-        if isinstance(impls, list):
-            return str(impls)
-        else:
-            return str([impls]) if impls else "[]"
-    except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for impls: {e}")
-        return "[]"
+    return extract_list_str("impls", metadata_json)
 
 
 # TypeScript/JavaScript-specific fields
 @cocoindex.op.function()
-def extract_exports_field(metadata_json: str) -> str:
+def extract_exports_field(metadata_json: str) -> List[str]:
     """Extract exports field from metadata JSON (TypeScript, JavaScript only)."""
-    try:
-        if not metadata_json:
-            return "[]"
-        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
-        exports = metadata_dict.get("exports", [])
-        if isinstance(exports, list):
-            return str(exports)
-        else:
-            return str([exports]) if exports else "[]"
-    except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for exports: {e}")
-        return "[]"
+    return extract_list_str("exports", metadata_json)
 
 
 @cocoindex.op.function()
-def extract_types_field(metadata_json: str) -> str:
+def extract_types_field(metadata_json: str) -> List[str]:
     """Extract types field from metadata JSON (TypeScript only)."""
-    try:
-        if not metadata_json:
-            return "[]"
-        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
-        types = metadata_dict.get("types", [])
-        if isinstance(types, list):
-            return str(types)
-        else:
-            return str([types]) if types else "[]"
-    except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for types: {e}")
-        return "[]"
+    return extract_list_str("types", metadata_json)
 
 
 @cocoindex.op.function()
@@ -827,9 +776,9 @@ def extract_enums_field(metadata_json: str) -> str:
         metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         enums = metadata_dict.get("enums", [])
         if isinstance(enums, list):
-            return str(enums)
+            return json.dumps(enums)
         else:
-            return str([enums]) if enums else "[]"
+            return json.dumps([enums]) if enums else json.dumps([])
     except Exception as e:
         LOGGER.debug(f"Failed to parse metadata JSON for enums: {e}")
         return "[]"
@@ -844,9 +793,9 @@ def extract_namespaces_field(metadata_json: str) -> str:
         metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         namespaces = metadata_dict.get("namespaces", [])
         if isinstance(namespaces, list):
-            return str(namespaces)
+            return json.dumps(namespaces)
         else:
-            return str([namespaces]) if namespaces else "[]"
+            return json.dumps([namespaces]) if namespaces else json.dumps([])
     except Exception as e:
         LOGGER.debug(f"Failed to parse metadata JSON for namespaces: {e}")
         return "[]"
@@ -1473,18 +1422,19 @@ def code_embedding_flow(
                     data_types=chunk["data_types"],
                     instances=chunk["instances"],
                     type_classes=chunk["type_classes"],
-                    modules=chunk["modules"],
                     has_module=chunk["has_module"],
                     function_details=chunk["function_details"],
                     data_type_details=chunk["data_type_details"],
-                    structs=chunk["structs"],
-                    traits=chunk["traits"],
-                    impls=chunk["impls"],
-                    exports=chunk["exports"],
-                    types=chunk["types"],
                     enums=chunk["enums"],
                     namespaces=chunk["namespaces"],
                     docstring=chunk["docstring"],
+                    # List[str] -> str
+                    modules=chunk["modules"].transform(list_to_space_separated_str),
+                    structs=chunk["structs"].transform(list_to_space_separated_str),
+                    traits=chunk["traits"].transform(list_to_space_separated_str),
+                    impls=chunk["impls"].transform(list_to_space_separated_str),
+                    exports=chunk["exports"].transform(list_to_space_separated_str),
+                    types=chunk["types"].transform(list_to_space_separated_str),
                 )
 
     code_embeddings.export(
