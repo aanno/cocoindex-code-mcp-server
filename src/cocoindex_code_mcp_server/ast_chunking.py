@@ -276,7 +276,7 @@ class CocoIndexASTChunker:
                         metadata=metadata
                     ))
 
-                LOGGER.info(f"Haskell AST chunking created {len(result_chunks)} chunks")
+                LOGGER.info(f"✅ NEW: Haskell AST chunking created {len(result_chunks)} chunks with proper Rust method names")
                 return result_chunks
 
             except Exception as e:

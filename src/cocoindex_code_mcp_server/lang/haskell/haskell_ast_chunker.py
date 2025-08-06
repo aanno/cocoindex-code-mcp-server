@@ -482,40 +482,67 @@ class CompatibleChunk:
 @cocoindex.op.function()
 def extract_haskell_ast_chunks(content: str):
     """
-    Enhanced AST-based Haskell chunking with default configuration.
+    Enhanced AST-based Haskell chunking using the fixed Rust implementation.
 
     Args:
         content: Haskell source code
 
     Returns:
-        List of chunk dictionaries with enhanced metadata
+        List of chunk dictionaries with proper rust_haskell_* chunking method names
     """
-    # Use default configuration
-    chunk_config = HaskellChunkConfig()
+    try:
+        # Call the fixed Rust function directly
+        rust_chunks = haskell_tree_sitter.get_haskell_ast_chunks(content)
+        
+        # Convert from Rust HaskellChunk objects to CocoIndex format
+        legacy_chunks = []
+        for chunk in rust_chunks:
+            metadata = chunk.metadata()
+            legacy_chunk = {
+                "text": chunk.text(),
+                "start": chunk.start_line(),
+                "end": chunk.end_line(),
+                "location": f"{chunk.start_line()}:{chunk.end_line()}",
+                "start_byte": chunk.start_byte(),
+                "end_byte": chunk.end_byte(),
+                "node_type": chunk.node_type(),
+                "metadata": metadata,  # This now contains rust_haskell_* method names!
+            }
+            legacy_chunks.append(legacy_chunk)
+            
+        LOGGER.info(f"✅ Rust Haskell chunking produced {len(legacy_chunks)} chunks with proper method names")
+        return legacy_chunks
+        
+    except Exception as e:
+        LOGGER.error(f"❌ Rust Haskell chunking failed: {e}")
+        LOGGER.info("⚠️ Falling back to enhanced Python chunking")
+        
+        # Fallback to the existing Python implementation if Rust fails
+        chunk_config = HaskellChunkConfig()
+        chunker = EnhancedHaskellChunker(chunk_config)
+        chunks = chunker.chunk_code(content)
 
-    chunker = EnhancedHaskellChunker(chunk_config)
-    chunks = chunker.chunk_code(content)
+        # Convert to legacy CocoIndex format for backward compatibility
+        legacy_chunks = []
+        for chunk in chunks:
+            legacy_chunk = {
+                "text": chunk["content"],
+                "start": chunk["metadata"]["start_line"],
+                "end": chunk["metadata"]["end_line"],
+                "location": f"{chunk['metadata']['start_line']}:{chunk['metadata']['end_line']}",
+                "start_byte": chunk["metadata"].get("start_byte", 0),
+                "end_byte": chunk["metadata"].get("end_byte", len(chunk["content"].encode('utf-8'))),
+                "node_type": chunk["metadata"].get("node_type", "haskell_chunk"),
+                "metadata": {
+                    "category": chunk["metadata"].get("node_type", "haskell_ast"),
+                    "method": chunk["metadata"]["chunk_method"],
+                    "chunking_method": "python_haskell_fallback",  # Mark as Python fallback
+                    **chunk["metadata"]
+                },
+            }
+            legacy_chunks.append(legacy_chunk)
 
-    # Convert to legacy CocoIndex format for backward compatibility
-    legacy_chunks = []
-    for chunk in chunks:
-        legacy_chunk = {
-            "text": chunk["content"],
-            "start": chunk["metadata"]["start_line"],
-            "end": chunk["metadata"]["end_line"],
-            "location": f"{chunk['metadata']['start_line']}:{chunk['metadata']['end_line']}",
-            "start_byte": chunk["metadata"].get("start_byte", 0),
-            "end_byte": chunk["metadata"].get("end_byte", len(chunk["content"].encode('utf-8'))),
-            "node_type": chunk["metadata"].get("node_type", "haskell_chunk"),
-            "metadata": {
-                "category": chunk["metadata"].get("node_type", "haskell_ast"),
-                "method": chunk["metadata"]["chunk_method"],
-                **chunk["metadata"]
-            },
-        }
-        legacy_chunks.append(legacy_chunk)
-
-    return legacy_chunks
+        return legacy_chunks
 
 
 def create_enhanced_regex_fallback_chunks(content: str, file_path: str,

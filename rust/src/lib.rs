@@ -350,9 +350,9 @@ fn extract_semantic_chunks_with_recursive_splitting(tree: &Tree, source: &str, p
     let merged_chunks = merge_adjacent_chunks(chunks, params.max_chunk_size);
     
     let chunking_method = if error_stats.error_count > 0 {
-        "ast_recursive_with_errors".to_string()
+        "rust_haskell_ast_recursive_with_errors".to_string()
     } else {
-        "ast_recursive".to_string()
+        "rust_haskell_ast_recursive".to_string()
     };
     
     ChunkingResult {
@@ -1042,8 +1042,15 @@ fn get_haskell_ast_chunks(source: &str) -> PyResult<Vec<HaskellChunk>> {
     
     match parser.parse(source, None) {
         Some(tree) => {
-            let chunks = extract_semantic_chunks(&tree, source);
-            Ok(chunks)
+            // Use the enhanced chunking with proper error handling and method names
+            let default_params = ChunkingParams {
+                chunk_size: 1800,
+                min_chunk_size: 300,
+                chunk_overlap: 0,
+                max_chunk_size: 1800,
+            };
+            let result = extract_semantic_chunks_with_recursive_splitting(&tree, source, &default_params);
+            Ok(result.chunks)
         }
         None => Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
             "Failed to parse Haskell source"
