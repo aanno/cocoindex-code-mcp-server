@@ -1136,21 +1136,28 @@ def get_embedding_model_group(language: str) -> str:
 
 
 @cocoindex.op.function()
-def get_cocoindex_split_recursively_chunking_method() -> str:
+def get_cocoindex_split_recursively_chunking_method(content: str) -> str:
     """Return chunking method for default SplitRecursively chunking."""
     return "cocoindex_split_recursively"
 
 
 @cocoindex.op.function()
-def get_ast_tree_sitter_chunking_method() -> str:
+def get_ast_tree_sitter_chunking_method(content: str) -> str:
     """Return chunking method for AST tree-sitter chunking."""
     return "ast_tree_sitter"
 
 
 @cocoindex.op.function()
-def get_ast_fallback_chunking_method() -> str:
+def get_ast_fallback_chunking_method(content: str) -> str:
     """Return chunking method for AST fallback chunking."""
     return "ast_fallback_unavailable"
+
+
+@cocoindex.op.function()
+def get_file_chunking_method(chunking_method_used: str) -> str:
+    """Return the chunking method used for this file."""
+    return chunking_method_used
+
 
 
 # Global configuration for flow parameters
@@ -1293,10 +1300,8 @@ def code_embedding_flow(
                 )
                 # Ensure unique locations for default chunking
                 file["chunks"] = raw_chunks.transform(ensure_unique_chunk_locations)
-                
-                # Set chunking method for default chunking
-                with file["chunks"].row() as chunk:
-                    chunk["chunking_method"] = chunk["content"].transform(get_cocoindex_split_recursively_chunking_method)
+                # Set chunking method for this file
+                file["chunking_method_used"] = file["content"].transform(get_cocoindex_split_recursively_chunking_method)
             else:
                 LOGGER.info("Using AST chunking extension")
                 if ASTChunkOperation is not None:
@@ -1307,15 +1312,13 @@ def code_embedding_flow(
                         chunk_overlap=file["chunking_params"]["chunk_overlap"]
                     )
                     # Set chunking method for AST chunking
-                    with raw_chunks.row() as chunk:
-                        chunk["chunking_method"] = chunk["content"].transform(get_ast_tree_sitter_chunking_method)
+                    file["chunking_method_used"] = file["content"].transform(get_ast_tree_sitter_chunking_method)
                 else:
                     # Fallback to basic chunking if AST operation is not available
                     # Skip transformation when AST chunking not available
                     raw_chunks = cast(Any, file["content"])
-                    # Set chunking method for fallback
-                    with raw_chunks.row() as chunk:
-                        chunk["chunking_method"] = chunk["content"].transform(get_ast_fallback_chunking_method)
+                    # Set chunking method for AST fallback
+                    file["chunking_method_used"] = file["content"].transform(get_ast_fallback_chunking_method)
                 # Ensure unique locations for AST chunking (safety measure)
                 file["chunks"] = raw_chunks.transform(ensure_unique_chunk_locations)
 
@@ -1374,7 +1377,7 @@ def code_embedding_flow(
                 
                 # Additional promoted metadata fields
                 chunk["analysis_method"] = chunk["extracted_metadata"].transform(extract_analysis_method_field)
-                # NOTE: chunking_method is now set during chunking stage, not extracted from analysis metadata
+                chunk["chunking_method"] = file["chunking_method_used"].transform(get_file_chunking_method)
                 
                 chunk["tree_sitter_chunking_error"] = chunk["extracted_metadata"].transform(extract_tree_sitter_chunking_error_field)
                 chunk["tree_sitter_analyze_error"] = chunk["extracted_metadata"].transform(extract_tree_sitter_analyze_error_field)
