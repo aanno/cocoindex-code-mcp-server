@@ -1165,6 +1165,18 @@ def get_chunking_method_from_metadata(metadata_json: str) -> str:
     return extract_string_field(metadata_json, "chunking_method", "unknown_chunking")
 
 
+@cocoindex.op.function()
+def is_haskell_language(language: str) -> bool:
+    """Check if language is Haskell for specialized chunking."""
+    return language == "Haskell"
+
+
+@cocoindex.op.function()
+def get_haskell_specialized_chunking_method() -> str:
+    """Return chunking method identifier for specialized Haskell chunker."""
+    return "haskell_specialized_chunker"
+
+
 
 # Global configuration for flow parameters
 _global_flow_config = {
@@ -1309,8 +1321,14 @@ def code_embedding_flow(
                 # Set chunking method for this file
                 file["chunking_method_used"] = file["content"].transform(get_cocoindex_split_recursively_chunking_method)
             else:
-                LOGGER.info("Using AST chunking extension")
+                LOGGER.info("Using language-specific or AST chunking")
+                
+                # For Haskell files, use specialized chunker; for others use AST chunking
+                # Note: CocoIndex doesn't support direct DataSlice conditional comparisons
+                # so we use chunking operations that handle language detection internally
+                
                 if ASTChunkOperation is not None:
+                    LOGGER.info("Using AST chunking with language-specific routing")
                     raw_chunks = file["content"].transform(
                         ASTChunkOperation,
                         language=file["language"],

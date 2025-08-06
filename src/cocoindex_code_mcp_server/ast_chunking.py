@@ -253,9 +253,11 @@ class CocoIndexASTChunker:
 
                 result_chunks: List[Chunk] = []
                 for i, chunk in enumerate(chunks):
+                    # Get original metadata from Rust including proper chunking method
+                    original_metadata = chunk.metadata()
+                    
                     metadata = {
                         "chunk_id": i,
-                        "chunking_method": "astchunk_library",
                         "language": language,
                         "file_path": file_path,
                         "chunk_size": len(chunk.text()),
@@ -263,7 +265,9 @@ class CocoIndexASTChunker:
                         "start_line": chunk.start_line(),
                         "end_line": chunk.end_line(),
                         "node_type": chunk.node_type(),
-                        **chunk.metadata()
+                        # Preserve original chunking method from Rust instead of overriding
+                        "chunking_method": original_metadata.get("chunking_method", "haskell_ast_fallback"),
+                        **original_metadata
                     }
 
                     result_chunks.append(Chunk(

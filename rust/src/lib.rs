@@ -400,9 +400,9 @@ fn extract_semantic_chunks_with_error_handling(tree: &Tree, source: &str) -> Chu
     ensure_complete_coverage(&mut chunks, &error_stats, source);
     
     let chunking_method = if error_stats.error_count > 0 {
-        "ast_with_errors".to_string()
+        "rust_haskell_ast_with_errors".to_string()
     } else {
-        "ast".to_string()
+        "rust_haskell_ast".to_string()
     };
     
     ChunkingResult {
@@ -786,7 +786,7 @@ fn extract_chunks_recursive_with_errors(
         metadata.insert("has_children".to_string(), (node.child_count() > 0).to_string());
         metadata.insert("is_named".to_string(), node.is_named().to_string());
         metadata.insert("has_error".to_string(), node.has_error().to_string());
-        metadata.insert("chunking_method".to_string(), "rust_haskell_ast_with_errors".to_string());
+        metadata.insert("chunking_method".to_string(), "rust_haskell_ast_with_errors_2".to_string());
         
         // Extract additional metadata based on node type
         match node_type {
