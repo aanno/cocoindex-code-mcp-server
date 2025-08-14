@@ -19,6 +19,8 @@ from numpy.typing import NDArray
 
 import cocoindex
 import logging
+
+from cocoindex_code_mcp_server.mappers import SOURCE_CONFIG
 # from cocoindex_code_mcp_server import LOGGER
 
 # from sentence_transformers import SentenceTransformer  # Use cocoindex.functions.SentenceTransformerEmbed instead
@@ -1181,78 +1183,8 @@ def code_embedding_flow(
         LOGGER.info(f"Adding source: {path} as '{source_name}'")
 
         # Configure LocalFile source with optional polling
-        source_config = {
-            "path": path,
-            "included_patterns": [
-                # Python
-                "*.py", "*.pyi", "*.pyx", "*.pxd",
-                # Rust
-                "*.rs", "*.toml",
-                # Java/Kotlin/JVM
-                "*.java", "*.kt", "*.kts", "*.scala", "*.clj", "*.cljs",
-                # JavaScript/TypeScript
-                "*.js", "*.jsx", "*.ts", "*.tsx", "*.mjs", "*.cjs",
-                # Go
-                "*.go", "go.mod", "go.sum",
-                # Haskell
-                "*.hs", "*.lhs", "*.cabal",
-                # "*.yaml", "*.yml", "stack.yaml",
-                # C/C++
-                "*.c", "*.cc", "*.cpp", "*.cxx", "*.h", "*.hh", "*.hpp", "*.hxx",
-                # C#/.NET
-                "*.cs", "*.fs", "*.fsx", "*.vb", "*.csproj", "*.fsproj", "*.vbproj", "*.sln",
-                # Build systems
-                "Makefile", "makefile", "*.mk", "*.cmake", "CMakeLists.txt",
-                "build.gradle", "build.gradle.kts", "settings.gradle", "gradle.properties",
-                "pom.xml", "build.xml", "*.ant",
-                # Shell/Scripts
-                "*.sh", "*.bash", "*.zsh", "*.fish", "*.ps1", "*.bat", "*.cmd",
-                # Web
-                "*.html", "*.htm", "*.css", "*.scss", "*.sass", "*.less",
-                "*.vue", "*.svelte", "*.astro", "*.php", "*.rb",
-                # Swift/Objective-C
-                "*.swift", "*.m", "*.mm", "*.pbxproj", "*.xcconfig",
-                # Documentation/Config
-                "*.md", "*.mdx", "*.rst", "*.txt", "*.json", "*.xml",
-                "*.ini", "*.cfg", "*.conf", "*.properties", "*.env",
-                # Database
-                "*.sql", "*.ddl", "*.dml", "*.migration",
-                # Other languages
-                "*.lua", "*.pl", "*.pm", "*.r", "*.R", "*.jl", "*.dart",
-                "*.ex", "*.exs", "*.erl", "*.hrl", "*.elm", "*.nim",
-                "*.zig", "*.odin", "*.v", "*.gleam", "*.crystal",
-                # Docker/Container
-                "Dockerfile", "*.dockerfile",
-                # "docker-compose.yml", "docker-compose.yaml",
-                # CI/CD
-                "Jenkinsfile", "*.jenkinsfile",
-                # "*.gitlab-ci.yml", ".github/workflows/*.yml", ".github/workflows/*.yaml",
-                # "azure-pipelines.yml",
-                # Package managers
-                "package.json", "package-lock.json", "yarn.lock", "requirements.txt",
-                "Pipfile", "poetry.lock", "pyproject.toml", "setup.py", "setup.cfg",
-                "Gemfile", "Gemfile.lock", "composer.json", "composer.lock",
-                # IDEs/Editors
-                "*.editorconfig", "*.gitignore", "*.gitattributes",
-            ],
-            "excluded_patterns": [
-                "**/.*", "target", "**/node_modules", "**/build", "**/dist",
-                "**/__pycache__", "**/bin", "**/obj", "**/out", "**/venv",
-                "**/env", "**/.gradle", "**/.idea", "**/.vscode",
-                "**/target/debug", "**/target/release", "**/*.class",
-                "**/*.jar", "**/*.war", "**/*.ear", "**/*.pyc", "**/*.pyo",
-                # cocoindex evaluate
-                "**/eval_CodeEmbedding_*",
-                # compiled and cached
-                "**/*.o", "**/*.obj", "**/*.exe", "**/*.dll",
-                # scm
-                "**/.git", "**/.svn", "**/.hg",
-                # misc
-                "**/.DS_Store", "**/Thumbs.db", "**/*.tmp",
-                # python
-                "**/.venv",
-            ]
-        }
+        source_config = SOURCE_CONFIG
+        source_config['path'] = path
 
         # Note: Polling configuration is handled by CocoIndex live updater, not LocalFile
         if enable_polling:

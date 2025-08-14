@@ -13,7 +13,17 @@ import json
 
 from .schemas import ChunkMetadata, QueryFilter, FilterOperator, SearchResult, SearchResultType
 
+###################################################
 # SINGLE SOURCE OF TRUTH: All database columns and field mappings
+#
+# Important:
+# If you change something here, the collect code `code_embeddings.collect(..)`
+# in src/cocoindex_code_mcp_server/cocoindex_config.py
+# has to be adapted as well!
+# 
+# TODO:
+# Might be a limitation of cocoindex, we should recheck this.
+###################################################
 CONST_FIELD_MAPPINGS = {
     # Core search result fields
     "filename": "filename",
@@ -137,6 +147,80 @@ CONST_LANGUAGE_INTERNAL_NAMES = {
     "XML": "xml",
     "Haskell": "haskell",
     "YAML": "yaml",
+}
+
+# TODO: Maybe this is related to CONST_LANGUAGE_MAPPINGS
+SOURCE_CONFIG = {
+    "path": "<forgot to set this>",
+    "included_patterns": [
+        # Python
+        "*.py", "*.pyi", "*.pyx", "*.pxd",
+        # Rust
+        "*.rs", "*.toml",
+        # Java/Kotlin/JVM
+        "*.java", "*.kt", "*.kts", "*.scala", "*.clj", "*.cljs",
+        # JavaScript/TypeScript
+        "*.js", "*.jsx", "*.ts", "*.tsx", "*.mjs", "*.cjs",
+        # Go
+        "*.go", "go.mod", "go.sum",
+        # Haskell
+        "*.hs", "*.lhs", "*.cabal",
+        # "*.yaml", "*.yml", "stack.yaml",
+        # C/C++
+        "*.c", "*.cc", "*.cpp", "*.cxx", "*.h", "*.hh", "*.hpp", "*.hxx",
+        # C#/.NET
+        "*.cs", "*.fs", "*.fsx", "*.vb", "*.csproj", "*.fsproj", "*.vbproj", "*.sln",
+        # Build systems
+        "Makefile", "makefile", "*.mk", "*.cmake", "CMakeLists.txt",
+        "build.gradle", "build.gradle.kts", "settings.gradle", "gradle.properties",
+        "pom.xml", "build.xml", "*.ant",
+        # Shell/Scripts
+        "*.sh", "*.bash", "*.zsh", "*.fish", "*.ps1", "*.bat", "*.cmd",
+        # Web
+        "*.html", "*.htm", "*.css", "*.scss", "*.sass", "*.less",
+        "*.vue", "*.svelte", "*.astro", "*.php", "*.rb",
+        # Swift/Objective-C
+        "*.swift", "*.m", "*.mm", "*.pbxproj", "*.xcconfig",
+        # Documentation/Config
+        "*.md", "*.mdx", "*.rst", "*.txt", "*.json", "*.xml",
+        "*.ini", "*.cfg", "*.conf", "*.properties", "*.env",
+        # Database
+        "*.sql", "*.ddl", "*.dml", "*.migration",
+        # Other languages
+        "*.lua", "*.pl", "*.pm", "*.r", "*.R", "*.jl", "*.dart",
+        "*.ex", "*.exs", "*.erl", "*.hrl", "*.elm", "*.nim",
+        "*.zig", "*.odin", "*.v", "*.gleam", "*.crystal",
+        # Docker/Container
+        "Dockerfile", "*.dockerfile",
+        # "docker-compose.yml", "docker-compose.yaml",
+        # CI/CD
+        "Jenkinsfile", "*.jenkinsfile",
+        # "*.gitlab-ci.yml", ".github/workflows/*.yml", ".github/workflows/*.yaml",
+        # "azure-pipelines.yml",
+        # Package managers
+        "package.json", "package-lock.json", "yarn.lock", "requirements.txt",
+        "Pipfile", "poetry.lock", "pyproject.toml", "setup.py", "setup.cfg",
+        "Gemfile", "Gemfile.lock", "composer.json", "composer.lock",
+        # IDEs/Editors
+        "*.editorconfig", "*.gitignore", "*.gitattributes",
+    ],
+    "excluded_patterns": [
+        "**/.*", "target", "**/node_modules", "**/build", "**/dist",
+        "**/__pycache__", "**/bin", "**/obj", "**/out", "**/venv",
+        "**/env", "**/.gradle", "**/.idea", "**/.vscode",
+        "**/target/debug", "**/target/release", "**/*.class",
+        "**/*.jar", "**/*.war", "**/*.ear", "**/*.pyc", "**/*.pyo",
+        # cocoindex evaluate
+        "**/eval_CodeEmbedding_*",
+        # compiled and cached
+        "**/*.o", "**/*.obj", "**/*.exe", "**/*.dll",
+        # scm
+        "**/.git", "**/.svn", "**/.hg",
+        # misc
+        "**/.DS_Store", "**/Thumbs.db", "**/*.tmp",
+        # python
+        "**/.venv",
+    ]
 }
 
 
