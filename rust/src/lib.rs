@@ -643,7 +643,7 @@ fn create_chunk_with_context(node: &Node, source: &str, context: &ChunkingContex
     // Add chunking method
     metadata.insert("chunking_method".to_string(), "rust_haskell_ast_recursive".to_string());
     
-    // Add aggregate metadata as JSON arrays
+    // Add aggregate metadata as JSON arrays (simple string arrays only)
     metadata.insert("functions".to_string(), format!("[{}]", context.functions.iter()
         .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
         .collect::<Vec<_>>().join(", ")));
@@ -666,7 +666,7 @@ fn create_chunk_with_context(node: &Node, source: &str, context: &ChunkingContex
         .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
         .collect::<Vec<_>>().join(", ")));
     
-    // Add empty arrays for other expected properties to avoid "[]" strings
+    // Add empty arrays for other expected simple List[str] properties
     metadata.insert("enums".to_string(), "[]".to_string());
     metadata.insert("namespaces".to_string(), "[]".to_string());
     metadata.insert("dunder_methods".to_string(), "[]".to_string());
@@ -674,10 +674,12 @@ fn create_chunk_with_context(node: &Node, source: &str, context: &ChunkingContex
     metadata.insert("private_methods".to_string(), "[]".to_string());
     metadata.insert("variables".to_string(), "[]".to_string());
     metadata.insert("decorators".to_string(), "[]".to_string());
-    metadata.insert("class_details".to_string(), "[]".to_string());
     metadata.insert("classes".to_string(), format!("[{}]", context.type_classes.iter()
         .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
         .collect::<Vec<_>>().join(", ")));
+    
+    // Do NOT populate complex JSON fields like function_details, data_type_details, class_details
+    // These should be handled by the language-specific analysis handlers
     
     // Add tree-sitter error tracking for chunking
     if node.is_error() {
@@ -920,7 +922,7 @@ fn extract_chunks_recursive_with_errors(
         metadata.insert("has_error".to_string(), node.has_error().to_string());
         metadata.insert("chunking_method".to_string(), "rust_haskell_ast_with_errors_2".to_string());
         
-        // Add aggregate metadata as JSON arrays
+        // Add aggregate metadata as JSON arrays (simple string arrays only)
         metadata.insert("functions".to_string(), format!("[{}]", context.functions.iter()
             .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
             .collect::<Vec<_>>().join(", ")));
@@ -943,7 +945,7 @@ fn extract_chunks_recursive_with_errors(
             .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
             .collect::<Vec<_>>().join(", ")));
         
-        // Add empty arrays for other expected properties
+        // Add empty arrays for other expected simple List[str] properties
         metadata.insert("enums".to_string(), "[]".to_string());
         metadata.insert("namespaces".to_string(), "[]".to_string());
         metadata.insert("dunder_methods".to_string(), "[]".to_string());
@@ -951,7 +953,6 @@ fn extract_chunks_recursive_with_errors(
         metadata.insert("private_methods".to_string(), "[]".to_string());
         metadata.insert("variables".to_string(), "[]".to_string());
         metadata.insert("decorators".to_string(), "[]".to_string());
-        metadata.insert("class_details".to_string(), "[]".to_string());
         metadata.insert("classes".to_string(), format!("[{}]", context.type_classes.iter()
             .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
             .collect::<Vec<_>>().join(", ")));
@@ -1410,7 +1411,7 @@ fn create_error_chunk(start_byte: usize, end_byte: usize, source: &str, depth: u
     metadata.insert("tree_sitter_chunking_error".to_string(), "true".to_string());
     metadata.insert("has_error".to_string(), "true".to_string());
     
-    // Add aggregate metadata as JSON arrays
+    // Add aggregate metadata as JSON arrays (simple string arrays only)
     metadata.insert("functions".to_string(), format!("[{}]", context.functions.iter()
         .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
         .collect::<Vec<_>>().join(", ")));
@@ -1433,7 +1434,7 @@ fn create_error_chunk(start_byte: usize, end_byte: usize, source: &str, depth: u
         .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
         .collect::<Vec<_>>().join(", ")));
     
-    // Add empty arrays for other expected properties
+    // Add empty arrays for other expected simple List[str] properties
     metadata.insert("enums".to_string(), "[]".to_string());
     metadata.insert("namespaces".to_string(), "[]".to_string());
     metadata.insert("dunder_methods".to_string(), "[]".to_string());
@@ -1441,7 +1442,6 @@ fn create_error_chunk(start_byte: usize, end_byte: usize, source: &str, depth: u
     metadata.insert("private_methods".to_string(), "[]".to_string());
     metadata.insert("variables".to_string(), "[]".to_string());
     metadata.insert("decorators".to_string(), "[]".to_string());
-    metadata.insert("class_details".to_string(), "[]".to_string());
     metadata.insert("classes".to_string(), format!("[{}]", context.type_classes.iter()
         .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
         .collect::<Vec<_>>().join(", ")));

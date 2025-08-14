@@ -1398,12 +1398,12 @@ def code_embedding_flow(
                     char_count=chunk["char_count"],
                     # Language-specific fields
                     has_module=chunk["has_module"],
+                    # TODO: This was JSON but now List[str] -> str
+                    class_details=chunk['class_details'].transform(list_to_space_separated_str),
                     # TODO: This is JSON
-                    class_details = chunk['class_details'],
-                    # TODO: This is JSON
-                    function_details=chunk["function_details"],
-                    # TODO: This is JSON
-                    data_type_details=chunk["data_type_details"],
+                    function_details=chunk["function_details"].transform(list_to_space_separated_str),
+                    # TODO: This was JSON but now List[str] -> str
+                    data_type_details=chunk["data_type_details"].transform(list_to_space_separated_str),
                     docstring=chunk["docstring"],
                     # List[str] -> str
                     decorators_used=chunk["decorators_used"].transform(list_to_space_separated_str),
