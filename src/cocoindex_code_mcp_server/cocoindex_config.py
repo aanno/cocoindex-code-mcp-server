@@ -204,7 +204,7 @@ def extract_language(filename: str) -> str:
 def get_chunking_params(language: str) -> ChunkingParams:
     """Get language-specific chunking parameters."""
     params = EFFECTIVE_CHUNKING_PARAMS.get(language, EFFECTIVE_CHUNKING_PARAMS["_DEFAULT"])
-    
+
     # Ensure max_chunk_size is properly set
     if params.max_chunk_size <= 0:
         params = ChunkingParams(
@@ -213,7 +213,7 @@ def get_chunking_params(language: str) -> ChunkingParams:
             chunk_overlap=params.chunk_overlap,
             max_chunk_size=params.chunk_size * 2
         )
-    
+
     return params
 
 
@@ -237,10 +237,10 @@ def create_default_metadata(content: str) -> str:
 @cocoindex.op.function()
 def extract_code_metadata(text: str, language: str, filename: str = "", existing_metadata_json: str = "") -> str:
     """Extract rich metadata from code chunks based on language and return as JSON string.
-    
+
     Args:
         text: Code content to analyze
-        language: Programming language 
+        language: Programming language
         filename: Optional filename for context
         existing_metadata_json: Optional existing metadata JSON to preserve important fields
     """
@@ -251,13 +251,13 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
             existing_metadata = json.loads(existing_metadata_json) if isinstance(existing_metadata_json, str) else existing_metadata_json
         except (json.JSONDecodeError, TypeError):
             existing_metadata = {}
-    
+
     # Extract important fields to preserve
     preserve_chunking_method = existing_metadata.get("chunking_method")
-    
+
     # Check if we should use default language handler
     use_default_handler = _global_flow_config.get('use_default_language_handler', False)
-    
+
     # DEBUG: Log configuration for specific files
     if filename and 'cpp_visitor.py' in filename:
         LOGGER.info(f"🔍 DEBUGGING extract_code_metadata for {filename}")
@@ -287,11 +287,11 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
             try:
                 # Normalize language string for consistent matching
                 lang_lower = language.lower() if language else ""
-                
+
                 if lang_lower == "rust":
                     from .language_handlers.rust_visitor import analyze_rust_code
                     metadata = analyze_rust_code(text, filename)
-                elif lang_lower == "java": 
+                elif lang_lower == "java":
                     from .language_handlers.java_visitor import analyze_java_code
                     metadata = analyze_java_code(text, filename)
                 elif lang_lower in ["javascript", "js"]:
@@ -314,12 +314,12 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                     metadata = analyze_haskell_code(text, filename)
                 else:
                     LOGGER.debug(f"No specialized analyzer for language: {language}")
-                    
+
             except ImportError as e:
                 LOGGER.warning(f"Failed to import analyzer for {language}: {e}")
             except Exception as e:
                 LOGGER.warning(f"Analysis failed for {language}: {e}")
-                
+
             # Fallback to basic metadata if analysis failed or no analyzer available
             if metadata is None:
                 metadata = {}
@@ -340,19 +340,19 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                     "tree_sitter_chunking_error": True,  # True because we failed to use tree-sitter
                     "tree_sitter_analyze_error": True,   # True because we failed to analyze properly
                 }
-                
+
                 # Preserve existing chunking_method even in failure cases
                 if preserve_chunking_method:
                     fallback_defaults["chunking_method"] = preserve_chunking_method
                     LOGGER.debug(f"✅ Preserving existing chunking_method in fallback: {preserve_chunking_method}")
-                    
+
                 update_defaults(metadata, fallback_defaults)
 
         # Return ALL fields from metadata (generalized approach)
         if metadata is not None:
             # Start with all metadata fields and ensure critical ones have defaults
             result = dict(metadata)  # Copy all fields
-            
+
             # Ensure essential fields have proper defaults if missing
             defaults = {
                 "functions": [],
@@ -369,12 +369,12 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                 "tree_sitter_analyze_error": False,
                 "dunder_methods": [],
             }
-            
+
             # Preserve existing chunking_method if available
             if preserve_chunking_method:
                 defaults["chunking_method"] = preserve_chunking_method
                 LOGGER.debug(f"✅ Preserving existing chunking_method: {preserve_chunking_method}")
-            
+
             update_defaults(result, defaults)
         else:
             result = {}
@@ -403,7 +403,7 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
             "tree_sitter_chunking_error": True,  # True because we had an error
             "tree_sitter_analyze_error": True,   # True because we had an error
         }
-        
+
         if preserve_chunking_method:
             LOGGER.debug(f"✅ Preserving existing chunking_method in exception fallback: {preserve_chunking_method}")
         return json.dumps(fallback_result)
@@ -417,12 +417,12 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
 def extract_string_field(metadata_json: str, field_name: str = "field", default_value: str = "") -> str:
     """
     Generic string field extractor from metadata JSON.
-    
+
     Args:
         metadata_json: JSON string or dict containing metadata
         field_name: Name of the field to extract
         default_value: Default value if field is missing or extraction fails
-        
+
     Returns:
         String value of the field
     """
@@ -442,12 +442,12 @@ def extract_string_field(metadata_json: str, field_name: str = "field", default_
 def extract_list_as_string_field(metadata_json: str, field_name: str = "field", default_value: str = "[]") -> str:
     """
     Generic list field extractor from metadata JSON, returned as string representation.
-    
+
     Args:
         metadata_json: JSON string or dict containing metadata
         field_name: Name of the field to extract
         default_value: Default value if field is missing or extraction fails
-        
+
     Returns:
         String representation of the list field
     """
@@ -471,12 +471,12 @@ def extract_list_as_string_field(metadata_json: str, field_name: str = "field", 
 def extract_bool_field(metadata_json: str, field_name: str = "field", default_value: bool = False) -> bool:
     """
     Generic boolean field extractor from metadata JSON.
-    
+
     Args:
         metadata_json: JSON string or dict containing metadata
         field_name: Name of the field to extract
         default_value: Default value if field is missing or extraction fails
-        
+
     Returns:
         Boolean value of the field
     """
@@ -495,12 +495,12 @@ def extract_bool_field(metadata_json: str, field_name: str = "field", default_va
 def extract_int_field(metadata_json: str, field_name: str = "field", default_value: int = 0) -> int:
     """
     Generic integer field extractor from metadata JSON.
-    
+
     Args:
         metadata_json: JSON string or dict containing metadata
         field_name: Name of the field to extract
         default_value: Default value if field is missing or extraction fails
-        
+
     Returns:
         Integer value of the field
     """
@@ -687,7 +687,7 @@ def extract_nodes_with_errors_field(metadata_json: str) -> List[str]:
             return []
         metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         nodes_with_errors = metadata_dict.get("nodes_with_errors", [])
-        
+
         # Handle both integer count and list of error descriptions
         if isinstance(nodes_with_errors, int):
             # Convert integer count to string representation
@@ -757,7 +757,7 @@ def extract_list_str(name: str, metadata_json: str) -> List[str]:
     except Exception as e:
         LOGGER.debug(f"Failed to parse metadata JSON for {name}: {e}")
         return []
-    
+
 
 @cocoindex.op.function()
 def extract_modules_field(metadata_json: str) -> List[str]:
@@ -999,13 +999,13 @@ def promote_metadata_fields(metadata_json: str) -> Dict[str, Any]:
     try:
         if not metadata_json:
             return {}
-        
+
         metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         if not isinstance(metadata_dict, dict):
             return {}
-        
+
         promoted = {}
-        
+
         # Define type conversions for known fields
         field_conversions = {
             # String fields
@@ -1014,7 +1014,7 @@ def promote_metadata_fields(metadata_json: str) -> Dict[str, Any]:
             'language': lambda x: str(x) if x is not None else "unknown",
             'filename': lambda x: str(x) if x is not None else "",
             'docstring': lambda x: str(x) if x is not None else "",
-            
+
             # Boolean fields (handle string "true"/"false" values)
             'tree_sitter_chunking_error': lambda x: x.lower() == "true" if isinstance(x, str) else bool(x) if x is not None else False,
             'tree_sitter_analyze_error': lambda x: x.lower() == "true" if isinstance(x, str) else bool(x) if x is not None else False,
@@ -1025,13 +1025,13 @@ def promote_metadata_fields(metadata_json: str) -> Dict[str, Any]:
             'tree_sitter_analyze_error': lambda x: bool(x) if x is not None else False,
             'tree_sitter_chunking_error': lambda x: bool(x) if x is not None else False,
             'has_docstrings': lambda x: bool(x) if x is not None else False,
-            
+
             # Integer fields
             'complexity_score': lambda x: int(x) if x is not None and str(x).isdigit() else 0,
             'line_count': lambda x: int(x) if x is not None and str(x).isdigit() else 0,
             'char_count': lambda x: int(x) if x is not None and str(x).isdigit() else 0,
             'parse_errors': lambda x: int(x) if x is not None and str(x).isdigit() else 0,
-            
+
             # List fields
             'functions': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
             'classes': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
@@ -1045,7 +1045,7 @@ def promote_metadata_fields(metadata_json: str) -> Dict[str, Any]:
             'variables': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
             'decorators': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
         }
-        
+
         # Apply conversions for known fields
         for field, converter in field_conversions.items():
             if field in metadata_dict:
@@ -1062,7 +1062,7 @@ def promote_metadata_fields(metadata_json: str) -> Dict[str, Any]:
                         promoted[field] = 0
                     elif field in ['functions', 'classes', 'imports', 'decorators_used', 'errors']:
                         promoted[field] = []
-        
+
         # For any remaining fields not in our conversion map, pass them through with basic type safety
         for field, value in metadata_dict.items():
             if field not in promoted and field not in ['metadata_json']:  # Avoid infinite recursion
@@ -1070,9 +1070,9 @@ def promote_metadata_fields(metadata_json: str) -> Dict[str, Any]:
                     promoted[field] = value
                 else:
                     promoted[field] = str(value)  # Convert unknown types to string
-        
+
         return promoted
-        
+
     except Exception as e:
         LOGGER.debug(f"Failed to promote metadata fields: {e}")
         return {}
@@ -1216,14 +1216,14 @@ def get_chunking_method_from_metadata(metadata_json: str) -> str:
             metadata = json.loads(metadata_json)
         else:
             metadata = metadata_json
-        
+
         # Debug logging
         chunking_method = str(metadata.get("chunking_method", "unknown_chunking"))
         if chunking_method == "unknown_chunking":
             LOGGER.debug(f"🔍 No chunking_method in metadata: {list(metadata.keys())[:10]}")
         else:
             LOGGER.debug(f"✅ Found chunking_method: {chunking_method}")
-        
+
         return chunking_method
     except Exception as e:
         LOGGER.debug(f"❌ Error extracting chunking method: {e}")
@@ -1326,11 +1326,11 @@ def code_embedding_flow(
                 file["chunking_method_used"] = file["content"].transform(get_cocoindex_split_recursively_chunking_method)
             else:
                 LOGGER.info("Using language-specific or AST chunking")
-                
+
                 # For Haskell files, use specialized chunker; for others use AST chunking
                 # Note: CocoIndex doesn't support direct DataSlice conditional comparisons
                 # so we use chunking operations that handle language detection internally
-                
+
                 if ASTChunkOperation is not None:
                     LOGGER.info("Using AST chunking with language-specific routing")
                     raw_chunks = file["content"].transform(
@@ -1397,12 +1397,20 @@ def code_embedding_flow(
                             existing_metadata_json = ""
                     except (AttributeError, KeyError, TypeError):
                         existing_metadata_json = ""
-                    chunk["extracted_metadata"] = chunk["content"].transform(
-                        extract_code_metadata,
-                        language=file["language"],
-                        filename=file["filename"],
-                        existing_metadata_json=existing_metadata_json
-                    )
+
+                    # For chunks that already have proper metadata (from AST chunking), use it directly
+                    # Otherwise, extract metadata using language analyzers
+                    if existing_metadata_json and "chunking_method" in (json.loads(existing_metadata_json) if existing_metadata_json else {}):
+                        # Chunk already has good metadata from chunking phase, just use it
+                        chunk["extracted_metadata"] = existing_metadata_json
+                    else:
+                        # Extract metadata using language analyzers
+                        chunk["extracted_metadata"] = chunk["content"].transform(
+                            extract_code_metadata,
+                            language=file["language"],
+                            filename=file["filename"],
+                            existing_metadata_json=existing_metadata_json
+                        )
 
                 # Promote all metadata fields from JSON to top-level fields using individual extractors
                 # (We need individual extractors for CocoIndex to properly type and transform each field)
@@ -1414,13 +1422,13 @@ def code_embedding_flow(
                 chunk["has_async"] = chunk["extracted_metadata"].transform(extract_has_async_field)
                 chunk["has_classes"] = chunk["extracted_metadata"].transform(extract_has_classes_field)
                 chunk["docstring"] = chunk["extracted_metadata"].transform(extract_docstring_field)
-                
+
                 # Additional promoted metadata fields
                 chunk["analysis_method"] = chunk["extracted_metadata"].transform(extract_analysis_method_field)
                 # Use chunking method from chunk metadata (ASTChunk operations set this properly)
                 chunk["chunking_method"] = chunk["extracted_metadata"].transform(get_chunking_method_from_metadata)
-                
-                
+
+
                 chunk["tree_sitter_chunking_error"] = chunk["extracted_metadata"].transform(extract_tree_sitter_chunking_error_field)
                 chunk["tree_sitter_analyze_error"] = chunk["extracted_metadata"].transform(extract_tree_sitter_analyze_error_field)
                 chunk["decorators_used"] = chunk["extracted_metadata"].transform(extract_decorators_used_field)
@@ -1428,7 +1436,7 @@ def code_embedding_flow(
                 chunk["success"] = chunk["extracted_metadata"].transform(extract_success_field)
                 chunk["parse_errors"] = chunk["extracted_metadata"].transform(extract_parse_errors_field)
                 chunk["char_count"] = chunk["extracted_metadata"].transform(extract_char_count_field)
-                
+
                 # Language-specific fields (will be empty for non-matching languages)
                 chunk["nodes_with_errors"] = chunk["extracted_metadata"].transform(extract_nodes_with_errors_field)  # Haskell
                 chunk["data_types"] = chunk["extracted_metadata"].transform(extract_data_types_field)  # Haskell
@@ -1445,13 +1453,13 @@ def code_embedding_flow(
                 chunk["types"] = chunk["extracted_metadata"].transform(extract_types_field)  # TypeScript
                 chunk["enums"] = chunk["extracted_metadata"].transform(extract_enums_field)  # TypeScript
                 chunk["namespaces"] = chunk["extracted_metadata"].transform(extract_namespaces_field)  # TypeScript/JavaScript/C++
-                
+
                 # python
                 chunk["private_methods"] = chunk["extracted_metadata"].transform(extract_private_methods_field)
                 chunk["variables"] = chunk["extracted_metadata"].transform(extract_variables_field)
                 chunk["decorators"] = chunk["extracted_metadata"].transform(extract_decorators_field)
                 chunk["class_details"] = chunk["extracted_metadata"].transform(extract_class_details_field)
-                
+
                 # Promoted metadata fields are now handled automatically by generalized promotion in main_mcp_server.py
                 # No need for chunk-level assignments - fields from metadata_json get promoted to top-level automatically
 
@@ -1459,7 +1467,7 @@ def code_embedding_flow(
                 # Important:
                 # This has to be updated for every new column.
                 # An attempt to automate this from CONST_FIELD_MAPPINGS has failed.
-                # 
+                #
                 # TODO:
                 # Might be a limitation of cocoindex, we should recheck this.
                 ###################################################
@@ -1535,12 +1543,12 @@ def code_embedding_flow(
 def scale_chunking_params(chunk_factor_percent: int) -> None:
     """Scale all chunking parameters by the given percentage factor."""
     global EFFECTIVE_CHUNKING_PARAMS
-    
+
     if chunk_factor_percent == 100:
         # No scaling needed, use original parameters
         EFFECTIVE_CHUNKING_PARAMS = copy.deepcopy(CHUNKING_PARAMS)
         return
-    
+
     # Create scaled versions of all chunking parameters based on original values
     scaled_params = {}
     for language, params in CHUNKING_PARAMS.items():
@@ -1550,10 +1558,10 @@ def scale_chunking_params(chunk_factor_percent: int) -> None:
             chunk_overlap=params.chunk_overlap * chunk_factor_percent // 100,
             max_chunk_size=max(params.max_chunk_size * chunk_factor_percent // 100, params.chunk_size * 2) if params.max_chunk_size > 0 else params.chunk_size * 2
         )
-    
+
     # Update the global EFFECTIVE_CHUNKING_PARAMS
     EFFECTIVE_CHUNKING_PARAMS = scaled_params
-    
+
     LOGGER.info(f"Scaled chunking parameters by {chunk_factor_percent}%")
 
 
@@ -1562,10 +1570,10 @@ def update_flow_config(paths: Union[List[str], None] = None, enable_polling: boo
                        use_default_language_handler: bool = False, chunk_factor_percent: int = 100) -> None:
     """Update the global flow configuration."""
     global _global_flow_config
-    
+
     # Scale chunking parameters if needed
     scale_chunking_params(chunk_factor_percent)
-    
+
     _global_flow_config.update({
         'paths': paths or ["cocoindex"],
         'enable_polling': enable_polling,
