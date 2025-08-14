@@ -525,20 +525,22 @@ def extract_haskell_ast_chunks(content: str):
 
         # Convert to legacy CocoIndex format for backward compatibility
         legacy_chunks = []
-        for chunk in chunks:
+        for chunk_dict in chunks:
+            # Type cast to ensure mypy knows this is a dict
+            chunk_data: dict = chunk_dict  
             legacy_chunk = {
-                "text": chunk["content"],
-                "start": chunk["metadata"]["start_line"],
-                "end": chunk["metadata"]["end_line"],
-                "location": f"{chunk['metadata']['start_line']}:{chunk['metadata']['end_line']}",
-                "start_byte": chunk["metadata"].get("start_byte", 0),
-                "end_byte": chunk["metadata"].get("end_byte", len(chunk["content"].encode('utf-8'))),
-                "node_type": chunk["metadata"].get("node_type", "haskell_chunk"),
+                "text": chunk_data["content"],
+                "start": chunk_data["metadata"]["start_line"],
+                "end": chunk_data["metadata"]["end_line"],
+                "location": f"{chunk_data['metadata']['start_line']}:{chunk_data['metadata']['end_line']}",
+                "start_byte": chunk_data["metadata"].get("start_byte", 0),
+                "end_byte": chunk_data["metadata"].get("end_byte", len(chunk_data["content"].encode('utf-8'))),
+                "node_type": chunk_data["metadata"].get("node_type", "haskell_chunk"),
                 "metadata": {
-                    "category": chunk["metadata"].get("node_type", "haskell_ast"),
-                    "method": chunk["metadata"]["chunk_method"],
+                    "category": chunk_data["metadata"].get("node_type", "haskell_ast"),
+                    "method": chunk_data["metadata"]["chunk_method"],
                     "chunking_method": "python_haskell_fallback",  # Mark as Python fallback
-                    **chunk["metadata"]
+                    **chunk_data["metadata"]
                 },
             }
             legacy_chunks.append(legacy_chunk)

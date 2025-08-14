@@ -81,10 +81,10 @@ class Chunk:
 
 
 try:
-    from astchunk import ASTChunkBuilder
+    from astchunk import ASTChunkBuilder  # type: ignore
 except ImportError as e:
     logging.warning(f"ASTChunk not available: {e}")
-    ASTChunkBuilder = None
+    ASTChunkBuilder = None  # type: ignore
 
 # Import CocoIndex conditionally to avoid circular imports
 cocoindex_module: Optional[ModuleType] = None

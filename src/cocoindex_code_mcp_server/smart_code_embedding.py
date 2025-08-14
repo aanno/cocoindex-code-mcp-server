@@ -41,6 +41,34 @@ class LanguageModelSelector:
     }
 
     # File extension to language mapping - uses centralized mapping from mappers.py
+    EXTENSION_TO_LANGUAGE = {
+        ".py": "python",
+        ".pyi": "python",
+        ".rs": "rust", 
+        ".js": "javascript",
+        ".mjs": "javascript",
+        ".cjs": "javascript",
+        ".ts": "typescript",
+        ".tsx": "typescript",
+        ".java": "java",
+        ".kt": "kotlin",
+        ".kts": "kotlin",
+        ".scala": "scala",
+        ".cs": "csharp",
+        ".cpp": "cpp",
+        ".cxx": "cpp",
+        ".cc": "cpp",
+        ".c": "c",
+        ".h": "c",
+        ".hpp": "cpp",
+        ".go": "go",
+        ".php": "php",
+        ".rb": "ruby",
+        ".swift": "swift",
+        ".dart": "dart",
+        ".hs": "haskell",
+        ".lhs": "haskell",
+    }
 
     def __init__(self, fallback_model: str = "sentence-transformers/all-MiniLM-L6-v2") -> None:
         """

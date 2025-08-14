@@ -388,7 +388,7 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
             LOGGER.error(f"   Traceback: {traceback.format_exc()}")
         else:
             LOGGER.debug(f"Metadata extraction failed for {filename}, using empty metadata: {e}")
-        fallback_result = {
+        fallback_result: dict = {
             "functions": [],
             "classes": [],
             "imports": [],
@@ -1284,7 +1284,7 @@ def code_embedding_flow(
         LOGGER.info(f"Adding source: {path} as '{source_name}'")
 
         # Configure LocalFile source with optional polling
-        source_config = SOURCE_CONFIG
+        source_config = SOURCE_CONFIG.copy()
         source_config['path'] = path
 
         # Note: Polling configuration is handled by CocoIndex live updater, not LocalFile
@@ -1292,7 +1292,7 @@ def code_embedding_flow(
             LOGGER.info(f"  Polling enabled: {poll_interval}s interval (handled by live updater)")
 
         data_scope[source_name] = flow_builder.add_source(
-            cocoindex.sources.LocalFile(**source_config)
+            cocoindex.sources.LocalFile(**source_config)  # type: ignore
         )
         all_files_sources.append(source_name)
 
@@ -1391,7 +1391,7 @@ def code_embedding_flow(
                     try:
                         if hasattr(chunk, "metadata") and chunk.metadata:
                             existing_metadata_json = json.dumps(chunk.metadata) if isinstance(chunk.metadata, dict) else str(chunk.metadata)
-                        elif "metadata" in chunk:
+                        elif hasattr(chunk, '__contains__') and "metadata" in chunk:
                             existing_metadata_json = json.dumps(chunk["metadata"]) if isinstance(chunk["metadata"], dict) else str(chunk["metadata"])
                         else:
                             existing_metadata_json = ""
