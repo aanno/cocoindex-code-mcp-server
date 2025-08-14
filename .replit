@@ -1,9 +1,10 @@
+
 modules = ["python-3.11", "rust-stable", "bash"]
-run = "maturin develop"
+run = "pip install -e ."
 
 [nix]
 channel = "stable-25_05"
 packages = ["maturin"]
 
 [deployment]
-run = ["sh", "-c", "maturin develop"]
+run = ["sh", "-c", "pip install -e ."]
