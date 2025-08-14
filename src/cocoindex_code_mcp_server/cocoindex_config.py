@@ -1178,6 +1178,26 @@ def get_chunking_method_from_metadata(metadata_json: str) -> str:
     """Extract chunking method directly from metadata without preference logic."""
     return cast(FunctionType, extract_string_field)(metadata_json, "chunking_method", "unknown_chunking")
 
+@cocoindex.op.function()
+def determine_chunking_method_for_language(language: str) -> str:
+    """Determine the appropriate chunking method for a given language."""
+    # Languages supported by ASTChunk library
+    astchunk_supported_languages = {"Python", "Java", "C#", "TypeScript", "JavaScript", "TSX"}
+    
+    # Check if AST chunking is available and if language is supported
+    use_default_chunking = _global_flow_config.get('use_default_chunking', False)
+    
+    if use_default_chunking or not AST_CHUNKING_AVAILABLE:
+        return "cocoindex_split_recursively"
+    elif language in astchunk_supported_languages:
+        return "astchunk_library"
+    elif language == "Haskell":
+        # For Haskell, we use the Rust implementation which may have parse errors
+        # but we standardize the method name rather than using diagnostic variants
+        return "rust_haskell_ast"
+    else:
+        return "unknown_chunking"
+
 
 @cocoindex.op.function()
 def is_haskell_language(language: str) -> bool:
@@ -1345,7 +1365,8 @@ def code_embedding_flow(
                 
                 # Additional promoted metadata fields
                 chunk["analysis_method"] = chunk["extracted_metadata"].transform(extract_analysis_method_field)
-                chunk["chunking_method"] = chunk["extracted_metadata"].transform(get_chunking_method_from_metadata)
+                # Set chunking method based on language and availability, not just metadata
+                chunk["chunking_method"] = file["language"].transform(determine_chunking_method_for_language)
                 
                 chunk["tree_sitter_chunking_error"] = chunk["extracted_metadata"].transform(extract_tree_sitter_chunking_error_field)
                 chunk["tree_sitter_analyze_error"] = chunk["extracted_metadata"].transform(extract_tree_sitter_analyze_error_field)
