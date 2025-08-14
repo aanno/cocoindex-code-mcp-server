@@ -707,8 +707,8 @@ def extract_list_str(name: str, metadata_json: str) -> List[str]:
         if not metadata_json:
             return []
         metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
-        structs = metadata_dict.get(name, [])
-        return structs if isinstance(structs, list) else [structs]
+        result = metadata_dict.get(name, [])
+        return result if isinstance(result, list) else [result]
     except Exception as e:
         LOGGER.debug(f"Failed to parse metadata JSON for {name}: {e}")
         return []
@@ -717,7 +717,7 @@ def extract_list_str(name: str, metadata_json: str) -> List[str]:
 @cocoindex.op.function()
 def extract_modules_field(metadata_json: str) -> List[str]:
     """Extract modules field from metadata JSON (Haskell, Rust)."""
-    return extract_list_str("modules", metadata_json)
+    return cast(FunctionType, extract_list_str)("modules", metadata_json)
 
 
 @cocoindex.op.function()
@@ -766,31 +766,31 @@ def extract_data_type_details_field(metadata_json: str) -> List[str]:
 @cocoindex.op.function()
 def extract_structs_field(metadata_json: str) -> List[str]:
     """Extract structs field from metadata JSON (Rust only)."""
-    return extract_list_str("structs", metadata_json)
+    return cast(FunctionType, extract_list_str)("structs", metadata_json)
 
 @cocoindex.op.function()
 def extract_traits_field(metadata_json: str) -> List[str]:
     """Extract traits field from metadata JSON (Rust only)."""
-    return extract_list_str("traits", metadata_json)
+    return cast(FunctionType, extract_list_str)("traits", metadata_json)
 
 
 @cocoindex.op.function()
 def extract_impls_field(metadata_json: str) -> List[str]:
     """Extract impls field from metadata JSON (Rust only)."""
-    return extract_list_str("impls", metadata_json)
+    return cast(FunctionType, extract_list_str)("impls", metadata_json)
 
 
 # TypeScript/JavaScript-specific fields
 @cocoindex.op.function()
 def extract_exports_field(metadata_json: str) -> List[str]:
     """Extract exports field from metadata JSON (TypeScript, JavaScript only)."""
-    return extract_list_str("exports", metadata_json)
+    return cast(FunctionType, extract_list_str)("exports", metadata_json)
 
 
 @cocoindex.op.function()
 def extract_types_field(metadata_json: str) -> List[str]:
     """Extract types field from metadata JSON (TypeScript only)."""
-    return extract_list_str("types", metadata_json)
+    return cast(FunctionType, extract_list_str)("types", metadata_json)
 
 
 @cocoindex.op.function()
