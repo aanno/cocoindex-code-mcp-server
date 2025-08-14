@@ -255,6 +255,19 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
     # Extract important fields to preserve
     preserve_chunking_method = existing_metadata.get("chunking_method")
     
+    # If no existing chunking method and AST chunking is enabled, use ast_tree_sitter
+    use_default_chunking = _global_flow_config.get('use_default_chunking', False)
+    if not preserve_chunking_method and not use_default_chunking:
+        # AST chunking is enabled (use_default_chunking=False), so set appropriate method
+        preserve_chunking_method = "ast_tree_sitter"
+        LOGGER.debug(f"✅ Setting chunking method to ast_tree_sitter for AST chunking (file: {filename})")
+    
+    # DEBUG: Log chunking method preservation for debugging
+    if filename and ('math_utils' in filename or 'tmp' in filename or 'simple' in filename):
+        LOGGER.debug(f"🔍 DEBUG extract_code_metadata for {filename}")
+        LOGGER.debug(f"   existing_metadata keys: {list(existing_metadata.keys())[:10]}")
+        LOGGER.debug(f"   preserve_chunking_method: '{preserve_chunking_method}'")
+    
     # Check if we should use default language handler
     use_default_handler = _global_flow_config.get('use_default_language_handler', False)
     
@@ -354,7 +367,7 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
             result = dict(metadata)  # Copy all fields
             
             # Ensure essential fields have proper defaults if missing
-            defaults = {
+            defaults: Dict[str, Any] = {
                 "functions": [],
                 "classes": [],
                 "imports": [],
@@ -364,7 +377,7 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                 "has_classes": False,
                 "decorators_used": [],
                 "analysis_method": "unknown_analysis",
-                "chunking_method": "unknown_chunking",
+                "chunking_method": preserve_chunking_method if preserve_chunking_method else "unknown_chunking",  # Preserve existing chunking method
                 "tree_sitter_chunking_error": False,
                 "tree_sitter_analyze_error": False,
                 "dunder_methods": [],
@@ -1196,8 +1209,9 @@ def get_ast_tree_sitter_chunking_method(content: str) -> str:
     return "ast_tree_sitter"
 
 
+
 @cocoindex.op.function()
-def get_ast_fallback_chunking_method(content: str) -> str:
+def get_ast_fallback_chunking_method(language: str) -> str:
     """Return chunking method for AST fallback chunking."""
     return "ast_fallback_unavailable"
 
@@ -1206,6 +1220,7 @@ def get_ast_fallback_chunking_method(content: str) -> str:
 def get_file_chunking_method(chunking_method_used: str) -> str:
     """Return the chunking method used for this file."""
     return chunking_method_used
+
 
 
 @cocoindex.op.function()
@@ -1236,6 +1251,8 @@ def get_chunking_method_with_file_fallback(chunk_method: str, file_method: str) 
     if chunk_method == "unknown_chunking" and file_method != "unknown_chunking":
         return file_method
     return chunk_method
+
+
 
 
 
@@ -1339,14 +1356,14 @@ def code_embedding_flow(
                         max_chunk_size=file["chunking_params"]["chunk_size"],
                         chunk_overlap=file["chunking_params"]["chunk_overlap"]
                     )
-                    # Don't set file-level chunking method - let each chunk carry its own method
-                    # ASTChunkOperation will set appropriate method per chunk (astchunk_library, rust_haskell_ast, etc.)
+                    # Don't set file-level chunking method - let extract_code_metadata handle it
+                    # based on the use_default_chunking setting
                 else:
                     # Fallback to basic chunking if AST operation is not available
                     # Skip transformation when AST chunking not available
                     raw_chunks = cast(Any, file["content"])
-                    # Set chunking method for AST fallback
-                    file["chunking_method_used"] = file["content"].transform(get_ast_fallback_chunking_method)
+                    # Set chunking method for AST fallback - use language field to avoid DataSlice reuse
+                    file["chunking_method_used"] = file["language"].transform(get_ast_fallback_chunking_method)
                 # Ensure unique locations for AST chunking (safety measure)
                 file["chunks"] = raw_chunks.transform(ensure_unique_chunk_locations)
 
@@ -1387,16 +1404,9 @@ def code_embedding_flow(
                 else:
                     LOGGER.info("Using custom language handler extension")
                     # Pass existing metadata from chunk to preserve chunking_method set by ASTChunk
-                    # Chunks created by ASTChunk operation have metadata in their metadata field
-                    try:
-                        if hasattr(chunk, "metadata") and chunk.metadata:
-                            existing_metadata_json = json.dumps(chunk.metadata) if isinstance(chunk.metadata, dict) else str(chunk.metadata)
-                        elif hasattr(chunk, '__contains__') and "metadata" in chunk:
-                            existing_metadata_json = json.dumps(chunk["metadata"]) if isinstance(chunk["metadata"], dict) else str(chunk["metadata"])
-                        else:
-                            existing_metadata_json = ""
-                    except (AttributeError, KeyError, TypeError):
-                        existing_metadata_json = ""
+                    # CocoIndex chunk processing - metadata not available at this level, 
+                    # but extract_code_metadata will set the correct chunking method based on config
+                    existing_metadata_json = ""
                     chunk["extracted_metadata"] = chunk["content"].transform(
                         extract_code_metadata,
                         language=file["language"],
@@ -1417,7 +1427,7 @@ def code_embedding_flow(
                 
                 # Additional promoted metadata fields
                 chunk["analysis_method"] = chunk["extracted_metadata"].transform(extract_analysis_method_field)
-                # Use chunking method from chunk metadata (ASTChunk operations set this properly)
+                # Use chunking method from metadata (now properly set by extract_code_metadata)
                 chunk["chunking_method"] = chunk["extracted_metadata"].transform(get_chunking_method_from_metadata)
                 
                 
