@@ -652,7 +652,15 @@ def extract_nodes_with_errors_field(metadata_json: str) -> List[str]:
             return []
         metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         nodes_with_errors = metadata_dict.get("nodes_with_errors", [])
-        return nodes_with_errors if isinstance(nodes_with_errors, list) else [nodes_with_errors]
+        
+        # Handle both integer count and list of error descriptions
+        if isinstance(nodes_with_errors, int):
+            # Convert integer count to string representation
+            return [str(nodes_with_errors)] if nodes_with_errors > 0 else []
+        elif isinstance(nodes_with_errors, list):
+            return nodes_with_errors
+        else:
+            return [str(nodes_with_errors)]
     except Exception as e:
         LOGGER.debug(f"Failed to parse metadata JSON for nodes_with_errors: {e}")
         return []
@@ -737,31 +745,31 @@ def extract_has_module_field(metadata_json: str) -> bool:
 
 # TODO: This is JSON - no multiple str
 @cocoindex.op.function()
-def extract_function_details_field(metadata_json: str) -> List[str]:
-    """Extract function_details field from metadata JSON (Haskell only)."""
+def extract_function_details_field(metadata_json: str) -> str:
+    """Extract function_details field from metadata JSON as JSON string."""
     try:
         if not metadata_json:
-            return []
+            return "[]"
         metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         function_details = metadata_dict.get("function_details", [])
-        return function_details if isinstance(function_details, list) else [function_details]
+        return json.dumps(function_details)
     except Exception as e:
         LOGGER.debug(f"Failed to parse metadata JSON for function_details: {e}")
-        return []
+        return "[]"
 
 # TODO: This is JSON - no multiple str
 @cocoindex.op.function()
-def extract_data_type_details_field(metadata_json: str) -> List[str]:
-    """Extract data_type_details field from metadata JSON (Haskell only)."""
+def extract_data_type_details_field(metadata_json: str) -> str:
+    """Extract data_type_details field from metadata JSON as JSON string."""
     try:
         if not metadata_json:
-            return []
+            return "[]"
         metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         data_type_details = metadata_dict.get("data_type_details", [])
-        return data_type_details if isinstance(data_type_details, list) else [data_type_details]
+        return json.dumps(data_type_details)
     except Exception as e:
         LOGGER.debug(f"Failed to parse metadata JSON for data_type_details: {e}")
-        return []
+        return "[]"
 
 
 # Rust-specific fields
@@ -815,9 +823,17 @@ def extract_decorators_field(metadata_json: str) -> List[str]:
 
 # TODO: This is JSON!
 @cocoindex.op.function()
-def extract_class_details_field(metadata_json: str) -> List[str]:
-    """Extract class_details field from metadata JSON."""
-    return cast(FunctionType, extract_list_str)("class_details", metadata_json)
+def extract_class_details_field(metadata_json: str) -> str:
+    """Extract class_details field from metadata JSON as JSON string."""
+    try:
+        if not metadata_json:
+            return "[]"
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
+        class_details = metadata_dict.get("class_details", [])
+        return json.dumps(class_details)
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for class_details: {e}")
+        return "[]"
 
 
 @cocoindex.op.function()
@@ -1398,12 +1414,10 @@ def code_embedding_flow(
                     char_count=chunk["char_count"],
                     # Language-specific fields
                     has_module=chunk["has_module"],
-                    # TODO: This was JSON but now List[str] -> str
-                    class_details=chunk['class_details'].transform(list_to_space_separated_str),
-                    # TODO: This is JSON
-                    function_details=chunk["function_details"].transform(list_to_space_separated_str),
-                    # TODO: This was JSON but now List[str] -> str
-                    data_type_details=chunk["data_type_details"].transform(list_to_space_separated_str),
+                    # These are now JSON strings returned directly from extraction functions
+                    class_details=chunk['class_details'],
+                    function_details=chunk["function_details"],
+                    data_type_details=chunk["data_type_details"],
                     docstring=chunk["docstring"],
                     # List[str] -> str
                     decorators_used=chunk["decorators_used"].transform(list_to_space_separated_str),
