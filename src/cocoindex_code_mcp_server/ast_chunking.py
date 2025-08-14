@@ -210,11 +210,13 @@ class CocoIndexASTChunker:
                 # Enhance metadata with our information
                 enhanced_metadata = {
                     "chunk_id": i,
-                    "chunking_method": "astchunk_library",
+                    "chunking_method": "ast_tree_sitter",  # Use standard chunking method name expected by tests
                     "language": language,
                     "file_path": file_path,
                     "chunk_size": len(content.strip()),
                     "line_count": len(content.split('\n')),
+                    "tree_sitter_chunking_error": False,  # ASTChunk succeeded
+                    "tree_sitter_analyze_error": False,   # ASTChunk succeeded
                     **metadata
                 }
 
@@ -283,9 +285,9 @@ class CocoIndexASTChunker:
                 LOGGER.error(f"Haskell AST chunking failed: {e}")
 
         # Simple text chunking as last resort
-        return self._simple_text_chunking(code, language, file_path)
+        return self._simple_text_chunking(code, language, file_path, "ast_fallback_unavailable")
 
-    def _simple_text_chunking(self, code: str, language: str, file_path: str) -> List[Chunk]:
+    def _simple_text_chunking(self, code: str, language: str, file_path: str, chunking_method: str = "simple_text_chunking") -> List[Chunk]:
         """
         Simple text-based chunking as a fallback.
 
@@ -308,13 +310,15 @@ class CocoIndexASTChunker:
             if content.strip():
                 metadata = {
                     "chunk_id": len(chunks),
-                    "chunking_method": "simple_text_chunking",
+                    "chunking_method": chunking_method,
                     "language": language,
                     "file_path": file_path,
                     "chunk_size": len(content),
                     "line_count": len(chunk_lines),
                     "start_line": i + 1,
-                    "end_line": i + len(chunk_lines)
+                    "end_line": i + len(chunk_lines),
+                    "tree_sitter_chunking_error": chunking_method == "ast_fallback_unavailable",  # True if fallback
+                    "tree_sitter_analyze_error": False,   # Simple text chunking doesn't use analysis
                 }
 
                 chunks.append(Chunk(
