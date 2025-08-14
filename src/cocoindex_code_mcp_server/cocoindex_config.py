@@ -235,8 +235,26 @@ def create_default_metadata(content: str) -> str:
 
 
 @cocoindex.op.function()
-def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
-    """Extract rich metadata from code chunks based on language and return as JSON string."""
+def extract_code_metadata(text: str, language: str, filename: str = "", existing_metadata_json: str = "") -> str:
+    """Extract rich metadata from code chunks based on language and return as JSON string.
+    
+    Args:
+        text: Code content to analyze
+        language: Programming language 
+        filename: Optional filename for context
+        existing_metadata_json: Optional existing metadata JSON to preserve important fields
+    """
+    # Parse existing metadata to preserve important fields
+    existing_metadata = {}
+    if existing_metadata_json:
+        try:
+            existing_metadata = json.loads(existing_metadata_json) if isinstance(existing_metadata_json, str) else existing_metadata_json
+        except (json.JSONDecodeError, TypeError):
+            existing_metadata = {}
+    
+    # Extract important fields to preserve
+    preserve_chunking_method = existing_metadata.get("chunking_method")
+    
     # Check if we should use default language handler
     use_default_handler = _global_flow_config.get('use_default_language_handler', False)
     
@@ -306,7 +324,7 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
             if metadata is None:
                 metadata = {}
             if not metadata.get('success', True):  # Fixed: Apply fallback when analysis FAILED
-                update_defaults(metadata, {
+                fallback_defaults = {
                     "language": language,
                     "analysis_method": "no_success_analyze",
                     "functions": [],
@@ -321,7 +339,14 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
                     "chunking_method": "no_success_chunking",
                     "tree_sitter_chunking_error": True,  # True because we failed to use tree-sitter
                     "tree_sitter_analyze_error": True,   # True because we failed to analyze properly
-                })
+                }
+                
+                # Preserve existing chunking_method even in failure cases
+                if preserve_chunking_method:
+                    fallback_defaults["chunking_method"] = preserve_chunking_method
+                    LOGGER.debug(f"✅ Preserving existing chunking_method in fallback: {preserve_chunking_method}")
+                    
+                update_defaults(metadata, fallback_defaults)
 
         # Return ALL fields from metadata (generalized approach)
         if metadata is not None:
@@ -329,7 +354,7 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
             result = dict(metadata)  # Copy all fields
             
             # Ensure essential fields have proper defaults if missing
-            update_defaults(result, {
+            defaults = {
                 "functions": [],
                 "classes": [],
                 "imports": [],
@@ -343,7 +368,14 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
                 "tree_sitter_chunking_error": False,
                 "tree_sitter_analyze_error": False,
                 "dunder_methods": [],
-            })
+            }
+            
+            # Preserve existing chunking_method if available
+            if preserve_chunking_method:
+                defaults["chunking_method"] = preserve_chunking_method
+                LOGGER.debug(f"✅ Preserving existing chunking_method: {preserve_chunking_method}")
+            
+            update_defaults(result, defaults)
         else:
             result = {}
         return json.dumps(result)
@@ -367,10 +399,13 @@ def extract_code_metadata(text: str, language: str, filename: str = "") -> str:
             "decorators_used": [],
             "analysis_method": "error_fallback",
             # Promoted metadata fields for database columns
-            "chunking_method": "error_fallback",
+            "chunking_method": preserve_chunking_method or "error_fallback",  # Preserve if available
             "tree_sitter_chunking_error": True,  # True because we had an error
             "tree_sitter_analyze_error": True,   # True because we had an error
         }
+        
+        if preserve_chunking_method:
+            LOGGER.debug(f"✅ Preserving existing chunking_method in exception fallback: {preserve_chunking_method}")
         return json.dumps(fallback_result)
 
 
@@ -1176,27 +1211,32 @@ def get_file_chunking_method(chunking_method_used: str) -> str:
 @cocoindex.op.function()
 def get_chunking_method_from_metadata(metadata_json: str) -> str:
     """Extract chunking method directly from metadata without preference logic."""
-    return cast(FunctionType, extract_string_field)(metadata_json, "chunking_method", "unknown_chunking")
+    try:
+        if isinstance(metadata_json, str):
+            metadata = json.loads(metadata_json)
+        else:
+            metadata = metadata_json
+        
+        # Debug logging
+        chunking_method = str(metadata.get("chunking_method", "unknown_chunking"))
+        if chunking_method == "unknown_chunking":
+            LOGGER.debug(f"🔍 No chunking_method in metadata: {list(metadata.keys())[:10]}")
+        else:
+            LOGGER.debug(f"✅ Found chunking_method: {chunking_method}")
+        
+        return chunking_method
+    except Exception as e:
+        LOGGER.debug(f"❌ Error extracting chunking method: {e}")
+        return "unknown_chunking"
+
 
 @cocoindex.op.function()
-def determine_chunking_method_for_language(language: str) -> str:
-    """Determine the appropriate chunking method for a given language."""
-    # Languages supported by ASTChunk library
-    astchunk_supported_languages = {"Python", "Java", "C#", "TypeScript", "JavaScript", "TSX"}
-    
-    # Check if AST chunking is available and if language is supported
-    use_default_chunking = _global_flow_config.get('use_default_chunking', False)
-    
-    if use_default_chunking or not AST_CHUNKING_AVAILABLE:
-        return "cocoindex_split_recursively"
-    elif language in astchunk_supported_languages:
-        return "astchunk_library"
-    elif language == "Haskell":
-        # For Haskell, we use the Rust implementation which may have parse errors
-        # but we standardize the method name rather than using diagnostic variants
-        return "rust_haskell_ast"
-    else:
-        return "unknown_chunking"
+def get_chunking_method_with_file_fallback(chunk_method: str, file_method: str) -> str:
+    """Use chunk method if available, otherwise fall back to file method."""
+    if chunk_method == "unknown_chunking" and file_method != "unknown_chunking":
+        return file_method
+    return chunk_method
+
 
 
 @cocoindex.op.function()
@@ -1299,8 +1339,8 @@ def code_embedding_flow(
                         max_chunk_size=file["chunking_params"]["chunk_size"],
                         chunk_overlap=file["chunking_params"]["chunk_overlap"]
                     )
-                    # Set chunking method for AST chunking
-                    file["chunking_method_used"] = file["content"].transform(get_ast_tree_sitter_chunking_method)
+                    # Don't set file-level chunking method - let each chunk carry its own method
+                    # ASTChunkOperation will set appropriate method per chunk (astchunk_library, rust_haskell_ast, etc.)
                 else:
                     # Fallback to basic chunking if AST operation is not available
                     # Skip transformation when AST chunking not available
@@ -1346,10 +1386,22 @@ def code_embedding_flow(
                     chunk["extracted_metadata"] = chunk["content"].transform(create_default_metadata)
                 else:
                     LOGGER.info("Using custom language handler extension")
+                    # Pass existing metadata from chunk to preserve chunking_method set by ASTChunk
+                    # Chunks created by ASTChunk operation have metadata in their metadata field
+                    try:
+                        if hasattr(chunk, "metadata") and chunk.metadata:
+                            existing_metadata_json = json.dumps(chunk.metadata) if isinstance(chunk.metadata, dict) else str(chunk.metadata)
+                        elif "metadata" in chunk:
+                            existing_metadata_json = json.dumps(chunk["metadata"]) if isinstance(chunk["metadata"], dict) else str(chunk["metadata"])
+                        else:
+                            existing_metadata_json = ""
+                    except (AttributeError, KeyError, TypeError):
+                        existing_metadata_json = ""
                     chunk["extracted_metadata"] = chunk["content"].transform(
                         extract_code_metadata,
                         language=file["language"],
-                        filename=file["filename"]
+                        filename=file["filename"],
+                        existing_metadata_json=existing_metadata_json
                     )
 
                 # Promote all metadata fields from JSON to top-level fields using individual extractors
@@ -1365,8 +1417,9 @@ def code_embedding_flow(
                 
                 # Additional promoted metadata fields
                 chunk["analysis_method"] = chunk["extracted_metadata"].transform(extract_analysis_method_field)
-                # Set chunking method based on language and availability, not just metadata
-                chunk["chunking_method"] = file["language"].transform(determine_chunking_method_for_language)
+                # Use chunking method from chunk metadata (ASTChunk operations set this properly)
+                chunk["chunking_method"] = chunk["extracted_metadata"].transform(get_chunking_method_from_metadata)
+                
                 
                 chunk["tree_sitter_chunking_error"] = chunk["extracted_metadata"].transform(extract_tree_sitter_chunking_error_field)
                 chunk["tree_sitter_analyze_error"] = chunk["extracted_metadata"].transform(extract_tree_sitter_analyze_error_field)
