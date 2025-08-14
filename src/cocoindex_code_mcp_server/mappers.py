@@ -73,6 +73,12 @@ CONST_FIELD_MAPPINGS = {
     "types": "types",  # TypeScript
     "enums": "enums",  # TypeScript
     "namespaces": "namespaces",  # TypeScript/JavaScript/C++
+    
+    # python
+    "private_methods": "private_methods",
+    "variables": "variables",
+    "decorators": "decorators",
+    "class_details": "class_details",
 }
 
 # Derived configurations from single source of truth
@@ -151,7 +157,7 @@ CONST_LANGUAGE_INTERNAL_NAMES = {
 
 # TODO: Maybe this is related to CONST_LANGUAGE_MAPPINGS
 SOURCE_CONFIG = {
-    "path": "<forgot to set this>",
+    "path": "<forgotten to set this>",
     "included_patterns": [
         # Python
         "*.py", "*.pyi", "*.pyx", "*.pxd",

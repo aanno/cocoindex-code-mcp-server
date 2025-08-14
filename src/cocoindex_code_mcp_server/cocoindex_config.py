@@ -796,6 +796,31 @@ def extract_types_field(metadata_json: str) -> List[str]:
 
 
 @cocoindex.op.function()
+def extract_private_methods_field(metadata_json: str) -> List[str]:
+    """Extract private_methods field from metadata JSON."""
+    return cast(FunctionType, extract_list_str)("private_methods", metadata_json)
+
+
+@cocoindex.op.function()
+def extract_variables_field(metadata_json: str) -> List[str]:
+    """Extract variables field from metadata JSON."""
+    return cast(FunctionType, extract_list_str)("variables", metadata_json)
+
+
+@cocoindex.op.function()
+def extract_decorators_field(metadata_json: str) -> List[str]:
+    """Extract decorators field from metadata JSON."""
+    return cast(FunctionType, extract_list_str)("decorators", metadata_json)
+
+
+# TODO: This is JSON!
+@cocoindex.op.function()
+def extract_class_details_field(metadata_json: str) -> List[str]:
+    """Extract class_details field from metadata JSON."""
+    return cast(FunctionType, extract_list_str)("class_details", metadata_json)
+
+
+@cocoindex.op.function()
 def extract_enums_field(metadata_json: str) -> List[str]:
     """Extract enums field from metadata JSON (TypeScript only)."""
     try:
@@ -1331,6 +1356,12 @@ def code_embedding_flow(
                 chunk["enums"] = chunk["extracted_metadata"].transform(extract_enums_field)  # TypeScript
                 chunk["namespaces"] = chunk["extracted_metadata"].transform(extract_namespaces_field)  # TypeScript/JavaScript/C++
                 
+                # python
+                chunk["private_methods"] = chunk["extracted_metadata"].transform(extract_private_methods_field)
+                chunk["variables"] = chunk["extracted_metadata"].transform(extract_variables_field)
+                chunk["decorators"] = chunk["extracted_metadata"].transform(extract_decorators_field)
+                chunk["class_details"] = chunk["extracted_metadata"].transform(extract_class_details_field)
+                
                 # Promoted metadata fields are now handled automatically by generalized promotion in main_mcp_server.py
                 # No need for chunk-level assignments - fields from metadata_json get promoted to top-level automatically
 
@@ -1368,6 +1399,8 @@ def code_embedding_flow(
                     # Language-specific fields
                     has_module=chunk["has_module"],
                     # TODO: This is JSON
+                    class_details = chunk['class_details'],
+                    # TODO: This is JSON
                     function_details=chunk["function_details"],
                     # TODO: This is JSON
                     data_type_details=chunk["data_type_details"],
@@ -1390,6 +1423,10 @@ def code_embedding_flow(
                     impls=chunk["impls"].transform(list_to_space_separated_str),
                     exports=chunk["exports"].transform(list_to_space_separated_str),
                     types=chunk["types"].transform(list_to_space_separated_str),
+                    # python
+                    private_methods=chunk["private_methods"].transform(list_to_space_separated_str),
+                    variables=chunk["variables"].transform(list_to_space_separated_str),
+                    decorators=chunk["decorators"].transform(list_to_space_separated_str),
                 )
 
     code_embeddings.export(
