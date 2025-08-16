@@ -11,7 +11,8 @@ import json
 import os
 from dataclasses import dataclass
 from types import FunctionType
-from typing import Dict, List, Union, Any, cast
+from typing import Dict, List, Union, Any, cast, TypedDict
+from dataclasses import dataclass
 from warnings import deprecated
 
 import numpy as np
@@ -24,7 +25,7 @@ from cocoindex_code_mcp_server.mappers import SOURCE_CONFIG
 # from cocoindex_code_mcp_server import LOGGER
 
 # from sentence_transformers import SentenceTransformer  # Use cocoindex.functions.SentenceTransformerEmbed instead
-from .ast_chunking import ASTChunkOperation, Chunk
+from .ast_chunking import ASTChunkOperation, ChunkRow
 from .lang.haskell.haskell_ast_chunker import get_haskell_language_spec
 from .lang.python.python_code_analyzer import analyze_python_code
 from .smart_code_embedding import LanguageModelSelector
@@ -986,8 +987,17 @@ def extract_namespaces_field(metadata_json: str) -> List[str]:
         return []
 
 
+class ChunkDict(TypedDict):
+    """Typed dictionary for chunk data."""
+    content: str
+    location: str
+    start: int
+    end: int
+    chunking_method: str
+
+
 @cocoindex.op.function()
-def ensure_unique_chunk_locations(chunks) -> List[Chunk]:
+def ensure_unique_chunk_locations(chunks) -> List[cocoindex.Json]:
     """
     Post-process chunks to ensure location fields are unique within the file.
     This prevents PostgreSQL 'ON CONFLICT DO UPDATE' duplicate key errors.
@@ -1035,15 +1045,15 @@ def ensure_unique_chunk_locations(chunks) -> List[Chunk]:
 
         seen_locations.add(unique_loc)
 
-        # Always create Chunk dataclass with unique location, preserving metadata
-        unique_chunk = Chunk(
-            content=text,
-            metadata=metadata,  # CRITICAL FIX: Preserve metadata instead of discarding it
-            location=unique_loc,
-            start=start,
-            end=end
-        )
-        unique_chunks.append(unique_chunk)
+        # Always create dictionary with unique location, preserving metadata
+        unique_chunk_dict = {
+            "content": text,
+            "location": unique_loc,
+            "start": start,
+            "end": end,
+            "chunking_method": metadata.get("chunking_method", "unknown_chunking") if metadata else "unknown_chunking"
+        }
+        unique_chunks.append(unique_chunk_dict)
 
     return unique_chunks
 
@@ -1426,9 +1436,7 @@ def code_embedding_flow(
                     LOGGER.info("Using AST chunking with language-specific routing")
                     raw_chunks = file["content"].transform(
                         ASTChunkOperation,
-                        language=file["language"],
-                        max_chunk_size=file["chunking_params"]["chunk_size"],
-                        chunk_overlap=file["chunking_params"]["chunk_overlap"]
+                        language=file["language"]
                     )
                     # Don't set file-level chunking method - let extract_code_metadata handle it
                     # based on the use_default_chunking setting
@@ -1480,18 +1488,8 @@ def code_embedding_flow(
                     # Pass existing metadata from chunk to preserve chunking_method set by ASTChunk
                     # If chunk already has chunking_method field (from ASTChunk), preserve it
                     # Note: In CocoIndex, chunk fields are accessed via DataSlice methods
-                    try:
-                        # Try to access chunking_method field if it exists
-                        existing_chunking_method = chunk.get("chunking_method", "")
-                        if existing_chunking_method and str(existing_chunking_method).strip():
-                            LOGGER.info(f"🔍 FLOW: Found existing chunking_method: '{existing_chunking_method}' - preserving it")
-                            existing_metadata_json = existing_chunking_method.transform(create_existing_metadata_json_from_chunking_method)
-                        else:
-                            LOGGER.info(f"🔍 FLOW: No existing chunking_method found in chunk - using empty metadata")
-                            existing_metadata_json = ""
-                    except Exception as e:
-                        LOGGER.debug(f"🔍 FLOW: Could not access chunking_method field: {e} - using empty metadata")
-                        existing_metadata_json = ""
+                    # For now, use empty metadata - chunk metadata will be set by the chunking operation itself
+                    existing_metadata_json = ""
                     
                     chunk["extracted_metadata"] = chunk["content"].transform(
                         extract_code_metadata,
