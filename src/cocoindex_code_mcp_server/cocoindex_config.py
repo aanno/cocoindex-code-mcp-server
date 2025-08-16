@@ -1448,8 +1448,8 @@ def code_embedding_flow(
                     raw_chunks = cast(Any, file["content"])
                     # Set chunking method for AST fallback - use language field to avoid DataSlice reuse
                     file["chunking_method_used"] = file["language"].transform(get_ast_fallback_chunking_method)
-                # Ensure unique locations for AST chunking (safety measure)
-                file["chunks"] = raw_chunks.transform(ensure_unique_chunk_locations)
+                # Chunks now have unique locations built-in from AST chunking operation
+                file["chunks"] = raw_chunks
 
             # Choose embedding method based on configuration
             use_smart_embedding = _global_flow_config.get('use_smart_embedding', False)
@@ -1514,7 +1514,8 @@ def code_embedding_flow(
                 # Additional promoted metadata fields
                 chunk["analysis_method"] = chunk["extracted_metadata"].transform(extract_analysis_method_field)
                 # Use chunking method from metadata (now properly set by extract_code_metadata)
-                chunk["chunking_method"] = chunk["extracted_metadata"].transform(get_chunking_method_from_metadata)
+                # SKIP: chunk["chunking_method"] = chunk["extracted_metadata"].transform(get_chunking_method_from_metadata)
+                # Note: chunking_method is already set directly in ASTChunkRow dataclass
                 
                 
                 chunk["tree_sitter_chunking_error"] = chunk["extracted_metadata"].transform(extract_tree_sitter_chunking_error_field)

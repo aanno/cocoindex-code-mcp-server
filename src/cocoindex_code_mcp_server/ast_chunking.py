@@ -77,17 +77,28 @@ class ASTChunkExecutor:
         return list[ASTChunkRow]
     
     def _convert_chunks_to_ast_chunk_rows(self, chunks: List[ChunkRow]) -> list[ASTChunkRow]:
-        """Convert internal ChunkRow objects to ASTChunkRow dataclass instances."""
-        return [
-            ASTChunkRow(
+        """Convert internal ChunkRow objects to ASTChunkRow dataclass instances with unique locations."""
+        seen_locations = set()
+        result = []
+        
+        for chunk in chunks:
+            # Ensure unique location
+            base_location = chunk["location"]
+            unique_location = base_location
+            suffix = 0
+            while unique_location in seen_locations:
+                suffix += 1
+                unique_location = f"{base_location}#{suffix}"
+            seen_locations.add(unique_location)
+            
+            result.append(ASTChunkRow(
                 content=chunk["content"],
-                location=chunk["location"], 
+                location=unique_location,  # Use unique location
                 start=chunk["start"],
                 end=chunk["end"],
                 chunking_method=chunk["chunking_method"]
-            )
-            for chunk in chunks
-        ]
+            ))
+        return result
     
     def _get_builder(self, language: str) -> Optional[Any]:
         """Get or create an ASTChunkBuilder for the given language."""
