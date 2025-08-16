@@ -996,7 +996,7 @@ class ChunkDict(TypedDict):
     chunking_method: str
 
 
-@cocoindex.op.function()
+@cocoindex.op.function() 
 def ensure_unique_chunk_locations(chunks) -> List[cocoindex.Json]:
     """
     Post-process chunks to ensure location fields are unique within the file.
@@ -1015,12 +1015,13 @@ def ensure_unique_chunk_locations(chunks) -> List[cocoindex.Json]:
     for i, chunk in enumerate(chunk_list):
         # Extract values from chunk (dict or dataclass) and convert to Chunk
         if hasattr(chunk, 'location'):
-            # Already a Chunk dataclass
+            # Already a Chunk dataclass (ASTChunkRow)
             base_loc = chunk.location
             text = chunk.content
             start = chunk.start
             end = chunk.end
-            metadata = chunk.metadata
+            # ASTChunkRow has chunking_method directly, not in metadata
+            chunking_method = getattr(chunk, 'chunking_method', 'unknown_chunking')
         elif isinstance(chunk, dict):
             # Dictionary format from SplitRecursively - convert to Chunk
             base_loc = chunk.get("location", f"chunk_{i}")
@@ -1028,13 +1029,14 @@ def ensure_unique_chunk_locations(chunks) -> List[cocoindex.Json]:
             start = chunk.get("start", 0)
             end = chunk.get("end", 0)
             metadata = chunk.get("metadata", {})
+            chunking_method = chunk.get("chunking_method", metadata.get("chunking_method", "unknown_chunking") if metadata else "unknown_chunking")
         else:
             # Fallback for unexpected types
             base_loc = f"chunk_{i}"
             text = str(chunk) if chunk else ""
             start = 0
             end = 0
-            metadata = {}
+            chunking_method = "unknown_chunking"
 
         # Make location unique
         unique_loc = base_loc
@@ -1045,13 +1047,13 @@ def ensure_unique_chunk_locations(chunks) -> List[cocoindex.Json]:
 
         seen_locations.add(unique_loc)
 
-        # Always create dictionary with unique location, preserving metadata
+        # Always return dictionary format for CocoIndex compatibility
         unique_chunk_dict = {
             "content": text,
             "location": unique_loc,
             "start": start,
             "end": end,
-            "chunking_method": metadata.get("chunking_method", "unknown_chunking") if metadata else "unknown_chunking"
+            "chunking_method": chunking_method
         }
         unique_chunks.append(unique_chunk_dict)
 
