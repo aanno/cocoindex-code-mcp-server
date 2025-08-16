@@ -60,6 +60,12 @@ class Chunk:
         except KeyError:
             return default
     
+    def __getattr__(self, name: str):
+        """Allow accessing metadata fields as attributes."""
+        if name in self.metadata:
+            return self.metadata[name]
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+    
     def keys(self):
         """Return available keys (attribute names + metadata keys)."""
         chunk_attrs = ["content", "metadata", "location", "start", "end"]
@@ -182,8 +188,10 @@ class CocoIndexASTChunker:
         # Map CocoIndex language to ASTChunk language
         astchunk_language = self.LANGUAGE_MAP.get(language)
         if not astchunk_language:
-            LOGGER.warning(f"Language {language} not supported by ASTChunk")
+            LOGGER.info(f"🔍 Language {language} not supported by ASTChunk - using fallback")
             return self._fallback_chunking(code, language, file_path)
+        else:
+            LOGGER.info(f"🔍 Language {language} IS supported by ASTChunk - proceeding with astchunk_language={astchunk_language}")
 
         # Get ASTChunkBuilder for this language
         builder = self._get_builder(astchunk_language)
@@ -222,10 +230,12 @@ class CocoIndexASTChunker:
                     **metadata
                 }
 
-                result_chunks.append(Chunk(
+                chunk_obj = Chunk(
                     content=content,
                     metadata=enhanced_metadata
-                ))
+                )
+                # Convert to dictionary to make metadata available as top-level fields for CocoIndex
+                result_chunks.append(chunk_obj.to_dict())
 
             LOGGER.info(f"AST chunking created {len(result_chunks)} chunks for {language}")
             return result_chunks
@@ -275,10 +285,12 @@ class CocoIndexASTChunker:
                         **original_metadata
                     }
 
-                    result_chunks.append(Chunk(
+                    chunk_obj = Chunk(
                         content=content,
                         metadata=metadata
-                    ))
+                    )
+                    # Keep as Chunk object
+                    result_chunks.append(chunk_obj)
 
                 LOGGER.info(f"✅ NEW: Haskell AST chunking created {len(result_chunks)} chunks with proper Rust method names")
                 return result_chunks
@@ -323,10 +335,12 @@ class CocoIndexASTChunker:
                     "tree_sitter_analyze_error": False,   # Simple text chunking doesn't use analysis
                 }
 
-                chunks.append(Chunk(
+                chunk_obj = Chunk(
                     content=content,
                     metadata=metadata
-                ))
+                )
+                # Keep as Chunk object
+                chunks.append(chunk_obj)
 
         LOGGER.info(f"Simple text chunking created {len(chunks)} chunks")
         return chunks
@@ -344,6 +358,7 @@ def create_ast_chunking_operation() -> FunctionSpec:
     def ast_chunk_content(content: str, language: str = "auto", max_chunk_size: int = 1800,
                           chunk_overlap: int = 0, chunk_expansion: bool = False,
                           metadata_template: str = "default") -> List[Chunk]:
+        LOGGER.info(f"🚀 ast_chunk_content called with language={language}, content_length={len(content)}")
         """
         AST-based code chunking function for CocoIndex.
 
@@ -396,13 +411,16 @@ def create_ast_chunking_operation() -> FunctionSpec:
             else:
                 location = f"line:{start_line}#{chunk_id}"
 
-            chunks.append(Chunk(
+            chunk_obj = Chunk(
                 content=chunk.get("content", ""),
                 metadata=metadata,
                 location=location,
                 start=start_line,
                 end=metadata.get("end_line", 0)
-            ))
+            )
+            # Keep as Chunk object but ensure metadata is accessible
+            LOGGER.info(f"🔍 ASTChunk created chunk for {language} with chunking_method: {chunk_obj.metadata.get('chunking_method', 'NOT_SET')}")
+            chunks.append(chunk_obj)
 
         return chunks
 

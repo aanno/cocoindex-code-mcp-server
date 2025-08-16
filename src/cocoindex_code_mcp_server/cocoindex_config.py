@@ -959,6 +959,20 @@ def extract_enums_field(metadata_json: str) -> List[str]:
 
 
 @cocoindex.op.function()
+def create_existing_metadata_json_from_chunking_method(chunking_method: str) -> str:
+    """Create metadata JSON string from existing chunking_method field.
+    
+    This function helps preserve chunking_method when chunks already have it set
+    (e.g., by ASTChunk operations).
+    """
+    if chunking_method and chunking_method.strip():
+        metadata = {"chunking_method": chunking_method.strip()}
+        return json.dumps(metadata)
+    else:
+        return ""
+
+
+@cocoindex.op.function()
 def extract_namespaces_field(metadata_json: str) -> List[str]:
     """Extract namespaces field from metadata JSON (TypeScript, JavaScript, C++ only)."""
     try:
@@ -1464,9 +1478,21 @@ def code_embedding_flow(
                 else:
                     LOGGER.info("Using custom language handler extension")
                     # Pass existing metadata from chunk to preserve chunking_method set by ASTChunk
-                    # CocoIndex chunk processing - metadata not available at this level, 
-                    # but extract_code_metadata will set the correct chunking method based on config
-                    existing_metadata_json = ""
+                    # If chunk already has chunking_method field (from ASTChunk), preserve it
+                    # Note: In CocoIndex, chunk fields are accessed via DataSlice methods
+                    try:
+                        # Try to access chunking_method field if it exists
+                        existing_chunking_method = chunk.get("chunking_method", "")
+                        if existing_chunking_method and str(existing_chunking_method).strip():
+                            LOGGER.info(f"🔍 FLOW: Found existing chunking_method: '{existing_chunking_method}' - preserving it")
+                            existing_metadata_json = existing_chunking_method.transform(create_existing_metadata_json_from_chunking_method)
+                        else:
+                            LOGGER.info(f"🔍 FLOW: No existing chunking_method found in chunk - using empty metadata")
+                            existing_metadata_json = ""
+                    except Exception as e:
+                        LOGGER.debug(f"🔍 FLOW: Could not access chunking_method field: {e} - using empty metadata")
+                        existing_metadata_json = ""
+                    
                     chunk["extracted_metadata"] = chunk["content"].transform(
                         extract_code_metadata,
                         language=file["language"],
