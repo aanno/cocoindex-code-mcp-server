@@ -305,14 +305,74 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                     from .language_handlers.rust_visitor import analyze_rust_code
                     metadata = analyze_rust_code(text, filename)
                 elif lang_lower == "java": 
-                    from .language_handlers.java_visitor import analyze_java_code
-                    metadata = analyze_java_code(text, filename)
+                    # Check if chunking_method is already set to astchunk_library (preserve it)
+                    if preserve_chunking_method == "astchunk_library":
+                        LOGGER.debug(f"Preserving ASTChunk chunking_method for Java")
+                        metadata = {
+                            "analysis_method": "astchunk_library", 
+                            "chunking_method": "astchunk_library",
+                            "functions": [],
+                            "classes": [],
+                            "imports": [],
+                            "has_classes": False,
+                            "has_async": False,
+                            "has_type_hints": False,
+                            "complexity_score": 0,
+                            "decorators_used": [],
+                            "dunder_methods": [],
+                            "tree_sitter_chunking_error": False,
+                            "tree_sitter_analyze_error": False,
+                            "success": True
+                        }
+                    else:
+                        from .language_handlers.java_visitor import analyze_java_code
+                        metadata = analyze_java_code(text, filename)
                 elif lang_lower in ["javascript", "js"]:
-                    from .language_handlers.javascript_visitor import analyze_javascript_code
-                    metadata = analyze_javascript_code(text, "javascript", filename)
+                    # Check if chunking_method is already set to astchunk_library (preserve it)
+                    if preserve_chunking_method == "astchunk_library":
+                        LOGGER.debug(f"Preserving ASTChunk chunking_method for JavaScript")
+                        metadata = {
+                            "analysis_method": "astchunk_library", 
+                            "chunking_method": "astchunk_library",
+                            "functions": [],
+                            "classes": [],
+                            "imports": [],
+                            "has_classes": False,
+                            "has_async": False,
+                            "has_type_hints": False,
+                            "complexity_score": 0,
+                            "decorators_used": [],
+                            "dunder_methods": [],
+                            "tree_sitter_chunking_error": False,
+                            "tree_sitter_analyze_error": False,
+                            "success": True
+                        }
+                    else:
+                        from .language_handlers.javascript_visitor import analyze_javascript_code
+                        metadata = analyze_javascript_code(text, "javascript", filename)
                 elif lang_lower in ["typescript", "ts"]:
-                    from .language_handlers.typescript_visitor import analyze_typescript_code
-                    metadata = analyze_typescript_code(text, "typescript", filename)
+                    # Check if chunking_method is already set to astchunk_library (preserve it)
+                    if preserve_chunking_method == "astchunk_library":
+                        LOGGER.debug(f"Preserving ASTChunk chunking_method for TypeScript")
+                        metadata = {
+                            "analysis_method": "astchunk_library", 
+                            "chunking_method": "astchunk_library",
+                            "functions": [],
+                            "classes": [],
+                            "imports": [],
+                            "has_classes": False,
+                            "has_async": False,
+                            "has_type_hints": False,
+                            "complexity_score": 0,
+                            "decorators_used": [],
+                            "dunder_methods": [],
+                            "tree_sitter_chunking_error": False,
+                            "tree_sitter_analyze_error": False,
+                            "success": True
+                        }
+                    else:
+                        from .language_handlers.typescript_visitor import analyze_typescript_code
+                        metadata = analyze_typescript_code(text, "typescript", filename)
                 elif lang_lower in ["cpp", "c++", "cxx"]:
                     from .language_handlers.cpp_visitor import analyze_cpp_code
                     metadata = analyze_cpp_code(text, "cpp", filename)

@@ -109,7 +109,7 @@ class CocoIndexASTChunker:
     Haskell tree-sitter functionality.
     """
 
-    # Language mapping from CocoIndex to ASTChunk
+    # Language mapping from CocoIndex to ASTChunk (only for actually supported languages)
     LANGUAGE_MAP = {
         "Python": "python",
         "Java": "java",
@@ -117,6 +117,8 @@ class CocoIndexASTChunker:
         "TypeScript": "typescript",
         "JavaScript": "typescript",  # ASTChunk uses TypeScript parser for JS
         "TSX": "typescript",
+        # Note: C++, C, Kotlin, Rust are not supported by ASTChunk library
+        # These languages continue to use their language-specific AST visitors
     }
 
     def __init__(self, max_chunk_size: int = 1800,
@@ -210,7 +212,7 @@ class CocoIndexASTChunker:
                 # Enhance metadata with our information
                 enhanced_metadata = {
                     "chunk_id": i,
-                    "chunking_method": "ast_tree_sitter",  # Use standard chunking method name expected by tests
+                    "chunking_method": "astchunk_library",  # Use specific name for ASTChunk library usage
                     "language": language,
                     "file_path": file_path,
                     "chunk_size": len(content.strip()),
