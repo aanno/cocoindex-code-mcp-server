@@ -209,7 +209,9 @@ class TestBackendFactory:
         original_backends = BackendFactory._backends.copy()
         
         class FirstBackend(VectorStoreBackend):
-            backend_type = "first"
+            def __init__(self, **kwargs):
+                super().__init__("localhost", 5432, FirstBackend, kwargs)
+                self.backend_type_label = "first"
             def vector_search(self, query_vector, top_k=10): return []
             def keyword_search(self, filters, top_k=10): return []
             def hybrid_search(self, query_vector, filters, top_k=10, vector_weight=0.7, keyword_weight=0.3): return []
@@ -218,7 +220,9 @@ class TestBackendFactory:
             def close(self): pass
         
         class SecondBackend(VectorStoreBackend):
-            backend_type = "second"
+            def __init__(self, **kwargs):
+                super().__init__("localhost", 5432, SecondBackend, kwargs)
+                self.backend_type_label = "second"
             def vector_search(self, query_vector, top_k=10): return []
             def keyword_search(self, filters, top_k=10): return []
             def hybrid_search(self, query_vector, filters, top_k=10, vector_weight=0.7, keyword_weight=0.3): return []
@@ -230,12 +234,12 @@ class TestBackendFactory:
             # Register first backend
             BackendFactory.register_backend("test", FirstBackend)
             backend1 = BackendFactory.create_backend("test")
-            assert backend1.backend_type == "first"
+            assert backend1.backend_type_label == "first"
             
             # Register second backend with same name (should overwrite)
             BackendFactory.register_backend("test", SecondBackend)
             backend2 = BackendFactory.create_backend("test")
-            assert backend2.backend_type == "second"
+            assert backend2.backend_type_label == "second"
             
         finally:
             # Restore original backends

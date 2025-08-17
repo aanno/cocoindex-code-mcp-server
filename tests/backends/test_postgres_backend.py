@@ -55,7 +55,14 @@ class TestPostgresBackend:
 
     @patch('cocoindex_code_mcp_server.backends.postgres_backend.register_vector')
     def test_vector_search(self, mock_register: MagicMock, postgres_backend: Tuple[PostgresBackend, MagicMock, MagicMock]):
-        """Test vector similarity search."""
+        """Test vector similarity search.
+        
+        NOTE: This test currently exposes a bug in postgres_backend.py where 
+        _format_result() tries to parse distance as float but gets string data.
+        The issue is in the column parsing logic - available_fields is empty
+        because _get_available_columns() returns no columns in the mock.
+        This should be fixed in the source code, not the test.
+        """
         backend, mock_conn, mock_cursor = postgres_backend
         
         # Mock database results
@@ -96,7 +103,14 @@ class TestPostgresBackend:
 
     @patch('cocoindex_code_mcp_server.backends.postgres_backend.build_sql_where_clause')
     def test_keyword_search(self, mock_build_where: MagicMock, postgres_backend: Tuple[PostgresBackend, MagicMock, MagicMock]):
-        """Test keyword/metadata search."""
+        """Test keyword/metadata search.
+        
+        NOTE: This test currently exposes a bug in postgres_backend.py where
+        _build_select_clause() generates malformed SQL like "SELECT , 0.0 as distance"
+        when available_fields is empty. The root cause is _get_available_columns()
+        returning no columns in the mock environment.
+        This should be fixed in the source code, not the test.
+        """
         backend, mock_conn, mock_cursor = postgres_backend
         
         # Mock WHERE clause builder

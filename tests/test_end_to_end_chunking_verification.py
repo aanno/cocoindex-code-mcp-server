@@ -17,7 +17,7 @@ import json
 load_dotenv()
 
 # Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+# sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 import cocoindex
 from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow, update_flow_config

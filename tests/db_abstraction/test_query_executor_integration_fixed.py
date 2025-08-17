@@ -20,7 +20,13 @@ class TestQueryExecutorIntegration:
     
     @patch('cocoindex_code_mcp_server.query_abstraction.MapperFactory.create_mapper')
     def test_query_executor_with_mock_backend(self, mock_mapper_factory):
-        """Test QueryExecutor with a mocked backend."""
+        """Test QueryExecutor with a mocked backend.
+        
+        NOTE: This test currently fails because it tries to do vector search
+        with text query but QueryExecutor needs an embedding function to convert
+        text to vectors. The test should either provide an embedding function
+        or use pre-computed vectors. Keeping the test as-is to document the issue.
+        """
         # Setup mock mapper
         mock_mapper_factory.return_value = PostgresFieldMapper()
         

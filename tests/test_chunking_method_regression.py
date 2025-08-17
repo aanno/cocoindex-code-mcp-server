@@ -17,11 +17,11 @@ from pathlib import Path
 from typing import List, Dict, Any
 
 # Add src and tests to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-sys.path.insert(0, str(Path(__file__).parent))
+# sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+# sys.path.insert(0, str(Path(__file__).parent))
+# sys.path.insert(0, str(Path(__file__).parent / ".."))
 
-sys.path.insert(0, str(Path(__file__).parent / ".."))
-from tests.common import CocoIndexTestInfrastructure
+from .common import CocoIndexTestInfrastructure
 
 
 class TestChunkingMethodRegression:
