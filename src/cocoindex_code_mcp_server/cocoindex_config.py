@@ -415,10 +415,7 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                     "tree_sitter_analyze_error": True,   # True because we failed to analyze properly
                 }
                 
-                # Preserve existing chunking_method even in failure cases
-                if preserve_chunking_method:
-                    fallback_defaults["chunking_method"] = preserve_chunking_method
-                    LOGGER.debug(f"✅ Preserving existing chunking_method in fallback: {preserve_chunking_method}")
+                # NOTE: chunking_method preservation removed - it comes from AST chunkers only
                     
                 update_defaults(metadata, fallback_defaults)
 
@@ -438,16 +435,13 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                 "has_classes": False,
                 "decorators_used": [],
                 "analysis_method": "unknown_analysis",
-                "chunking_method": preserve_chunking_method if preserve_chunking_method else "unknown_chunking",  # Preserve existing chunking method
+                # NOTE: chunking_method removed from metadata - it comes from AST chunkers only
                 "tree_sitter_chunking_error": False,
                 "tree_sitter_analyze_error": False,
                 "dunder_methods": [],
             }
             
-            # Preserve existing chunking_method if available
-            if preserve_chunking_method:
-                defaults["chunking_method"] = preserve_chunking_method
-                LOGGER.debug(f"✅ Preserving existing chunking_method: {preserve_chunking_method}")
+            # NOTE: chunking_method preservation removed - it comes from AST chunkers only
             
             update_defaults(result, defaults)
         else:
@@ -473,13 +467,12 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
             "decorators_used": [],
             "analysis_method": "error_fallback",
             # Promoted metadata fields for database columns
-            "chunking_method": preserve_chunking_method or "error_fallback",  # Preserve if available
+            # NOTE: chunking_method removed from metadata - it comes from AST chunkers only
             "tree_sitter_chunking_error": True,  # True because we had an error
             "tree_sitter_analyze_error": True,   # True because we had an error
         }
         
-        if preserve_chunking_method:
-            LOGGER.debug(f"✅ Preserving existing chunking_method in exception fallback: {preserve_chunking_method}")
+        # NOTE: chunking_method preservation removed - it comes from AST chunkers only
         return json.dumps(fallback_result)
 
 

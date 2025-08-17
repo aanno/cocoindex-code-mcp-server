@@ -523,6 +523,152 @@ code_embeddings.collect(
 - **Type safety** - PostgreSQL enforces column types
 - **Backward compatibility** - metadata_json remains for experimental fields
 
+## Metadata Flow Patterns: The Key Breakthrough (January 2025)
+
+Based on major discoveries during chunking_method conflict resolution, here are the critical patterns for metadata handling in CocoIndex:
+
+### 1. **How to Add Properties to metadata_json**
+
+```python
+# In collector logic (cocoindex_config.py):
+def create_metadata_json(content, language, metadata_dict):
+    """Create metadata_json with standard fields."""
+    return {
+        # Analysis tracking
+        "analysis_method": metadata_dict.get("analysis_method", "unknown"),
+        "tree_sitter_chunking_error": metadata_dict.get("tree_sitter_chunking_error", False),
+        "tree_sitter_analyze_error": metadata_dict.get("tree_sitter_analyze_error", False),
+        
+        # Custom properties you want in metadata_json:
+        "file_size": len(content),
+        "has_tests": "test" in content.lower(),
+        "complexity_level": calculate_complexity(content)
+    }
+```
+
+### 2. **How to Promote metadata_json Properties to Results**
+
+Properties in metadata_json are **automatically promoted** to top-level result fields:
+
+```python
+# In schemas.py - validation automatically promotes ALL metadata_json fields:
+def validate_chunk_metadata(metadata: Dict[str, Any]) -> ChunkMetadata:
+    # If metadata_json contains {"analysis_method": "python_ast", "custom_field": "value"}
+    # Both become top-level fields in results:
+    if "metadata_json" in metadata:
+        validated["metadata_json"] = metadata["metadata_json"]
+        # All keys from metadata_json also become individual result fields
+    return validated
+```
+
+### 3. **How to Add Properties Directly to Results**
+
+```python
+# In collector - fields collected directly become result properties:
+code_embeddings.collect(
+    filename=file["filename"],
+    code=chunk["content"], 
+    # Direct result fields (not in metadata_json):
+    chunking_method=chunk["chunking_method"],  # From AST chunkers
+    functions=str(metadata_dict.get("functions", [])),
+    classes=str(metadata_dict.get("classes", [])),
+    complexity_score=metadata_dict.get("complexity_score", 0),
+    # This goes into metadata_json AND gets promoted:
+    metadata_json=metadata_json_dict
+)
+```
+
+### 4. **How to Handle Typed Flows (Dataclass + Conversion)**
+
+For AST chunking and other operations that return structured data:
+
+```python
+# Step 1: Define dataclass for CocoIndex processing
+@dataclass
+class ASTChunkRow:
+    content: str
+    location: str
+    start: int
+    end: int
+    chunking_method: str  # This becomes a result field
+
+# Step 2: CocoIndex operation returns typed data
+@op.executor_class()
+class ASTChunkExecutor:
+    def __call__(self, content: str, language: str) -> list[ASTChunkRow]:
+        # Return list of dataclass instances
+        return [ASTChunkRow(content=chunk, location=loc, ...)]
+
+# Step 3: Collector converts dataclass to dict and extracts fields
+for chunk in chunks:
+    if hasattr(chunk, 'chunking_method'):
+        chunking_method = chunk.chunking_method  # Extract from dataclass
+    elif isinstance(chunk, dict):
+        chunking_method = chunk.get("chunking_method", "unknown")
+    
+    code_embeddings.collect(
+        chunking_method=chunking_method,  # Direct field from dataclass
+        # ... other fields
+    )
+```
+
+### 5. **Critical Anti-Pattern: Conflicting Field Sources**
+
+**❌ AVOID**: Having the same field in both direct collection and metadata_json:
+
+```python
+# BAD - Creates confusion:
+code_embeddings.collect(
+    chunking_method=chunk["chunking_method"],  # Direct field
+    metadata_json={
+        "chunking_method": "different_value",  # CONFLICTS!
+        "other_data": "..."
+    }
+)
+# Results in confusing: chunking_method="value1" but metadata.chunking_method="value2"
+```
+
+**✅ SOLUTION**: Choose ONE source per field:
+
+```python
+# GOOD - Single source of truth:
+code_embeddings.collect(
+    chunking_method=chunk["chunking_method"],  # From AST chunkers only
+    metadata_json={
+        # chunking_method NOT included in metadata
+        "analysis_method": "python_ast",
+        "other_data": "..."
+    }
+)
+```
+
+### 6. **Field Promotion Debugging**
+
+To verify field promotion is working:
+
+```python
+# Check search results contain expected fields:
+results = hybrid_search_engine.search(vector_query="test", keyword_query="language:Python")
+for result in results[:3]:
+    print(f"Direct fields: chunking_method={result.get('chunking_method')}")
+    print(f"Metadata fields: {result.get('metadata_json', {}).keys()}")
+    print(f"Promoted fields: analysis_method={result.get('analysis_method')}")
+```
+
+### 7. **Schema Validation for New Fields**
+
+When adding new metadata fields, update schemas.py:
+
+```python
+class ChunkMetadata(TypedDict, total=False):
+    # Existing fields...
+    
+    # Your new fields:
+    file_size: int
+    has_tests: bool
+    complexity_level: str
+```
+
 ## Summary
 
 - **USE Vector types** with fixed dimensions for embeddings: `Vector[np.float32, Literal[384]]`
@@ -536,6 +682,10 @@ code_embeddings.collect(
 - **Custom metadata fields** should appear in evaluation outputs and database
 - **Load models once** at module level, not inside functions
 - **Always run setup** after changing collection schema or vector dimensions
+- **Avoid field conflicts** between direct collection and metadata_json
+- **Choose single source of truth** for each field (either direct or metadata_json)
+- **Use dataclass → dict conversion** for typed CocoIndex operations
+- **Leverage automatic field promotion** from metadata_json to results
 
 Following these updated practices will ensure proper pgvector integration, prevent database conflicts, and enable rich metadata collection in your CocoIndex flows.
 

@@ -144,5 +144,74 @@ class MyClass:
         assert preservation_ratio >= 0.8, f"Should preserve most content, got {preservation_ratio:.2%}"
 
 
+class TestASTChunkLibraryUsage:
+    """Test to verify if ASTChunk library is actually being used."""
+    
+    def test_astchunk_library_direct_usage(self):
+        """Test direct usage of ASTChunk library through ASTChunkExecutor."""
+        # Import the executor directly
+        from cocoindex_code_mcp_server.ast_chunking import ASTChunkExecutor, ASTChunkSpec
+        
+        # Test Python code that should use ASTChunk library
+        python_code = '''
+def test_function():
+    """A simple test function."""
+    x = 1
+    y = 2
+    return x + y
+
+class TestClass:
+    def method(self):
+        return "hello"
+'''
+        
+        # Create executor with spec
+        spec = ASTChunkSpec(max_chunk_size=1800)
+        executor = ASTChunkExecutor()
+        executor.spec = spec
+        
+        # Call the executor directly
+        result = executor(python_code, "Python")
+        
+        # Verify we got results
+        assert isinstance(result, list), "Should return list of ASTChunkRow objects"
+        assert len(result) > 0, "Should produce at least one chunk"
+        
+        # Check the chunking_method values
+        chunking_methods = [chunk.chunking_method for chunk in result]
+        print(f"\n🔍 Direct ASTChunk test - chunking_methods found: {chunking_methods}")
+        
+        # If ASTChunk library is working, we should see "astchunk_library"
+        assert any(method == "astchunk_library" for method in chunking_methods), \
+            f"Expected 'astchunk_library' in chunking methods, but got: {chunking_methods}"
+    
+    def test_astchunk_library_availability(self):
+        """Test if ASTChunk library is available and can be imported."""
+        from cocoindex_code_mcp_server.ast_chunking import ASTCHUNK_AVAILABLE, ASTChunkBuilder
+        
+        print(f"\n🔍 ASTChunk availability test - ASTCHUNK_AVAILABLE: {ASTCHUNK_AVAILABLE}")
+        print(f"🔍 ASTChunkBuilder: {ASTChunkBuilder}")
+        
+        # Check if ASTChunk is available
+        if not ASTCHUNK_AVAILABLE:
+            pytest.skip("ASTChunk library is not available - this explains why astchunk_library doesn't appear")
+        
+        # If available, try to create a builder
+        assert ASTChunkBuilder is not None, "ASTChunkBuilder should be available"
+        
+        # Try to create a Python builder
+        try:
+            builder = ASTChunkBuilder(
+                max_chunk_size=1800,
+                language="python",
+                metadata_template="default",
+                chunk_expansion=False
+            )
+            assert builder is not None, "Should be able to create ASTChunkBuilder for Python"
+            print("✅ Successfully created ASTChunkBuilder for Python")
+        except Exception as e:
+            pytest.fail(f"Failed to create ASTChunkBuilder: {e}")
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

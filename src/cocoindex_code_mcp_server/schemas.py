@@ -301,7 +301,7 @@ def validate_chunk_metadata(metadata: Dict[str, Any]) -> ChunkMetadata:
     
     # Analysis tracking metadata with defaults
     validated["analysis_method"] = str(metadata.get("analysis_method", "unknown"))
-    validated["chunking_method"] = str(metadata.get("chunking_method", "unknown"))
+    # NOTE: chunking_method removed from metadata to avoid confusion - it comes from AST chunkers only
     validated["tree_sitter_chunking_error"] = bool(metadata.get("tree_sitter_chunking_error", False))
     validated["tree_sitter_analyze_error"] = bool(metadata.get("tree_sitter_analyze_error", False))
     

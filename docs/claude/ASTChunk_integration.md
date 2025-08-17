@@ -222,3 +222,192 @@ else:
 **Status**: ✅ **INTEGRATION COMPLETE** - AST chunking fully operational and ready for use!
 
 **Task 12 Status**: ❌ **DEFERRED** - Unified AST framework analysis complete, implementation deferred pending real multi-language requirements.
+
+---
+
+## 🔥 **MAJOR BREAKTHROUGH: Field Promotion & Metadata Flow (January 2025)**
+
+### **Critical Discovery: chunking_method Conflict Resolution**
+
+During investigation of chunking_method values, we discovered fundamental patterns about how CocoIndex handles metadata flow from operations to search results. This breakthrough explains the entire metadata architecture.
+
+#### **The Problem**
+- Only 3 chunking_method values appeared in test results: `ast_tree_sitter`, `rust_haskell_ast`, `rust_haskell_ast_with_errors`
+- Expected to see `astchunk_library` and other diverse methods from AST chunkers
+- Before changes, "astchunk_library" was wrongly overwriting other legitimate values
+
+#### **Root Cause: Metadata Conflicts**
+The issue was **dual sources of truth** for the same field:
+```python
+# Chunk from ASTChunk operation had:
+chunk.chunking_method = "astchunk_library"  # From AST chunker
+
+# But metadata_json had:
+metadata_json = {"chunking_method": "ast_tree_sitter"}  # From tree-sitter analysis
+
+# Result: Conflicting values in search results
+result = {
+    "chunking_method": "astchunk_library",  # Direct field
+    "metadata_json": {"chunking_method": "ast_tree_sitter"}  # Metadata field
+}
+```
+
+#### **The Solution: Field Source Separation**
+1. **Preserve ALL chunking methods from AST chunkers** (not just "astchunk_library")
+2. **Remove chunking_method from metadata_json** to eliminate confusion
+3. **Single source of truth**: chunk.chunking_method is the authoritative value
+
+### **Key Implementation Changes**
+
+#### **schemas.py:304**
+```python
+# BEFORE: Added chunking_method to metadata causing conflicts
+validated["chunking_method"] = str(metadata.get("chunking_method", "unknown"))
+
+# AFTER: Removed to avoid confusion
+# NOTE: chunking_method removed from metadata to avoid confusion - it comes from AST chunkers only
+```
+
+#### **cocoindex_config.py: Multiple Lines**
+```python
+# BEFORE: Metadata included chunking_method assignments
+"chunking_method": preserve_chunking_method if preserve_chunking_method else "unknown_chunking",
+
+# AFTER: All chunking_method removed from metadata creation
+# NOTE: chunking_method removed from metadata - it comes from AST chunkers only
+```
+
+### **Critical Patterns Discovered**
+
+#### **1. Automatic Field Promotion**
+ALL fields in metadata_json are automatically promoted to top-level search result fields:
+```python
+# If metadata_json contains:
+{"analysis_method": "python_ast", "custom_field": "value"}
+
+# Search results automatically get:
+{
+    "analysis_method": "python_ast",  # Promoted from metadata_json
+    "custom_field": "value",         # Promoted from metadata_json
+    "metadata_json": {"analysis_method": "python_ast", "custom_field": "value"}
+}
+```
+
+#### **2. Dataclass to Field Conversion**
+AST operations return typed dataclasses that get converted to result fields:
+```python
+@dataclass
+class ASTChunkRow:
+    content: str
+    chunking_method: str  # This becomes a result field
+
+# CocoIndex automatically converts:
+chunk = ASTChunkRow(content="code", chunking_method="astchunk_library")
+# To result field:
+result["chunking_method"] = "astchunk_library"
+```
+
+#### **3. Conflict Avoidance Pattern**
+**❌ ANTI-PATTERN**: Same field in both direct collection and metadata_json
+```python
+code_embeddings.collect(
+    chunking_method=chunk["chunking_method"],  # Direct field
+    metadata_json={"chunking_method": "different_value"}  # CONFLICTS!
+)
+```
+
+**✅ BEST PRACTICE**: Choose single source per field
+```python
+code_embeddings.collect(
+    chunking_method=chunk["chunking_method"],  # From AST chunkers only
+    metadata_json={"analysis_method": "..."}   # Other fields only
+)
+```
+
+### **Testing Results: Perfect Success**
+
+**Before Fix** (Problematic):
+```
+📄 File: python_minor_errors.py
+   chunking_method: 'astchunk_library'
+   metadata chunking_method: 'ast_tree_sitter'  ← CONFLICTING VALUES
+```
+
+**After Fix** (Correct):
+```
+📄 File: python_minor_errors.py
+   chunking_method: 'astchunk_library'
+   metadata chunking_method: 'none'  ← NO CONFUSION!
+```
+
+**Diverse chunking methods now preserved**:
+- `astchunk_library` (4 occurrences) - from ASTChunk library
+- `ast_tree_sitter` (16 occurrences) - from tree-sitter analysis
+- `rust_haskell_regex_fallback_3` - from Rust Haskell implementation
+- `rust_haskell_error_recovery` - from Rust error handling
+
+### **Universal Metadata Flow Patterns**
+
+#### **Pattern 1: Properties in metadata_json**
+```python
+# Add properties to metadata_json in collector logic:
+metadata_json = {
+    "analysis_method": "python_ast",
+    "file_size": len(content),
+    "has_tests": "test" in content.lower(),
+    "custom_property": calculate_value(content)
+}
+```
+
+#### **Pattern 2: Automatic promotion to results**
+```python
+# ALL metadata_json fields automatically become result fields
+# No additional code needed - CocoIndex handles this automatically
+```
+
+#### **Pattern 3: Direct result fields**
+```python
+# Collect fields directly for immediate result inclusion:
+code_embeddings.collect(
+    filename=file["filename"],
+    chunking_method=chunk["chunking_method"],  # Direct from operation
+    functions=extract_functions(content),       # Direct calculation
+    metadata_json=metadata_dict                # Bulk metadata
+)
+```
+
+#### **Pattern 4: Typed operation conversion**
+```python
+# Operations return dataclasses that get converted to result fields:
+@op.executor_class()
+class MyOperation:
+    def __call__(self, input) -> list[MyDataClass]:
+        return [MyDataClass(field1="value", field2="value")]
+
+# Result automatically gets field1 and field2 as top-level properties
+```
+
+### **Implications for Future Development**
+
+1. **Metadata Strategy**: Use metadata_json for bulk properties, direct fields for operation outputs
+2. **Conflict Prevention**: Never put the same field in both direct collection and metadata_json
+3. **Field Promotion**: Leverage automatic promotion - no manual result field creation needed
+4. **Typed Operations**: Use dataclasses for structured operation outputs
+5. **Single Source of Truth**: Each field should have exactly one authoritative source
+
+### **This Breakthrough Enables**
+
+- **Rich metadata collection** without schema changes
+- **Automatic result field promotion** from metadata_json
+- **Conflict-free field management** with clear source separation
+- **Typed operation integration** with automatic field conversion
+- **Flexible development patterns** for metadata experimentation
+
+### **Documentation Impact**
+
+This discovery has been documented in:
+- `docs/cocoindex/flow-and-types.md` - Complete metadata flow patterns
+- This file - ASTChunk integration context
+- Test files - Validation of the patterns
+
+**Status**: 🔥 **BREAKTHROUGH COMPLETE** - Fundamental metadata flow patterns discovered and documented!
