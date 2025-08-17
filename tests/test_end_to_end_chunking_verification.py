@@ -7,7 +7,7 @@ This test will finally prove whether our AST chunking is working end-to-end.
 import os
 import tempfile
 
-import psycopg2
+import psycopg
 import pytest
 from dotenv import load_dotenv
 
@@ -46,7 +46,7 @@ class TestEndToEndChunkingVerification:
             import urllib.parse
             parsed = urllib.parse.urlparse(db_url)
 
-            return psycopg2.connect(
+            return psycopg.connect(
                 host=parsed.hostname,
                 port=parsed.port or 5432,
                 user=parsed.username,

@@ -5,6 +5,8 @@ Converted from debug_metadata_extraction.py and related debugging scripts.
 """
 
 import json
+from types import FunctionType
+from typing import cast
 
 import pytest
 
@@ -45,7 +47,7 @@ async def async_function():
     await some_operation()
 '''
 
-        metadata_json = extract_code_metadata(python_code, "python", "test.py")
+        metadata_json = cast(FunctionType, extract_code_metadata)(python_code, "python", "test.py")
         metadata = json.loads(metadata_json)
 
         # Should have basic metadata
@@ -100,7 +102,7 @@ class Calculator {
 }
 '''
 
-        metadata_json = extract_code_metadata(kotlin_code, "kotlin", "test.kt")
+        metadata_json = cast(FunctionType, extract_code_metadata)(kotlin_code, "kotlin", "test.kt")
         metadata = json.loads(metadata_json)
 
         # Should succeed and use Kotlin analyzer
@@ -146,7 +148,7 @@ sumList []     = 0
 sumList (x:xs) = x + sumList xs
 '''
 
-        metadata_json = extract_code_metadata(haskell_code, "haskell", "test.hs")
+        metadata_json = cast(FunctionType, extract_code_metadata)(haskell_code, "haskell", "test.hs")
         metadata = json.loads(metadata_json)
 
         # Should succeed and use Haskell analyzer
@@ -174,7 +176,7 @@ class SomeClass {
 }
 '''
 
-        metadata_json = extract_code_metadata(unknown_code, "unknown", "test.unknown")
+        metadata_json = cast(FunctionType, extract_code_metadata)(unknown_code, "unknown", "test.unknown")
         metadata = json.loads(metadata_json)
 
         # Should still succeed with fallback
@@ -194,7 +196,7 @@ class TestMetadataConsistency:
         empty_cases = ["", "   ", "\n\n\n", "// Just a comment"]
 
         for empty_code in empty_cases:
-            metadata_json = extract_code_metadata(empty_code, "python", "empty.py")
+            metadata_json = cast(FunctionType, extract_code_metadata)(empty_code, "python", "empty.py")
             metadata = json.loads(metadata_json)
 
             # Should handle gracefully
@@ -214,7 +216,7 @@ class IncompleteClass
 invalid syntax here ###
 '''
 
-        metadata_json = extract_code_metadata(malformed_code, "python", "malformed.py")
+        metadata_json = cast(FunctionType, extract_code_metadata)(malformed_code, "python", "malformed.py")
         metadata = json.loads(metadata_json)
 
         # Should handle gracefully without crashing
