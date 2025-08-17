@@ -152,8 +152,8 @@ class TestWorkflowIntegration:
 
         return mock_pool, mock_conn, mock_cursor
 
-    @patch('cocoindex_code_mcp_server.cocoindex_code_mcp_server.hybrid_search.os.getenv')
-    @patch('cocoindex_code_mcp_server.cocoindex_code_mcp_server.hybrid_search.ConnectionPool')
+    @patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.os.getenv')
+    @patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.ConnectionPool')
     def test_interactive_hybrid_search_workflow(self, mock_pool_class, mock_getenv, mock_database_setup):
         """Test the complete interactive hybrid search workflow."""
         try:
