@@ -19,7 +19,7 @@ class LanguageBaseline:
     def __init__(self, language: str, fixture_file: str, expected_functions: Set[str],
                  expected_constructs: Optional[Dict[str, Set[str]]] = None):
         self.language = language
-        self.fixture_file = Path(f"tests/fixtures/{fixture_file}")
+        self.fixture_file = Path(f"tests/fixtures/lang_examples/{fixture_file}")
         self.expected_functions = expected_functions
         self.expected_constructs = expected_constructs or {}
 
