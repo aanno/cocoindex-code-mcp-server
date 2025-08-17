@@ -52,7 +52,8 @@ class ValidationResult:
 class SchemaValidator:
     """Validates and maps database fields to prevent SQL injection and schema errors."""
 
-    def __init__(self, valid_columns: Optional[Set[str]] = None, field_aliases: Optional[Dict[str, str]] = None) -> None:
+    def __init__(self, valid_columns: Optional[Set[str]] = None,
+                 field_aliases: Optional[Dict[str, str]] = None) -> None:
         self.valid_columns = valid_columns or VALID_COLUMNS
         self.field_aliases = field_aliases or FIELD_ALIASES
 

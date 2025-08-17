@@ -5,9 +5,10 @@ JavaScript-specific AST visitor for metadata extraction.
 Follows the same pattern as other language visitors by subclassing GenericMetadataVisitor.
 """
 
-from tree_sitter import Node
 import logging
 from typing import Any, Dict, List, Optional
+
+from tree_sitter import Node
 
 from ..ast_visitor import GenericMetadataVisitor, NodeContext
 from ..parser_util import update_defaults
@@ -215,7 +216,7 @@ def analyze_javascript_code(code: str, language: str = "javascript", filename: s
             'tree_language': str(parser.language) if parser else None,
             # Required metadata fields for promoted column implementation
             # don't set chunking method in analyzer
-            # "chunking_method": "ast_tree_sitter", 
+            # "chunking_method": "ast_tree_sitter",
             # "tree_sitter_chunking_error": False,
             'tree_sitter_analyze_error': False,
             'decorators_used': [],  # JavaScript doesn't commonly use decorators

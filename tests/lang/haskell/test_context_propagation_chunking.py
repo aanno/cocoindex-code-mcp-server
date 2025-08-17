@@ -5,8 +5,9 @@ Comprehensive tests for context propagation and recursive splitting in Haskell A
 Tests the new Rust-based implementation with ChunkingParams, ChunkingContext, and recursive splitting.
 """
 
-import pytest
 import haskell_tree_sitter
+import pytest
+
 from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
     EnhancedHaskellChunker,
     HaskellChunkConfig,
@@ -24,7 +25,7 @@ class TestChunkingParams:
             chunk_overlap=0,
             max_chunk_size=2000
         )
-        
+
         assert params.chunk_size() == 1800
         assert params.min_chunk_size() == 400
         assert params.chunk_overlap() == 0
@@ -39,7 +40,7 @@ class TestChunkingParams:
             chunk_overlap=50,
             max_chunk_size=600
         )
-        
+
         # Large chunks
         large_params = haskell_tree_sitter.ChunkingParams(
             chunk_size=3000,
@@ -47,7 +48,7 @@ class TestChunkingParams:
             chunk_overlap=200,
             max_chunk_size=4000
         )
-        
+
         assert small_params.chunk_size() < large_params.chunk_size()
         assert small_params.min_chunk_size() < large_params.min_chunk_size()
 
@@ -79,17 +80,17 @@ helper x = x + 1
             chunk_overlap=0,
             max_chunk_size=2000
         )
-        
+
         result = haskell_tree_sitter.get_haskell_ast_chunks_with_params(haskell_code, params)
-        
+
         assert hasattr(result, 'chunks')
         assert hasattr(result, 'chunking_method')
         assert hasattr(result, 'error_stats')
         assert hasattr(result, 'coverage_complete')
-        
+
         chunks = result.chunks()
         assert len(chunks) > 0
-        
+
         # Check that chunks have metadata
         for chunk in chunks:
             metadata = chunk.metadata()
@@ -98,24 +99,24 @@ helper x = x + 1
     def test_chunking_result_methods(self):
         """Test that ChunkingResult provides all expected methods."""
         haskell_code = "factorial n = n * factorial (n - 1)"
-        
+
         params = haskell_tree_sitter.ChunkingParams(
             chunk_size=1000,
             min_chunk_size=200,
             chunk_overlap=0,
             max_chunk_size=1200
         )
-        
+
         result = haskell_tree_sitter.get_haskell_ast_chunks_with_params(haskell_code, params)
-        
+
         # Test all methods
         chunking_method = result.chunking_method()
         assert isinstance(chunking_method, str)
         assert chunking_method in ["ast_recursive", "ast_recursive_with_errors", "regex_fallback"]
-        
+
         coverage = result.coverage_complete()
         assert isinstance(coverage, bool)
-        
+
         error_stats = result.error_stats()
         assert hasattr(error_stats, 'error_count')
         assert hasattr(error_stats, 'should_fallback')
@@ -160,13 +161,13 @@ processComplexData strings numbers = do
             chunk_overlap=0,
             max_chunk_size=800   # Force splitting of large functions
         )
-        
+
         result = haskell_tree_sitter.get_haskell_ast_chunks_with_params(large_function, params)
         chunks = result.chunks()
-        
+
         # Should create multiple chunks due to size constraints
         assert len(chunks) >= 1
-        
+
         # Verify chunking method indicates recursive splitting
         method = result.chunking_method()
         assert "recursive" in method.lower() or "ast" in method.lower()
@@ -185,7 +186,7 @@ firstFunction x = x + 1
 data ComplexType = Simple Int | Complex String Int Bool
     deriving (Show, Eq)
 
-secondFunction :: ComplexType -> String  
+secondFunction :: ComplexType -> String
 secondFunction (Simple n) = show n
 secondFunction (Complex s n b) = s ++ show n ++ show b
 
@@ -208,13 +209,13 @@ thirdFunction = map process
             chunk_overlap=0,
             max_chunk_size=400
         )
-        
+
         result = haskell_tree_sitter.get_haskell_ast_chunks_with_params(haskell_code, params)
         chunks = result.chunks()
-        
+
         # Should create multiple chunks
         assert len(chunks) >= 2
-        
+
         # Check that chunks maintain reasonable boundaries
         for chunk in chunks:
             content = chunk.text()
@@ -251,10 +252,10 @@ instance Processor TreeProcessor where
             chunk_overlap=0,
             max_chunk_size=2000
         )
-        
+
         result = haskell_tree_sitter.get_haskell_ast_chunks_with_params(haskell_code, params)
         chunks = result.chunks()
-        
+
         # Look for chunks with ancestor path information
         found_ancestor_paths = False
         for chunk in chunks:
@@ -264,8 +265,8 @@ instance Processor TreeProcessor where
                 ancestor_path = metadata['ancestor_path']
                 assert isinstance(ancestor_path, str)
                 # Should contain module or class context
-                assert any(context in ancestor_path.lower() for context in 
-                          ['complexmodule', 'processor', 'treeprocessor'])
+                assert any(context in ancestor_path.lower() for context in
+                           ['complexmodule', 'processor', 'treeprocessor'])
 
         # At least some chunks should have ancestor path information
         # Note: This may not always be present depending on the AST structure
@@ -302,21 +303,21 @@ instance UserProcessor SimpleProcessor where
             chunk_overlap=0,
             max_chunk_size=1500
         )
-        
+
         result = haskell_tree_sitter.get_haskell_ast_chunks_with_params(haskell_code, params)
         chunks = result.chunks()
-        
+
         # Check for semantic categories in metadata
         categories_found = set()
         for chunk in chunks:
             metadata = chunk.metadata()
             if 'category' in metadata:
                 categories_found.add(metadata['category'])
-            
+
             # Check for other semantic information
             if 'current_module' in metadata:
                 assert metadata['current_module'] == 'SemanticTest'
-            
+
             if 'current_class' in metadata:
                 assert 'UserProcessor' in str(metadata['current_class'])
 
@@ -338,7 +339,7 @@ factorial :: Integer -> Integer
 factorial 0 = 1
 factorial n = n * factorial (n - 1)
 
-fibonacci :: Int -> Int  
+fibonacci :: Int -> Int
 fibonacci 0 = 0
 fibonacci 1 = 1
 fibonacci n = fibonacci (n - 1) + fibonacci (n - 2)
@@ -354,18 +355,18 @@ treeDepth (Node _ left right) = 1 + max (treeDepth left) (treeDepth right)
         config = HaskellChunkConfig(max_chunk_size=600)
         chunker = EnhancedHaskellChunker(config)
         chunks = chunker.chunk_code(haskell_code, "integration_test.hs")
-        
+
         assert len(chunks) >= 1
-        
+
         # Check that chunks have the enhanced metadata from context propagation
         context_features_found = False
         for chunk in chunks:
             original_metadata = chunk.get('original_metadata', {})
-            if original_metadata and any(key in original_metadata for key in 
-                                       ['ancestor_path', 'category', 'current_module']):
+            if original_metadata and any(key in original_metadata for key in
+                                         ['ancestor_path', 'category', 'current_module']):
                 context_features_found = True
                 break
-        
+
         # Should find context propagation features in at least some chunks
         # Note: This depends on the AST structure and may not always be present
 
@@ -381,7 +382,7 @@ simpleFunction x = x + 1
         config = HaskellChunkConfig(max_chunk_size=1500)
         chunker = EnhancedHaskellChunker(config)
         chunks = chunker.chunk_code(haskell_code, "method_test.hs")
-        
+
         # Check that method indicates context-aware chunking
         assert len(chunks) > 0
         for chunk in chunks:
@@ -402,7 +403,7 @@ module ErrorTest where
 
 -- Missing type signature might cause parsing issues
 problematicFunction = \\x -> case x of
-    Just y -> y + 
+    Just y -> y +
     Nothing -> 0
 
 -- Incomplete where clause
@@ -417,14 +418,14 @@ anotherFunction x = helper x
             chunk_overlap=0,
             max_chunk_size=1200
         )
-        
+
         result = haskell_tree_sitter.get_haskell_ast_chunks_with_params(problematic_code, params)
-        
+
         # Check error statistics
         error_stats = result.error_stats()
         error_count = error_stats.error_count()
         should_fallback = error_stats.should_fallback()
-        
+
         assert isinstance(error_count, int)
         assert isinstance(should_fallback, bool)
         assert error_count >= 0
@@ -436,18 +437,18 @@ anotherFunction x = helper x
 module BadCode where
 
 import Data.List
-import 
+import
 
-function1 :: Int -> 
-function1 x = x + 
+function1 :: Int ->
+function1 x = x +
 
 data BadType = Constructor {
-    field1 :: 
+    field1 ::
     field2 String
     -- Missing closing brace
 
 class BadClass where
-    method1 :: 
+    method1 ::
     -- Missing method definition
 """
 
@@ -457,13 +458,13 @@ class BadClass where
             chunk_overlap=0,
             max_chunk_size=1000
         )
-        
+
         result = haskell_tree_sitter.get_haskell_ast_chunks_with_params(malformed_code, params)
-        
+
         # Should still produce chunks even with errors
         chunks = result.chunks()
         assert len(chunks) >= 1
-        
+
         # Check chunking method - might be fallback
         method = result.chunking_method()
         assert isinstance(method, str)
@@ -504,13 +505,13 @@ helper{i} (Constructor{i} n _ _) = n + {i}
             chunk_overlap=0,
             max_chunk_size=1500
         )
-        
+
         result = haskell_tree_sitter.get_haskell_ast_chunks_with_params(large_code, params)
         chunks = result.chunks()
-        
+
         # Should handle large files and create many chunks
         assert len(chunks) >= 10
-        
+
         # All chunks should have valid content
         for chunk in chunks:
             assert len(chunk.text().strip()) > 0
@@ -545,10 +546,10 @@ mergeSort xs = merge (mergeSort left) (mergeSort right)
         # Test with different configurations
         configs = [
             (500, 100, 600),   # Small chunks
-            (1000, 250, 1200), # Medium chunks  
-            (2000, 500, 2500), # Large chunks
+            (1000, 250, 1200),  # Medium chunks
+            (2000, 500, 2500),  # Large chunks
         ]
-        
+
         for chunk_size, min_size, max_size in configs:
             params = haskell_tree_sitter.ChunkingParams(
                 chunk_size=chunk_size,
@@ -556,13 +557,13 @@ mergeSort xs = merge (mergeSort left) (mergeSort right)
                 chunk_overlap=0,
                 max_chunk_size=max_size
             )
-            
+
             result = haskell_tree_sitter.get_haskell_ast_chunks_with_params(haskell_code, params)
             chunks = result.chunks()
-            
+
             # Should produce valid chunks for all configurations
             assert len(chunks) >= 1
-            
+
             # Verify chunk sizes are reasonable
             for chunk in chunks:
                 content = chunk.text()

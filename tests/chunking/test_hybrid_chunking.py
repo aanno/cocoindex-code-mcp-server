@@ -4,12 +4,14 @@
 Test hybrid chunking functionality with different languages and CocoIndex integration.
 """
 
+
 import pytest
 
-from typing import Any
-
 try:
-    from cocoindex_code_mcp_server.ast_chunking import CocoIndexASTChunker, detect_language_from_filename
+    from cocoindex_code_mcp_server.ast_chunking import (
+        CocoIndexASTChunker,
+        detect_language_from_filename,
+    )
     COCOINDEX_AST_AVAILABLE = True
 except ImportError:
     COCOINDEX_AST_AVAILABLE = False

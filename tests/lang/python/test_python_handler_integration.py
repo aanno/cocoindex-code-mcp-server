@@ -9,7 +9,7 @@ the PythonNodeHandler through the AST visitor framework.
 import json
 import sys
 from types import FunctionType
-from typing import Any, Dict, cast
+from typing import cast
 
 import pytest
 
@@ -72,7 +72,7 @@ def utility_function(x: int, y: int = 10) -> int:
     # Test the analyzer directly
     analyzer = TreeSitterPythonAnalyzer(prefer_tree_sitter=True)
     metadata = analyzer.analyze_code(sample_code, "test.py")
-    
+
     if metadata is None:
         pytest.fail('metadata is None')
     else:
@@ -112,7 +112,8 @@ def utility_function(x: int, y: int = 10) -> int:
         print(f"DEBUG: dunder_methods: {metadata.get('dunder_methods', [])}")
 
         # Basic sanity checks - the analyzer should detect something
-        assert len(metadata['functions']) + len(metadata['classes']) > 0, "Should detect at least some functions or classes"
+        assert len(metadata['functions']) + len(metadata['classes']
+                                                ) > 0, "Should detect at least some functions or classes"
 
         # Verify imports
         assert 'imports' in metadata

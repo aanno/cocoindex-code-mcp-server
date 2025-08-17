@@ -17,10 +17,7 @@ import signal
 import sys
 import threading
 from collections.abc import AsyncIterator
-from types import ModuleType
-from typing import Optional, Union, List
-from pydantic import AnyUrl
-from pydantic import BaseModel
+from typing import List, Optional
 
 import click
 import mcp.types as types
@@ -29,25 +26,30 @@ from mcp.server.lowlevel import Server
 from mcp.server.lowlevel.helper_types import ReadResourceContents
 from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
 from mcp.shared.exceptions import McpError
-# Backend abstraction imports
-from .backends import BackendFactory, VectorStoreBackend
-from .parser_util import update_defaults
+from pydantic import AnyUrl
 from starlette.applications import Starlette
 from starlette.routing import Mount
 from starlette.types import Receive, Scope, Send
 
 import cocoindex
 
-from .cocoindex_config import code_to_embedding, run_flow_update, update_flow_config, code_embedding_flow
+from . import mcp_json_schemas
+
+# Backend abstraction imports
+from .backends import BackendFactory, VectorStoreBackend
+from .cocoindex_config import (
+    code_embedding_flow,
+    code_to_embedding,
+    run_flow_update,
+    update_flow_config,
+)
 
 # Local imports
 from .db.pgvector.hybrid_search import HybridSearchEngine
 from .keyword_search_parser_lark import KeywordSearchParser
 from .lang.python.python_code_analyzer import analyze_python_code
-from . import mcp_json_schemas
 
 try:
-    import coverage
     from coverage import Coverage
     HAS_COVERAGE = True
 except ImportError:
@@ -56,7 +58,9 @@ except ImportError:
 
 # Import metadata fields from single source of truth
 from .mappers import CONST_METADATA_FIELDS
+
 METADATA_FIELDS = list(CONST_METADATA_FIELDS)
+
 
 @contextlib.asynccontextmanager
 async def coverage_context() -> AsyncIterator[Optional[object]]:
@@ -66,14 +70,14 @@ async def coverage_context() -> AsyncIterator[Optional[object]]:
         return
 
     import atexit
-    
+
     if Coverage is None:
         yield None
         return
-        
+
     cov = Coverage()
     cov.start()
-    
+
     # Set up cleanup handlers
     def stop_coverage():
         try:
@@ -81,10 +85,10 @@ async def coverage_context() -> AsyncIterator[Optional[object]]:
             cov.save()
         except Exception as e:
             logger.warning(f"Error stopping coverage: {e}")
-    
+
     # Register cleanup handlers
     atexit.register(stop_coverage)
-    
+
     try:
         yield cov
     finally:
@@ -242,7 +246,8 @@ def get_mcp_resources() -> list[types.Resource]:
 @click.option("--default-embedding", is_flag=True, help="Use default CocoIndex embedding")
 @click.option("--default-chunking", is_flag=True, help="Use default CocoIndex chunking")
 @click.option("--default-language-handler", is_flag=True, help="Use default CocoIndex language handling")
-@click.option("--chunk-factor-percent", default=100, help="Chunk size scaling factor as percentage (100=default, <100=smaller, >100=larger)")
+@click.option("--chunk-factor-percent", default=100,
+              help="Chunk size scaling factor as percentage (100=default, <100=smaller, >100=larger)")
 @click.option("--port", default=3000, help="Port to listen on for HTTP")
 @click.option("--log-level", default="INFO", help="Logging level")
 @click.option("--json-response", is_flag=True, default=False, help="Enable JSON responses instead of SSE streams")
@@ -399,10 +404,9 @@ def main(
     # Helper function to make SearchResult objects JSON serializable
     def serialize_search_results(results) -> list:
         """Convert SearchResult objects to JSON-serializable dictionaries."""
-        import json
         from decimal import Decimal
         from enum import Enum
-        
+
         def make_serializable(obj):
             """Recursively convert objects to JSON-serializable format."""
             if obj is None:
@@ -444,14 +448,14 @@ def main(
                         'score_type': make_serializable(obj.score_type),
                         'source': make_serializable(obj.source)
                     }
-                    
+
                     # Add direct metadata fields from SearchResult
                     metadata_fields = list(METADATA_FIELDS)
                     for key in metadata_fields:
                         if hasattr(obj, key):
                             value = getattr(obj, key)
                             result_dict[key] = make_serializable(value)
-                    
+
                     # Extract ALL fields from metadata_json if it exists (generalized promotion)
                     if hasattr(obj, 'metadata_json') and isinstance(obj.metadata_json, dict):
                         metadata_json = obj.metadata_json
@@ -460,7 +464,7 @@ def main(
                             # Skip if already exists as top-level field to avoid overwriting
                             if key not in result_dict:
                                 result_dict[key] = make_serializable(value)
-                    
+
                     return result_dict
                 else:
                     # Generic object serialization
@@ -468,7 +472,7 @@ def main(
             else:
                 # Fallback to string representation
                 return str(obj)
-        
+
         return [make_serializable(result) for result in results]
 
     # Tool implementation functions
@@ -592,7 +596,7 @@ def main(
     async def get_embeddings_tool(arguments: dict) -> dict:
         """Generate embeddings for text."""
         text = arguments["text"]
-        
+
         if hybrid_search_engine is not None:
             embedding = hybrid_search_engine.embedding_func(text)
 
@@ -624,8 +628,8 @@ def main(
                 "boolean_logic": {
                     "AND": "default, i.e. simple separate search terms with spaces",
                     "OR": "parentheses are used to create OR terms",
-                    "examples": ['(language:python language:rust) exists(functions)', 
-'(value_contains(code, "async")) exists(functions)) (value_contains(filename, "test") has_async:true)']
+                    "examples": ['(language:python language:rust) exists(functions)',
+                                 '(value_contains(code, "async")) exists(functions)) (value_contains(filename, "test") has_async:true)']
                 },
                 "available_fields": [
                     "filename", "language", "code", "functions", "classes", "imports",
@@ -851,12 +855,12 @@ include file src/cocoindex_code_mcp_server/grammars/keyword_search.lark here
             raise ValueError("COCOINDEX_DATABASE_URL not found in environment")
 
         backend_type = os.getenv("COCOINDEX_BACKEND_TYPE", "postgres").lower()
-        
+
         # Use coverage context for long-running daemon
         async with coverage_context() as cov:
             if cov:
                 logger.info("📊 Coverage collection started")
-            
+
             # Use backend abstraction for proper cleanup
             async with session_manager.run():
                 logger.info("🚀 MCP Server started with StreamableHTTP session manager!")
@@ -865,17 +869,17 @@ include file src/cocoindex_code_mcp_server/grammars/keyword_search.lark here
                 table_name = cocoindex.utils.get_target_default_name(
                     code_embedding_flow, "code_embeddings"
                 )
-                
+
                 # Create the appropriate backend
                 if backend_type == "postgres":
-                    from psycopg_pool import ConnectionPool
                     from pgvector.psycopg import register_vector
-                    
+                    from psycopg_pool import ConnectionPool
+
                     pool = ConnectionPool(database_url)
                     # Register pgvector extensions
                     with pool.connection() as conn:
                         register_vector(conn)
-                    
+
                     backend = BackendFactory.create_backend(
                         backend_type,
                         pool=pool,
@@ -888,7 +892,7 @@ include file src/cocoindex_code_mcp_server/grammars/keyword_search.lark here
                         connection_string=database_url,
                         table_name=table_name
                     )
-                
+
                 logger.info(f"🔧 Initializing {backend_type} backend...")
                 await initialize_search_engine(backend)
 

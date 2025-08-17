@@ -7,6 +7,7 @@ This test simulates the actual flow execution to see where duplicates are genera
 
 from types import FunctionType
 from typing import cast
+
 import pytest
 
 import cocoindex

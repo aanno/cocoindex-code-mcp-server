@@ -6,7 +6,7 @@ Tests both tree-sitter visitors and CocoIndex baseline analysis.
 
 import json
 from pathlib import Path
-from typing import Any, Dict, Set, Optional
+from typing import Any, Dict, Optional, Set
 
 from cocoindex_code_mcp_server.ast_visitor import analyze_code
 

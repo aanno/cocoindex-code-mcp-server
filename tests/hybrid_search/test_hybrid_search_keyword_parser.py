@@ -4,7 +4,8 @@
 Tests for the keyword search parser in hybrid search functionality.
 """
 
-from typing import List, Union, cast
+from typing import Union, cast
+
 import pytest
 
 from cocoindex_code_mcp_server.keyword_search_parser_lark import (
@@ -100,7 +101,7 @@ class TestKeywordSearchParser:
         result = parser.parse('filename:"test file.py"')
 
         assert len(result.conditions) == 1
-        
+
         condition: Union[SearchCondition, SearchGroup] = result.conditions[0]
         cond = cast(SearchCondition, condition)
 
@@ -112,7 +113,7 @@ class TestKeywordSearchParser:
         result = parser.parse("filename:'test file.py'")
 
         assert len(result.conditions) == 1
-        
+
         condition: Union[SearchCondition, SearchGroup] = result.conditions[0]
         cond = cast(SearchCondition, condition)
 
@@ -137,7 +138,7 @@ class TestKeywordSearchParser:
         result = parser.parse("EXISTS(embedding)")
 
         assert len(result.conditions) == 1
-        
+
         condition: Union[SearchCondition, SearchGroup] = result.conditions[0]
         cond = cast(SearchCondition, condition)
 

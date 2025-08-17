@@ -18,7 +18,7 @@ from tests.mcp_client import MCPTestClient
 async def mcp_client():
     """Fixture providing a test client connected to the server (new pattern)."""
     load_dotenv()
-    
+
     # Use the new common client with streaming transport
     async with MCPTestClient(host="127.0.0.1", port=3033, transport='http') as client:
         # Verify server is running
@@ -50,10 +50,10 @@ async def test_tool_invocation_new_pattern(mcp_client):
     """Test tool invocation using new pattern."""
     # Test code embeddings tool
     response = await mcp_client.call_tool("code-embeddings", {"text": "test code"})
-    
+
     assert not response["isError"]
     assert len(response["content"]) > 0
-    
+
     # Parse the JSON response to check embedding format
     import json
     embedding_data = json.loads(response["content"][0])
@@ -62,12 +62,12 @@ async def test_tool_invocation_new_pattern(mcp_client):
     assert isinstance(embedding_data["embedding"], list)
 
 
-@pytest.mark.asyncio 
+@pytest.mark.asyncio
 async def test_tool_error_handling_new_pattern(mcp_client):
     """Test tool error handling using new pattern."""
     # Test with invalid tool name - should return error response
     response = await mcp_client.call_tool("nonexistent-tool", {})
-    
+
     # With the new client, we expect isError to be True
     assert response["isError"]
     assert len(response["content"]) > 0
@@ -79,17 +79,17 @@ async def test_resource_access_new_pattern(mcp_client):
     # Test reading a resource (we'll use search-configuration)
     try:
         content = await mcp_client.read_resource("search-configuration")
-        
+
         # Should get valid JSON content
         import json
         config_data = json.loads(content)
         assert isinstance(config_data, dict)
-        
+
         # Check expected configuration keys
         expected_keys = ["table_name", "embedding_model", "parser_type"]
         for key in expected_keys:
             assert key in config_data, f"Expected config key '{key}' not found"
-            
+
     except Exception as e:
         # If resource reading fails, it's likely due to the known resource handler issue
         pytest.skip(f"Resource reading failed (known issue): {e}")

@@ -6,7 +6,6 @@ Tests the logic without importing CocoIndex to avoid circular imports.
 """
 
 import sys
-from typing import Any, Dict
 from unittest.mock import Mock
 
 import pytest

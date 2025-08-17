@@ -10,13 +10,12 @@ for our CocoIndex RAG MCP server.
 
 import json
 import logging
-from typing import Any, Dict, List, Optional
 from datetime import timedelta
+from typing import Any, Dict, List, Optional
 
 import httpx
-from mcp.client.streamable_http import streamablehttp_client
 from mcp.client.session import ClientSession
-
+from mcp.client.streamable_http import streamablehttp_client
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +23,7 @@ logger = logging.getLogger(__name__)
 class MCPTestClient:
     """
     Test client for MCP servers supporting both stdio and HTTP transports.
-    
+
     This client provides a unified interface for testing MCP servers with
     proper connection management and response parsing.
     """
@@ -32,7 +31,7 @@ class MCPTestClient:
     def __init__(self, host: str = '127.0.0.1', port: int = 3033, transport: str = 'http'):
         """
         Initialize MCP test client.
-        
+
         Args:
             host: Server host (default: 127.0.0.1)
             port: Server port (default: 3033 for our cocoindex server)
@@ -41,14 +40,14 @@ class MCPTestClient:
         self.host = host
         self.port = port
         self.transport = transport
-        
+
         if transport == 'http':
             self.server_url = f"http://{host}:{port}/mcp/"
             self.http_client = httpx.AsyncClient(timeout=30.0)
         else:
             self.server_url = f"http://{host}:{port}/mcp/"
             self.http_client = None
-            
+
         # For streaming HTTP MCP client
         self.session: Optional[ClientSession] = None
         self._client_context: Any = None
@@ -65,13 +64,13 @@ class MCPTestClient:
         """Connect using streaming HTTP transport (official MCP client)."""
         if not self.server_url:
             raise RuntimeError("Server URL not set for streaming transport")
-            
+
         self._client_context = streamablehttp_client(
             url=self.server_url,
             timeout=timedelta(seconds=30)
         )
         read_stream, write_stream, get_session_id = await self._client_context.__aenter__()
-        
+
         self._session_context = ClientSession(read_stream, write_stream)
         self.session = await self._session_context.__aenter__()
         await self.session.initialize()
@@ -95,11 +94,11 @@ class MCPTestClient:
                     "Accept": "application/json, text/event-stream"
                 }
             )
-            
+
             result = self._parse_http_response(response)
             if "error" in result:
                 raise Exception(f"MCP Error: {result['error']}")
-                
+
             logger.info(f"Connected to MCP server at {self.server_url} (HTTP)")
         except Exception as e:
             logger.error(f"Failed to connect to MCP server: {e}")
@@ -155,7 +154,7 @@ class MCPTestClient:
     async def call_tool(self, tool_name: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Call a tool and return normalized result.
-        
+
         Returns:
             Dict with keys:
                 - isError: bool indicating if there was an error
@@ -171,24 +170,24 @@ class MCPTestClient:
         """Call tool using streaming transport."""
         if not self.session:
             raise RuntimeError("Not connected to server")
-        
+
         result = await self.session.call_tool(tool_name, params or {})
-        
+
         # Normalize result format
         response: Dict[str, Any] = {
             "isError": getattr(result, 'isError', False),
             "content": [],
             "result": result
         }
-        
+
         if hasattr(result, 'content') and result.content:
             for content in result.content:
                 if hasattr(content, 'text'):
                     response["content"].append(content.text)
-        
+
         if hasattr(result, 'structuredContent') and result.structuredContent:
             response["structuredContent"] = result.structuredContent
-            
+
         return response
 
     async def _call_tool_http(self, tool_name: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
@@ -221,7 +220,7 @@ class MCPTestClient:
         # Parse MCP result format
         mcp_result = result["result"]
         content_items = []
-        
+
         # MCP returns {"content": [{"type": "text", "text": "..."}]}
         if isinstance(mcp_result, dict) and "content" in mcp_result:
             for item in mcp_result["content"]:
@@ -248,7 +247,7 @@ class MCPTestClient:
     async def read_resource(self, resource_name_or_uri: str) -> str:
         """
         Read a resource and return text content.
-        
+
         Args:
             resource_name_or_uri: Either resource name or full URI
         """
@@ -261,25 +260,25 @@ class MCPTestClient:
         """Read resource using streaming transport."""
         if not self.session:
             raise RuntimeError("Not connected to server")
-            
+
         # If it's just a name, find the URI
         if not resource_name_or_uri.startswith(('http://', 'https://', 'cocoindex://')):
             resources_result = await self.session.list_resources()
             resource = next((r for r in resources_result.resources if r.name == resource_name_or_uri), None)
-            
+
             if not resource:
                 raise RuntimeError(f"Resource '{resource_name_or_uri}' not found")
             resource_uri = resource.uri
         else:
             resource_uri = resource_name_or_uri
-            
+
         result = await self.session.read_resource(resource_uri)
-        
+
         if hasattr(result, 'contents') and result.contents:
             for content in result.contents:
                 if hasattr(content, 'text'):
                     return content.text
-        
+
         return ""
 
     async def _read_resource_http(self, resource_name_or_uri: str) -> str:
@@ -294,7 +293,7 @@ class MCPTestClient:
                 if hasattr(resource, 'name') and resource.name == resource_name_or_uri:
                     matching_resource = resource
                     break
-            
+
             if not matching_resource:
                 raise RuntimeError(f"Resource '{resource_name_or_uri}' not found")
             resource_uri = str(matching_resource.uri)
@@ -326,7 +325,7 @@ class MCPTestClient:
             for content in result["result"]["contents"]:
                 if "text" in content:
                     return content["text"]
-        
+
         return ""
 
     async def list_tools(self) -> List[Any]:
@@ -340,7 +339,7 @@ class MCPTestClient:
         """List tools using streaming transport."""
         if not self.session:
             raise RuntimeError("Not connected to server")
-            
+
         result = await self.session.list_tools()
         return [tool.name for tool in result.tools]
 
@@ -386,8 +385,8 @@ class MCPTestClient:
         """List resources using streaming transport."""
         if not self.session:
             raise RuntimeError("Not connected to server")
-            
-        result = await self.session.list_resources() 
+
+        result = await self.session.list_resources()
         return [resource.name for resource in result.resources]
 
     async def _list_resources_http(self) -> List[Any]:
@@ -427,7 +426,7 @@ class MCPTestClient:
             if self.transport == 'http':
                 if not self.http_client:
                     return False
-                    
+
                 # Test with a simple tools/list request
                 response = await self.http_client.post(
                     self.server_url,
@@ -457,7 +456,7 @@ class MCPTestClient:
 # Legacy compatibility wrapper for existing tests
 class MCPHTTPClient(MCPTestClient):
     """Legacy wrapper for backward compatibility."""
-    
+
     def __init__(self, host: str = '127.0.0.1', port: int = 3033):
         super().__init__(host=host, port=port, transport='http')
         # For compatibility with existing tests
@@ -469,18 +468,18 @@ class MCPHTTPClient(MCPTestClient):
     async def execute_tool(self, tool_name: str, arguments: dict):
         """Execute tool with legacy interface."""
         result = await self.call_tool(tool_name, arguments)
-        
+
         # Convert to legacy format expected by existing tests
         from types import SimpleNamespace
-        
+
         if result["isError"]:
             raise Exception(f"MCP Tool Error: {result['content'][0] if result['content'] else 'Unknown error'}")
-        
+
         # Convert to legacy tuple format: ["content", [SimpleNamespace objects]]
         content_items = []
         for text in result["content"]:
             content_items.append(SimpleNamespace(type="text", text=text))
-        
+
         return ["content", content_items]
 
     async def cleanup(self):

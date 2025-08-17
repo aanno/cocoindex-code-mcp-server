@@ -5,9 +5,8 @@ Tree-sitter based Python code analyzer.
 Combines the generic AST visitor framework with Python-specific node handlers.
 """
 
-from ast import AST
-from ast import expr
 import ast
+from ast import AST, expr
 from typing import Any, Dict, List, Optional, Set, Union
 
 from ...ast_visitor import (
@@ -170,7 +169,7 @@ class TreeSitterPythonAnalyzer:
                     # Promoted metadata fields for database columns
                     "analysis_method": "tree_sitter_python_analyzer",
                     # don't set chunking method in analyzer
-                    # "chunking_method": "ast_tree_sitter", 
+                    # "chunking_method": "ast_tree_sitter",
                     # "tree_sitter_chunking_error": False,
                     'tree_sitter_analyze_error': False,
                     'decorators_used': metadata.get('decorators', [])
@@ -254,7 +253,7 @@ class TreeSitterPythonAnalyzer:
 
         return merged
 
-    def _normalize_metadata(self, metadata: Union[Dict[str, Any],None], code: str, filename: str) -> Dict[str, Any]:
+    def _normalize_metadata(self, metadata: Union[Dict[str, Any], None], code: str, filename: str) -> Dict[str, Any]:
         """Ensure metadata has all expected fields without overriding enhanced metadata."""
         base_metadata = {
             'language': 'Python',
@@ -532,7 +531,7 @@ class PythonASTVisitor(ast.NodeVisitor):
         else:
             return ast.unparse(decorator)
 
-    def _get_annotation_name(self, annotation: expr) -> Union[str,None]:
+    def _get_annotation_name(self, annotation: expr) -> Union[str, None]:
         """Extract type annotation name."""
         if annotation is None:
             return None
@@ -589,7 +588,7 @@ def create_python_analyzer(prefer_tree_sitter: bool = True) -> TreeSitterPythonA
 
 
 # Convenience function for direct analysis
-def analyze_python_code(code: str, filename: str = "", prefer_tree_sitter: bool = True) -> Union[Dict[str, Any],None]:
+def analyze_python_code(code: str, filename: str = "", prefer_tree_sitter: bool = True) -> Union[Dict[str, Any], None]:
     """Analyze Python code with the enhanced analyzer."""
     analyzer = create_python_analyzer(prefer_tree_sitter=prefer_tree_sitter)
     return analyzer.analyze_code(code, filename)

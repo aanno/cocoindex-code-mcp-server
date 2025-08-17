@@ -9,25 +9,26 @@ This script demonstrates how to:
 3. Debug chunk operations and transformations
 """
 
+import os
 import sys
 import tempfile
-import os
-import json
 from pathlib import Path
+
+from cocoindex_code_mcp_server.ast_chunking import (
+    CocoIndexASTChunker,
+    ensure_unique_chunk_locations,
+)
+from cocoindex_code_mcp_server.cocoindex_config import update_flow_config
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
-
-from cocoindex_code_mcp_server.cocoindex_config import update_flow_config
-from cocoindex_code_mcp_server.ast_chunking import CocoIndexASTChunker, ensure_unique_chunk_locations
-import cocoindex
 
 
 def test_single_file_flow():
     """Test CocoIndex flow with a single file."""
     print("🔍 Testing Single File CocoIndex Flow")
     print("=" * 50)
-    
+
     # Create test code
     test_code = '''
 def fibonacci(n):
@@ -44,10 +45,10 @@ def factorial(n):
 
 class Calculator:
     """A simple calculator class."""
-    
+
     def add(self, a, b):
         return a + b
-    
+
     def multiply(self, a, b):
         return a * b
 
@@ -61,29 +62,29 @@ def main():
 if __name__ == "__main__":
     main()
 '''
-    
+
     # Create temporary file
     with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
         f.write(test_code)
         temp_file = f.name
-    
+
     try:
         # Update flow config for single file
         print(f"Processing file: {temp_file}")
         update_flow_config(temp_file)
-        
+
         # Run the flow
         print("Running CocoIndex flow...")
-        
+
         # Here you would normally run the flow
         # This is a placeholder for the actual flow execution
         print("✅ Flow configuration updated successfully")
         print("Note: Actual flow execution would happen here")
-        
+
     finally:
         # Cleanup
         os.unlink(temp_file)
-    
+
     print()
 
 
@@ -91,7 +92,7 @@ def test_ast_chunking():
     """Test AST chunking operations."""
     print("🔍 Testing AST Chunking")
     print("=" * 30)
-    
+
     test_code = '''
 import os
 import sys
@@ -106,40 +107,40 @@ def function_two():
 
 class MyClass:
     """Example class."""
-    
+
     def __init__(self):
         self.value = 0
-    
+
     def method_one(self):
         return self.value + 1
-    
+
     def method_two(self):
         return self.value * 2
 '''
-    
+
     # Test chunking
     chunker = CocoIndexASTChunker()
     chunks = chunker.chunk_code(test_code, language="python", filename="test.py")
-    
+
     print(f"Generated {len(chunks)} chunks:")
-    
+
     total_content_length = 0
     for i, chunk in enumerate(chunks):
         content_preview = chunk.content[:80].replace('\n', '\\n')
-        print(f"  {i+1}. Length: {len(chunk.content)}, Preview: {content_preview}")
+        print(f"  {i + 1}. Length: {len(chunk.content)}, Preview: {content_preview}")
         total_content_length += len(chunk.content)
-        
+
         # Show metadata if available
         if hasattr(chunk, 'metadata') and chunk.metadata:
-            relevant_metadata = {k: v for k, v in chunk.metadata.items() 
-                               if k in ['functions', 'classes', 'imports', 'analysis_method']}
+            relevant_metadata = {k: v for k, v in chunk.metadata.items()
+                                 if k in ['functions', 'classes', 'imports', 'analysis_method']}
             if relevant_metadata:
                 print(f"      Metadata: {relevant_metadata}")
-    
+
     print(f"\nOriginal code length: {len(test_code)}")
     print(f"Total chunk content length: {total_content_length}")
-    print(f"Coverage: {total_content_length/len(test_code):.1%}")
-    
+    print(f"Coverage: {total_content_length / len(test_code):.1%}")
+
     # Test ensure_unique_chunk_locations
     print("\nTesting unique chunk locations...")
     try:
@@ -147,7 +148,7 @@ class MyClass:
         print(f"✅ Processed {len(chunks)} chunks -> {len(unique_chunks)} unique chunks")
     except Exception as e:
         print(f"❌ Error in ensure_unique_chunk_locations: {e}")
-    
+
     print()
 
 
@@ -155,7 +156,7 @@ def trace_content_preservation():
     """Trace how content is preserved through the pipeline."""
     print("🔍 Tracing Content Preservation")
     print("=" * 35)
-    
+
     original_code = '''
 def hello_world():
     print("Hello, World!")
@@ -165,34 +166,34 @@ def goodbye_world():
     print("Goodbye, World!")
     return "farewell"
 '''
-    
+
     print(f"Original code ({len(original_code)} chars):")
     print(original_code)
     print("-" * 40)
-    
+
     # Step 1: AST Chunking
     chunker = CocoIndexASTChunker()
     chunks = chunker.chunk_code(original_code, language="python", filename="trace.py")
-    
+
     print(f"After AST chunking: {len(chunks)} chunks")
     reconstructed = ""
     for i, chunk in enumerate(chunks):
-        print(f"  Chunk {i+1}: {len(chunk.content)} chars")
+        print(f"  Chunk {i + 1}: {len(chunk.content)} chars")
         reconstructed += chunk.content
-    
+
     print(f"Reconstructed length: {len(reconstructed)} chars")
-    
+
     # Check preservation
     original_functions = original_code.count("def ")
     reconstructed_functions = reconstructed.count("def ")
-    
+
     print(f"Functions preserved: {reconstructed_functions}/{original_functions}")
-    
+
     if "hello_world" in reconstructed and "goodbye_world" in reconstructed:
         print("✅ Key functions preserved")
     else:
         print("❌ Key functions lost")
-    
+
     print()
 
 
@@ -200,7 +201,7 @@ def test_metadata_extraction():
     """Test metadata extraction from chunks."""
     print("🔍 Testing Metadata Extraction")
     print("=" * 35)
-    
+
     test_cases = [
         ("Python", "python", '''
 def calculate(a, b):
@@ -222,15 +223,15 @@ fibonacci :: Int -> Int
 fibonacci n = if n <= 1 then n else fibonacci (n-1) + fibonacci (n-2)
 ''')
     ]
-    
+
     for name, language, code in test_cases:
         print(f"{name} code:")
-        
+
         chunker = CocoIndexASTChunker()
         chunks = chunker.chunk_code(code, language=language, filename=f"test.{language}")
-        
+
         print(f"  Chunks generated: {len(chunks)}")
-        
+
         for i, chunk in enumerate(chunks):
             if hasattr(chunk, 'metadata') and chunk.metadata:
                 # Show relevant metadata
@@ -238,15 +239,15 @@ fibonacci n = if n <= 1 then n else fibonacci (n-1) + fibonacci (n-2)
                 functions = metadata.get('functions', [])
                 classes = metadata.get('classes', [])
                 analysis_method = metadata.get('analysis_method', 'unknown')
-                
+
                 if functions or classes or analysis_method != 'unknown':
-                    print(f"    Chunk {i+1} metadata:")
+                    print(f"    Chunk {i + 1} metadata:")
                     if functions:
                         print(f"      Functions: {functions}")
                     if classes:
                         print(f"      Classes: {classes}")
                     print(f"      Analysis: {analysis_method}")
-        
+
         print()
 
 
@@ -257,13 +258,13 @@ def main():
         test_ast_chunking()
         trace_content_preservation()
         test_metadata_extraction()
-        
+
         print("🎯 Summary:")
         print("- Single file flow configuration should work")
         print("- AST chunking should preserve content and generate metadata")
         print("- Content preservation can be tracked through the pipeline")
         print("- Different languages should produce appropriate metadata")
-        
+
     except Exception as e:
         print(f"Error: {e}")
         import traceback

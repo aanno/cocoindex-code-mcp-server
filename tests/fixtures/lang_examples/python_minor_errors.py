@@ -2,23 +2,29 @@
 """Python example with 1-2 syntax errors for testing error recovery"""
 
 # Valid function
+
+
 def add(x, y):
     """Add two numbers"""
     return x + y
 
 # Valid class
+
+
 class Calculator:
     """Simple calculator class"""
-    
+
     def __init__(self):
         self.history = []
-    
+
     def multiply(self, a, b):
         result = a * b
         self.history.append(f"{a} * {b} = {result}")
         return result
 
-# Error 1: Invalid indentation 
+# Error 1: Invalid indentation
+
+
 def broken_function():
     x = 5
   y = 10  # Error: inconsistent indentation

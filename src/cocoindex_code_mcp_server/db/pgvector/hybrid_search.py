@@ -14,7 +14,12 @@ from prompt_toolkit.key_binding import KeyBindings
 from psycopg_pool import ConnectionPool
 
 import cocoindex
-from cocoindex_code_mcp_server.backends import VectorStoreBackend, BackendFactory, QueryFilters, SearchResult
+from cocoindex_code_mcp_server.backends import (
+    BackendFactory,
+    QueryFilters,
+    SearchResult,
+    VectorStoreBackend,
+)
 from cocoindex_code_mcp_server.cocoindex_config import (
     code_embedding_flow,
     code_to_embedding,
@@ -28,8 +33,8 @@ class HybridSearchEngine:
     """Hybrid search engine combining vector and keyword search."""
 
     def __init__(self, table_name: str, parser: KeywordSearchParser,
-                 backend: Union[VectorStoreBackend,None] = None, 
-                 pool: Union[ConnectionPool,None] = None, 
+                 backend: Union[VectorStoreBackend, None] = None,
+                 pool: Union[ConnectionPool, None] = None,
                  embedding_func=None) -> None:
         # Support both new backend interface and legacy direct pool access
         if backend is not None:
@@ -42,7 +47,7 @@ class HybridSearchEngine:
             self.backend = BackendFactory.create_backend("postgres", pool=pool, table_name=table_name)
         else:
             raise ValueError("Either 'backend' or 'pool' parameter must be provided")
-        
+
         self.parser = parser or KeywordSearchParser()
         self.embedding_func = embedding_func or (lambda q: code_to_embedding.eval(q))
 
@@ -51,7 +56,7 @@ class HybridSearchEngine:
         """Access to the database connection pool via backend."""
         return getattr(self.backend, 'pool', None)
 
-    @property  
+    @property
     def table_name(self):
         """Access to the table name via backend."""
         return getattr(self.backend, 'table_name', None)
@@ -79,7 +84,7 @@ class HybridSearchEngine:
         """
         # Parse keyword query
         search_group = self.parser.parse(keyword_query)
-        
+
         # Convert search group to QueryFilters format
         filters = None
         if search_group and search_group.conditions:
@@ -122,13 +127,12 @@ class HybridSearchEngine:
             "source": result.source,
             "score_type": result.score_type
         }
-        
+
         # Add metadata fields if available
         if result.metadata:
             result_dict.update(result.metadata)
-        
-        return result_dict
 
+        return result_dict
 
 
 def format_results_as_json(results: List[Dict[str, Any]], indent: int = 2) -> str:

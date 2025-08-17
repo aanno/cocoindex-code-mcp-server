@@ -7,6 +7,7 @@ within the same file, causing PostgreSQL "ON CONFLICT DO UPDATE" errors.
 
 from types import FunctionType
 from typing import cast
+
 import pytest
 
 import cocoindex

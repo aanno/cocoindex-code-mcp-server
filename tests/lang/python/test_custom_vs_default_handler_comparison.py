@@ -360,7 +360,7 @@ class TestCustomVsDefaultHandlerComparison:
         """Compare import detection capabilities."""
         custom_result = self.custom_analyzer.analyze_code(SAMPLE_PYTHON_CODE, self.filename)
         default_result = basic_analyze_python_code(SAMPLE_PYTHON_CODE, self.filename)
-        
+
         if custom_result is None or default_result is None:
             pytest.fail("custom_result or default_result is None")
         else:
@@ -387,9 +387,10 @@ class TestCustomVsDefaultHandlerComparison:
 
     def test_analysis_method_tracking(self) -> None:
         """Test that analysis method is properly tracked."""
-        custom_result: Union[Dict[str, Any], None] = self.custom_analyzer.analyze_code(SAMPLE_PYTHON_CODE, self.filename)
+        custom_result: Union[Dict[str, Any], None] = self.custom_analyzer.analyze_code(
+            SAMPLE_PYTHON_CODE, self.filename)
         default_result: Dict[str, Any] = basic_analyze_python_code(SAMPLE_PYTHON_CODE, self.filename)
-        
+
         if custom_result is not None and default_result is not None:
             # Check analysis method is tracked
             assert 'analysis_method' in custom_result
@@ -410,7 +411,8 @@ class TestCustomVsDefaultHandlerComparison:
 
     def test_metadata_richness_comparison(self) -> None:
         """Compare overall metadata richness between handlers."""
-        custom_result: Union[Dict[str, Any], None] = self.custom_analyzer.analyze_code(SAMPLE_PYTHON_CODE, self.filename)
+        custom_result: Union[Dict[str, Any], None] = self.custom_analyzer.analyze_code(
+            SAMPLE_PYTHON_CODE, self.filename)
         default_result = basic_analyze_python_code(SAMPLE_PYTHON_CODE, self.filename)
 
         if custom_result is not None:

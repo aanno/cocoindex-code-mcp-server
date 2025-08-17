@@ -44,7 +44,7 @@ class LanguageModelSelector:
     EXTENSION_TO_LANGUAGE = {
         ".py": "python",
         ".pyi": "python",
-        ".rs": "rust", 
+        ".rs": "rust",
         ".js": "javascript",
         ".mjs": "javascript",
         ".cjs": "javascript",
@@ -110,12 +110,12 @@ class LanguageModelSelector:
         dummy_filename = f"dummy{file_extension.lower()}"
         if not file_extension.startswith('.'):
             dummy_filename = f"dummy.{file_extension.lower()}"
-            
-        from .mappers import get_language_from_extension, get_internal_language_name
+
+        from .mappers import get_internal_language_name, get_language_from_extension
         display_language = get_language_from_extension(dummy_filename)
         if display_language == "Unknown":
             return None
-            
+
         # Convert to internal processing name for embedding model selection
         return get_internal_language_name(display_language)
 

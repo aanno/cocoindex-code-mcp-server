@@ -354,7 +354,9 @@ class TestErrorHandling:
             mock_pool = Mock()
             mock_pool.connection.side_effect = Exception("Database connection failed")
 
-            from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
+            from cocoindex_code_mcp_server.keyword_search_parser_lark import (
+                KeywordSearchParser,
+            )
             parser = KeywordSearchParser()
             engine = HybridSearchEngine(
                 table_name="test_embeddings",
@@ -413,7 +415,9 @@ class TestErrorHandling:
 
             mock_pool = Mock()
 
-            from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
+            from cocoindex_code_mcp_server.keyword_search_parser_lark import (
+                KeywordSearchParser,
+            )
             parser = KeywordSearchParser()
             engine = HybridSearchEngine(
                 table_name="test_embeddings",
@@ -475,7 +479,9 @@ class TestPerformanceCharacteristics:
 
     def test_query_complexity_handling(self):
         """Test handling of complex queries."""
-        from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
+        from cocoindex_code_mcp_server.keyword_search_parser_lark import (
+            KeywordSearchParser,
+        )
 
         parser = KeywordSearchParser()
 

@@ -1,9 +1,11 @@
-from cocoindex_code_mcp_server import LOGGER
-from typing import Any, Dict
 from collections.abc import Iterable, Sized
+from typing import Any, Dict
+
 
 def is_empty_iterable(value: Any) -> bool:
-    return isinstance(value, Iterable) and not isinstance(value, (str, bytes)) and isinstance(value, Sized) and len(value) == 0
+    return isinstance(value, Iterable) and not isinstance(
+        value, (str, bytes)) and isinstance(value, Sized) and len(value) == 0
+
 
 def update_defaults(d: Dict[str, Any], defaults: Dict[str, Any]) -> None:
     for k, v in defaults.items():
@@ -13,4 +15,3 @@ def update_defaults(d: Dict[str, Any], defaults: Dict[str, Any]) -> None:
                 d[k] = v
         else:
             d.setdefault(k, v)
-

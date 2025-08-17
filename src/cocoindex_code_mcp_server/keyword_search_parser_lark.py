@@ -17,6 +17,7 @@ from lark.exceptions import LarkError, ParseError
 # Configure logging
 logger = logging.getLogger(__name__)
 
+
 class Operator(Enum):
     AND = "and"
     OR = "or"
@@ -173,7 +174,7 @@ class KeywordSearchParser:
                 # The tree is already transformed to SearchGroup during parsing
                 return tree  # type: ignore
             else:
-                logger.warning(f"No lark parser found, falling back to regex parser")
+                logger.warning("No lark parser found, falling back to regex parser")
                 raise LarkError("No lark parser found")
         except (LarkError, ParseError) as e:
             logger.warning(f"Lark parser failed ({e}), falling back to regex parser")

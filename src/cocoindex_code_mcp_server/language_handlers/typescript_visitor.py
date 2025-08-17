@@ -9,8 +9,8 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from ..ast_visitor import NodeContext
-from .javascript_visitor import JavaScriptASTVisitor
 from ..parser_util import update_defaults
+from .javascript_visitor import JavaScriptASTVisitor
 
 LOGGER = logging.getLogger(__name__)
 
@@ -191,7 +191,7 @@ def analyze_typescript_code(code: str, language: str = "typescript", filename: s
             'tree_language': str(parser.language) if parser else None,
             # Required metadata fields for promoted column implementation
             # don't set chunking method in analyzer
-            # "chunking_method": "ast_tree_sitter", 
+            # "chunking_method": "ast_tree_sitter",
             # "tree_sitter_chunking_error": False,
             'decorators_used': result.get('decorators', []),  # TypeScript supports decorators
             'has_type_hints': True,  # TypeScript has strong typing

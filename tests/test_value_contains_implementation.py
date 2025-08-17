@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Test cases for value_contains functionality in keyword search parsers."""
 
-from typing import Union, cast, Optional, Callable, Tuple, List, Any
+from typing import Union, cast
+
 import pytest
 
 from cocoindex_code_mcp_server.keyword_search_parser_lark import (
@@ -125,6 +126,7 @@ class TestValueContainsSQLGeneration:
         assert "AND" in where_clause
         assert params == ["python", "%def%"]
 
+
 class TestValueContainsLarkParser:
     """Test value_contains functionality in the Lark parser."""
 
@@ -202,19 +204,19 @@ class TestValueContainsEdgeCases:
 
         # Test exists
         exists_result = parser.parse('exists(embedding)')
-        
+
         exists_condition: Union[SearchCondition, SearchGroup] = exists_result.conditions[0]
         cond = cast(SearchCondition, exists_condition)
-        
+
         assert cond.is_exists_check is True
         assert cond.is_value_contains_check is False
 
         # Test value_contains
         contains_result = parser.parse('value_contains(code, "test")')
-        
+
         contains_condition: Union[SearchCondition, SearchGroup] = contains_result.conditions[0]
         cond = cast(SearchCondition, contains_condition)
-        
+
         assert cond.is_exists_check is False
         assert cond.is_value_contains_check is True
 

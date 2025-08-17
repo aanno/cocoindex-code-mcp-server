@@ -11,15 +11,18 @@ import os
 import pytest
 from dotenv import load_dotenv
 from psycopg_pool import ConnectionPool
+
 from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
     HybridSearchEngine,
     format_results_readable,
 )
 from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
+
 from .cocoindex_util import get_default_db_name
 
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)
+
 
 @pytest.mark.integration
 class TestMetadataSearch:
@@ -55,7 +58,7 @@ class TestMetadataSearch:
                             if not table_exists:
                                 pytest.skip(f"{name} table does not exist - database not initialized")
                         else:
-                                pytest.skip(f"{name} table does not exist - database not initialized")
+                            pytest.skip(f"{name} table does not exist - database not initialized")
                     else:
                         pytest.fail(f"{name} table does not exist - database not initialized")
         except Exception as e:

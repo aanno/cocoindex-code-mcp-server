@@ -7,22 +7,22 @@ This module wraps the existing PostgreSQL/pgvector functionality from hybrid_sea
 into the standardized VectorStoreBackend interface.
 """
 
-from ast import FunctionDef, FunctionType
-import json
 import logging
-from typing import Any, Dict, List, Union, Tuple, cast, Set
+from typing import Any, Dict, List, Set, Tuple
 
 import numpy as np
+from cachetools import TTLCache, cached
 from numpy.typing import NDArray
 from pgvector.psycopg import register_vector
 from psycopg_pool import ConnectionPool
-from cachetools import TTLCache, cached
 
-from . import VectorStoreBackend, QueryFilters
-from ..schemas import ChunkMetadata, SearchResult, SearchResultType, validate_chunk_metadata
-from ..mappers import PostgresFieldMapper, ResultMapper, CONST_SELECTABLE_FIELDS
 from ..keyword_search_parser_lark import build_sql_where_clause
-from ..lang.python.python_code_analyzer import analyze_python_code
+from ..mappers import CONST_SELECTABLE_FIELDS, PostgresFieldMapper, ResultMapper
+from ..schemas import (
+    SearchResult,
+    SearchResultType,
+)
+from . import QueryFilters, VectorStoreBackend
 
 logger = logging.getLogger(__name__)
 
@@ -34,11 +34,11 @@ column_cache = TTLCache(maxsize=100, ttl=60)
 def _get_table_columns(pool: ConnectionPool, table_name: str) -> Set[str]:
     """
     Get available columns from database table with caching.
-    
+
     Args:
         pool: PostgreSQL connection pool
         table_name: Name of the table to inspect
-        
+
     Returns:
         Set of available column names
     """
@@ -56,7 +56,7 @@ def _get_table_columns(pool: ConnectionPool, table_name: str) -> Set[str]:
                 (table_name,)
             )
             available_columns = {row[0] for row in cur.fetchall()}
-            
+
             # If no columns found, try with lowercase table name
             if not available_columns:
                 lowercase_table_name = table_name.lower()
@@ -69,21 +69,21 @@ def _get_table_columns(pool: ConnectionPool, table_name: str) -> Set[str]:
                     (lowercase_table_name,)
                 )
                 available_columns = {row[0] for row in cur.fetchall()}
-                
+
                 # Return both the columns and indicate if we used lowercase
                 if available_columns:
                     logger.info(f"Table name '{table_name}' not found, using lowercase '{lowercase_table_name}'")
-    
+
     return available_columns
 
 
 class PostgresBackend(VectorStoreBackend):
     """PostgreSQL + pgvector backend implementation."""
-    
+
     def __init__(self, pool: ConnectionPool, table_name: str) -> None:
         """
         Initialize PostgreSQL backend.
-        
+
         Args:
             pool: PostgreSQL connection pool
             table_name: Name of the table containing vector embeddings
@@ -92,33 +92,34 @@ class PostgresBackend(VectorStoreBackend):
         self.table_name = table_name
         self.mapper = PostgresFieldMapper()
         self._columns_warned: Set[str] = set()  # Track which missing columns we've already warned about
-        
+
     def _get_available_columns(self) -> Set[str]:
         """Get available columns from database with caching."""
         # Use the cached function to get columns
         available_columns = _get_table_columns(self.pool, self.table_name)
-        
+
         # If no columns found, try with lowercase table name and update instance
         if not available_columns:
             lowercase_table_name = self.table_name.lower()
             available_columns = _get_table_columns(self.pool, lowercase_table_name)
-            
+
             # If we found columns with lowercase, update the table name for future queries
             if available_columns:
                 logger.info(f"Table name '{self.table_name}' not found, using lowercase '{lowercase_table_name}'")
                 self.table_name = lowercase_table_name
-        
+
         return available_columns
-    
-    def _build_select_clause(self, include_distance: bool = False, distance_alias: str = "distance") -> Tuple[str, List[str]]:
+
+    def _build_select_clause(self, include_distance: bool = False,
+                             distance_alias: str = "distance") -> Tuple[str, List[str]]:
         """Build SELECT clause dynamically using only available DB columns."""
         available_columns = self._get_available_columns()
-        
+
         # Filter selectable fields to only those that exist in the database
         fields = []
         available_fields = []
         missing_fields = []
-        
+
         for field in CONST_SELECTABLE_FIELDS:
             if field in available_columns:
                 # Quote PostgreSQL reserved keywords
@@ -129,7 +130,7 @@ class PostgresBackend(VectorStoreBackend):
                 available_fields.append(field)
             else:
                 missing_fields.append(field)
-        
+
         # Log warning for missing fields (only once per field)
         new_missing_fields = set(missing_fields) - self._columns_warned
         if new_missing_fields:
@@ -138,22 +139,23 @@ class PostgresBackend(VectorStoreBackend):
                 f"Query will be restricted to available columns: {sorted(available_fields)}"
             )
             self._columns_warned.update(new_missing_fields)
-        
+
         if include_distance:
             fields.append(f"embedding <=> %s AS {distance_alias}")
-            
+
         return ", ".join(fields), available_fields
-    
+
     def vector_search(
-        self, 
-        query_vector: NDArray[np.float32], 
+        self,
+        query_vector: NDArray[np.float32],
         top_k: int = 10
     ) -> List[SearchResult]:
         """Perform pure vector similarity search using pgvector."""
         with self.pool.connection() as conn:
             register_vector(conn)
             with conn.cursor() as cur:
-                select_clause, available_fields = self._build_select_clause(include_distance=True, distance_alias="distance")
+                select_clause, available_fields = self._build_select_clause(
+                    include_distance=True, distance_alias="distance")
                 cur.execute(
                     f"""
                     SELECT {select_clause}
@@ -164,19 +166,19 @@ class PostgresBackend(VectorStoreBackend):
                     (query_vector, top_k),
                 )
                 return [
-                    self._format_result(row, available_fields, score_type="vector") 
+                    self._format_result(row, available_fields, score_type="vector")
                     for row in cur.fetchall()
                 ]
-    
+
     def keyword_search(
-        self, 
-        filters: QueryFilters, 
+        self,
+        filters: QueryFilters,
         top_k: int = 10
     ) -> List[SearchResult]:
         """Perform pure keyword/metadata search using PostgreSQL."""
         # Convert QueryFilters to SQL where clause
         where_clause, params = self._build_where_clause(filters)
-        
+
         with self.pool.connection() as conn:
             with conn.cursor() as cur:
                 select_clause, available_fields = self._build_select_clause()
@@ -191,10 +193,10 @@ class PostgresBackend(VectorStoreBackend):
                     params + [top_k],
                 )
                 return [
-                    self._format_result(row, available_fields, score_type="keyword") 
+                    self._format_result(row, available_fields, score_type="keyword")
                     for row in cur.fetchall()
                 ]
-    
+
     def hybrid_search(
         self,
         query_vector: NDArray[np.float32],
@@ -205,11 +207,11 @@ class PostgresBackend(VectorStoreBackend):
     ) -> List[SearchResult]:
         """Perform hybrid search combining vector and keyword search."""
         where_clause, params = self._build_where_clause(filters)
-        
+
         with self.pool.connection() as conn:
             register_vector(conn)
             with conn.cursor() as cur:
-                # Hybrid search: vector similarity with keyword filtering  
+                # Hybrid search: vector similarity with keyword filtering
                 select_clause, available_fields = self._build_select_clause()
                 cur.execute(
                     f"""
@@ -232,16 +234,15 @@ class PostgresBackend(VectorStoreBackend):
                     [query_vector, query_vector] + params + [vector_weight, top_k],
                 )
                 return [
-                    self._format_result(row, available_fields, score_type="hybrid") 
+                    self._format_result(row, available_fields, score_type="hybrid")
                     for row in cur.fetchall()
                 ]
-    
+
     def configure(self, **options: Any) -> None:
         """Configure PostgreSQL-specific options."""
         # For now, configuration is handled through the connection pool
         # Future: Could support connection pool size, query timeouts, etc.
-        pass
-    
+
     def get_table_info(self) -> Dict[str, Any]:
         """Get information about the PostgreSQL table structure."""
         with self.pool.connection() as conn:
@@ -257,14 +258,14 @@ class PostgresBackend(VectorStoreBackend):
                     (self.table_name,)
                 )
                 columns = cur.fetchall()
-                
+
                 # Get table size
                 cur.execute(
                     f"SELECT COUNT(*) FROM {self.table_name}"
                 )
                 result = cur.fetchone()
                 row_count = result[0] if result else 0
-                
+
                 # Get index information
                 cur.execute(
                     """
@@ -275,12 +276,12 @@ class PostgresBackend(VectorStoreBackend):
                     (self.table_name,)
                 )
                 indexes = cur.fetchall()
-                
+
                 # Get available columns for this table
                 available_columns = {col[0] for col in columns}
                 expected_columns = CONST_SELECTABLE_FIELDS
                 missing_columns = expected_columns - available_columns
-                
+
                 return {
                     "backend_type": "postgres",
                     "table_name": self.table_name,
@@ -288,7 +289,7 @@ class PostgresBackend(VectorStoreBackend):
                     "columns": [
                         {
                             "name": col[0],
-                            "type": col[1], 
+                            "type": col[1],
                             "nullable": col[2] == "YES"
                         }
                         for col in columns
@@ -306,7 +307,7 @@ class PostgresBackend(VectorStoreBackend):
                         "missing_columns": sorted(missing_columns)
                     }
                 }
-    
+
     def close(self) -> None:
         """Close PostgreSQL connection pool."""
         if hasattr(self.pool, 'close'):
@@ -314,34 +315,34 @@ class PostgresBackend(VectorStoreBackend):
         # Clear instance-level tracking
         self._columns_warned.clear()
         # Note: Global column_cache is shared across instances and persists
-    
+
     def _build_where_clause(self, filters: QueryFilters) -> Tuple[str, List[Any]]:
         """Convert QueryFilters to PostgreSQL WHERE clause."""
         # Create a mock search group compatible with existing parser
-        from ..keyword_search_parser_lark import SearchGroup as LegacySearchGroup
-        
+
         class MockSearchGroup:
             def __init__(self, conditions: List[Any]) -> None:
                 self.conditions = conditions
                 self.operator = "and"
-        
+
         search_group = MockSearchGroup(filters.conditions)
         return build_sql_where_clause(search_group)  # type: ignore
-    
-    def _format_result(self, row: Tuple[Any, ...], available_fields: List[str], score_type: str = "vector") -> SearchResult:
+
+    def _format_result(self, row: Tuple[Any, ...], available_fields: List[str],
+                       score_type: str = "vector") -> SearchResult:
         """Format PostgreSQL database row into SearchResult using available field mapping."""
         # Build dictionary from row values using only available fields
         pg_row = {}
         for i, field in enumerate(available_fields):
             if i < len(row):
                 pg_row[field] = row[i]
-        
+
         # Handle distance/score fields based on search type
         if score_type == "hybrid":
             # Row includes hybrid_score at the end
             score = float(row[-1]) if len(row) > len(available_fields) else 1.0
         elif score_type == "vector":
-            # Row includes distance field 
+            # Row includes distance field
             distance_idx = len(available_fields)  # distance is after available fields
             if len(row) > distance_idx:
                 distance = float(row[distance_idx])
@@ -351,12 +352,15 @@ class PostgresBackend(VectorStoreBackend):
         else:  # keyword
             # Row includes distance field (0.0)
             score = 1.0
-        
+
         # Ensure required fields have defaults
         pg_row.setdefault("source_name", "default")
         if "location" not in pg_row and "filename" in pg_row and "start" in pg_row and "end" in pg_row:
-            pg_row["location"] = f"{pg_row['filename']}:{pg_row['start']}-{pg_row['end']}" if pg_row.get('start') and pg_row.get('end') else pg_row['filename']
-        
+            pg_row["location"] = f"{
+                pg_row['filename']}:{
+                pg_row['start']}-{
+                pg_row['end']}" if pg_row.get('start') and pg_row.get('end') else pg_row['filename']
+
         # Convert score_type string to SearchResultType enum
         if score_type == "vector":
             result_type = SearchResultType.VECTOR_SIMILARITY
@@ -366,6 +370,6 @@ class PostgresBackend(VectorStoreBackend):
             result_type = SearchResultType.HYBRID_COMBINED
         else:
             result_type = SearchResultType.VECTOR_SIMILARITY
-        
+
         # Use ResultMapper to convert to standardized SearchResult
         return ResultMapper.from_postgres_result(pg_row, score, result_type)

@@ -16,12 +16,13 @@ import cocoindex
 from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow
 from cocoindex_code_mcp_server.db.pgvector.hybrid_search import HybridSearchEngine
 from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
+
 from ..cocoindex_util import get_default_db_name
 
 # Package should be installed via maturin develop or pip install -e .
 
 # TODO:
-# The e2e tests are failing because they're trying to access a real database table code_embeddings that doesn't exist. 
+# The e2e tests are failing because they're trying to access a real database table code_embeddings that doesn't exist.
 # These are integration tests that expect actual database setup.
 
 LOGGER = logging.getLogger(__name__)

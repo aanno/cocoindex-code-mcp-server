@@ -7,9 +7,9 @@ Similar to tests/lang/python/test_cocoindex_baseline_comparison.py
 """
 
 from pathlib import Path
+from typing import Dict, List, Union
 
 import pytest
-from typing import Dict, List, Union
 
 import_error = None
 try:
@@ -261,11 +261,11 @@ class TestHaskellBaselineComparison:
         # Assert basic quality thresholds
         assert func_recall >= 0.5, f"Function recall too low: {func_recall:.2%}"
         assert type_recall >= 0.5, f"Data type recall too low: {type_recall:.2%}"
-        
+
         # Type-safe assertions
         has_type_signatures = our_metrics.get('has_type_signatures', False)
         complexity_score = our_metrics.get('complexity_score', 0)
-        
+
         assert isinstance(has_type_signatures, bool) and has_type_signatures, "Should detect type signatures"
         assert isinstance(complexity_score, int) and complexity_score > 0, "Should calculate complexity"
 

@@ -8,10 +8,12 @@ Follows the same pattern as haskell_visitor.py by subclassing GenericMetadataVis
 import logging
 from typing import Any, Dict, List, Optional
 
+from tree_sitter import Node
+
+from cocoindex_code_mcp_server.ast_visitor import NodeContext
+
 from ..ast_visitor import GenericMetadataVisitor, NodeContext
 from ..parser_util import update_defaults
-from cocoindex_code_mcp_server.ast_visitor import NodeContext
-from tree_sitter import Node
 
 LOGGER = logging.getLogger(__name__)
 
@@ -189,12 +191,13 @@ def analyze_kotlin_code(code: str, filename: str = "") -> Dict[str, Any]:
             'tree_language': str(parser.language) if parser else None,
             # Required metadata fields for promoted column implementation
             # don't set chunking method in analyzer
-            # "chunking_method": "ast_tree_sitter", 
+            # "chunking_method": "ast_tree_sitter",
             # "tree_sitter_chunking_error": False,
             'tree_sitter_analyze_error': False,
             'decorators_used': result.get('annotations', []),  # Kotlin uses annotations like Java
             'has_type_hints': True,  # Kotlin has strong typing
-            'has_async': any('suspend' in func.lower() for func in result.get('functions', [])),  # Kotlin uses 'suspend' for async
+            # Kotlin uses 'suspend' for async
+            'has_async': any('suspend' in func.lower() for func in result.get('functions', [])),
             'has_classes': len(result.get('classes', [])) > 0
         })
 

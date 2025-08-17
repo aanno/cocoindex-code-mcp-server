@@ -7,11 +7,17 @@ This module provides mapping between standardized ChunkMetadata schema
 and backend-specific storage formats (PostgreSQL JSONB vs Qdrant payload).
 """
 
-from typing import Any, Dict, List, Optional, Union, TypeVar, Generic
-from abc import ABC, abstractmethod
 import json
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Generic, List, TypeVar
 
-from .schemas import ChunkMetadata, QueryFilter, FilterOperator, SearchResult, SearchResultType
+from .schemas import (
+    ChunkMetadata,
+    FilterOperator,
+    QueryFilter,
+    SearchResult,
+    SearchResultType,
+)
 
 ###################################################
 # SINGLE SOURCE OF TRUTH: All database columns and field mappings
@@ -20,25 +26,25 @@ from .schemas import ChunkMetadata, QueryFilter, FilterOperator, SearchResult, S
 # If you change something here, the collect code `code_embeddings.collect(..)`
 # in src/cocoindex_code_mcp_server/cocoindex_config.py
 # has to be adapted as well!
-# 
+#
 # TODO:
 # Might be a limitation of cocoindex, we should recheck this.
 ###################################################
 CONST_FIELD_MAPPINGS = {
     # Core search result fields
     "filename": "filename",
-    "language": "language", 
+    "language": "language",
     "location": "location",
     "code": "code",
     "start": "start",
     "end": "end",
     "source_name": "source_name",
     "embedding": "embedding",
-    
+
     # Metadata fields (promoted from metadata_json)
     "functions": "functions",
     "classes": "classes",
-    "imports": "imports", 
+    "imports": "imports",
     "complexity_score": "complexity_score",
     "has_type_hints": "has_type_hints",
     "has_async": "has_async",
@@ -52,12 +58,12 @@ CONST_FIELD_MAPPINGS = {
     "dunder_methods": "dunder_methods",
     "function_details": "function_details",
     "docstring": "docstring",
-    
+
     # Additional metadata fields
     "success": "success",
     "parse_errors": "parse_errors",
     "char_count": "char_count",
-    
+
     # Language-specific fields
     "nodes_with_errors": "nodes_with_errors",  # Haskell
     "data_types": "data_types",  # Haskell
@@ -73,7 +79,7 @@ CONST_FIELD_MAPPINGS = {
     "types": "types",  # TypeScript
     "enums": "enums",  # TypeScript
     "namespaces": "namespaces",  # TypeScript/JavaScript/C++
-    
+
     # python
     "private_methods": "private_methods",
     "variables": "variables",
@@ -108,7 +114,7 @@ CONST_LANGUAGE_MAPPINGS = {
     ".md": "Markdown", ".mdx": "Markdown",
     ".pas": "Pascal", ".dpr": "Pascal",
     ".php": "PHP",
-    ".py": "Python", # ".pyi": "Python",
+    ".py": "Python",  # ".pyi": "Python",
     ".r": "R", ".R": "R",
     ".rb": "Ruby",
     ".rs": "Rust",
@@ -127,7 +133,7 @@ CONST_LANGUAGE_MAPPINGS = {
 # Maps normalized display names to internal processing names
 CONST_LANGUAGE_INTERNAL_NAMES = {
     "C": "c",
-    "C++": "cpp", 
+    "C++": "cpp",
     "C#": "c_sharp",
     "CSS": "css",
     "Fortran": "fortran",
@@ -142,7 +148,7 @@ CONST_LANGUAGE_INTERNAL_NAMES = {
     "PHP": "php",
     "Python": "python",
     "R": "r",
-    "Ruby": "ruby", 
+    "Ruby": "ruby",
     "Rust": "rust",
     "Scala": "scala",
     "SQL": "sql",
@@ -235,11 +241,11 @@ def get_language_from_extension(filename: str) -> str:
     """Get normalized language name from file extension."""
     import os
     basename = os.path.basename(filename)
-    
+
     # Handle special files without extensions
     if basename.lower() in ["makefile", "dockerfile", "jenkinsfile"]:
         return basename.lower().title()
-    
+
     # Handle special patterns
     if basename.lower().startswith("cmakelists"):
         return "CMake"
@@ -253,7 +259,7 @@ def get_language_from_extension(filename: str) -> str:
         return "Go"
     if basename.lower() in ["stack.yaml", "cabal.project"]:
         return "Haskell"
-    
+
     # Get extension and map to language
     ext = os.path.splitext(filename)[1].lower()
     return CONST_LANGUAGE_MAPPINGS.get(ext, ext[1:] if ext.startswith('.') else "Unknown")
@@ -284,71 +290,68 @@ T = TypeVar('T')
 
 class FieldMapper(ABC, Generic[T]):
     """Abstract base class for backend-specific field mapping."""
-    
+
     @abstractmethod
     def to_backend_format(self, metadata: ChunkMetadata) -> T:
         """Convert ChunkMetadata to backend-specific format."""
-        pass
-    
+
     @abstractmethod
     def from_backend_format(self, backend_data: T) -> ChunkMetadata:
         """Convert backend-specific format to ChunkMetadata."""
-        pass
-    
+
     @abstractmethod
     def map_query_filter(self, query_filter: QueryFilter) -> Any:
         """Convert QueryFilter to backend-specific filter format."""
-        pass
 
 
 class PostgresFieldMapper(FieldMapper[Dict[str, Any]]):
     """
     Field mapper for PostgreSQL backend with JSONB metadata storage.
-    
+
     PostgreSQL stores metadata in JSONB columns and individual fields
     as separate columns for performance.
     """
-    
+
     FIELD_MAPPINGS = dict(CONST_FIELD_MAPPINGS)
     JSONB_FIELDS = set(CONST_JSONB_FIELDS)
     INDIVIDUAL_COLUMNS = set(CONST_INDIVIDUAL_COLUMNS)
-    
+
     def to_backend_format(self, metadata: ChunkMetadata) -> Dict[str, Any]:
         """
         Convert ChunkMetadata to PostgreSQL row format.
-        
+
         Returns dictionary ready for INSERT/UPDATE operations.
         """
         row_data = {}
-        
+
         for schema_field, pg_column in self.FIELD_MAPPINGS.items():
             if schema_field in metadata:
                 value = metadata[schema_field]  # type: ignore
-                
+
                 # Special handling for JSONB fields
                 if schema_field in self.JSONB_FIELDS and isinstance(value, dict):
                     row_data[pg_column] = json.dumps(value)
                 else:
                     row_data[pg_column] = value
-        
+
         return row_data
-    
+
     def from_backend_format(self, pg_row: Dict[str, Any]) -> ChunkMetadata:
         """
         Convert PostgreSQL row to ChunkMetadata.
-        
+
         Args:
             pg_row: Dictionary representing a PostgreSQL row
-            
+
         Returns:
             ChunkMetadata with all available fields
         """
         metadata: ChunkMetadata = {}
-        
+
         for schema_field, pg_column in self.FIELD_MAPPINGS.items():
             if pg_column in pg_row and pg_row[pg_column] is not None:
                 value = pg_row[pg_column]
-                
+
                 # Parse JSONB fields
                 if schema_field == "metadata_json" and isinstance(value, str):
                     try:
@@ -357,31 +360,31 @@ class PostgresFieldMapper(FieldMapper[Dict[str, Any]]):
                         metadata[schema_field] = {}  # type: ignore
                 else:
                     metadata[schema_field] = value  # type: ignore
-        
+
         return metadata
-    
+
     def map_query_filter(self, query_filter: QueryFilter) -> str:
         """
         Convert QueryFilter to PostgreSQL WHERE clause fragment.
-        
+
         Args:
             query_filter: Filter to convert
-            
+
         Returns:
             SQL WHERE clause fragment with parameter placeholder
-            
+
         Raises:
             ValueError: If field or operator is not supported
         """
         field = query_filter.field
         operator = query_filter.operator
-        
+
         # Map field name to PostgreSQL column
         if field not in self.FIELD_MAPPINGS:
             raise ValueError(f"Unknown field '{field}' for PostgreSQL backend")
-        
+
         pg_column = self.FIELD_MAPPINGS[field]
-        
+
         # Handle different operators
         if operator == FilterOperator.EQUALS:
             return f"{pg_column} = %s"
@@ -423,98 +426,98 @@ class PostgresFieldMapper(FieldMapper[Dict[str, Any]]):
                 return f"%s = ANY({pg_column})"
         else:
             raise ValueError(f"Unsupported operator '{operator}' for PostgreSQL backend")
-    
+
     def build_insert_query(self, table_name: str, metadata: ChunkMetadata) -> tuple[str, List[Any]]:
         """
         Build INSERT query for PostgreSQL.
-        
+
         Args:
             table_name: Target table name
             metadata: Metadata to insert
-            
+
         Returns:
             tuple: (sql_query, parameters)
         """
         row_data = self.to_backend_format(metadata)
-        
+
         columns = list(row_data.keys())
         placeholders = ['%s'] * len(columns)
         values = list(row_data.values())
-        
+
         query = f"""
             INSERT INTO {table_name} ({', '.join(columns)})
             VALUES ({', '.join(placeholders)})
             ON CONFLICT (filename, location) 
             DO UPDATE SET {', '.join(f'{col} = EXCLUDED.{col}' for col in columns)}
         """
-        
+
         return query, values
 
 
 class QdrantFieldMapper(FieldMapper[Dict[str, Any]]):
     """
     Field mapper for Qdrant backend with payload-based metadata storage.
-    
+
     Qdrant stores all metadata in the payload object, with some fields
     potentially indexed for filtering performance.
     """
-    
+
     INDEXED_FIELDS = set(CONST_INDEXED_FIELDS)
 
     def to_backend_format(self, metadata: ChunkMetadata) -> Dict[str, Any]:
         """
         Convert ChunkMetadata to Qdrant payload format.
-        
+
         All fields go into the payload, with vectors handled separately.
         """
         payload = {}
-        
+
         # Copy all metadata fields to payload
         for key, value in metadata.items():
             if key != "embedding":  # Embedding handled separately in Qdrant
                 payload[key] = value
-        
+
         return payload
-    
+
     def from_backend_format(self, qdrant_point: Dict[str, Any]) -> ChunkMetadata:
         """
         Convert Qdrant point to ChunkMetadata.
-        
+
         Args:
             qdrant_point: Qdrant point data with payload
-            
+
         Returns:
             ChunkMetadata extracted from payload
         """
         payload = qdrant_point.get("payload", {})
-        
+
         # Qdrant payload can directly map to ChunkMetadata
         metadata: ChunkMetadata = {}
-        
+
         # Copy all payload fields
         for key, value in payload.items():
             if key in ChunkMetadata.__annotations__:
                 metadata[key] = value  # type: ignore
-        
+
         return metadata
-    
+
     def map_query_filter(self, query_filter: QueryFilter) -> Dict[str, Any]:
         """
         Convert QueryFilter to Qdrant filter format.
-        
+
         Args:
             query_filter: Filter to convert
-            
+
         Returns:
             Qdrant filter dictionary
-            
+
         Raises:
             ValueError: If operator is not supported
         """
         field = query_filter.field
         operator = query_filter.operator
         value = query_filter.value
-        
+
         # Qdrant filter format
         if operator == FilterOperator.EQUALS:
             return {"key": field, "match": {"value": value}}
@@ -541,26 +544,26 @@ class QdrantFieldMapper(FieldMapper[Dict[str, Any]]):
             return {"key": field, "match": {"text": str(value)}}
         else:
             raise ValueError(f"Unsupported operator '{operator}' for Qdrant backend")
-    
+
     def build_search_filters(self, filters: List[QueryFilter], logic: str = "AND") -> Dict[str, Any]:
         """
         Build Qdrant search filters from multiple QueryFilters.
-        
+
         Args:
             filters: List of filters to combine
             logic: "AND" or "OR" logic
-            
+
         Returns:
             Qdrant filter structure
         """
         if not filters:
             return {}
-        
+
         qdrant_filters = [self.map_query_filter(f) for f in filters]
-        
+
         if len(qdrant_filters) == 1:
             return qdrant_filters[0]
-        
+
         if logic.upper() == "AND":
             return {"must": qdrant_filters}
         else:  # OR
@@ -569,17 +572,17 @@ class QdrantFieldMapper(FieldMapper[Dict[str, Any]]):
 
 class ResultMapper:
     """Utility for mapping search results between backends and standardized format."""
-    
+
     @staticmethod
     def from_postgres_result(
-        pg_row: Dict[str, Any], 
+        pg_row: Dict[str, Any],
         score: float,
         score_type: SearchResultType = SearchResultType.HYBRID_COMBINED
     ) -> SearchResult:
         """Convert PostgreSQL row to SearchResult."""
         mapper = PostgresFieldMapper()
         metadata = mapper.from_backend_format(pg_row)
-        
+
         result = SearchResult(
             filename=metadata.get("filename", ""),
             language=metadata.get("language", ""),
@@ -592,17 +595,16 @@ class ResultMapper:
             source=metadata.get("source_name", ""),
             metadata=metadata
         )
-        
+
         # Dynamically add all metadata fields as attributes to the SearchResult object
         # This allows the MCP server to access them via hasattr() and getattr()
         for key, value in metadata.items():
             # Skip core fields that are already set as SearchResult attributes
             if key not in {"filename", "language", "code", "location", "start", "end", "source_name", "embedding"}:
                 setattr(result, key, value)
-        
-        
+
         return result
-    
+
     @staticmethod
     def from_qdrant_result(
         qdrant_point: Dict[str, Any],
@@ -612,7 +614,7 @@ class ResultMapper:
         """Convert Qdrant search result to SearchResult."""
         mapper = QdrantFieldMapper()
         metadata = mapper.from_backend_format(qdrant_point)
-        
+
         return SearchResult(
             filename=metadata.get("filename", ""),
             language=metadata.get("language", ""),
@@ -633,7 +635,7 @@ class ResultMapper:
 
 class MapperFactory:
     """Factory for creating appropriate field mappers."""
-    
+
     @staticmethod
     def create_mapper(backend_type: str) -> FieldMapper:
         """Create appropriate mapper for backend type."""
@@ -654,7 +656,7 @@ class MapperFactory:
 
 __all__ = [
     "FieldMapper",
-    "PostgresFieldMapper", 
+    "PostgresFieldMapper",
     "QdrantFieldMapper",
     "ResultMapper",
     "MapperFactory"

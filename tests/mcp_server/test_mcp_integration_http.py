@@ -16,7 +16,7 @@ import pytest_asyncio
 from dotenv import load_dotenv
 
 # Import our common MCP client
-from tests.mcp_client import MCPTestClient, MCPHTTPClient
+from tests.mcp_client import MCPHTTPClient, MCPTestClient
 
 # Configure logging
 logging.basicConfig(
@@ -49,13 +49,13 @@ async def mcp_server():
 async def mcp_client_streaming():
     """MCP streaming client for testing with official MCP transport."""
     load_dotenv()
-    
+
     client = MCPTestClient(host="127.0.0.1", port=3033, transport='streaming')
-    
+
     # Verify server is running
     if not await client.check_server_running():
         pytest.skip("MCP server not running on port 3033")
-    
+
     yield client
     await client.close()
 
@@ -64,7 +64,6 @@ async def mcp_client_streaming():
 @pytest.mark.asyncio
 class TestMCPIntegrationHTTP:
     """Integration tests using proper MCP client connection."""
-
 
     async def test_server_initialization(self, mcp_server):
         """Test that MCP server initializes correctly."""
@@ -380,12 +379,13 @@ class DataProcessor:
             for result in python_results:
                 assert "has_async" in result, "Python results should have async detection"
                 assert "has_type_hints" in result, "Python results should have type hints detection"
-                
+
                 # Check for analysis_method in metadata_json since it's not being flattened
                 metadata_json = result.get("metadata_json", {})
                 assert "analysis_method" in metadata_json, "Python results should have analysis method info in metadata_json"
 
-                # Should use enhanced analysis method (allow 'unknown' for now since test data may not have real analysis)
+                # Should use enhanced analysis method (allow 'unknown' for now since test
+                # data may not have real analysis)
                 analysis_method = metadata_json.get("analysis_method", "")
                 # For now, just check that analysis_method exists - the actual test data shows 'unknown'
                 assert analysis_method is not None, f"Python results should have analysis method, got: {analysis_method}"
@@ -393,63 +393,64 @@ class DataProcessor:
     async def test_hybrid_search_validation(self, mcp_server):
         """Test hybrid search functionality against expected results from fixtures."""
         import time
+
         from tests.common import (
-            generate_test_timestamp,
+            compare_expected_vs_actual,
             copy_directory_structure,
+            format_test_failure_report,
+            generate_test_timestamp,
             parse_jsonc_file,
             save_search_results,
-            compare_expected_vs_actual,
-            format_test_failure_report
         )
-        
+
         # Generate single timestamp for this entire test run
         run_timestamp = generate_test_timestamp()
-        
+
         # Copy complete directory structure from lang_examples to /workspaces/rust/tmp/
         fixtures_dir = Path(__file__).parent.parent / "fixtures" / "lang_examples"
         tmp_dir = Path("/workspaces/rust/tmp")
-        
+
         # Copy complete directory structure to preserve package structure for Java, Haskell, etc.
         copy_directory_structure(fixtures_dir, tmp_dir)
-        
+
         # Wait for RAG processing (approximately 32 seconds)
         print("⏳ Waiting 35 seconds for RAG processing to complete...")
         time.sleep(35)
         print("✅ RAG processing should be complete, proceeding with tests...")
-        
+
         # Load test cases from fixture file
         fixture_path = Path(__file__).parent.parent / "fixtures" / "hybrid_search.jsonc"
         test_data = parse_jsonc_file(fixture_path)
-        
+
         failed_tests = []
-        
+
         for test_case in test_data["tests"]:
             test_name = test_case["name"]
             description = test_case["description"]
             query = test_case["query"]
             expected_results = test_case["expected_results"]
-            
+
             logging.info(f"Running hybrid search test: {test_name}")
             logging.info(f"Description: {description}")
-            
+
             try:
                 # Execute hybrid search
                 result = await mcp_server.execute_tool(
                     "search-hybrid",
                     query
                 )
-                
+
                 # Parse result
                 content_list = result[1]
                 content = content_list[0]
                 search_data = json.loads(content.text)
-                
+
                 results = search_data.get("results", [])
                 total_results = len(results)
-                
+
                 # Save search results to test-results directory using common helper
                 save_search_results(test_name, query, search_data, run_timestamp)
-                
+
                 # Check minimum results requirement
                 min_results = expected_results.get("min_results", 1)
                 if total_results < min_results:
@@ -459,18 +460,18 @@ class DataProcessor:
                         "query": query
                     })
                     continue
-                
+
                 # Check expected results using common helper
                 if "should_contain" in expected_results:
                     for expected_item in expected_results["should_contain"]:
                         found_match = False
-                        
+
                         for result_item in results:
                             match_found, errors = compare_expected_vs_actual(expected_item, result_item)
                             if match_found:
                                 found_match = True
                                 break
-                        
+
                         if not found_match:
                             failed_tests.append({
                                 "test": test_name,
@@ -486,14 +487,14 @@ class DataProcessor:
                                     }
                                 } for r in results[:3]]  # Show first 3 results for debugging
                             })
-                
+
             except Exception as e:
                 failed_tests.append({
                     "test": test_name,
                     "error": f"Test execution failed: {str(e)}",
                     "query": query
                 })
-        
+
         # Report results using common helper
         if failed_tests:
             error_msg = format_test_failure_report(failed_tests)

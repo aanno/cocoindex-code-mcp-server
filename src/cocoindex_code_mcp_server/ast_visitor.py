@@ -9,10 +9,11 @@ import logging
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Protocol
+
 import tree_sitter
-from tree_sitter import Language, Node, Parser, Tree
+from tree_sitter import Node, Parser, Tree
+
 from .parser_util import update_defaults
 
 TREE_SITTER_AVAILABLE = True
@@ -20,6 +21,7 @@ LOGGER = logging.getLogger(__name__)
 
 # Threshold for error count above which we bail out to regex fallback parsing
 ERROR_FALLBACK_THRESHOLD = 10
+
 
 @dataclass
 class Position:
@@ -47,7 +49,7 @@ class ErrorNodeInfo:
     text: str
     parent_node_type: Optional[str] = None
     severity: str = "error"  # "error", "warning", "partial"
-    
+
     def get_span(self) -> CodeSpan:
         """Get the code span for this error."""
         return CodeSpan(
@@ -57,7 +59,7 @@ class ErrorNodeInfo:
         )
 
 
-@dataclass  
+@dataclass
 class ErrorStats:
     """Statistics about error nodes found during parsing."""
     error_count: int = 0
@@ -65,7 +67,7 @@ class ErrorStats:
     uncovered_ranges: List[tuple[int, int]] = field(default_factory=list)
     should_fallback: bool = False
     error_nodes: List[ErrorNodeInfo] = field(default_factory=list)
-    
+
     def should_use_regex_fallback(self, threshold: int = ERROR_FALLBACK_THRESHOLD) -> bool:
         """Check if we should bail out to regex parsing."""
         return self.error_count >= threshold
@@ -179,16 +181,16 @@ class GenericMetadataVisitor(ASTVisitor):
         self._update_complexity(node_type)
 
         return metadata if metadata else None
-    
+
     def _check_for_errors(self, context: NodeContext) -> None:
         """Check if the current node is an error node and track it."""
         node = context.node
-        
+
         # Check if this is an error node
         if hasattr(node, 'is_error') and node.is_error:
             self.error_stats.error_count += 1
             self.parse_errors += 1
-            
+
             # Create error node info
             error_info = ErrorNodeInfo(
                 start_byte=getattr(node, 'start_byte', 0),
@@ -200,26 +202,26 @@ class GenericMetadataVisitor(ASTVisitor):
                 severity="error"
             )
             self.error_stats.error_nodes.append(error_info)
-            
+
         # Check if this node has errors (propagated from children)
         if hasattr(node, 'has_error') and node.has_error:
             self.error_stats.nodes_with_errors += 1
-            
+
     def get_error_stats(self) -> ErrorStats:
         """Get error statistics collected during parsing."""
         self.error_stats.should_fallback = self.error_stats.should_use_regex_fallback()
         return self.error_stats
-    
+
     def analyze_tree_with_error_handling(self, tree: Tree, source_text: str) -> Dict[str, Any]:
         """Analyze a tree with comprehensive error handling."""
         root_node = tree.root_node
-        
+
         # Walk the tree and collect metadata
         self._visit_tree_recursive(root_node, source_text)
-        
+
         # Determine chunking method based on errors
         chunking_method = self._determine_chunking_method()
-        
+
         # Build result metadata
         update_defaults(self.metadata, {
             'language': self.language,
@@ -237,10 +239,11 @@ class GenericMetadataVisitor(ASTVisitor):
             'tree_language': f'{self.language}_tree_sitter',
             'success': True
         })
-        
+
         return self.metadata
-    
-    def _visit_tree_recursive(self, node: Node, source_text: str, parent: Optional[Node] = None, depth: int = 0) -> None:
+
+    def _visit_tree_recursive(self, node: Node, source_text: str,
+                              parent: Optional[Node] = None, depth: int = 0) -> None:
         """Recursively visit tree nodes with error tracking."""
         context = NodeContext(
             node=node,
@@ -249,14 +252,14 @@ class GenericMetadataVisitor(ASTVisitor):
             scope_stack=[],
             source_text=source_text
         )
-        
+
         # Visit this node
         self.visit_node(context)
-        
+
         # Visit children
         for child in node.children:
             self._visit_tree_recursive(child, source_text, node, depth + 1)
-    
+
     def _determine_chunking_method(self) -> str:
         """Determine the appropriate chunking method based on error stats."""
 
@@ -398,12 +401,12 @@ class ASTParserFactory:
 
     def get_language_for_file(self, filename: str) -> Optional[str]:
         """Detect language from filename."""
-        from .mappers import get_language_from_extension, get_internal_language_name
-        
+        from .mappers import get_internal_language_name, get_language_from_extension
+
         display_language = get_language_from_extension(filename)
         if display_language == "Unknown":
             return None
-        
+
         # Convert to internal processing name
         return get_internal_language_name(display_language)
 
@@ -557,7 +560,7 @@ class MultiLevelAnalyzer:
 
         # Store display language name in metadata for database storage
         from .mappers import get_display_language_name
-        
+
         metadata = {
             'language': get_display_language_name(language),
             'filename': filename,

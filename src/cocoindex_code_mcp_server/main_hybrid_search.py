@@ -6,6 +6,7 @@ Combines vector similarity search with keyword metadata filtering.
 """
 
 import argparse
+from typing import List, Optional
 
 from dotenv import load_dotenv
 
@@ -14,7 +15,6 @@ import cocoindex
 # Import our modular components
 from .cocoindex_config import update_flow_config
 from .db.pgvector.hybrid_search import run_interactive_hybrid_search
-from typing import List, Optional
 
 
 def parse_hybrid_search_args() -> argparse.Namespace:

@@ -6,6 +6,7 @@ Comprehensive tests for AST-based Haskell chunking functionality.
 
 from types import FunctionType
 from typing import cast
+
 import haskell_tree_sitter
 import pytest
 

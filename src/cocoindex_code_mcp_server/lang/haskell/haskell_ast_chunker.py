@@ -6,14 +6,13 @@ Incorporates techniques from ASTChunk for improved chunking quality.
 """
 
 import re
-from types import FunctionType
 from typing import Any, Dict, List, Optional
 from warnings import deprecated
 
-from cocoindex.op import FunctionSpec
 import haskell_tree_sitter
 
 import cocoindex
+from cocoindex.op import FunctionSpec
 
 from . import LOGGER
 
@@ -77,6 +76,7 @@ def get_enhanced_haskell_separators() -> List[str]:
 
     return enhanced_separators
 
+
 @deprecated("Use haskell_tree_sitter.get_haskell_ast_chunks from maturin/rust")
 class EnhancedHaskellChunker:
     """
@@ -127,11 +127,11 @@ class EnhancedHaskellChunker:
                 chunk_overlap=self.config.chunk_overlap,
                 max_chunk_size=self.config.max_chunk_size
             )
-            
+
             # Use the new parameterized AST chunking with recursive splitting
             chunking_result = haskell_tree_sitter.get_haskell_ast_chunks_with_params(content, params)
             ast_chunks = chunking_result.chunks()
-            
+
         except Exception as e:
             # Fallback to the original method if parameterized version fails
             LOGGER.warning(f"Parameterized chunking failed, using fallback: {e}")
@@ -141,7 +141,7 @@ class EnhancedHaskellChunker:
         for i, chunk in enumerate(ast_chunks):
             # Get original metadata from Rust including proper chunking method
             original_metadata = chunk.metadata()
-            
+
             chunk_dict = {
                 "content": chunk.text(),
                 "start_line": chunk.start_line(),
@@ -366,10 +366,10 @@ class EnhancedHaskellChunker:
                 # AST info
                 "node_type": chunk.get("node_type", "unknown"),
                 "is_split": chunk.get("is_split", False),
-                
+
                 # Chunking method tracking - preserve Rust chunking method names
                 "chunking_method": chunk.get("original_metadata", {}).get("chunking_method", chunk.get("method", "haskell_ast_enhanced")),
-                
+
                 # Tree-sitter error tracking
                 "tree_sitter_chunking_error": chunk.get("original_metadata", {}).get("tree_sitter_chunking_error", "false"),
                 "has_tree_sitter_error": chunk.get("original_metadata", {}).get("has_error", "false") == "true",
@@ -456,26 +456,27 @@ class EnhancedHaskellChunker:
 
 class CompatibleChunk:
     """Chunk wrapper that provides the interface expected by AST chunking code."""
-    
-    def __init__(self, content: str, metadata: dict, start_line: int = 1, end_line: int = 1, node_type: str = "haskell_chunk") -> None:
+
+    def __init__(self, content: str, metadata: dict, start_line: int = 1,
+                 end_line: int = 1, node_type: str = "haskell_chunk") -> None:
         self._content = content
         self._metadata = metadata
         self._start_line = start_line
         self._end_line = end_line
         self._node_type = node_type
-    
+
     def text(self) -> str:
         return self._content
-    
+
     def start_line(self) -> int:
         return self._start_line
-    
+
     def end_line(self) -> int:
         return self._end_line
-    
+
     def node_type(self) -> str:
         return self._node_type
-    
+
     def metadata(self) -> dict:
         return self._metadata
 
@@ -494,7 +495,7 @@ def extract_haskell_ast_chunks(content: str):
     try:
         # Call the fixed Rust function directly
         rust_chunks = haskell_tree_sitter.get_haskell_ast_chunks(content)
-        
+
         # Convert from Rust HaskellChunk objects to CocoIndex format
         legacy_chunks = []
         for chunk in rust_chunks:
@@ -510,14 +511,14 @@ def extract_haskell_ast_chunks(content: str):
                 "metadata": metadata,  # This now contains rust_haskell_* method names!
             }
             legacy_chunks.append(legacy_chunk)
-            
+
         LOGGER.info(f"✅ Rust Haskell chunking produced {len(legacy_chunks)} chunks with proper method names")
         return legacy_chunks
-        
+
     except Exception as e:
         LOGGER.error(f"❌ Rust Haskell chunking failed: {e}")
         LOGGER.info("⚠️ Falling back to enhanced Python chunking")
-        
+
         # Fallback to the existing Python implementation if Rust fails
         chunk_config = HaskellChunkConfig()
         chunker = EnhancedHaskellChunker(chunk_config)
@@ -527,7 +528,7 @@ def extract_haskell_ast_chunks(content: str):
         legacy_chunks = []
         for chunk_dict in chunks:
             # Type cast to ensure mypy knows this is a dict
-            chunk_data: dict = chunk_dict  
+            chunk_data: dict = chunk_dict
             legacy_chunk = {
                 "text": chunk_data["content"],
                 "start": chunk_data["metadata"]["start_line"],
@@ -609,7 +610,7 @@ def create_enhanced_regex_fallback_chunks(content: str, file_path: str,
                     "end_line": i,
                     "separator_priority": separator_priority,
                     "was_force_split": force_split and not is_separator,
-                    
+
                     # Tree-sitter error tracking (false for regex fallback)
                     "tree_sitter_chunking_error": "false",
                     "has_tree_sitter_error": False,
@@ -654,7 +655,7 @@ def create_enhanced_regex_fallback_chunks(content: str, file_path: str,
                 "separator_priority": 0,
                 "was_force_split": False,
                 "is_final_chunk": True,
-                
+
                 # Tree-sitter error tracking (false for regex fallback)
                 "tree_sitter_chunking_error": "false",
                 "has_tree_sitter_error": False,

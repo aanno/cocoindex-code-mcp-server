@@ -7,11 +7,9 @@ structure-aware code chunking.
 """
 
 import logging
-import os
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, TypedDict
 
-import cocoindex
 from cocoindex import op
 from cocoindex_code_mcp_server import LOGGER
 
@@ -47,7 +45,7 @@ except ImportError as e:
 # Language mapping from CocoIndex to ASTChunk (only for actually supported languages)
 LANGUAGE_MAP = {
     "Python": "python",
-    "Java": "java", 
+    "Java": "java",
     "C#": "csharp",
     "TypeScript": "typescript",
     "JavaScript": "typescript",  # ASTChunk uses TypeScript parser for JS
@@ -68,19 +66,19 @@ class ASTChunkSpec(op.FunctionSpec):
 @op.executor_class()
 class ASTChunkExecutor:
     """Executor for AST-based code chunking."""
-    
+
     spec: ASTChunkSpec
     _builders: Dict[str, Any] = {}
-    
+
     def analyze(self, content: Any, language: Any = "auto") -> type:
         """Analyze method required by CocoIndex to determine return type."""
         return list[ASTChunkRow]
-    
+
     def _convert_chunks_to_ast_chunk_rows(self, chunks: List[ChunkRow]) -> list[ASTChunkRow]:
         """Convert internal ChunkRow objects to ASTChunkRow dataclass instances with unique locations."""
         seen_locations = set()
         result = []
-        
+
         for chunk in chunks:
             # Ensure unique location
             base_location = chunk["location"]
@@ -90,7 +88,7 @@ class ASTChunkExecutor:
                 suffix += 1
                 unique_location = f"{base_location}#{suffix}"
             seen_locations.add(unique_location)
-            
+
             result.append(ASTChunkRow(
                 content=chunk["content"],
                 location=unique_location,  # Use unique location
@@ -99,7 +97,7 @@ class ASTChunkExecutor:
                 chunking_method=chunk["chunking_method"]
             ))
         return result
-    
+
     def _get_builder(self, language: str) -> Optional[Any]:
         """Get or create an ASTChunkBuilder for the given language."""
         if not ASTCHUNK_AVAILABLE:
@@ -132,7 +130,8 @@ class ASTChunkExecutor:
             try:
                 # Import and call Haskell chunker
                 import importlib
-                haskell_module = importlib.import_module('.lang.haskell.haskell_ast_chunker', 'cocoindex_code_mcp_server')
+                haskell_module = importlib.import_module(
+                    '.lang.haskell.haskell_ast_chunker', 'cocoindex_code_mcp_server')
                 extract_func = getattr(haskell_module, 'extract_haskell_ast_chunks')
                 chunks = extract_func(code)
 
@@ -143,10 +142,10 @@ class ASTChunkExecutor:
                     original_metadata = chunk_dict.get("metadata", {})
                     start_line = chunk_dict.get("start", 0)
                     end_line = chunk_dict.get("end", 0)
-                    
+
                     # Build location
                     location = f"line:{start_line}#{i}"
-                    
+
                     # Get chunking method from original metadata (preserves Rust method names)
                     chunking_method = original_metadata.get("chunking_method", "rust_haskell_ast")
 
@@ -168,7 +167,8 @@ class ASTChunkExecutor:
         # Simple text chunking as last resort
         return self._simple_text_chunking(code, language, "ast_fallback_unavailable")
 
-    def _simple_text_chunking(self, code: str, language: str, chunking_method: str = "simple_text_chunking") -> List[ChunkRow]:
+    def _simple_text_chunking(self, code: str, language: str,
+                              chunking_method: str = "simple_text_chunking") -> List[ChunkRow]:
         """Simple text-based chunking as a fallback."""
         lines = code.split('\n')
         chunks: List[ChunkRow] = []
@@ -180,7 +180,7 @@ class ASTChunkExecutor:
 
             if content.strip():
                 location = f"line:{i + 1}#{len(chunks)}"
-                
+
                 chunk_row = ChunkRow({
                     "content": content,
                     "location": location,
@@ -192,12 +192,11 @@ class ASTChunkExecutor:
 
         LOGGER.info(f"Simple text chunking created {len(chunks)} chunks")
         return chunks
-    
 
     def __call__(self, content: str, language: str = "auto") -> list[ASTChunkRow]:
         """Main chunking function - returns typed chunk structures for CocoIndex."""
         LOGGER.info(f"🚀 ASTChunk called with language={language}, content_length={len(content)}")
-        
+
         # Auto-detect language if needed
         if language == "auto":
             detected_language = "Python"  # Default fallback for now
@@ -211,7 +210,8 @@ class ASTChunkExecutor:
             chunks = self._fallback_chunking(content, detected_language)
             return self._convert_chunks_to_ast_chunk_rows(chunks)
         else:
-            LOGGER.info(f"🔍 Language {detected_language} IS supported by ASTChunk - proceeding with astchunk_language={astchunk_language}")
+            LOGGER.info(
+                f"🔍 Language {detected_language} IS supported by ASTChunk - proceeding with astchunk_language={astchunk_language}")
 
         # Get ASTChunkBuilder for this language
         builder = self._get_builder(astchunk_language)
@@ -260,7 +260,7 @@ class ASTChunkExecutor:
             return self._convert_chunks_to_ast_chunk_rows(chunks)
 
 
-# Create the operation  
+# Create the operation
 ASTChunkOperation = ASTChunkSpec()
 
 if __name__ == "__main__":

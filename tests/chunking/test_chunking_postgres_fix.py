@@ -12,6 +12,7 @@ These tests verify:
 
 from types import FunctionType
 from typing import cast
+
 import pytest
 
 import cocoindex
@@ -118,7 +119,7 @@ class TestLanguageDetection:
 
     def test_special_files(self):
         """Test special file detection.
-        
+
         NOTE: This test currently fails because there's a disagreement between
         the test expectation (lowercase "dockerfile") and the implementation
         (title case "Dockerfile"). The implementation uses basename.lower().title()
@@ -160,8 +161,8 @@ class TestCocoIndexSplitRecursively:
 
     def test_split_recursively_function_exists(self):
         """Test that SplitRecursively function exists.
-        
-        NOTE: This test currently fails because SplitRecursively instances 
+
+        NOTE: This test currently fails because SplitRecursively instances
         don't have a __call__ method, making them non-callable. This might be
         a bug in the CocoIndex SplitRecursively implementation or the test
         expectation is wrong about how CocoIndex functions should work.
@@ -176,8 +177,8 @@ class TestCocoIndexSplitRecursively:
 
     def test_split_recursively_with_python_code(self):
         """Test SplitRecursively with Python code.
-        
-        NOTE: This test currently fails because SplitRecursively instances 
+
+        NOTE: This test currently fails because SplitRecursively instances
         are not callable ('SplitRecursively' object is not callable).
         This is the same issue as test_split_recursively_function_exists.
         Keeping the test as-is to document the issue.
@@ -245,8 +246,8 @@ class TestASTChunking:
 
     def test_ast_chunking_availability(self):
         """Test AST chunking availability.
-        
-        NOTE: This test currently fails because ASTChunkOperation is an 
+
+        NOTE: This test currently fails because ASTChunkOperation is an
         ASTChunkSpec instance, not a callable. Similar to SplitRecursively,
         this suggests CocoIndex operations might not follow the expected
         callable pattern. Keeping the test as-is to document the issue.

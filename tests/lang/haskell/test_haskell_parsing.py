@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
-from typing import Optional
 import unittest
-import pytest
+from typing import Optional
+
 import haskell_tree_sitter
+import pytest
 
 
 class TestHaskellParsing(unittest.TestCase):

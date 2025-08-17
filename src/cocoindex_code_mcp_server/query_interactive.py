@@ -7,11 +7,12 @@ Interactive query functionality for the code embedding pipeline.
 import os
 from typing import Any, Dict, List
 
-from .cocoindex_config import code_embedding_flow, code_to_embedding
 from pgvector.psycopg import register_vector
 from psycopg_pool import ConnectionPool
 
 import cocoindex
+
+from .cocoindex_config import code_embedding_flow, code_to_embedding
 
 
 def search(pool: ConnectionPool, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
@@ -63,7 +64,7 @@ def run_interactive_query_mode():
     database_url = os.getenv("COCOINDEX_DATABASE_URL")
     if not database_url:
         raise ValueError("COCOINDEX_DATABASE_URL not found in environment")
-    
+
     pool = ConnectionPool(database_url)
     print("\n🔍 Interactive search mode. Type queries to search the code index.")
     print("Press Enter with empty query to quit.\n")

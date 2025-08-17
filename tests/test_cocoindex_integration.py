@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-from types import FunctionType
-from typing import cast
 import unittest
 from pathlib import Path
+from types import FunctionType
+from typing import cast
 
 import pytest
 

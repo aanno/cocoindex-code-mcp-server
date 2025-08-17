@@ -5,6 +5,8 @@ Debug test to understand what AST nodes are being processed.
 """
 
 
+import pytest
+
 from cocoindex_code_mcp_server.ast_visitor import (
     ASTParserFactory,
     GenericMetadataVisitor,
@@ -14,7 +16,7 @@ from cocoindex_code_mcp_server.lang.python.tree_sitter_python_analyzer import (
     TreeSitterPythonAnalyzer,
 )
 from cocoindex_code_mcp_server.language_handlers import get_handler_for_language
-import pytest
+
 
 def test_debug_ast_node_processing():
     """Debug what nodes are being processed and which handlers are called."""
@@ -92,14 +94,14 @@ def utility_function() -> str:
                     # Only show first few nodes to avoid spam
                     if context.depth < 5:
                         print(f"  Processing node: {node_type} "
-                            f"(depth: {context.depth})")
+                              f"(depth: {context.depth})")
 
                         # Check if any handler can handle this
                         for handler in visitor.handlers:
                             if handler.can_handle(node_type):
                                 handler_name = type(handler).__name__
                                 print(f"    ✓ Handler {handler_name} can handle "
-                                    f"{node_type}")
+                                      f"{node_type}")
 
                     return original_visit_node(context)
 

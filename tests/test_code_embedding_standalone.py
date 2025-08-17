@@ -5,8 +5,9 @@ Standalone tests for language-aware code embedding functionality.
 Tests the logic without requiring full CocoIndex imports.
 """
 
-import pytest
 from typing import Optional
+
+import pytest
 
 # Test the core logic without importing the full module
 
@@ -30,7 +31,8 @@ class MockCodeEmbeddingExecutor:
         "unixcode": "microsoft/unixcoder-base",
     }
 
-    def __init__(self, force_model: Optional[str]=None, fallback_model: str="sentence-transformers/all-MiniLM-L6-v2"):
+    def __init__(self, force_model: Optional[str] = None,
+                 fallback_model: str = "sentence-transformers/all-MiniLM-L6-v2"):
         self.force_model = force_model
         self.fallback_model = fallback_model
 
@@ -105,7 +107,7 @@ class MockSmartCodeEmbeddingExecutor:
         ".lhs": "haskell",
     }
 
-    def __init__(self, file_extension: Optional[str]=None, language_hint: Optional[str]=None):
+    def __init__(self, file_extension: Optional[str] = None, language_hint: Optional[str] = None):
         self.file_extension = file_extension
         self.language_hint = language_hint
 

@@ -10,7 +10,9 @@ to extract metadata from Python source code.
 import os
 import sys
 
-from cocoindex_code_mcp_server.lang.python.python_code_analyzer import analyze_python_code
+from cocoindex_code_mcp_server.lang.python.python_code_analyzer import (
+    analyze_python_code,
+)
 
 # Add src to path (examples is one level down from root)
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
@@ -63,4 +65,3 @@ if metadata is not None:
     print("- Complexity scoring")
 else:
     print("Error: metadata is None")
-

@@ -64,10 +64,10 @@ async def test_claude_desktop_simulation():
         }
 
         print("📤 Sending initialize message...")
-        
+
         stdin = process.stdin
         stdout = process.stdout
-        
+
         if stdin is None or stdout is None:
             print("❌ None: process.stdin or process.stdout")
         else:

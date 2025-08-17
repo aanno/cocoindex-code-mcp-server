@@ -7,14 +7,15 @@ This avoids the complexity of trying to wrap chunks in a generic tree-sitter int
 
 import os
 import sys
-from typing import Any, Dict, Union
+from typing import Any, Dict
 
 from tree_sitter import Node
+
+from cocoindex_code_mcp_server.ast_visitor import Position
 
 from ..ast_visitor import GenericMetadataVisitor, NodeContext
 from ..language_handlers.haskell_handler import HaskellNodeHandler
 from . import LOGGER
-from cocoindex_code_mcp_server.ast_visitor import Position
 
 # Import from parent directory
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
@@ -45,7 +46,7 @@ class HaskellASTVisitor(GenericMetadataVisitor):
         try:
             # Use enhanced error-aware chunking
             chunking_result = haskell_tree_sitter.get_haskell_ast_chunks_enhanced(code)
-            
+
             # Process each chunk using our handler
             for chunk in chunking_result.chunks():
                 self._process_chunk(chunk, code)
@@ -180,7 +181,7 @@ class HaskellChunkContext(NodeContext):
         from ..ast_visitor import Position
         line = 1
         byte_offset = 0
-        
+
         # Handle both tree-sitter node and chunk interfaces
         if hasattr(self.node, 'start_point'):
             point = self.node.start_point
@@ -202,7 +203,7 @@ class HaskellChunkContext(NodeContext):
                     line = int(start_line_attr) if isinstance(start_line_attr, (int, float, str)) else 1
                 except (ValueError, TypeError):
                     line = 1
-                
+
         if hasattr(self.node, 'start_byte'):
             start_byte_attr = getattr(self.node, 'start_byte')
             if callable(start_byte_attr):
@@ -216,7 +217,7 @@ class HaskellChunkContext(NodeContext):
                     byte_offset = int(start_byte_attr) if isinstance(start_byte_attr, (int, float, str)) else 0
                 except (ValueError, TypeError):
                     byte_offset = 0
-            
+
         return Position(
             line=line,
             column=0,  # haskell_tree_sitter doesn't provide column info

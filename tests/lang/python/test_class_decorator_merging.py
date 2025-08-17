@@ -6,8 +6,10 @@ This tests the specific issue where class decorators from Python AST analysis
 are not being properly merged with function decorators from tree-sitter analysis.
 """
 
-from typing import Any, Union, Dict
+from typing import Any, Dict, Union
+
 import pytest
+
 from cocoindex_code_mcp_server.lang.python.python_code_analyzer import (
     analyze_python_code,
 )
@@ -105,7 +107,7 @@ class SortableDataExample:
     value: int
 """
 
-    metadata: Union[Dict[str, Any],None] = analyze_python_code(code, "test.py")
+    metadata: Union[Dict[str, Any], None] = analyze_python_code(code, "test.py")
 
     if metadata is not None:
         assert "decorators" in metadata
