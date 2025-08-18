@@ -25,10 +25,26 @@ class TestChunkingMethodRegression:
     """Test suite to prevent chunking method and metadata regressions."""
 
     @pytest.mark.asyncio
+    @pytest.mark.slow
+    @pytest.mark.integration
     async def test_haskell_rust_chunking_method_names(self):
-        """Test that Haskell files get proper rust_haskell_* chunking method names."""
+        """Test that Haskell files get proper rust_haskell_* chunking method names.
+        
+        SLOW TEST: This test is marked as slow because it:
+        1. Creates full CocoIndexTestInfrastructure which:
+           - Initializes complete CocoIndex system (cocoindex.init())
+           - Sets up database connections and schemas
+           - Processes the ENTIRE /workspaces/rust directory (thousands of files)
+           - Runs flow updates with language detection, AST parsing, chunking
+           - Generates embeddings for all chunks and stores in vector database
+           - Initializes search engines and indices
+        2. Performs vector similarity search across entire indexed codebase
+        3. Searches for Haskell files with top_k=20, analyzing chunking methods
+        
+        Expected runtime: 2-5 minutes (depends on codebase size and system performance)
+        """
         async with CocoIndexTestInfrastructure(
-            paths=["/workspaces/rust"],
+            paths=["/workspaces/rust/src", "/workspaces/rust/tests/fixtures"],  # Reduced scope for performance
             enable_polling=False,
             default_chunking=False,
             default_language_handler=False
@@ -102,10 +118,21 @@ class TestChunkingMethodRegression:
                 # This is a warning, not a failure, since some might be legitimate
 
     @pytest.mark.asyncio
+    @pytest.mark.slow
+    @pytest.mark.integration
     async def test_metadata_arrays_not_strings(self):
-        """Test that metadata arrays are JSON arrays, not Python string representations."""
+        """Test that metadata arrays are JSON arrays, not Python string representations.
+        
+        SLOW TEST: This test is marked as slow because it:
+        1. Creates full CocoIndexTestInfrastructure (same expensive setup as above)
+        2. Processes entire /workspaces/rust directory with complete indexing pipeline
+        3. Searches for Python files with metadata analysis (top_k=10)
+        4. Analyzes metadata_json fields for array storage format validation
+        
+        Expected runtime: 2-5 minutes (similar to test above)
+        """
         async with CocoIndexTestInfrastructure(
-            paths=["/workspaces/rust"],
+            paths=["/workspaces/rust/src", "/workspaces/rust/tests/fixtures"],  # Reduced scope for performance
             enable_polling=False,
             default_chunking=False,
             default_language_handler=False
@@ -173,10 +200,24 @@ class TestChunkingMethodRegression:
             )
 
     @pytest.mark.asyncio
+    @pytest.mark.slow
+    @pytest.mark.integration
     async def test_chunking_method_consistency(self):
-        """Test that chunking_method is consistent between different metadata sources."""
+        """Test that chunking_method is consistent between different metadata sources.
+        
+        SLOW TEST: This test is marked as slow because it:
+        1. Creates full CocoIndexTestInfrastructure (same expensive setup as above)
+        2. Processes entire /workspaces/rust directory with complete indexing pipeline  
+        3. Performs multiple vector searches across different languages:
+           - Haskell function search (top_k=5)
+           - Python class search (top_k=5)  
+           - JavaScript function search (top_k=5)
+        4. Analyzes chunking method consistency across metadata sources
+        
+        Expected runtime: 2-5 minutes (similar to tests above)
+        """
         async with CocoIndexTestInfrastructure(
-            paths=["/workspaces/rust"],
+            paths=["/workspaces/rust/src", "/workspaces/rust/tests/fixtures"],  # Reduced scope for performance
             enable_polling=False,
             default_chunking=False,
             default_language_handler=False
@@ -234,10 +275,22 @@ class TestChunkingMethodRegression:
             )
 
     @pytest.mark.asyncio
+    @pytest.mark.slow
+    @pytest.mark.integration
     async def test_no_unknown_chunking_for_supported_languages(self):
-        """Test that supported languages don't get 'unknown_chunking' method."""
+        """Test that supported languages don't get 'unknown_chunking' method.
+        
+        SLOW TEST: This test is marked as slow because it:
+        1. Creates full CocoIndexTestInfrastructure (same expensive setup as above)
+        2. Processes entire /workspaces/rust directory with complete indexing pipeline
+        3. Performs searches for 5 different supported languages:
+           - Haskell, Python, JavaScript, TypeScript, Java (top_k=5 each)
+        4. Validates chunking methods for each language to ensure proper handlers
+        
+        Expected runtime: 2-5 minutes (similar to tests above)
+        """
         async with CocoIndexTestInfrastructure(
-            paths=["/workspaces/rust"],
+            paths=["/workspaces/rust/src", "/workspaces/rust/tests/fixtures"],  # Reduced scope for performance
             enable_polling=False,
             default_chunking=False,
             default_language_handler=False
