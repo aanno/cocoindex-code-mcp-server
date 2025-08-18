@@ -117,7 +117,7 @@ class MathUtils:
 
                     results = cursor.fetchall()
 
-                    print("\\n=== Database Query Results ===")
+                    print("\n=== Database Query Results ===")
                     print(f"Found {len(results)} chunks for math_utils.py")
 
                     assert len(results) > 0, "Should find chunks in database for Python file"
@@ -125,7 +125,7 @@ class MathUtils:
                     for i, row in enumerate(results):
                         filename, language, chunking_method, analysis_method, ts_chunk_err, ts_analyze_err, functions, classes, code = row
 
-                        print(f"\\nChunk {i + 1}:")
+                        print(f"\nChunk {i + 1}:")
                         print(f"  filename: {filename}")
                         print(f"  language: {language}")
                         print(f"  chunking_method: '{chunking_method}'")
@@ -229,7 +229,7 @@ public class FibonacciCalculator {
 
                     results = cursor.fetchall()
 
-                    print("\\n=== Database Query Results ===")
+                    print("\n= Database Query Results ===")
                     print(f"Found {len(results)} chunks for FibonacciCalculator.java")
 
                     assert len(results) > 0, "Should find chunks in database for Java file"
@@ -237,7 +237,7 @@ public class FibonacciCalculator {
                     for i, row in enumerate(results):
                         filename, language, chunking_method, analysis_method, ts_chunk_err, ts_analyze_err, functions, classes, code = row
 
-                        print(f"\\nChunk {i + 1}:")
+                        print(f"\nChunk {i + 1}:")
                         print(f"  filename: {filename}")
                         print(f"  language: {language}")
                         print(f"  chunking_method: '{chunking_method}'")
@@ -291,7 +291,7 @@ data Tree a = Leaf a | Node (Tree a) (Tree a)
 main :: IO ()
 main = do
     putStrLn "Fibonacci Numbers:"
-    mapM_ (\\n -> putStrLn $ "fib(" ++ show n ++ ") = " ++ show (fibonacci n)) [1..10]
+    mapM_ (\n -> putStrLn $ "fib(" ++ show n ++ ") = " ++ show (fibonacci n)) [1..10]
 '''
 
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -332,7 +332,7 @@ main = do
 
                     results = cursor.fetchall()
 
-                    print("\\n=== Database Query Results ===")
+                    print("\n=== Database Query Results ===")
                     print(f"Found {len(results)} chunks for Fibonacci.hs")
 
                     assert len(results) > 0, "Should find chunks in database for Haskell file"
@@ -340,7 +340,7 @@ main = do
                     for i, row in enumerate(results):
                         filename, language, chunking_method, analysis_method, ts_chunk_err, ts_analyze_err, functions, classes, data_types, code = row
 
-                        print(f"\\nChunk {i + 1}:")
+                        print(f"\nChunk {i + 1}:")
                         print(f"  filename: {filename}")
                         print(f"  language: {language}")
                         print(f"  chunking_method: '{chunking_method}'")

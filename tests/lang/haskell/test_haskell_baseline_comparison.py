@@ -70,7 +70,7 @@ class TestHaskellBaselineComparison:
             'data_type_details_count': len(result.get('data_type_details', [])),
         }
 
-        print("\\n=== Our Haskell Visitor Results ===")
+        print("\n=== Our Haskell Visitor Results ===")
         for key, value in metrics.items():
             print(f"{key}: {value}")
 
@@ -102,7 +102,7 @@ class TestHaskellBaselineComparison:
             'data_type_details_count': len(result.get('data_type_details', [])),
         }
 
-        print("\\n=== Generic Visitor Results ===")
+        print("\n=== Generic Visitor Results ===")
         for key, value in metrics.items():
             print(f"{key}: {value}")
 
@@ -117,7 +117,7 @@ class TestHaskellBaselineComparison:
         try:
             # Use CocoIndex's basic text analysis
             # This is a simplified baseline since CocoIndex doesn't have Haskell-specific parsing
-            lines = self.haskell_code.split('\\n')
+            lines = self.haskell_code.split('\n')
 
             # Basic pattern matching (CocoIndex-style fallback)
             functions = []
@@ -157,7 +157,7 @@ class TestHaskellBaselineComparison:
                 'data_type_details_count': 0,
             }
 
-            print("\\n=== CocoIndex Baseline Results ===")
+            print("\n=== CocoIndex Baseline Results ===")
             for key, value in metrics.items():
                 print(f"{key}: {value}")
 
@@ -178,12 +178,12 @@ class TestHaskellBaselineComparison:
         except BaseException:
             baseline_metrics = None
 
-        print("\\n" + "=" * 60)
+        print("\n" + "=" * 60)
         print("HASKELL ANALYSIS COMPARISON")
         print("=" * 60)
 
         # Compare our implementation vs generic visitor
-        print("\\n--- Our Specialized Visitor vs Generic Visitor ---")
+        print("\n--- Our Specialized Visitor vs Generic Visitor ---")
         for key in ['functions_found', 'data_types_found', 'imports_found']:
             our_val = our_metrics.get(key, 0)
             generic_val = generic_metrics.get(key, 0)
@@ -218,7 +218,7 @@ class TestHaskellBaselineComparison:
 
         # Compare with baseline if available
         if baseline_metrics:
-            print("\\n--- Our Implementation vs CocoIndex Baseline ---")
+            print("\n--- Our Implementation vs CocoIndex Baseline ---")
             our_func_names = our_metrics.get('function_names', [])
             baseline_func_names = baseline_metrics.get('function_names', [])
             our_funcs = set(our_func_names if isinstance(our_func_names, list) else [])
@@ -239,7 +239,7 @@ class TestHaskellBaselineComparison:
                 print(f"  Baseline: {sorted(baseline_types)}")
 
         # Quality assessment
-        print("\\n--- Quality Assessment ---")
+        print("\n--- Quality Assessment ---")
         expected_functions = {'fibonacci', 'sumList', 'treeMap', 'compose', 'addTen', 'multiplyByTwo', 'main'}
         expected_types = {'Person', 'Tree'}
 

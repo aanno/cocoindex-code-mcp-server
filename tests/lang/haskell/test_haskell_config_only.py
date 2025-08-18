@@ -94,11 +94,11 @@ def test_safe_regex_matching():
             if not isinstance(separator, str):
                 continue
             pattern = separator
-            if pattern.startswith('\\n'):
+            if pattern.startswith('\n'):
                 pattern = pattern[2:]  # Remove \n
                 # Handle double newlines and other special cases
-                if pattern.startswith('\\n'):
-                    if pattern == '\\n+':
+                if pattern.startswith('\n'):
+                    if pattern == '\n+':
                         pattern = '^$'  # Match empty lines
                     else:
                         pattern = pattern[2:] + '$'  # Make it end-of-line match for empty lines
@@ -132,15 +132,15 @@ def create_test_regex_fallback_chunks(content: str, file_path: str, config: Hask
 
         # Check for separator patterns with priority
         for priority, separator in enumerate(separators):
-            # Remove leading \n but handle special cases like \\n\\n+
+            # Remove leading \n but handle special cases like \n\n
             if not isinstance(separator, str):
                 continue
             pattern = separator
-            if pattern.startswith('\\n'):
+            if pattern.startswith('\n'):
                 pattern = pattern[2:]  # Remove \n
                 # Handle double newlines and other special cases
-                if pattern.startswith('\\n'):
-                    if pattern == '\\n+':
+                if pattern.startswith('\n):
+                    if pattern == '\n+':
                         pattern = '^$'  # Match empty lines
                     else:
                         pattern = pattern[2:] + '$'  # Make it end-of-line match for empty lines

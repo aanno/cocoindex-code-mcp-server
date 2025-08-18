@@ -27,14 +27,12 @@ class TestChunkingMethodRegression:
     @pytest.mark.asyncio
     async def test_haskell_rust_chunking_method_names(self):
         """Test that Haskell files get proper rust_haskell_* chunking method names."""
-        infrastructure_config = {
-            "paths": ["/workspaces/rust"],
-            "enable_polling": False,
-            "default_chunking": False,
-            "default_language_handler": False,
-        }
-
-        async with CocoIndexTestInfrastructure(**infrastructure_config) as test_infrastructure:
+        async with CocoIndexTestInfrastructure(
+            paths=["/workspaces/rust"],
+            enable_polling=False,
+            default_chunking=False,
+            default_language_handler=False
+        ) as test_infrastructure:
             results = test_infrastructure.hybrid_search_engine.search(
                 vector_query="haskell function pattern matching",
                 keyword_query="language:haskell",
@@ -74,18 +72,18 @@ class TestChunkingMethodRegression:
                         'metadata_chunking': metadata_chunking
                     })
 
-            print("\\n📊 Chunking Methods Analysis:")
+            print("\n📊 Chunking Methods Analysis:")
             print(f"   All methods found: {sorted(chunking_methods)}")
             print(f"   Good files (rust_haskell_*): {len(good_files)}")
             print(f"   Problematic files: {len(problematic_files)}")
 
             if good_files:
-                print("\\n✅ Good examples:")
+                print("\n✅ Good examples:")
                 for f in good_files[:3]:
                     print(f"   {f['filename']}: {f['chunking_method']}")
 
             if problematic_files:
-                print("\\n❌ Problematic examples:")
+                print("\n❌ Problematic examples:")
                 for f in problematic_files[:5]:
                     print(f"   {f['filename']}: {f['chunking_method']}")
 
@@ -100,20 +98,18 @@ class TestChunkingMethodRegression:
             found_bad = chunking_methods.intersection(bad_generic_methods)
 
             if found_bad:
-                print(f"\\n⚠️  Found potentially problematic generic methods: {found_bad}")
+                print(f"\n⚠️  Found potentially problematic generic methods: {found_bad}")
                 # This is a warning, not a failure, since some might be legitimate
 
     @pytest.mark.asyncio
     async def test_metadata_arrays_not_strings(self):
         """Test that metadata arrays are JSON arrays, not Python string representations."""
-        infrastructure_config = {
-            "paths": ["/workspaces/rust"],
-            "enable_polling": False,
-            "default_chunking": False,
-            "default_language_handler": False,
-        }
-
-        async with CocoIndexTestInfrastructure(**infrastructure_config) as test_infrastructure:
+        async with CocoIndexTestInfrastructure(
+            paths=["/workspaces/rust"],
+            enable_polling=False,
+            default_chunking=False,
+            default_language_handler=False
+        ) as test_infrastructure:
             # Search for files that should have array metadata
             results = test_infrastructure.hybrid_search_engine.search(
                 vector_query="python function class import",
@@ -155,17 +151,17 @@ class TestChunkingMethodRegression:
                                 'type': type(field_value).__name__
                             })
 
-            print("\\n📊 Metadata Array Analysis:")
+            print("\n📊 Metadata Array Analysis:")
             print(f"   Good examples (proper lists): {len(good_examples)}")
             print(f"   String representation examples: {len(string_representation_examples)}")
 
             if good_examples:
-                print("\\n✅ Good examples (proper JSON arrays):")
+                print("\n✅ Good examples (proper JSON arrays):")
                 for example in good_examples[:3]:
                     print(f"   {example['filename']}.{example['field']}: {example['value']} ({example['type']})")
 
             if string_representation_examples:
-                print("\\n❌ String representation examples:")
+                print("\n❌ String representation examples:")
                 for example in string_representation_examples[:3]:
                     print(f"   {example['filename']}.{example['field']}: {example['value'][:100]}... ({example['type']})")
 
@@ -179,14 +175,12 @@ class TestChunkingMethodRegression:
     @pytest.mark.asyncio
     async def test_chunking_method_consistency(self):
         """Test that chunking_method is consistent between different metadata sources."""
-        infrastructure_config = {
-            "paths": ["/workspaces/rust"],
-            "enable_polling": False,
-            "default_chunking": False,
-            "default_language_handler": False,
-        }
-
-        async with CocoIndexTestInfrastructure(**infrastructure_config) as test_infrastructure:
+        async with CocoIndexTestInfrastructure(
+            paths=["/workspaces/rust"],
+            enable_polling=False,
+            default_chunking=False,
+            default_language_handler=False
+        ) as test_infrastructure:
             # Test various languages to check consistency
             test_cases = [
                 ("haskell function", "language:haskell"),
@@ -223,12 +217,12 @@ class TestChunkingMethodRegression:
                             'metadata': metadata_method
                         })
 
-            print("\\n📊 Chunking Method Consistency Analysis:")
+            print("\n📊 Chunking Method Consistency Analysis:")
             print(f"   All chunking methods found: {sorted(all_chunking_methods)}")
             print(f"   Inconsistencies found: {len(inconsistencies)}")
 
             if inconsistencies:
-                print("\\n⚠️  Chunking method inconsistencies:")
+                print("\n⚠️  Chunking method inconsistencies:")
                 for inconsistency in inconsistencies[:3]:
                     print(f"   {inconsistency['filename']} ({inconsistency['language']}): "
                           f"top_level='{inconsistency['top_level']}' vs metadata='{inconsistency['metadata']}'")
@@ -242,14 +236,12 @@ class TestChunkingMethodRegression:
     @pytest.mark.asyncio
     async def test_no_unknown_chunking_for_supported_languages(self):
         """Test that supported languages don't get 'unknown_chunking' method."""
-        infrastructure_config = {
-            "paths": ["/workspaces/rust"],
-            "enable_polling": False,
-            "default_chunking": False,
-            "default_language_handler": False,
-        }
-
-        async with CocoIndexTestInfrastructure(**infrastructure_config) as test_infrastructure:
+        async with CocoIndexTestInfrastructure(
+            paths=["/workspaces/rust"],
+            enable_polling=False,
+            default_chunking=False,
+            default_language_handler=False
+        ) as test_infrastructure:
             # Languages that should have proper chunking methods
             supported_languages = ["Haskell", "Python", "JavaScript", "TypeScript", "Java"]
 
@@ -272,12 +264,12 @@ class TestChunkingMethodRegression:
                                 'chunking_method': chunking_method
                             })
 
-            print("\\n📊 Unknown Chunking Analysis:")
+            print("\n📊 Unknown Chunking Analysis:")
             print(f"   Supported languages checked: {supported_languages}")
             print(f"   Files with unknown_chunking: {len(unknown_chunking_cases)}")
 
             if unknown_chunking_cases:
-                print("\\n❌ Files with unknown_chunking (should have proper methods):")
+                print("\n❌ Files with unknown_chunking (should have proper methods):")
                 for case in unknown_chunking_cases[:5]:
                     print(f"   {case['filename']} ({case['language']}): {case['chunking_method']}")
 

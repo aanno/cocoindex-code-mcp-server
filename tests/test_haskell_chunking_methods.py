@@ -26,17 +26,14 @@ class TestHaskellChunkingMethods:
     @pytest.mark.asyncio
     async def test_haskell_chunking_methods_from_rust(self):
         """Test that Haskell files get proper Rust chunking method names."""
-        infrastructure_config = {
-            "paths": ["/workspaces/rust"],
-            "enable_polling": False,
-            "poll_interval": 30,
-            "default_embedding": False,
-            "default_chunking": False,
-            "default_language_handler": False,
-            "chunk_factor_percent": 100
-        }
-
-        async with CocoIndexTestInfrastructure(**infrastructure_config) as test_infrastructure:
+        async with CocoIndexTestInfrastructure(
+            paths=["/workspaces/rust"],
+            enable_polling=False,
+            default_embedding=False,
+            default_chunking=False,
+            default_language_handler=False,
+            chunk_factor_percent=100
+        ) as test_infrastructure:
             # Search for Haskell files to get their chunking methods
             results = test_infrastructure.hybrid_search_engine.search(
                 vector_query="haskell function",
@@ -117,13 +114,11 @@ class TestHaskellChunkingMethods:
     @pytest.mark.asyncio
     async def test_haskell_specialized_chunker_used(self):
         """Test that Haskell files use the specialized chunker, not generic AST chunking."""
-        infrastructure_config = {
-            "paths": ["/workspaces/rust"],
-            "enable_polling": False,
-            "default_chunking": False
-        }
-
-        async with CocoIndexTestInfrastructure(**infrastructure_config) as test_infrastructure:
+        async with CocoIndexTestInfrastructure(
+            paths=["/workspaces/rust"],
+            enable_polling=False,
+            default_chunking=False
+        ) as test_infrastructure:
             results = test_infrastructure.hybrid_search_engine.search(
                 vector_query="haskell data type",
                 keyword_query="language:haskell",
@@ -161,12 +156,12 @@ class TestHaskellChunkingMethods:
 
 if __name__ == "__main__":
     # Run the test directly
+    import asyncio
     test = TestHaskellChunkingMethods()
-    infrastructure = CocoIndexTestInfrastructure()
 
     print("🧪 Running Haskell chunking method test...")
     try:
-        test.test_haskell_chunking_methods_from_rust(infrastructure)
+        asyncio.run(test.test_haskell_chunking_methods_from_rust())
         print("✅ Test passed!")
     except Exception as e:
         print(f"❌ Test failed: {e}")

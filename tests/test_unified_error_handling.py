@@ -341,8 +341,8 @@ class TestPythonErrorExamples:
 
         # Should successfully analyze despite errors
         assert result.get('language') == 'python', "Should detect Python language"
-        assert result.get('char_count') > 0, "Should have character count"
-        assert result.get('line_count') > 0, "Should have line count"
+        assert result.get('char_count', 0) > 0, "Should have character count"
+        assert result.get('line_count', 0) > 0, "Should have line count"
 
         # Analysis method depends on available parsers
         analysis_method = result.get('analysis_method', 'unknown')

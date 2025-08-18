@@ -106,7 +106,7 @@ class TestJSONFormatting:
         assert "print(\"Hello, World!\")" in result
         assert "return True" in result
         # Should NOT contain escaped newlines
-        assert "\\n" not in result
+        assert "\n" not in result
 
     def test_metadata_json_field_formatting(self):
         """Test that metadata_json fields are formatted without JSON escaping."""
