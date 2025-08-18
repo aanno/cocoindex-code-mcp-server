@@ -48,7 +48,7 @@ class TestRustHaskellErrorHandling:
         assert result.error_stats().error_count(
         ) >= ERROR_FALLBACK_THRESHOLD, f"Expected at least {ERROR_FALLBACK_THRESHOLD} errors"
         assert result.error_stats().should_fallback(), "Should trigger fallback"
-        assert result.chunking_method() == "regex_fallback", f"Expected regex_fallback, got {result.chunking_method()}"
+        assert result.chunking_method() == "rust_haskell_regex_fallback_2", f"Expected rust_haskell_regex_fallback_2, got {result.chunking_method()}"
         assert len(result.chunks()) > 0, "Should have fallback chunks"
         assert result.coverage_complete(), "Coverage should be complete"
 
@@ -73,7 +73,7 @@ class TestRustHaskellErrorHandling:
         assert 1 <= error_count < ERROR_FALLBACK_THRESHOLD, f"Expected 1-{
             ERROR_FALLBACK_THRESHOLD - 1} errors, got {error_count}"
         assert not result.error_stats().should_fallback(), "Should not trigger fallback"
-        assert result.chunking_method() == "ast_with_errors", f"Expected ast_with_errors, got {
+        assert result.chunking_method() == "rust_haskell_ast_with_errors", f"Expected rust_haskell_ast_with_errors, got {
             result.chunking_method()}"
         assert len(result.chunks()) > 0, "Should have AST chunks"
         assert result.coverage_complete(), "Coverage should be complete"
@@ -102,7 +102,7 @@ data Color = Red | Green | Blue
         # Should use pure AST chunking (0 errors)
         assert result.error_stats().error_count() == 0, "Expected 0 errors"
         assert not result.error_stats().should_fallback(), "Should not trigger fallback"
-        assert result.chunking_method() == "ast", f"Expected ast, got {result.chunking_method()}"
+        assert result.chunking_method() == "rust_haskell_ast", f"Expected rust_haskell_ast, got {result.chunking_method()}"
         assert len(result.chunks()) > 0, "Should have AST chunks"
         assert result.coverage_complete(), "Coverage should be complete"
 
@@ -183,7 +183,7 @@ multiply x y = x * y
         result = analyze_haskell_code(good_code, "test_good.hs")
 
         assert result.get('analysis_method') == 'haskell_chunk_visitor', "Should use Haskell chunk visitor"
-        assert result.get('chunking_method') == 'ast', "Should use AST chunking"
+        assert result.get('chunking_method') == 'rust_haskell_ast', "Should use AST chunking (rust_haskell_ast)"
         assert result.get('error_count', 0) == 0, "Should have 0 errors"
         assert result.get('parse_errors', 0) == 0, "Should have 0 parse errors"
         assert result.get('coverage_complete', False), "Coverage should be complete"
@@ -209,7 +209,7 @@ multiply x y = x * y
         result = analyze_haskell_code(minor_errors_code, "test_minor_errors.hs")
 
         assert result.get('analysis_method') == 'haskell_chunk_visitor', "Should use Haskell chunk visitor"
-        assert result.get('chunking_method') == 'ast_with_errors', "Should use AST with errors"
+        assert result.get('chunking_method') == 'rust_haskell_ast_with_errors', "Should use AST with errors (rust_haskell_ast_with_errors)"
         error_count = result.get('error_count', 0)
         assert 1 <= error_count < ERROR_FALLBACK_THRESHOLD, f"Should have 1-{
             ERROR_FALLBACK_THRESHOLD - 1} errors, got {error_count}"
@@ -236,7 +236,7 @@ multiply x y = x * y
         result = analyze_haskell_code(buggy_code, "test_buggy.hs")
 
         assert result.get('analysis_method') == 'haskell_chunk_visitor', "Should use Haskell chunk visitor"
-        assert result.get('chunking_method') == 'regex_fallback', "Should use regex fallback"
+        assert result.get('chunking_method') == 'rust_haskell_regex_fallback_2', "Should use rust_haskell_regex_fallback_2 fallback"
         error_count = result.get('error_count', 0)
         assert error_count >= ERROR_FALLBACK_THRESHOLD, f"Should have {ERROR_FALLBACK_THRESHOLD}+ errors, got {error_count}"
         assert result.get('should_fallback', False), "Should trigger fallback"
@@ -340,7 +340,7 @@ class TestPythonErrorExamples:
         result = analyzer.analyze_code(python_errors_code, language="python", filename="python_minor_errors.py")
 
         # Should successfully analyze despite errors
-        assert result.get('language') == 'python', "Should detect Python language"
+        assert result.get('language') == 'Python', "Should detect Python language"
         assert result.get('char_count', 0) > 0, "Should have character count"
         assert result.get('line_count', 0) > 0, "Should have line count"
 

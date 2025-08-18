@@ -149,7 +149,7 @@ sumList (x:xs) = x + sumList xs
 
         # Should succeed and use Haskell analyzer
         assert metadata['success'] is True
-        assert metadata['language'] == 'haskell'
+        assert metadata['language'] == 'Haskell'
         assert metadata.get('analysis_method') == 'haskell_chunk_visitor'
 
         # Note: Functions may be empty due to the known Haskell AST parsing issue
