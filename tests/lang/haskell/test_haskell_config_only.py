@@ -139,7 +139,7 @@ def create_test_regex_fallback_chunks(content: str, file_path: str, config: Hask
             if pattern.startswith('\n'):
                 pattern = pattern[2:]  # Remove \n
                 # Handle double newlines and other special cases
-                if pattern.startswith('\n):
+                if pattern.startswith('\n'):
                     if pattern == '\n+':
                         pattern = '^$'  # Match empty lines
                     else:

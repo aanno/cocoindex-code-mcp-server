@@ -121,7 +121,7 @@ class TestJSONFormatting:
         assert '"functions": ["hello"]' in result
         assert '"classes": []' in result
         # Should NOT contain escaped quotes
-        assert '\\"' not in result
+        assert '\"' not in result
 
     def test_other_fields_normal_formatting(self):
         """Test that non-code/metadata_json fields use normal JSON formatting."""
