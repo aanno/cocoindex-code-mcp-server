@@ -1,7 +1,71 @@
-# Current State: ASTChunk Integration with CocoIndex
+# AST Chunking in CocoIndex
 
-## 🎯 **Current Task Status**
-**Task in Progress**: Implementing AST-based chunking operation in CocoIndex (Task #10)
+## 🎯 **Preferred Implementation Pattern (January 2025)**
+
+The current preferred approach for implementing AST chunking in CocoIndex uses the `@op.executor_class()` pattern as demonstrated in:
+- `src/cocoindex_code_mcp_server/ast_chunking.py` (Python AST chunking)
+- `src/cocoindex_code_mcp_server/lang/haskell/haskell_ast_chunker.py` (Haskell AST chunking)
+
+### **Modern Pattern: @op.executor_class()**
+
+```python
+from dataclasses import dataclass
+from cocoindex import op
+from typing import Any
+
+@dataclass
+class MyChunkRow:
+    """Typed chunk representation for CocoIndex."""
+    content: str
+    location: str
+    start: int
+    end: int
+    chunking_method: str
+    
+    # Dictionary-style access for backward compatibility
+    def __getitem__(self, key: str) -> Any:
+        return getattr(self, key)
+    
+    def __contains__(self, key: str) -> bool:
+        return hasattr(self, key)
+    
+    def get(self, key: str, default: Any = None) -> Any:
+        return getattr(self, key, default)
+
+class MyChunkSpec(op.FunctionSpec):
+    """Function specification for MyChunk operation."""
+    max_chunk_size: int = 1800
+    chunk_overlap: int = 0
+    chunk_expansion: bool = False
+
+@op.executor_class()
+class MyChunkExecutor:
+    """Executor for MyChunk AST-based code chunking."""
+    spec: MyChunkSpec
+
+    def analyze(self, content: Any, language: Any = "MyLanguage") -> type:
+        """Analyze method required by CocoIndex to determine return type."""
+        return list[MyChunkRow]
+
+    def __call__(self, content: str, language: str = "MyLanguage") -> list[MyChunkRow]:
+        """Main chunking function - returns typed chunk structures for CocoIndex."""
+        # Implementation here
+        chunks = []
+        # ... chunking logic ...
+        return chunks
+```
+
+### **Key Features of Modern Pattern**
+
+1. **Typed Returns**: Use dataclasses with proper typing
+2. **Dictionary Compatibility**: Add `__getitem__`, `__contains__`, `get()` for backward compatibility
+3. **Analyze Method**: Required by CocoIndex to determine return types
+4. **Spec Classes**: Separate configuration from execution logic
+5. **Unique Locations**: Generate unique location strings for each chunk
+
+## 🎯 **Legacy Integration Context**
+
+The following sections document the historical integration work with ASTChunk library.
 
 ## 📋 **Completed Work**
 

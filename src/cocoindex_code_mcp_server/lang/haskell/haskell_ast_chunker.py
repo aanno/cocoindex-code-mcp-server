@@ -150,7 +150,7 @@ def get_enhanced_haskell_separators() -> List[str]:
     return enhanced_separators
 
 
-@deprecated("Use haskell_tree_sitter.get_haskell_ast_chunks from maturin/rust")
+@deprecated("Use HaskellChunkExecutor with @op.executor_class() pattern instead")
 class EnhancedHaskellChunker:
     """
     Enhanced Haskell chunker inspired by ASTChunk techniques.
@@ -554,6 +554,7 @@ class CompatibleChunk:
         return self._metadata
 
 
+@deprecated("Use HaskellChunkExecutor with @op.executor_class() pattern instead")
 def extract_haskell_ast_chunks(content: str) -> List[Dict[str, Any]]:
     """
     Enhanced AST-based Haskell chunking using the fixed Rust implementation.
