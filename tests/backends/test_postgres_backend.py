@@ -302,7 +302,8 @@ class TestPostgresBackend:
 
         # Test result formatting
         row = ("test.py", "Python", "def test():", 0.2, {"line": 1}, {"line": 3}, "files")
-        result = backend._format_result(row, score_type="vector")
+        available_fields = ["filename", "language", "content", "score", "start_char", "end_char", "file_type"]
+        result = backend._format_result(row, available_fields=available_fields, score_type="vector")
 
         # Verify Python analysis was called
         mock_analyze.assert_called_once_with("def test():", "test.py")
@@ -327,7 +328,8 @@ class TestPostgresBackend:
 
         # Test result formatting
         row = ("test.py", "Python", "def test():", 0.2, {"line": 1}, {"line": 3}, "files")
-        result = backend._format_result(row, score_type="vector")
+        available_fields = ["filename", "language", "content", "score", "start_char", "end_char", "file_type"]
+        result = backend._format_result(row, available_fields=available_fields, score_type="vector")
 
         # Verify result structure with fallback metadata
         assert isinstance(result, SearchResult)
@@ -341,7 +343,8 @@ class TestPostgresBackend:
 
         # Test result formatting for non-Python language
         row = ("test.js", "JavaScript", "function test() {}", 0.3, {"line": 1}, {"line": 3}, "files")
-        result = backend._format_result(row, score_type="vector")
+        available_fields = ["filename", "language", "content", "score", "start_char", "end_char", "file_type"]
+        result = backend._format_result(row, available_fields=available_fields, score_type="vector")
 
         # Verify result structure with basic metadata for non-Python code
         assert isinstance(result, SearchResult)

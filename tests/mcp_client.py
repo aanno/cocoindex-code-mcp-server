@@ -11,11 +11,12 @@ for our CocoIndex RAG MCP server.
 import json
 import logging
 from datetime import timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 import httpx
 from mcp.client.session import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
+from pydantic import AnyUrl
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ class MCPTestClient:
 
         if transport == 'http':
             self.server_url = f"http://{host}:{port}/mcp/"
-            self.http_client = httpx.AsyncClient(timeout=30.0)
+            self.http_client: Optional[httpx.AsyncClient] = httpx.AsyncClient(timeout=30.0)
         else:
             self.server_url = f"http://{host}:{port}/mcp/"
             self.http_client = None
@@ -81,6 +82,9 @@ class MCPTestClient:
         # For HTTP transport, we don't need a persistent connection
         # Just verify the server is accessible
         try:
+            if not self.http_client:
+                raise RuntimeError("HTTP client not initialized")
+        
             response = await self.http_client.post(
                 self.server_url,
                 json={
@@ -192,6 +196,9 @@ class MCPTestClient:
 
     async def _call_tool_http(self, tool_name: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Call tool using HTTP transport."""
+        if not self.http_client:
+            raise RuntimeError("HTTP client not initialized")
+        
         response = await self.http_client.post(
             self.server_url,
             json={
@@ -270,7 +277,7 @@ class MCPTestClient:
                 raise RuntimeError(f"Resource '{resource_name_or_uri}' not found")
             resource_uri = resource.uri
         else:
-            resource_uri = resource_name_or_uri
+            resource_uri = AnyUrl(resource_name_or_uri)
 
         result = await self.session.read_resource(resource_uri)
 
@@ -296,10 +303,13 @@ class MCPTestClient:
 
             if not matching_resource:
                 raise RuntimeError(f"Resource '{resource_name_or_uri}' not found")
-            resource_uri = str(matching_resource.uri)
+            resource_uri = matching_resource.uri
         else:
-            resource_uri = resource_name_or_uri
+            resource_uri = AnyUrl(resource_name_or_uri)
 
+        if not self.http_client:
+            raise RuntimeError("HTTP client not initialized")
+        
         response = await self.http_client.post(
             self.server_url,
             json={
@@ -345,6 +355,9 @@ class MCPTestClient:
 
     async def _list_tools_http(self) -> List[Any]:
         """List tools using HTTP transport."""
+        if not self.http_client:
+            raise RuntimeError("HTTP client not initialized")
+        
         response = await self.http_client.post(
             self.server_url,
             json={
@@ -391,6 +404,9 @@ class MCPTestClient:
 
     async def _list_resources_http(self) -> List[Any]:
         """List resources using HTTP transport."""
+        if not self.http_client:
+            raise RuntimeError("HTTP client not initialized")
+        
         response = await self.http_client.post(
             self.server_url,
             json={
@@ -428,6 +444,9 @@ class MCPTestClient:
                     return False
 
                 # Test with a simple tools/list request
+                if not self.http_client:
+                    raise RuntimeError("HTTP client not initialized")
+        
                 response = await self.http_client.post(
                     self.server_url,
                     json={
@@ -462,7 +481,7 @@ class MCPHTTPClient(MCPTestClient):
         # For compatibility with existing tests
         self.base_url = f"http://{host}:{port}/mcp/"
         self.client = self.http_client
-        self.session = self  # Self-reference for compatibility
+        self.session = cast(Optional[ClientSession], self)  # Self-reference for compatibility
         self.name = "cocoindex-rag"
 
     async def execute_tool(self, tool_name: str, arguments: dict):

@@ -27,7 +27,7 @@ load_dotenv()
 # CocoIndex and MCP infrastructure imports
 try:
     import cocoindex
-    from cocoindex_code_mcp_server.backends import BackendFactory
+    from cocoindex_code_mcp_server.backends import BackendFactory, VectorStoreBackend
     from cocoindex_code_mcp_server.cocoindex_config import (
         run_flow_update,
         update_flow_config,
@@ -398,7 +398,7 @@ class CocoIndexTestInfrastructure:
 
         # Infrastructure components
         self.hybrid_search_engine: Optional[HybridSearchEngine] = None
-        self.backend = None
+        self.backend: Optional[VectorStoreBackend] = None
         self.shutdown_event = threading.Event()
         self.background_thread: Optional[threading.Thread] = None
 
@@ -447,11 +447,11 @@ class CocoIndexTestInfrastructure:
 
             # Run initial flow update to process files
             self.logger.info("🔄 Running initial flow update...")
-            stats = run_flow_update(
+            run_flow_update(
                 live_update=self.enable_polling,
                 poll_interval=self.poll_interval
             )
-            self.logger.info(f"✅ Flow update completed - Stats: {stats}")
+            self.logger.info("✅ Flow update completed")
             self.logger.info("📚 CocoIndex indexing completed and ready for searches")
 
             # Initialize backend and search engine

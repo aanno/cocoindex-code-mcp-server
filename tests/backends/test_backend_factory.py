@@ -245,12 +245,12 @@ class TestBackendFactory:
             # Register first backend
             BackendFactory.register_backend("test", FirstBackend)
             backend1 = BackendFactory.create_backend("test")
-            assert backend1.backend_type_label == "first"
+            assert backend1.backend_type == FirstBackend
 
             # Register second backend with same name (should overwrite)
             BackendFactory.register_backend("test", SecondBackend)
             backend2 = BackendFactory.create_backend("test")
-            assert backend2.backend_type_label == "second"
+            assert backend2.backend_type == SecondBackend
 
         finally:
             # Restore original backends

@@ -63,8 +63,13 @@ class TestMCPDirect:
             "poll_interval": 30
         }
 
-        # Create and initialize infrastructure
-        async with CocoIndexTestInfrastructure(**infrastructure_config) as infrastructure:
+        # Create and initialize infrastructure  
+        async with CocoIndexTestInfrastructure(
+            paths=["/workspaces/rust"],
+            enable_polling=False,
+            default_chunking=False,
+            default_language_handler=False
+        ) as infrastructure:
 
             # CocoIndex indexing completes synchronously during infrastructure setup
             # No need to wait - infrastructure is ready for searches

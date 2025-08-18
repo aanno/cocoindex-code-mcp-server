@@ -241,25 +241,21 @@ class Example:
     def test_flow_configuration_updates(self):
         """Test that flow configuration updates work correctly."""
         # Test initial configuration
-        initial_config = {
-            'paths': ['/test/path'],
-            'enable_polling': True,
-            'poll_interval': 60,
-            'use_default_chunking': True,
-            'use_default_language_handler': True
-        }
-
-        update_flow_config(**initial_config)
+        update_flow_config(
+            paths=['/test/path'],
+            enable_polling=True,
+            poll_interval=60,
+            use_default_chunking=True,
+            use_default_language_handler=True
+        )
 
         # Test updated configuration
-        updated_config = {
-            'paths': ['/another/path'],
-            'enable_polling': False,
-            'use_default_chunking': False,
-            'use_default_language_handler': False
-        }
-
-        update_flow_config(**updated_config)
+        update_flow_config(
+            paths=['/another/path'],
+            enable_polling=False,
+            use_default_chunking=False,
+            use_default_language_handler=False
+        )
 
         # Configuration changes don't throw errors
         # Real testing would require access to _global_flow_config
