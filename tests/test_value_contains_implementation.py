@@ -121,7 +121,7 @@ class TestValueContainsSQLGeneration:
 
         where_clause, params = build_sql_where_clause(result)
 
-        assert "language = %s" in where_clause
+        assert "LOWER(language) = LOWER(%s)" in where_clause
         assert "code ILIKE %s" in where_clause
         assert "AND" in where_clause
         assert params == ["python", "%def%"]
@@ -165,7 +165,7 @@ class TestValueContainsLarkParser:
 
         assert "code ILIKE %s" in where_clause
         assert "%async%" in params
-        assert "language = %s" in where_clause  # Should have both languages
+        assert "LOWER(language) = LOWER(%s)" in where_clause  # Should have both languages
         assert params == ['python', 'rust', '%async%']
 
 

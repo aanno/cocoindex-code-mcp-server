@@ -50,7 +50,7 @@ class TestHaskellBaselineComparison:
         result = analyze_haskell_code(self.haskell_code, str(self.fixture_path))
 
         # Basic validation
-        assert result['language'] == 'haskell'
+        assert result['language'] == 'Haskell'
         assert result['analysis_method'] == 'haskell_chunk_visitor'
         assert result['line_count'] > 0
         assert result['char_count'] > 0
@@ -84,7 +84,7 @@ class TestHaskellBaselineComparison:
         result = generic_analyze_code(self.haskell_code, 'haskell', str(self.fixture_path))
 
         # Basic validation
-        assert result['language'] == 'haskell'
+        assert result['language'] == 'Haskell'
         assert 'tree_sitter' in result.get('analysis_method', '')
 
         # Extract key metrics for comparison

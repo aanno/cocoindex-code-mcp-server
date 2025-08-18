@@ -115,7 +115,7 @@ _helperFunction s = "Helper: " ++ s
         )
 
         # Basic metadata should be present
-        assert metadata['language'] == 'haskell'
+        assert metadata['language'] == 'Haskell'
         assert metadata['filename'] == 'test.hs'
         assert metadata['line_count'] > 0
         assert metadata['char_count'] > 0
@@ -160,7 +160,7 @@ _helperFunction s = "Helper: " ++ s
         )
 
         assert isinstance(metadata, dict), "Should return metadata dictionary"
-        assert metadata['language'] == 'haskell'
+        assert metadata['language'] == 'Haskell'
 
         # Should contain analysis results
         assert 'analysis_method' in metadata
@@ -195,7 +195,7 @@ _helperFunction s = "Helper: " ++ s
 
         # Should still return metadata, possibly using fallback methods
         assert isinstance(metadata, dict)
-        assert metadata['language'] == 'haskell'
+        assert metadata['language'] == 'Haskell'
         assert 'analysis_method' in metadata
 
         print(f"Fallback analysis method: {metadata['analysis_method']}")
@@ -215,7 +215,7 @@ _helperFunction s = "Helper: " ++ s
                 filename=str(test_file_path)
             )
 
-            assert metadata['language'] == 'haskell'
+            assert metadata['language'] == 'Haskell'
             print(f"Real file analysis method: {metadata['analysis_method']}")
             print(f"Real file metadata keys: {list(metadata.keys())}")
         else:

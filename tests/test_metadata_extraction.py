@@ -50,9 +50,7 @@ async def async_function():
         metadata_json = cast(FunctionType, extract_code_metadata)(python_code, "python", "test.py")
         metadata = json.loads(metadata_json)
 
-        # Should have basic metadata
-        assert metadata['success'] is True
-        assert metadata['language'] == 'python'
+        # Should have basic metadata (success/language not in raw metadata, only promoted fields)
         assert 'analysis_method' in metadata
 
         # Should detect functions
@@ -105,9 +103,7 @@ class Calculator {
         metadata_json = cast(FunctionType, extract_code_metadata)(kotlin_code, "kotlin", "test.kt")
         metadata = json.loads(metadata_json)
 
-        # Should succeed and use Kotlin analyzer
-        assert metadata['success'] is True
-        assert metadata['language'] == 'kotlin'
+        # Should succeed and use Kotlin analyzer (success/language not in raw metadata)
         assert metadata.get('analysis_method') == 'kotlin_ast_visitor'
 
         # Should detect functions
@@ -179,11 +175,7 @@ class SomeClass {
         metadata_json = cast(FunctionType, extract_code_metadata)(unknown_code, "unknown", "test.unknown")
         metadata = json.loads(metadata_json)
 
-        # Should still succeed with fallback
-        assert metadata['success'] is True
-        assert metadata['language'] == 'unknown'
-
-        # Should have basic analysis
+        # Should still succeed with fallback (success/language not in raw metadata)
         assert 'analysis_method' in metadata
         assert metadata['analysis_method'] in ['enhanced_regex', 'basic_text', 'tree_sitter']
 
@@ -199,9 +191,8 @@ class TestMetadataConsistency:
             metadata_json = cast(FunctionType, extract_code_metadata)(empty_code, "python", "empty.py")
             metadata = json.loads(metadata_json)
 
-            # Should handle gracefully
+            # Should handle gracefully (language not in raw metadata)
             assert isinstance(metadata, dict)
-            assert 'language' in metadata
             assert 'analysis_method' in metadata
 
     def test_malformed_code_handling(self):
@@ -219,9 +210,8 @@ invalid syntax here ###
         metadata_json = cast(FunctionType, extract_code_metadata)(malformed_code, "python", "malformed.py")
         metadata = json.loads(metadata_json)
 
-        # Should handle gracefully without crashing
+        # Should handle gracefully without crashing (language not in raw metadata)
         assert isinstance(metadata, dict)
-        assert 'language' in metadata
         assert 'analysis_method' in metadata
 
 
