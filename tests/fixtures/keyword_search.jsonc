@@ -1,0 +1,369 @@
+{
+  // Test cases for keyword search functionality
+  // Each test contains: name, query (keyword_query only), and expected results
+  "tests": [
+    {
+      "name": "python_language_filter",
+      "description": "Search for Python files using language metadata filter",
+      "query": {
+        "keyword_query": "language:python"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "language": "python",
+              "analysis_method": "!unknown"
+            },
+            "should_not_be_empty": ["code", "functions"]
+          }
+        ],
+        "min_results": 2
+      }
+    },
+    {
+      "name": "classes_filter",
+      "description": "Search for files containing classes using metadata filter",
+      "query": {
+        "keyword_query": "has_classes:true"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "has_classes": true,
+              "classes": "!empty",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 2
+      }
+    },
+    {
+      "name": "fibonacci_function_filter",
+      "description": "Search for files containing fibonacci function using metadata filter",
+      "query": {
+        "keyword_query": "functions:fibonacci"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "functions": "!empty",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "rust_language_filter",
+      "description": "Search for Rust files using language metadata filter",
+      "query": {
+        "keyword_query": "language:rust"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "filename_pattern": ".*(tmp/)?test_rust\\.rs$",
+            "expected_metadata": {
+              "language": "rust",
+              "functions": "!empty",
+              "has_classes": false,
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "java_language_filter",
+      "description": "Search for Java files using language metadata filter",
+      "query": {
+        "keyword_query": "language:java"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "filename_pattern": ".*(tmp/)?.*\\.java$",
+            "expected_metadata": {
+              "language": "java",
+              "classes": "!empty",
+              "functions": "!empty",
+              "has_classes": true,
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "javascript_language_filter",
+      "description": "Search for JavaScript files using language metadata filter",
+      "query": {
+        "keyword_query": "language:javascript"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "filename_pattern": ".*(tmp/)?test_javascript\\.js$",
+            "expected_metadata": {
+              "language": "javascript",
+              "functions": "!empty",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "typescript_language_filter",
+      "description": "Search for TypeScript files using language metadata filter",
+      "query": {
+        "keyword_query": "language:typescript"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "filename_pattern": ".*(tmp/)?test_typescript\\.ts$",
+            "expected_metadata": {
+              "language": "typescript",
+              "functions": "!empty",
+              "has_type_hints": true,
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "cpp_language_filter",
+      "description": "Search for C++ files using language metadata filter",
+      "query": {
+        "keyword_query": "language:C++"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "filename_pattern": ".*(tmp/)?test_cpp\\.cpp$",
+            "expected_metadata": {
+              "language": "c++",
+              "functions": "!empty",
+              "classes": "!empty",
+              "has_classes": true,
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "c_language_filter",
+      "description": "Search for C files using language metadata filter",
+      "query": {
+        "keyword_query": "language:c"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "filename_pattern": ".*(tmp/)?test_c\\.c$",
+            "expected_metadata": {
+              "language": "c",
+              "functions": "!empty",
+              "has_classes": false,
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "kotlin_language_filter",
+      "description": "Search for Kotlin files using language metadata filter",
+      "query": {
+        "keyword_query": "language:kotlin"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "filename_pattern": ".*(tmp/)?test_kotlin\\.kt$",
+            "expected_metadata": {
+              "language": "kotlin",
+              "functions": "!empty",
+              "classes": "!empty",
+              "has_classes": true,
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "haskell_language_filter",
+      "description": "Search for Haskell files using language metadata filter",
+      "query": {
+        "keyword_query": "language:haskell"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "filename_pattern": ".*(tmp/)?test_haskell\\.hs$",
+            "expected_metadata": {
+              "language": "haskell",
+              "functions": "!empty",
+              "has_classes": false,
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "complexity_filter_high",
+      "description": "Search for files with high complexity using metadata filter",
+      "query": {
+        "keyword_query": "language:java AND has_classes:true"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "complexity_score": ">2",
+              "classes": "!empty",
+              "functions": "!empty",
+              "has_classes": true,
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "filename_pattern_filter",
+      "description": "Search for specific filename patterns using metadata filter",
+      "query": {
+        "keyword_query": "filename:python_handler"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "filename_pattern": ".*python_handler\\.py$",
+            "expected_metadata": {
+              "classes": "!empty",
+              "functions": "!empty",
+              "has_classes": true,
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "boolean_logic_and",
+      "description": "Test boolean AND logic in keyword search",
+      "query": {
+        "keyword_query": "language:python AND has_classes:true"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "language": "python",
+              "classes": "!empty",
+              "has_classes": true,
+              "functions": "!empty",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "boolean_logic_or",
+      "description": "Test boolean OR logic in keyword search",
+      "query": {
+        "keyword_query": "language:rust OR language:c"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "functions": "!empty",
+              "has_classes": false,
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 2
+      }
+    },
+    {
+      "name": "promoted_metadata_validation",
+      "description": "Validate promoted metadata fields using keyword filters",
+      "query": {
+        "keyword_query": "language:python AND chunking_method:ast_tree_sitter"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "analysis_method": "!unknown",
+              "chunking_method": "ast_tree_sitter",
+              "tree_sitter_chunking_error": false,
+              "tree_sitter_analyze_error": false,
+              "has_type_hints": "!null",
+              "has_async": "!null",
+              "decorators_used": "!null"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    }
+  ],
+  "test_metadata": {
+    "version": "2.0",
+    "description": "Keyword search tests to validate metadata-based filtering across all supported languages",
+    "search_type": "keyword_only",
+    "supported_languages": [
+      "python", "rust", "java", "javascript", "typescript", 
+      "cpp", "c", "kotlin", "haskell"
+    ],
+    "test_categories": [
+      "Language-specific filters (Python, Rust, Java, JS, TS, C++, C, Kotlin, Haskell)",
+      "Metadata-based filters (has_classes, functions, complexity, filename)",
+      "Boolean logic tests (AND, OR combinations)",
+      "Promoted metadata validation (chunking_method, error flags, type hints)"
+    ],
+    "keyword_syntax_examples": [
+      "language:python - Filter by programming language",
+      "has_classes:true - Filter files containing classes", 
+      "functions:fibonacci - Filter files containing specific function name",
+      "filename:handler - Filter by filename pattern",
+      "complexity_score:>2 - Numeric comparisons (not supported in keyword search)",
+      "language:python AND has_classes:true - Boolean AND logic",
+      "language:rust OR language:c - Boolean OR logic"
+    ],
+    "notes": [
+      "Tests validate metadata extraction and indexing accuracy",
+      "Each test uses only keyword_query without vector similarity",
+      "Boolean operators (AND, OR) test query parsing capabilities",
+      "Language filters verify proper language detection",
+      "Metadata filters test promoted field population",
+      "Numeric comparisons like >2 should be handled in application logic, not keyword parser"
+    ]
+  }
+}

@@ -1,0 +1,320 @@
+{
+  // Test cases for full text (vector) search functionality
+  // Each test contains: name, query (vector_query only), and expected results
+  "tests": [
+    {
+      "name": "basename_semantic_search",
+      "description": "Search for 'basename' using semantic similarity - should find relevant code patterns",
+      "query": {
+        "vector_query": "basename file path extraction"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "functions": "!empty",
+              "complexity_score": ">0",
+              "analysis_method": "!unknown"
+            },
+            "should_not_be_empty": ["code", "functions"]
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "ast_visitor_pattern_search",
+      "description": "Search for AST visitor pattern using semantic understanding",
+      "query": {
+        "vector_query": "AST visitor pattern tree traversal"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "classes": "!empty",
+              "functions": "!empty",
+              "complexity_score": ">0",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "python_handler_semantic_search",
+      "description": "Search for Python language handler using semantic similarity",
+      "query": {
+        "vector_query": "python language handler processing"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "classes": "!empty",
+              "functions": "!empty",
+              "has_classes": true,
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "complex_algorithm_search",
+      "description": "Search for complex algorithms using semantic understanding",
+      "query": {
+        "vector_query": "complex algorithm implementation recursive"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "complexity_score": ">1",
+              "functions": "!empty",
+              "code": "!empty",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "class_definition_search",
+      "description": "Search for class definitions using semantic similarity",
+      "query": {
+        "vector_query": "class definition constructor methods"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "classes": "!empty",
+              "has_classes": true,
+              "functions": "!empty",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 2
+      }
+    },
+    {
+      "name": "rust_struct_implementation_search",
+      "description": "Search for Rust struct implementations using semantic understanding",
+      "query": {
+        "vector_query": "rust struct implementation methods traits"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "filename_pattern": ".*(tmp/)?test_rust\\.rs$",
+            "expected_metadata": {
+              "functions": "!empty",
+              "has_classes": false,
+              "complexity_score": ">0",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "inheritance_polymorphism_search", 
+      "description": "Search for inheritance and polymorphism concepts using semantic similarity",
+      "query": {
+        "vector_query": "inheritance polymorphism abstract class extends"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "classes": "!empty",
+              "functions": "!empty",
+              "has_classes": true,
+              "complexity_score": ">2",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "generics_template_search",
+      "description": "Search for generic programming and templates using semantic understanding",
+      "query": {
+        "vector_query": "generic programming templates type parameters"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "functions": "!empty",
+              "complexity_score": ">1",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "functional_programming_search",
+      "description": "Search for functional programming patterns using semantic similarity",
+      "query": {
+        "vector_query": "functional programming higher order functions recursion"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "functions": "!empty",
+              "complexity_score": ">0",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "data_structures_search",
+      "description": "Search for data structure implementations using semantic understanding",
+      "query": {
+        "vector_query": "data structures arrays lists trees graphs"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "functions": "!empty",
+              "complexity_score": ">0",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "error_handling_search",
+      "description": "Search for error handling patterns using semantic similarity",
+      "query": {
+        "vector_query": "error handling exceptions try catch finally"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "functions": "!empty",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "async_concurrent_search",
+      "description": "Search for asynchronous and concurrent programming patterns",
+      "query": {
+        "vector_query": "asynchronous concurrent threading async await"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "functions": "!empty",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "fibonacci_algorithm_search",
+      "description": "Search for fibonacci algorithm implementations using semantic understanding",
+      "query": {
+        "vector_query": "fibonacci sequence recursive dynamic programming"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "functions": "!empty",
+              "complexity_score": ">0",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 2
+      }
+    },
+    {
+      "name": "design_patterns_search",
+      "description": "Search for common design patterns using semantic similarity",
+      "query": {
+        "vector_query": "design patterns observer factory singleton strategy"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "classes": "!empty",
+              "functions": "!empty",
+              "has_classes": true,
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "database_operations_search",
+      "description": "Search for database operations and SQL patterns using semantic understanding",
+      "query": {
+        "vector_query": "database operations SQL queries CRUD operations"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "functions": "!empty",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    }
+  ],
+  "test_metadata": {
+    "version": "2.0",
+    "description": "Full text (vector) search tests to validate semantic code search across all supported languages",
+    "search_type": "vector_only",
+    "supported_languages": [
+      "python", "rust", "java", "javascript", "typescript", 
+      "cpp", "c", "kotlin", "haskell"
+    ],
+    "test_categories": [
+      "Semantic code pattern searches (AST, algorithms, data structures)",
+      "Programming paradigm searches (OOP, functional, concurrent)",
+      "Domain-specific searches (database, error handling, design patterns)",
+      "Cross-language concept searches (fibonacci, inheritance, generics)"
+    ],
+    "notes": [
+      "Tests validate semantic understanding of code concepts across languages",
+      "Vector search should find conceptually similar code even with different syntax",
+      "Each test uses only vector_query without keyword filtering",
+      "Results should demonstrate embedding model's ability to understand programming concepts",
+      "Empty code fields indicate analysis failures that affect semantic search quality"
+    ]
+  }
+}

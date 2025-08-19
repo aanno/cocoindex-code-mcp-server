@@ -552,6 +552,7 @@ class CocoIndexTestInfrastructure:
         keyword_weight = arguments.get("keyword_weight", 0.3)
 
         try:
+            # Use HybridSearchEngine which already converts to dictionaries
             results = self.hybrid_search_engine.search(
                 vector_query=vector_query,
                 keyword_query=keyword_query,
@@ -575,6 +576,114 @@ class CocoIndexTestInfrastructure:
         except Exception as e:
             self.logger.error(f"Hybrid search failed: {e}")
             raise
+
+    async def perform_vector_search(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Perform vector-only search using the initialized infrastructure.
+
+        Args:
+            arguments: Search arguments containing vector_query, etc.
+
+        Returns:
+            Search results dictionary
+        """
+        if not self.backend:
+            raise RuntimeError("Backend not initialized")
+
+        vector_query = arguments["vector_query"]
+        top_k = arguments.get("top_k", 10)
+
+        try:
+            # Convert text query to vector using embedding function
+            from cocoindex_code_mcp_server.main_mcp_server import safe_embedding_function
+            query_vector = safe_embedding_function(vector_query)
+
+            # Call backend method directly 
+            search_results = self.backend.vector_search(
+                query_vector=query_vector,
+                top_k=top_k
+            )
+
+            # Convert SearchResult objects to dictionaries (like HybridSearchEngine does)
+            results = [self._search_result_to_dict(result) for result in search_results]
+
+            return {
+                "query": {
+                    "vector_query": vector_query,
+                    "top_k": top_k
+                },
+                "results": results,
+                "total_results": len(results)
+            }
+
+        except Exception as e:
+            self.logger.error(f"Vector search failed: {e}")
+            raise
+
+    async def perform_keyword_search(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Perform keyword-only search using the initialized infrastructure.
+
+        Args:
+            arguments: Search arguments containing keyword_query, etc.
+
+        Returns:
+            Search results dictionary
+        """
+        if not self.backend:
+            raise RuntimeError("Backend not initialized")
+
+        keyword_query = arguments["keyword_query"]
+        top_k = arguments.get("top_k", 10)
+
+        try:
+            # Parse keyword query using the keyword search parser
+            from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
+            from cocoindex_code_mcp_server.backends import QueryFilters
+
+            parser = KeywordSearchParser()
+            filters = parser.parse_query(keyword_query)
+
+            # Call backend method directly
+            search_results = self.backend.keyword_search(
+                filters=filters,
+                top_k=top_k
+            )
+
+            # Convert SearchResult objects to dictionaries (like HybridSearchEngine does)
+            results = [self._search_result_to_dict(result) for result in search_results]
+
+            return {
+                "query": {
+                    "keyword_query": keyword_query,
+                    "top_k": top_k
+                },
+                "results": results,
+                "total_results": len(results)
+            }
+
+        except Exception as e:
+            self.logger.error(f"Keyword search failed: {e}")
+            raise
+
+    def _search_result_to_dict(self, result) -> Dict[str, Any]:
+        """Convert SearchResult to dict format for backward compatibility."""
+        result_dict = {
+            "filename": result.filename,
+            "language": result.language,
+            "code": result.code,
+            "score": result.score,
+            "start": result.start,
+            "end": result.end,
+            "source": result.source,
+            "score_type": result.score_type
+        }
+
+        # Add metadata fields if available
+        if result.metadata:
+            result_dict.update(result.metadata)
+
+        return result_dict
 
     async def cleanup(self) -> None:
         """Clean up the infrastructure."""

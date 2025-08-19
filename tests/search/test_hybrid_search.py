@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 from dotenv import load_dotenv
 
-from tests.common import (
+from ..common import (
     COCOINDEX_AVAILABLE,
     CocoIndexTestInfrastructure,
     copy_directory_structure,
