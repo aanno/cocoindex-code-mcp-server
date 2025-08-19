@@ -6,6 +6,7 @@ Integration tests for the hybrid search workflow.
 
 import tempfile
 import pytest
+from unittest.mock import Mock
 
 # Package should be installed via maturin develop or pip install -e .
 
@@ -42,13 +43,13 @@ class TestMainHybridSearchIntegration:
             )
 
             # Test default arguments
-            with patch('sys.argv', ['main_hybrid_search.py']):
-                args = parse_hybrid_search_args()
-                paths = determine_paths(args)
+            mocker.patch('sys.argv', ['main_hybrid_search.py'])
+            args = parse_hybrid_search_args()
+            paths = determine_paths(args)
 
-                assert paths is None  # Should use default
-                assert not args.no_live  # Live updates enabled by default
-                assert args.poll == 60  # Default polling interval
+            assert paths is None  # Should use default
+            assert not args.no_live  # Live updates enabled by default
+            assert args.poll == 60  # Default polling interval
         except ImportError:
             pytest.skip("CocoIndex not available in test environment")
 
@@ -68,11 +69,11 @@ class TestMainHybridSearchIntegration:
             )
 
             # Test with positional paths
-            with patch('sys.argv', ['main_hybrid_search.py', '/path1', '/path2']):
-                args = parse_hybrid_search_args()
-                paths = determine_paths(args)
+            mocker.patch('sys.argv', ['main_hybrid_search.py', '/path1', '/path2'])
+            args = parse_hybrid_search_args()
+            paths = determine_paths(args)
 
-                assert paths == ['/path1', '/path2']
+            assert paths == ['/path1', '/path2']
         except ImportError:
             pytest.skip("CocoIndex not available in test environment")
 
@@ -89,10 +90,10 @@ class TestMainHybridSearchIntegration:
                 parse_hybrid_search_args,
             )
 
-            with patch('sys.argv', ['main_hybrid_search.py', '--no-live']):
-                args = parse_hybrid_search_args()
+            mocker.patch('sys.argv', ['main_hybrid_search.py', '--no-live'])
+            args = parse_hybrid_search_args()
 
-                assert args.no_live
+            assert args.no_live
         except ImportError:
             pytest.skip("CocoIndex not available in test environment")
 
@@ -109,10 +110,10 @@ class TestMainHybridSearchIntegration:
                 parse_hybrid_search_args,
             )
 
-            with patch('sys.argv', ['main_hybrid_search.py', '--poll', '30']):
-                args = parse_hybrid_search_args()
+            mocker.patch('sys.argv', ['main_hybrid_search.py', '--poll', '30'])
+            args = parse_hybrid_search_args()
 
-                assert args.poll == 30
+            assert args.poll == 30
         except ImportError:
             pytest.skip("CocoIndex not available in test environment")
 
@@ -133,20 +134,20 @@ class TestMainHybridSearchIntegration:
             from cocoindex_code_mcp_server.main_hybrid_search import main
 
             # Mock the flow update
-            with patch('main_hybrid_search.code_embedding_flow') as mock_flow:
-                mock_flow.update.return_value = {"processed": 10}
+            mock_flow = mocker.patch('main_hybrid_search.code_embedding_flow')
+            mock_flow.update.return_value = {"processed": 10}
 
-                with patch('sys.argv', ['main_hybrid_search.py', '--no-live']):
-                    main()
+            mocker.patch('sys.argv', ['main_hybrid_search.py', '--no-live'])
+            main()
 
-                    # Verify configuration was updated
-                    mock_update_config.assert_called_once()
+            # Verify configuration was updated
+            mock_update_config.assert_called_once()
 
-                    # Verify flow update was called
-                    mock_flow.update.assert_called_once()
+            # Verify flow update was called
+            mock_flow.update.assert_called_once()
 
-                    # Verify interactive search was started
-                    mock_run_interactive.assert_called_once()
+            # Verify interactive search was started
+            mock_run_interactive.assert_called_once()
         except ImportError:
             pytest.skip("CocoIndex not available in test environment")
 
@@ -194,23 +195,23 @@ class TestWorkflowIntegration:
             ]
 
             # Mock user input
-            with patch('builtins.input') as mock_input:
-                # Simulate user entering queries and then empty query to quit
-                mock_input.side_effect = [
-                    "authentication functions",  # vector query
-                    "language:python",           # keyword query
-                    "",                         # empty query to quit
-                ]
+            mock_input = mocker.patch('builtins.input')
+            # Simulate user entering queries and then empty query to quit
+            mock_input.side_effect = [
+                "authentication functions",  # vector query
+                "language:python",           # keyword query
+                "",                         # empty query to quit
+            ]
 
-                from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
-                    run_interactive_hybrid_search,
-                )
+            from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
+                run_interactive_hybrid_search,
+            )
 
-                # Should not raise any exceptions
-                run_interactive_hybrid_search()
+            # Should not raise any exceptions
+            run_interactive_hybrid_search()
 
-                # Verify database connection was created
-                mock_pool_class.assert_called_once_with("postgresql://test")
+            # Verify database connection was created
+            mock_pool_class.assert_called_once_with("postgresql://test")
         except ImportError:
             pytest.skip("CocoIndex not available in test environment")
 
