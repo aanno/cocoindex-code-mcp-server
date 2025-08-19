@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 
-import unittest
 from typing import Optional
 
 import haskell_tree_sitter
 import pytest
 
 
-class TestHaskellParsing(unittest.TestCase):
+class TestHaskellParsing:
     """Test the haskell-tree-sitter extension functionality."""
 
     def setUp(self):
@@ -29,27 +28,27 @@ main = do
     def test_basic_parsing(self):
         """Test that basic Haskell code can be parsed."""
         tree: Optional[haskell_tree_sitter.HaskellTree] = haskell_tree_sitter.parse_haskell(self.sample_haskell_code)
-        self.assertIsNotNone(tree, "Parsing should return a tree")
+        assert tree is not None, "Parsing should return a tree"
 
         if tree is not None:
             root = tree.root_node()
-            self.assertEqual(root.kind(), "haskell")
-            self.assertEqual(root.start_position(), (0, 0))
-            self.assertGreater(root.child_count(), 0)
-            self.assertTrue(root.is_named())
-            self.assertFalse(root.is_error())
+            assert root.kind() == "haskell"
+            assert root.start_position() == (0, 0)
+            assert root.child_count() > 0
+            assert root.is_named() == True
+            assert root.is_error() == False
         else:
             pytest.fail("no metadata in chunk")
 
     def test_empty_code_parsing(self) -> None:
         """Test parsing empty code."""
         tree: Optional[haskell_tree_sitter.HaskellTree] = haskell_tree_sitter.parse_haskell("")
-        self.assertIsNotNone(tree)
+        assert tree is not None
 
         if tree is not None:
             root = tree.root_node()
-            self.assertEqual(root.kind(), "haskell")
-            self.assertEqual(root.child_count(), 0)
+            assert root.kind() == "haskell"
+            assert root.child_count() == 0
         else:
             pytest.fail("no metadata in chunk")
 
@@ -57,44 +56,44 @@ main = do
         """Test parsing invalid Haskell code."""
         invalid_code = "module Main where\n  invalid syntax here @#$%"
         tree: Optional[haskell_tree_sitter.HaskellTree] = haskell_tree_sitter.parse_haskell(invalid_code)
-        self.assertIsNotNone(tree, "Should still return a tree even for invalid code")
+        assert tree is not None, "Should still return a tree even for invalid code"
 
         if tree is not None:
             # Tree-sitter should handle errors gracefully
             root = tree.root_node()
-            self.assertEqual(root.kind(), "haskell")
+            assert root.kind() == "haskell"
         else:
             pytest.fail("no metadata in chunk")
 
     def test_separator_patterns(self) -> None:
         """Test that expected separator patterns are returned."""
         separators = haskell_tree_sitter.get_haskell_separators()
-        self.assertEqual(len(separators), 11)
+        assert len(separators) == 11
 
         # Check for specific important separators
-        self.assertIn(r"\n\w+\s*::\s*", separators)  # Type signatures
-        self.assertIn(r"\n\w+.*=\s*", separators)    # Function definitions
-        self.assertIn(r"\nmodule\s+", separators)    # Module declarations
-        self.assertIn(r"\nimport\s+", separators)    # Import statements
-        self.assertIn(r"\ndata\s+", separators)      # Data declarations
-        self.assertIn(r"\nnewtype\s+", separators)   # Newtype declarations
-        self.assertIn(r"\ntype\s+", separators)      # Type aliases
-        self.assertIn(r"\nclass\s+", separators)     # Type classes
-        self.assertIn(r"\ninstance\s+", separators)  # Type class instances
-        self.assertIn(r"\n\n+", separators)          # Paragraph breaks
-        self.assertIn(r"\n", separators)             # Line breaks
+        assert r"\n\w+\s*::\s*" in separators  # Type signatures
+        assert r"\n\w+.*=\s*" in separators    # Function definitions
+        assert r"\nmodule\s+" in separators    # Module declarations
+        assert r"\nimport\s+" in separators    # Import statements
+        assert r"\ndata\s+" in separators      # Data declarations
+        assert r"\nnewtype\s+" in separators   # Newtype declarations
+        assert r"\ntype\s+" in separators      # Type aliases
+        assert r"\nclass\s+" in separators     # Type classes
+        assert r"\ninstance\s+" in separators  # Type class instances
+        assert r"\n\n+" in separators          # Paragraph breaks
+        assert r"\n" in separators             # Line breaks
 
     def test_parser_creation(self) -> None:
         """Test that HaskellParser can be created and used."""
         parser = haskell_tree_sitter.HaskellParser()
-        self.assertIsNotNone(parser)
+        assert parser is not None
 
         tree: Optional[haskell_tree_sitter.HaskellTree] = parser.parse(self.sample_haskell_code)
-        self.assertIsNotNone(tree)
+        assert tree is not None
 
         if tree is not None:
             root = tree.root_node()
-            self.assertEqual(root.kind(), "haskell")
+            assert root.kind() == "haskell"
         else:
             pytest.fail("no metadata in chunk")
 
@@ -105,25 +104,25 @@ main = do
             root = tree.root_node()
 
             # Test node position and byte information
-            self.assertIsInstance(root.start_byte(), int)
-            self.assertIsInstance(root.end_byte(), int)
-            self.assertLessEqual(root.start_byte(), root.end_byte())
+            assert isinstance(root.start_byte(), int)
+            assert isinstance(root.end_byte(), int)
+            assert root.start_byte() <= root.end_byte()
 
             # Test position tuples
             start_pos = root.start_position()
             end_pos = root.end_position()
-            self.assertIsInstance(start_pos, tuple)
-            self.assertIsInstance(end_pos, tuple)
-            self.assertEqual(len(start_pos), 2)
-            self.assertEqual(len(end_pos), 2)
+            assert isinstance(start_pos, tuple)
+            assert isinstance(end_pos, tuple)
+            assert len(start_pos) == 2
+            assert len(end_pos) == 2
 
             # Test boolean properties
-            self.assertIsInstance(root.is_named(), bool)
-            self.assertIsInstance(root.is_error(), bool)
-            self.assertIsInstance(root.child_count(), int)
+            assert isinstance(root.is_named(), bool)
+            assert isinstance(root.is_error(), bool)
+            assert isinstance(root.child_count(), int)
         else:
             pytest.fail("no metadata in chunk")
 
 
 if __name__ == "__main__":
-    unittest.main()
+    pytest.main()

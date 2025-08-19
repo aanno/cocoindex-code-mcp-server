@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 
 import tempfile
-import unittest
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
 
-class TestMultiplePaths(unittest.TestCase):
+class TestMultiplePaths:
     """Test multiple path handling in the code embedding flow."""
 
+    @pytest.fixture(autouse=True)
     def setUp(self):
         # Create temporary directories for testing
         self.temp_dir = tempfile.TemporaryDirectory()
@@ -44,7 +44,7 @@ class TestMultiplePaths(unittest.TestCase):
             elif args.paths:
                 paths = args.paths
 
-            self.assertIsNone(paths)
+            assertIsNone(paths)
 
         # Test multiple paths
         with patch('sys.argv', ['main_interactive_query.py', str(self.dir1), str(self.dir2)]):
@@ -56,7 +56,7 @@ class TestMultiplePaths(unittest.TestCase):
                 paths = args.paths
 
             expected_paths = [str(self.dir1), str(self.dir2)]
-            self.assertEqual(paths, expected_paths)
+            assertEqual(paths, expected_paths)
 
     @pytest.mark.skip(reason="Main function output format changed")
     def test_main_function_output(self):
@@ -85,14 +85,14 @@ class TestMultiplePaths(unittest.TestCase):
         if not paths:
             paths = ["cocoindex"]
 
-        self.assertEqual(paths, ["cocoindex"])
+        assert paths == ["cocoindex"]
 
         # Test with actual paths
         paths = [str(self.dir1), str(self.dir2)]
         if not paths:
             paths = ["cocoindex"]
 
-        self.assertEqual(paths, [str(self.dir1), str(self.dir2)])
+        assert paths == [str(self.dir1), str(self.dir2)]
 
     def test_source_naming_logic(self):
         """Test the source naming logic for multiple paths."""
@@ -104,7 +104,7 @@ class TestMultiplePaths(unittest.TestCase):
             source_name = f"files_{i}" if len(paths) > 1 else "files"
             all_sources.append(source_name)
 
-        self.assertEqual(all_sources, ["files"])
+        assert all_sources == ["files"]
 
         # Test multiple path naming
         paths = [str(self.dir1), str(self.dir2)]
@@ -114,8 +114,8 @@ class TestMultiplePaths(unittest.TestCase):
             source_name = f"files_{i}" if len(paths) > 1 else "files"
             all_sources.append(source_name)
 
-        self.assertEqual(all_sources, ["files_0", "files_1"])
+        assert all_sources == ["files_0", "files_1"]
 
 
 if __name__ == "__main__":
-    unittest.main()
+    pytest.main()
