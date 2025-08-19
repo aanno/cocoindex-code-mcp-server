@@ -113,7 +113,7 @@ class LanguageModelSelector:
 
         from .mappers import get_internal_language_name, get_language_from_extension
         display_language = get_language_from_extension(dummy_filename)
-        if display_language == "Unknown":
+        if display_language.lower() == "unknown":
             return None
 
         # Convert to internal processing name for embedding model selection

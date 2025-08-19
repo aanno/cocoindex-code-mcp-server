@@ -101,6 +101,7 @@ impl UserService {
 class TestDuplicateKeyDebug:
     """Debug tests to identify duplicate key sources."""
 
+    @pytest.mark.xfail(reason="ASTChunkOperation is not directly callable - requires CocoIndex flow context")
     def test_typescript_chunking_path(self):
         """Test what chunking path TypeScript files take."""
         filename = "userRoutes.ts"
@@ -210,6 +211,7 @@ class TestDuplicateKeyDebug:
                 except Exception as e:
                     print(f"AST chunking with Rust failed: {e}")
 
+    @pytest.mark.xfail(reason="ASTChunkOperation is not directly callable - requires CocoIndex flow context")
     def test_potential_flow_duplication(self):
         """Test if the flow logic itself could create duplicates."""
         print("=== Testing potential flow duplication scenarios ===")

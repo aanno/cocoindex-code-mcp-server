@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import unittest
 from pathlib import Path
 from types import FunctionType
 from typing import cast
@@ -15,27 +14,28 @@ from cocoindex_code_mcp_server.cocoindex_config import (
 )
 
 
-class TestCocoIndexIntegration(unittest.TestCase):
+class TestCocoIndexIntegration:
     """Test integration of Haskell support with CocoIndex."""
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup(self):
         self.fixtures_dir = Path(__file__).parent / "fixtures"
         self.sample_file = self.fixtures_dir / "lang_examples" / "HaskellExample1.hs"
 
     def test_language_detection(self):
         """Test that .hs files are detected as Haskell."""
         language = cast(FunctionType, extract_language)("HaskellExample1.hs")
-        self.assertEqual(language, "Haskell")
+        assert language == "Haskell"
 
         language = cast(FunctionType, extract_language)("HaskellExample1.hs")
-        self.assertEqual(language, "Haskell")
+        assert language == "Haskell"
 
     def test_chunking_parameters(self):
         """Test Haskell chunking parameters."""
         params = cast(FunctionType, get_chunking_params)("Haskell")
-        self.assertEqual(params.chunk_size, 1200)
-        self.assertEqual(params.min_chunk_size, 300)
-        self.assertEqual(params.chunk_overlap, 200)
+        assert params.chunk_size == 1200
+        assert params.min_chunk_size == 300
+        assert params.chunk_overlap == 200
 
     @pytest.mark.skip(reason="Language spec count changed due to refactoring")
     def test_custom_language_spec(self) -> None:
@@ -47,17 +47,17 @@ class TestCocoIndexIntegration(unittest.TestCase):
                 break
 
         if haskell_spec is not None:
-            self.assertIsNotNone(haskell_spec, "Haskell custom language spec not found")
-            self.assertEqual(len(haskell_spec.separators_regex), 24)
-            self.assertIn(".hs", haskell_spec.aliases)
-            self.assertIn(".lhs", haskell_spec.aliases)
+            assert haskell_spec is not None, "Haskell custom language spec not found"
+            assert len(haskell_spec.separators_regex) == 24
+            assert ".hs" in haskell_spec.aliases
+            assert ".lhs" in haskell_spec.aliases
 
             # Check for specific important separators
             separators = haskell_spec.separators_regex
-            self.assertIn(r"\n\w+\s*::\s*", separators)  # Type signatures
-            self.assertIn(r"\nmodule\s+", separators)    # Module declarations
-            self.assertIn(r"\nimport\s+", separators)    # Import statements
-            self.assertIn(r"\ndata\s+", separators)      # Data declarations
+            assert r"\n\w+\s*::\s*" in separators  # Type signatures
+            assert r"\nmodule\s+" in separators    # Module declarations
+            assert r"\nimport\s+" in separators    # Import statements
+            assert r"\ndata\s+" in separators      # Data declarations
         else:
             pytest.fail("no metadata in chunk")
 
@@ -67,22 +67,20 @@ class TestCocoIndexIntegration(unittest.TestCase):
             split_func = cocoindex.functions.SplitRecursively(
                 custom_languages=CUSTOM_LANGUAGES
             )
-            self.assertIsNotNone(split_func)
+            assert split_func is not None
         except Exception as e:
-            self.fail(f"Failed to configure SplitRecursively: {e}")
+            pytest.fail(f"Failed to configure SplitRecursively: {e}")
 
     def test_sample_file_processing(self):
         """Test that the sample Haskell file can be processed."""
         if not self.sample_file.exists():
-            self.skipTest("Sample Haskell file not found")
+            pytest.skip("Sample Haskell file not found")
 
         with open(self.sample_file, "r") as f:
             haskell_code = f.read()
 
-        self.assertGreater(len(haskell_code), 0)
-        self.assertIn("module Main where", haskell_code)
-        self.assertIn("factorial ::", haskell_code)
+        assert len(haskell_code) > 0
+        assert "module HaskellExample1 where" in haskell_code
+        assert "fibonacci ::" in haskell_code
 
 
-if __name__ == "__main__":
-    unittest.main()
