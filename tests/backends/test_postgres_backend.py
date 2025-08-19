@@ -4,8 +4,6 @@
 Tests for PostgreSQL backend implementation.
 """
 
-from unittest.mock import Mock, patch
-
 import numpy as np
 import pytest
 

@@ -5,8 +5,6 @@ Integration tests for the hybrid search workflow.
 """
 
 import tempfile
-from unittest.mock import MagicMock, Mock, patch
-
 import pytest
 
 # Package should be installed via maturin develop or pip install -e .

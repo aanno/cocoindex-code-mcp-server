@@ -5,8 +5,6 @@ Integration tests db_abstraction: QueryExecutor with backend integration.
 
 import asyncio
 from typing import List
-from unittest.mock import Mock
-
 import pytest
 
 from cocoindex_code_mcp_server.query_abstraction import QueryBuilder, QueryExecutor

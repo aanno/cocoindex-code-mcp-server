@@ -6,8 +6,6 @@ Tests the logic without importing CocoIndex to avoid circular imports.
 """
 
 import sys
-from unittest.mock import Mock
-
 import pytest
 
 from cocoindex_code_mcp_server.smart_code_embedding import (
