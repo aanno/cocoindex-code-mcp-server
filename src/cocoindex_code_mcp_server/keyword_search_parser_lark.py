@@ -226,6 +226,13 @@ def build_sql_where_clause(search_group: SearchGroup, table_alias: str = "") -> 
 
     for condition in search_group.conditions:
         if isinstance(condition, SearchCondition):
+            # Handle special _text field first before validation
+            if condition.field == "_text":
+                # General text search across code content - map to 'code' field
+                where_parts.append(f"{prefix}code ILIKE %s")
+                params.append(f"%{condition.value}%")
+                continue
+                
             # Validate and map field name to prevent SQL injection and unknown column errors
             field_result = schema_validator.validate_field(condition.field)
             if not field_result.is_valid:
@@ -238,10 +245,6 @@ def build_sql_where_clause(search_group: SearchGroup, table_alias: str = "") -> 
             elif condition.is_value_contains_check:
                 # value_contains(field, "search_string") -> field ILIKE %search_string%
                 where_parts.append(f"{prefix}{validated_field} ILIKE %s")
-                params.append(f"%{condition.value}%")
-            elif condition.field == "_text":
-                # General text search across code content - map to 'code' field
-                where_parts.append(f"{prefix}code ILIKE %s")
                 params.append(f"%{condition.value}%")
             else:
                 # Use case-insensitive comparison for better language matching

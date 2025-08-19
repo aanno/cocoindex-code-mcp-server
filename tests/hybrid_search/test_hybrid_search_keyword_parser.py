@@ -292,7 +292,7 @@ class TestBuildSqlWhereClause:
 
         where_clause, params = build_sql_where_clause(group)
 
-        assert where_clause == "language = %s"
+        assert where_clause == "LOWER(language) = LOWER(%s)"
         assert params == ["python"]
 
     def test_exists_condition(self):
@@ -323,7 +323,7 @@ class TestBuildSqlWhereClause:
 
         where_clause, params = build_sql_where_clause(group)
 
-        assert where_clause == "language = %s AND filename = %s"
+        assert where_clause == "LOWER(language) = LOWER(%s) AND filename = %s"
         assert params == ["python", "main_interactive_query.py"]
 
     def test_or_conditions(self):
@@ -334,7 +334,7 @@ class TestBuildSqlWhereClause:
 
         where_clause, params = build_sql_where_clause(group)
 
-        assert where_clause == "language = %s OR language = %s"
+        assert where_clause == "LOWER(language) = LOWER(%s) OR LOWER(language) = LOWER(%s)"
         assert params == ["python", "rust"]
 
     def test_nested_groups(self):
@@ -349,7 +349,7 @@ class TestBuildSqlWhereClause:
 
         where_clause, params = build_sql_where_clause(outer_group)
 
-        assert where_clause == "(language = %s OR language = %s) AND embedding IS NOT NULL"
+        assert where_clause == "(LOWER(language) = LOWER(%s) OR LOWER(language) = LOWER(%s)) AND embedding IS NOT NULL"
         assert params == ["python", "rust"]
 
     def test_table_alias(self):
@@ -359,7 +359,7 @@ class TestBuildSqlWhereClause:
 
         where_clause, params = build_sql_where_clause(group, table_alias="t")
 
-        assert where_clause == "t.language = %s"
+        assert where_clause == "LOWER(t.language) = LOWER(%s)"
         assert params == ["python"]
 
 
