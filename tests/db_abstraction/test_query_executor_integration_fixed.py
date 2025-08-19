@@ -5,7 +5,7 @@ Integration tests db_abstraction: QueryExecutor with backend integration (fixed)
 
 import asyncio
 from typing import List
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 

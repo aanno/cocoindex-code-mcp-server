@@ -5,7 +5,7 @@ Tests for PostgreSQL backend implementation.
 """
 
 from typing import Tuple
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock
 
 import numpy as np
 import pytest

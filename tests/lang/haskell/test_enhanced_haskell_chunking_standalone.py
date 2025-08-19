@@ -6,7 +6,7 @@ Tests the new HaskellChunkConfig and EnhancedHaskellChunker classes without Coco
 """
 
 from typing import Any, Dict, List
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 

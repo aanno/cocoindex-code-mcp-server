@@ -5,7 +5,7 @@ Tests for external language-aware code embedding functionality.
 Tests the smart_code_embedding module without modifying CocoIndex.
 """
 
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock
 
 import pytest
 

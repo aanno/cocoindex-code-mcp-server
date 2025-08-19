@@ -5,7 +5,7 @@ Integration tests for the hybrid search workflow.
 """
 
 import tempfile
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock
 
 import pytest
 

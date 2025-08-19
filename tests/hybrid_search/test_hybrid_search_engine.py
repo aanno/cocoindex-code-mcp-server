@@ -5,7 +5,7 @@ Tests for the hybrid search engine with backend abstraction.
 """
 
 from typing import Any, Dict, List
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock
 
 import numpy as np
 import pytest

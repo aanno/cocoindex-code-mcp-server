@@ -4,7 +4,7 @@
 Tests for Backend Factory functionality.
 """
 
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock
 
 import pytest
 
