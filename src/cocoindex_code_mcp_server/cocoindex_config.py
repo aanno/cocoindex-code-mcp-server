@@ -282,7 +282,7 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
         LOGGER.info(f"   _global_flow_config: {_global_flow_config}")
 
     try:
-        if language == "Python" and PYTHON_HANDLER_AVAILABLE and not use_default_handler:
+        if language.lower() == "python" and PYTHON_HANDLER_AVAILABLE and not use_default_handler:
             # Use our advanced Python handler through the tree-sitter analyzer
             try:
                 from .lang.python.tree_sitter_python_analyzer import (
@@ -294,7 +294,7 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
             except Exception as e:
                 LOGGER.debug(f"TreeSitterPythonAnalyzer failed, falling back to basic analysis: {e}")
                 metadata = analyze_python_code(text, filename)
-        elif language == "Python":
+        elif language.lower() == "python":
             metadata = analyze_python_code(text, filename)
         else:
             # For non-Python languages, use specialized analyzers

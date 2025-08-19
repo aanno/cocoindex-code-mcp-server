@@ -11,6 +11,7 @@ import os
 import pytest
 from dotenv import load_dotenv
 from psycopg_pool import ConnectionPool
+import cocoindex
 
 from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
     HybridSearchEngine,
@@ -32,6 +33,9 @@ class TestMetadataSearch:
     def setup_search_engine(self):
         """Setup search engine for testing."""
         load_dotenv()
+        cocoindex.init()
+        # Import flow to register it
+        from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow
 
         db_url = os.getenv("COCOINDEX_DATABASE_URL")
         if not db_url:

@@ -32,6 +32,8 @@ class TestEndToEndChunkingVerification:
         """Setup CocoIndex with loaded database configuration."""
         print(f"Using database: {os.environ.get('COCOINDEX_DATABASE_URL')}")
         cocoindex.init()
+        # Import the flow to register it
+        from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow
         yield
 
     def get_database_connection(self):

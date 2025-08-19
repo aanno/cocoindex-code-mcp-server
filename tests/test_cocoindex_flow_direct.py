@@ -34,6 +34,9 @@ class TestCocoIndexFlowDirect:
         # Initialize CocoIndex
         cocoindex.init()
 
+        # Import the flow to register it
+        from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow
+
         yield
 
     def test_flow_with_single_python_file(self):

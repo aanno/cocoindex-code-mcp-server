@@ -7,6 +7,7 @@ Tests that embedding functions are properly defined and configured.
 import inspect
 
 import pytest
+import cocoindex
 
 from cocoindex_code_mcp_server.cocoindex_config import (
     SMART_EMBEDDING_AVAILABLE,
@@ -19,6 +20,12 @@ from cocoindex_code_mcp_server.cocoindex_config import (
 
 class TestEmbeddingFunctions:
     """Test smart embedding function definitions and configurations."""
+
+    @pytest.fixture(autouse=True)
+    def setup_cocoindex(self):
+        """Setup CocoIndex before each test."""
+        cocoindex.init()
+        yield
 
     def test_smart_embedding_enabled(self):
         """Test that smart embedding is enabled."""

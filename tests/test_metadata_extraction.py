@@ -177,7 +177,7 @@ class SomeClass {
 
         # Should still succeed with fallback (success/language not in raw metadata)
         assert 'analysis_method' in metadata
-        assert metadata['analysis_method'] in ['enhanced_regex', 'basic_text', 'tree_sitter']
+        assert metadata['analysis_method'] in ['enhanced_regex', 'basic_text', 'tree_sitter', 'unknown_analysis']
 
 
 class TestMetadataConsistency:

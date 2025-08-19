@@ -98,4 +98,5 @@ def test_tool_with_optional_fields():
     assert dumped["description"] == "An advanced test tool"
     assert dumped["title"] == "Advanced Tool"
     assert "outputSchema" in dumped
-    assert "annotations" in dumped
+    # annotations=None should be excluded when exclude_none=True
+    assert "annotations" not in dumped
