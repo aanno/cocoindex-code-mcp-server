@@ -6,37 +6,37 @@ import pytest
 class TestLiveUpdates:
     """Test live update functionality and command-line options."""
 
-    def test_live_argument_parsing(self):
+    def test_live_argument_parsing(self, mocker):
         """Test that --live and --poll arguments are parsed correctly."""
         from cocoindex_code_mcp_server.arg_parser_old import parse_args
 
         # Test --live flag
-        with patch('sys.argv', ['main_interactive_query.py', '--live']):
-            args = parse_args()
-            assert args.live == True
-            assert args.poll == 0  # Default no polling
+        mocker.patch('sys.argv', ['main_interactive_query.py', '--live'])
+        args = parse_args()
+        assert args.live == True
+        assert args.poll == 0  # Default no polling
 
         # Test --live with --poll
-        with patch('sys.argv', ['main_interactive_query.py', '--live', '--poll', '30']):
-            args = parse_args()
-            assert args.live == True
-            assert args.poll == 30
+        mocker.patch('sys.argv', ['main_interactive_query.py', '--live', '--poll', '30'])
+        args = parse_args()
+        assert args.live == True
+        assert args.poll == 30
 
         # Test --poll without --live (should work)
-        with patch('sys.argv', ['main_interactive_query.py', '--poll', '60']):
-            args = parse_args()
-            assert args.live == False
-            assert args.poll == 60
+        mocker.patch('sys.argv', ['main_interactive_query.py', '--poll', '60'])
+        args = parse_args()
+        assert args.live == False
+        assert args.poll == 60
 
-    def test_live_arguments_with_paths(self):
+    def test_live_arguments_with_paths(self, mocker):
         """Test live update arguments combined with paths."""
         from cocoindex_code_mcp_server.arg_parser_old import parse_args
 
-        with patch('sys.argv', ['main_interactive_query.py', '--live', '--poll', '15', '/path/to/code']):
-            args = parse_args()
-            assert args.live == True
-            assert args.poll == 15
-            assert args.paths == ['/path/to/code']
+        mocker.patch('sys.argv', ['main_interactive_query.py', '--live', '--poll', '15', '/path/to/code'])
+        args = parse_args()
+        assert args.live == True
+        assert args.poll == 15
+        assert args.paths == ['/path/to/code']
 
     @pytest.mark.skip(reason="Config update logic changed")
     def test_global_config_updates(self):
