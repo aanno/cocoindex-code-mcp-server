@@ -5,7 +5,6 @@ Integration tests db_abstraction: QueryExecutor with backend integration (fixed)
 
 import asyncio
 from typing import List
-from unittest.mock import Mock
 
 import pytest
 
@@ -22,20 +21,14 @@ from cocoindex_code_mcp_server.schemas import (
 class TestQueryExecutorIntegration:
     """Test QueryExecutor integration with real backends."""
 
-    @patch('cocoindex_code_mcp_server.query_abstraction.MapperFactory.create_mapper')
-    def test_query_executor_with_mock_backend(self, mock_mapper_factory):
-        """Test QueryExecutor with a mocked backend.
-
-        NOTE: This test currently fails because it tries to do vector search
-        with text query but QueryExecutor needs an embedding function to convert
-        text to vectors. The test should either provide an embedding function
-        or use pre-computed vectors. Keeping the test as-is to document the issue.
-        """
+    def test_query_executor_with_mock_backend(self, mocker):
+        """Test QueryExecutor with a mocked backend."""
         # Setup mock mapper
+        mock_mapper_factory = mocker.patch('cocoindex_code_mcp_server.query_abstraction.MapperFactory.create_mapper')
         mock_mapper_factory.return_value = PostgresFieldMapper()
 
         # Create mock backend
-        mock_backend = Mock()
+        mock_backend = mocker.Mock()
 
         # Mock SearchResult with proper ChunkMetadata
         mock_metadata: ChunkMetadata = {
@@ -74,8 +67,12 @@ class TestQueryExecutorIntegration:
         mock_backend.keyword_search.return_value = [mock_result]
         mock_backend.hybrid_search.return_value = [mock_result]
 
-        # Create QueryExecutor
-        executor = QueryExecutor(mock_backend)
+        # Create mock embedding function
+        mock_embedding_func = mocker.Mock()
+        mock_embedding_func.return_value = [0.1, 0.2, 0.3, 0.4, 0.5]  # Mock embedding vector
+        
+        # Create QueryExecutor with embedding function
+        executor = QueryExecutor(mock_backend, embedding_func=mock_embedding_func)
 
         # Test vector search
         query = QueryBuilder().text("test query").vector_search().limit(5).build()
@@ -163,14 +160,14 @@ class TestQueryExecutorIntegration:
 
 
 @pytest.mark.asyncio
-@patch('cocoindex_code_mcp_server.query_abstraction.MapperFactory.create_mapper')
-async def test_async_query_execution(mock_mapper_factory):
+async def test_async_query_execution(mocker):
     """Test async QueryExecutor execution."""
     # Setup mock mapper
+    mock_mapper_factory = mocker.patch('cocoindex_code_mcp_server.query_abstraction.MapperFactory.create_mapper')
     mock_mapper_factory.return_value = PostgresFieldMapper()
 
     # Mock backend with async-compatible methods
-    mock_backend = Mock()
+    mock_backend = mocker.Mock()
 
     mock_result = SearchResult(
         filename="async_test.py",
@@ -192,7 +189,11 @@ async def test_async_query_execution(mock_mapper_factory):
 
     mock_backend.vector_search.return_value = [mock_result]
 
-    executor = QueryExecutor(mock_backend)
+    # Create mock embedding function for async test
+    mock_embedding_func = mocker.Mock()
+    mock_embedding_func.return_value = [0.1, 0.2, 0.3, 0.4, 0.5]  # Mock embedding vector
+    
+    executor = QueryExecutor(mock_backend, embedding_func=mock_embedding_func)
     query = QueryBuilder().text("async function").vector_search().build()
 
     results: List[SearchResult] = await executor.execute(query)
@@ -200,8 +201,8 @@ async def test_async_query_execution(mock_mapper_factory):
     assert len(results) == 1
     metadata = results[0].metadata
     if metadata is not None:
-        assert metadata["has_async"] == True
-        assert "test" in metadata["functions"]
+        assert metadata.get("has_async") == True
+        assert "test" in metadata.get("functions", [])
 
 
 if __name__ == "__main__":
