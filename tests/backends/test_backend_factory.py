@@ -4,8 +4,6 @@
 Tests for Backend Factory functionality.
 """
 
-from unittest.mock import MagicMock, Mock
-
 import pytest
 
 from cocoindex_code_mcp_server.backends import (
@@ -83,11 +81,11 @@ class TestBackendFactory:
         with pytest.raises(ValueError, match="Unknown backend type 'nonexistent'"):
             BackendFactory.create_backend("nonexistent")
 
-    def test_create_backend_error_message_lists_available(self):
+    def test_create_backend_error_message_lists_available(self, mocker):
         """Test that error message lists available backends."""
         # Temporarily set known backends
         original_backends = BackendFactory._backends.copy()
-        BackendFactory._backends = {"postgres": Mock, "qdrant": Mock}
+        BackendFactory._backends = {"postgres": mocker.Mock, "qdrant": mocker.Mock}
 
         try:
             with pytest.raises(ValueError) as exc_info:
@@ -99,11 +97,11 @@ class TestBackendFactory:
             # Restore original backends
             BackendFactory._backends = original_backends
 
-    def test_list_backends(self):
+    def test_list_backends(self, mocker):
         """Test listing available backends."""
         # Temporarily set known backends
         original_backends = BackendFactory._backends.copy()
-        BackendFactory._backends = {"postgres": Mock, "qdrant": Mock, "test": Mock}
+        BackendFactory._backends = {"postgres": mocker.Mock, "qdrant": mocker.Mock, "test": mocker.Mock}
 
         try:
             backends = BackendFactory.list_backends()
@@ -130,11 +128,12 @@ class TestBackendFactory:
             # Restore original backends
             BackendFactory._backends = original_backends
 
-    @patch('cocoindex_code_mcp_server.backends.postgres_backend.PostgresBackend')
-    def test_auto_registration_postgres(self, mock_postgres_class: MagicMock):
+    def test_auto_registration_postgres(self, mocker): # mock_postgres_class: MagicMock):
         """Test that PostgreSQL backend is auto-registered."""
         # Import should trigger auto-registration
         from cocoindex_code_mcp_server.backends import BackendFactory
+        
+        mock_postgres_class = mocker.patch('cocoindex_code_mcp_server.backends.postgres_backend.PostgresBackend')
 
         # Verify postgres is available
         backends = BackendFactory.list_backends()
