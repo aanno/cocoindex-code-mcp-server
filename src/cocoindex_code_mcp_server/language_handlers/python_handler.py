@@ -12,11 +12,12 @@ import sys
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set
 
-from ..ast_visitor import NodeContext
-
-from . import LOGGER
-from cocoindex_code_mcp_server.ast_visitor import NodeContext
 from tree_sitter import Node
+
+from cocoindex_code_mcp_server.ast_visitor import NodeContext
+
+from ..ast_visitor import NodeContext
+from . import LOGGER
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
@@ -348,7 +349,7 @@ class PythonNodeHandler:
 
     def _extract_parameters(self, node: Node, source_text: str) -> List[Dict[str, Any]]:
         """Extract function parameters with type annotations and defaults."""
-        parameters:List[Dict[str, Any]] = []
+        parameters: List[Dict[str, Any]] = []
 
         if not hasattr(node, 'children'):
             return parameters

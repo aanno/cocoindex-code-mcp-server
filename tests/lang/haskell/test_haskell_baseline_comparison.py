@@ -7,9 +7,9 @@ Similar to tests/lang/python/test_cocoindex_baseline_comparison.py
 """
 
 from pathlib import Path
+from typing import Dict, List, Union
 
 import pytest
-from typing import Dict, List, Union
 
 import_error = None
 try:
@@ -37,7 +37,7 @@ class TestHaskellBaselineComparison:
     def setup_method(self):
         """Set up test fixtures."""
         # Load the test Haskell file
-        self.fixture_path = Path(__file__).parent.parent.parent / 'fixtures' / 'test_haskell.hs'
+        self.fixture_path = Path(__file__).parent.parent.parent / 'fixtures' / 'lang_examples' / 'HaskellExample1.hs'
 
         if not self.fixture_path.exists():
             pytest.skip(f"Test fixture not found: {self.fixture_path}")
@@ -50,7 +50,7 @@ class TestHaskellBaselineComparison:
         result = analyze_haskell_code(self.haskell_code, str(self.fixture_path))
 
         # Basic validation
-        assert result['language'] == 'haskell'
+        assert result['language'] == 'Haskell'
         assert result['analysis_method'] == 'haskell_chunk_visitor'
         assert result['line_count'] > 0
         assert result['char_count'] > 0
@@ -70,7 +70,7 @@ class TestHaskellBaselineComparison:
             'data_type_details_count': len(result.get('data_type_details', [])),
         }
 
-        print("\\n=== Our Haskell Visitor Results ===")
+        print("\n=== Our Haskell Visitor Results ===")
         for key, value in metrics.items():
             print(f"{key}: {value}")
 
@@ -84,7 +84,7 @@ class TestHaskellBaselineComparison:
         result = generic_analyze_code(self.haskell_code, 'haskell', str(self.fixture_path))
 
         # Basic validation
-        assert result['language'] == 'haskell'
+        assert result['language'] == 'Haskell'
         assert 'tree_sitter' in result.get('analysis_method', '')
 
         # Extract key metrics for comparison
@@ -102,7 +102,7 @@ class TestHaskellBaselineComparison:
             'data_type_details_count': len(result.get('data_type_details', [])),
         }
 
-        print("\\n=== Generic Visitor Results ===")
+        print("\n=== Generic Visitor Results ===")
         for key, value in metrics.items():
             print(f"{key}: {value}")
 
@@ -117,7 +117,7 @@ class TestHaskellBaselineComparison:
         try:
             # Use CocoIndex's basic text analysis
             # This is a simplified baseline since CocoIndex doesn't have Haskell-specific parsing
-            lines = self.haskell_code.split('\\n')
+            lines = self.haskell_code.split('\n')
 
             # Basic pattern matching (CocoIndex-style fallback)
             functions = []
@@ -157,7 +157,7 @@ class TestHaskellBaselineComparison:
                 'data_type_details_count': 0,
             }
 
-            print("\\n=== CocoIndex Baseline Results ===")
+            print("\n=== CocoIndex Baseline Results ===")
             for key, value in metrics.items():
                 print(f"{key}: {value}")
 
@@ -178,12 +178,12 @@ class TestHaskellBaselineComparison:
         except BaseException:
             baseline_metrics = None
 
-        print("\\n" + "=" * 60)
+        print("\n" + "=" * 60)
         print("HASKELL ANALYSIS COMPARISON")
         print("=" * 60)
 
         # Compare our implementation vs generic visitor
-        print("\\n--- Our Specialized Visitor vs Generic Visitor ---")
+        print("\n--- Our Specialized Visitor vs Generic Visitor ---")
         for key in ['functions_found', 'data_types_found', 'imports_found']:
             our_val = our_metrics.get(key, 0)
             generic_val = generic_metrics.get(key, 0)
@@ -218,7 +218,7 @@ class TestHaskellBaselineComparison:
 
         # Compare with baseline if available
         if baseline_metrics:
-            print("\\n--- Our Implementation vs CocoIndex Baseline ---")
+            print("\n--- Our Implementation vs CocoIndex Baseline ---")
             our_func_names = our_metrics.get('function_names', [])
             baseline_func_names = baseline_metrics.get('function_names', [])
             our_funcs = set(our_func_names if isinstance(our_func_names, list) else [])
@@ -239,7 +239,7 @@ class TestHaskellBaselineComparison:
                 print(f"  Baseline: {sorted(baseline_types)}")
 
         # Quality assessment
-        print("\\n--- Quality Assessment ---")
+        print("\n--- Quality Assessment ---")
         expected_functions = {'fibonacci', 'sumList', 'treeMap', 'compose', 'addTen', 'multiplyByTwo', 'main'}
         expected_types = {'Person', 'Tree'}
 
@@ -261,11 +261,11 @@ class TestHaskellBaselineComparison:
         # Assert basic quality thresholds
         assert func_recall >= 0.5, f"Function recall too low: {func_recall:.2%}"
         assert type_recall >= 0.5, f"Data type recall too low: {type_recall:.2%}"
-        
+
         # Type-safe assertions
         has_type_signatures = our_metrics.get('has_type_signatures', False)
         complexity_score = our_metrics.get('complexity_score', 0)
-        
+
         assert isinstance(has_type_signatures, bool) and has_type_signatures, "Should detect type signatures"
         assert isinstance(complexity_score, int) and complexity_score > 0, "Should calculate complexity"
 

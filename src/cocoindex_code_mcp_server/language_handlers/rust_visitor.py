@@ -8,9 +8,12 @@ Follows the same pattern as haskell_visitor.py by subclassing GenericMetadataVis
 import logging
 from typing import Any, Dict, List, Optional
 
-from ..ast_visitor import GenericMetadataVisitor, NodeContext
-from cocoindex_code_mcp_server.ast_visitor import NodeContext
 from tree_sitter import Node
+
+from cocoindex_code_mcp_server.ast_visitor import NodeContext
+
+from ..ast_visitor import GenericMetadataVisitor, NodeContext
+from ..parser_util import update_defaults
 
 LOGGER = logging.getLogger(__name__)
 
@@ -174,14 +177,25 @@ def analyze_rust_code(code: str, filename: str = "") -> Dict[str, Any]:
 
         # Get results from visitor
         result = visitor.get_summary()
-        result.update({
+        # Use display language name for database storage
+        from ..mappers import get_display_language_name
+        update_defaults(result, {
             'success': True,
-            'language': 'rust',
+            'language': get_display_language_name('rust'),
             'filename': filename,
             'line_count': code.count('\n') + 1,
             'char_count': len(code),
             'parse_errors': 0,
-            'tree_language': str(parser.language) if parser else None
+            'tree_language': str(parser.language) if parser else None,
+            # Required metadata fields for promoted column implementation
+            # don't set chunking method in analyzer
+            # "chunking_method": "ast_tree_sitter",
+            # "tree_sitter_chunking_error": False,
+            'tree_sitter_analyze_error': False,
+            'decorators_used': [],  # Rust doesn't have decorators
+            'has_type_hints': True,  # Rust has strong typing
+            'has_async': any('async' in func.lower() for func in result.get('functions', [])),
+            'has_classes': len(result.get('structs', [])) > 0 or len(result.get('traits', [])) > 0
         })
 
         LOGGER.debug(f"Rust analysis completed: {len(result.get('functions', []))} functions found")

@@ -203,14 +203,16 @@ def custom_extractor(dummy_metadata):
 class TestCocoIndexBaselineComparison:
     """Test suite comparing custom and default CocoIndex extractors."""
 
-    def test_extractor_initialization(self, default_extractor: CocoIndexMetadataExtractor, custom_extractor: CocoIndexMetadataExtractor):
+    def test_extractor_initialization(self, default_extractor: CocoIndexMetadataExtractor,
+                                      custom_extractor: CocoIndexMetadataExtractor):
         """Test that both extractors initialize properly."""
         assert default_extractor.provider_name == "CocoIndex"
         assert custom_extractor.provider_name == "CocoIndex"
         assert default_extractor.use_default_handler is True
         assert custom_extractor.use_default_handler is False
 
-    def test_basic_metadata_extraction(self, default_extractor: CocoIndexMetadataExtractor, custom_extractor: CocoIndexMetadataExtractor, simple_python_code: Dict[str, str]):
+    def test_basic_metadata_extraction(self, default_extractor: CocoIndexMetadataExtractor,
+                                       custom_extractor: CocoIndexMetadataExtractor, simple_python_code: Dict[str, str]):
         """Test basic metadata extraction capabilities."""
         default_result = default_extractor.extract(simple_python_code)
         custom_result = custom_extractor.extract(simple_python_code)
@@ -238,7 +240,8 @@ class TestCocoIndexBaselineComparison:
         assert "SimpleClass" in str(default_metadata["classes"])
         assert "SimpleClass" in str(custom_metadata["classes"])
 
-    def test_comprehensive_extraction_comparison(self, default_extractor: CocoIndexMetadataExtractor, custom_extractor: CocoIndexMetadataExtractor, sample_python_code: Dict[str, str]):
+    def test_comprehensive_extraction_comparison(
+            self, default_extractor: CocoIndexMetadataExtractor, custom_extractor: CocoIndexMetadataExtractor, sample_python_code: Dict[str, str]):
         """Test comprehensive metadata extraction and compare results."""
         default_result = default_extractor.extract(sample_python_code)
         custom_result = custom_extractor.extract(sample_python_code)
@@ -287,7 +290,8 @@ class TestCocoIndexBaselineComparison:
             assert cls in str(default_classes), f"Default extractor should find class: {cls}"
             assert cls in str(custom_classes), f"Custom extractor should find class: {cls}"
 
-    def test_async_detection_comparison(self, default_extractor: CocoIndexMetadataExtractor, custom_extractor: CocoIndexMetadataExtractor, sample_python_code: Dict[str, str]):
+    def test_async_detection_comparison(self, default_extractor: CocoIndexMetadataExtractor,
+                                        custom_extractor: CocoIndexMetadataExtractor, sample_python_code: Dict[str, str]):
         """Test async code detection capabilities."""
         default_result = default_extractor.extract(sample_python_code)
         custom_result = custom_extractor.extract(sample_python_code)
@@ -302,7 +306,8 @@ class TestCocoIndexBaselineComparison:
         assert default_has_async, "Default extractor should detect async code"
         assert custom_has_async, "Custom extractor should detect async code"
 
-    def test_decorator_detection_comparison(self, default_extractor: CocoIndexMetadataExtractor, custom_extractor: CocoIndexMetadataExtractor, sample_python_code: Dict[str, str]):
+    def test_decorator_detection_comparison(self, default_extractor: CocoIndexMetadataExtractor,
+                                            custom_extractor: CocoIndexMetadataExtractor, sample_python_code: Dict[str, str]):
         """Test decorator detection capabilities."""
         default_result = default_extractor.extract(sample_python_code)
         custom_result = custom_extractor.extract(sample_python_code)
@@ -343,7 +348,8 @@ class TestCocoIndexBaselineComparison:
         assert default_found >= 1, f"Default should find at least 1 decorator, found {default_found}"
         assert custom_found >= 1, f"Custom should find at least 1 decorator, found {custom_found}"
 
-    def test_metadata_richness_comparison(self, default_extractor: CocoIndexMetadataExtractor, custom_extractor: CocoIndexMetadataExtractor, sample_python_code: Dict[str, str]):
+    def test_metadata_richness_comparison(self, default_extractor: CocoIndexMetadataExtractor,
+                                          custom_extractor: CocoIndexMetadataExtractor, sample_python_code: Dict[str, str]):
         """Compare the richness of metadata extraction."""
         default_result = default_extractor.extract(sample_python_code)
         custom_result = custom_extractor.extract(sample_python_code)
@@ -383,7 +389,8 @@ class TestCocoIndexBaselineComparison:
             print(
                 f"Warning: Custom extractor provides fewer fields ({custom_field_count}) than default ({default_field_count})")
 
-    def test_error_handling_comparison(self, default_extractor: CocoIndexMetadataExtractor, custom_extractor: CocoIndexMetadataExtractor):
+    def test_error_handling_comparison(self, default_extractor: CocoIndexMetadataExtractor,
+                                       custom_extractor: CocoIndexMetadataExtractor):
         """Test error handling with malformed code."""
         malformed_code = {
             "code": '''
@@ -408,7 +415,8 @@ class IncompleteClass:
         assert default_result.get("provider") == "CocoIndex"
         assert custom_result.get("provider") == "CocoIndex"
 
-    def test_performance_characteristics(self, default_extractor: CocoIndexMetadataExtractor, custom_extractor: CocoIndexMetadataExtractor, sample_python_code: Dict[str, str]):
+    def test_performance_characteristics(self, default_extractor: CocoIndexMetadataExtractor,
+                                         custom_extractor: CocoIndexMetadataExtractor, sample_python_code: Dict[str, str]):
         """Compare basic performance characteristics."""
         import time
 
@@ -437,7 +445,8 @@ class IncompleteClass:
         assert "metadata" in default_result
         assert "metadata" in custom_result
 
-    def test_edge_case_empty_code(self, default_extractor: CocoIndexMetadataExtractor, custom_extractor: CocoIndexMetadataExtractor):
+    def test_edge_case_empty_code(self, default_extractor: CocoIndexMetadataExtractor,
+                                  custom_extractor: CocoIndexMetadataExtractor):
         """Test handling of edge case: empty code."""
         empty_code = {
             "code": "",

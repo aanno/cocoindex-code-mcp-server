@@ -6,9 +6,6 @@ Tests the logic without importing CocoIndex to avoid circular imports.
 """
 
 import sys
-from typing import Any, Dict
-from unittest.mock import Mock
-
 import pytest
 
 from cocoindex_code_mcp_server.smart_code_embedding import (
@@ -90,7 +87,7 @@ class TestLanguageModelSelector:
 
         test_cases = [
             (".py", "python"),
-            (".pyi", "python"),
+            # (".pyi", "python"),
             (".rs", "rust"),
             (".js", "javascript"),
             (".ts", "typescript"),

@@ -10,7 +10,7 @@ The Hybrid Search system provides an advanced alternative entry point for CocoIn
 
 1. **`main_hybrid_search.py`** - Alternative main entry point with enhanced configuration
 2. **`hybrid_search.py`** - Core hybrid search engine implementation
-3. **`keyword_search_parser.py`** - Advanced keyword search syntax parser
+3. **`keyword_search_parser_lark.py`** - Advanced keyword search syntax parser
 
 ### Key Features
 
@@ -352,7 +352,7 @@ The keyword search system is extensible and supports adding new operators. Here'
              | "(" or_expr ")"
    ```
 
-2. **Add SearchCondition Field** (`keyword_search_parser.py`):
+2. **Add SearchCondition Field** (`keyword_search_parser_lark.py`):
    ```python
    @dataclass
    class SearchCondition:
@@ -375,20 +375,7 @@ The keyword search system is extensible and supports adding new operators. Here'
        )
    ```
 
-4. **Update Fallback Parser** (`keyword_search_parser.py`):
-   ```python
-   def __init__(self):
-       # Add regex pattern
-       self.my_operator_pattern = re.compile(r'my_operator\s*\(\s*(\w+)\s*,\s*(...)\s*\)')
-   
-   def _parse_condition(self, condition: str):
-       # Add parsing logic
-       my_match = self.my_operator_pattern.search(condition)
-       if my_match:
-           return SearchCondition(field=..., value=..., is_my_new_operator_check=True)
-   ```
-
-5. **Add SQL Generation** (`build_sql_where_clause`):
+4. **Add SQL Generation** (`build_sql_where_clause`):
    ```python
    elif condition.is_my_new_operator_check:
        # Generate appropriate SQL
@@ -396,7 +383,7 @@ The keyword search system is extensible and supports adding new operators. Here'
        params.append(f"^{condition.value}")
    ```
 
-6. **Write Tests** (`tests/test_my_operator.py`):
+5. **Write Tests** (`tests/test_my_operator.py`):
    ```python
    def test_my_operator_parsing():
        parser = KeywordSearchParser()

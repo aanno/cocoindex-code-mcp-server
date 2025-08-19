@@ -40,10 +40,10 @@ class LanguageModelSelector:
         "unixcode": "microsoft/unixcoder-base",
     }
 
-    # File extension to language mapping
+    # File extension to language mapping - uses centralized mapping from mappers.py
     EXTENSION_TO_LANGUAGE = {
         ".py": "python",
-        # ".pyi": "python",
+        ".pyi": "python",
         ".rs": "rust",
         ".js": "javascript",
         ".mjs": "javascript",
@@ -106,10 +106,18 @@ class LanguageModelSelector:
         if not file_extension:
             return None
 
-        ext = file_extension.lower()
-        if not ext.startswith('.'):
-            ext = '.' + ext
-        return self.EXTENSION_TO_LANGUAGE.get(ext)
+        # Create a dummy filename to use the centralized mapping
+        dummy_filename = f"dummy{file_extension.lower()}"
+        if not file_extension.startswith('.'):
+            dummy_filename = f"dummy.{file_extension.lower()}"
+
+        from .mappers import get_internal_language_name, get_language_from_extension
+        display_language = get_language_from_extension(dummy_filename)
+        if display_language.lower() == "unknown":
+            return None
+
+        # Convert to internal processing name for embedding model selection
+        return get_internal_language_name(display_language)
 
     def select_model(self, language: str | None = None,
                      file_extension: str | None = None,

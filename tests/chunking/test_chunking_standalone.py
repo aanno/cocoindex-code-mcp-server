@@ -6,7 +6,7 @@ Test standalone chunking functionality without CocoIndex imports.
 
 from typing import Any, Dict, List, Optional
 
-from astchunk import ASTChunkBuilder
+from astchunk import ASTChunkBuilder  # type: ignore
 
 
 def detect_language_from_filename(filename: str) -> str:

@@ -101,11 +101,11 @@ class TestJSONFormatting:
 
         result = format_results_as_json(test_data)
 
-        # Should contain readable newlines, not \n
+        # Should contain readable newlines, not escaped \n
         assert "def hello():" in result
         assert "print(\"Hello, World!\")" in result
         assert "return True" in result
-        # Should NOT contain escaped newlines
+        # Should NOT contain escaped newlines in the code content
         assert "\\n" not in result
 
     def test_metadata_json_field_formatting(self):
@@ -120,7 +120,7 @@ class TestJSONFormatting:
         # Should contain readable JSON, not escaped quotes
         assert '"functions": ["hello"]' in result
         assert '"classes": []' in result
-        # Should NOT contain escaped quotes
+        # Should NOT contain escaped quotes in the metadata content
         assert '\\"' not in result
 
     def test_other_fields_normal_formatting(self):

@@ -7,10 +7,10 @@ Tests HaskellChunkConfig, enhanced separators, and regex fallback functionality.
 
 import logging
 import re
+from typing import Any, Dict, List
 
 import haskell_tree_sitter
 import pytest
-from typing import Any, Dict, List, Union
 
 LOGGER = logging.getLogger(__name__)
 
@@ -94,11 +94,11 @@ def test_safe_regex_matching():
             if not isinstance(separator, str):
                 continue
             pattern = separator
-            if pattern.startswith('\\n'):
+            if pattern.startswith('\n'):
                 pattern = pattern[2:]  # Remove \n
                 # Handle double newlines and other special cases
-                if pattern.startswith('\\n'):
-                    if pattern == '\\n+':
+                if pattern.startswith('\n'):
+                    if pattern == '\n+':
                         pattern = '^$'  # Match empty lines
                     else:
                         pattern = pattern[2:] + '$'  # Make it end-of-line match for empty lines
@@ -132,15 +132,15 @@ def create_test_regex_fallback_chunks(content: str, file_path: str, config: Hask
 
         # Check for separator patterns with priority
         for priority, separator in enumerate(separators):
-            # Remove leading \n but handle special cases like \\n\\n+
+            # Remove leading \n but handle special cases like \n\n
             if not isinstance(separator, str):
                 continue
             pattern = separator
-            if pattern.startswith('\\n'):
+            if pattern.startswith('\n'):
                 pattern = pattern[2:]  # Remove \n
                 # Handle double newlines and other special cases
-                if pattern.startswith('\\n'):
-                    if pattern == '\\n+':
+                if pattern.startswith('\n'):
+                    if pattern == '\n+':
                         pattern = '^$'  # Match empty lines
                     else:
                         pattern = pattern[2:] + '$'  # Make it end-of-line match for empty lines
@@ -469,13 +469,12 @@ factorial n = product [1..n]
         # Type-safe operations
         int_priorities = [p for p in priorities if isinstance(p, int)]
         bool_force_splits = [f for f in force_splits if isinstance(f, bool)]
-        
+
         # At least some chunks should have separator-based splits (priority > 0)
         if int_priorities:
             assert max(int_priorities) > 0
         # Should have a mix of separator and force splits for this test case
         assert any(bool_force_splits) or (int_priorities and max(int_priorities) > 0)
-
 
 
 if __name__ == "__main__":

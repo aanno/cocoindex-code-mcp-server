@@ -6,23 +6,35 @@ Tests the new HaskellChunkConfig and EnhancedHaskellChunker classes without Coco
 """
 
 from typing import Any, Dict, List
-from unittest.mock import Mock, patch
+import sys
 
 import pytest
 
-# Mock cocoindex to avoid circular import
-mock_cocoindex = Mock()
-mock_cocoindex.op = Mock()
-mock_cocoindex.op.function = Mock(return_value=lambda f: f)
+# Set up mock early to avoid circular import - this runs at module load time
+@pytest.fixture(scope="session", autouse=True)
+def setup_cocoindex_mock():
+    """Set up cocoindex mock before any imports."""
+    import unittest.mock
+    
+    mock_cocoindex = unittest.mock.Mock()
+    mock_cocoindex.op = unittest.mock.Mock()
+    mock_cocoindex.op.function = unittest.mock.Mock(return_value=lambda f: f)
+    sys.modules['cocoindex'] = mock_cocoindex
+    
+    yield
+    
+    # Cleanup
+    if 'cocoindex' in sys.modules:
+        del sys.modules['cocoindex']
 
-with patch.dict('sys.modules', {'cocoindex': mock_cocoindex}):
-    import haskell_tree_sitter
+# Import modules after cocoindex mock is available
+import haskell_tree_sitter
 
-    from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
-        HaskellChunkConfig,
-        create_enhanced_regex_fallback_chunks,
-        get_enhanced_haskell_separators,
-    )
+from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
+    HaskellChunkConfig,
+    create_enhanced_regex_fallback_chunks,
+    get_enhanced_haskell_separators,
+)
 
 
 class TestHaskellChunkConfig:

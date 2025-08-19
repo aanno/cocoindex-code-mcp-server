@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Haskell baseline comparison test to verify implementation works."""
 
+from typing import Set
+
 import pytest
 
 from cocoindex_code_mcp_server.ast_visitor import analyze_code
 from cocoindex_code_mcp_server.language_handlers.haskell_visitor import (
     analyze_haskell_code,
 )
-from typing import Set
 
 
 class TestHaskellBaseline:
@@ -126,9 +127,10 @@ main = do
         assert len(found_data_types) >= 1, f"Expected at least 1 data type, found {found_data_types}"
         assert 'TestHaskell' in modules, f"Expected TestHaskell module, found {modules}"
 
-    def test_specialized_haskell_visitor(self, haskell_code: str, expected_functions: Set[str], expected_data_types: Set[str]):
+    def test_specialized_haskell_visitor(
+            self, haskell_code: str, expected_functions: Set[str], expected_data_types: Set[str]):
         """Test our specialized Haskell visitor."""
-        result = analyze_haskell_code(haskell_code, "test_haskell.hs")
+        result = analyze_haskell_code(haskell_code, "HaskellExample1.hs")
 
         assert result.get('success', False), f"Analysis failed: {result}"
         assert 'analysis_method' in result, "Analysis method should be reported"
@@ -147,7 +149,7 @@ main = do
 
     def test_generic_ast_visitor(self, haskell_code: str):
         """Test generic AST visitor fallback."""
-        result = analyze_code(haskell_code, 'haskell', "test_haskell.hs")
+        result = analyze_code(haskell_code, 'haskell', "HaskellExample1.hs")
 
         assert result.get('success', False), f"Analysis failed: {result}"
         assert 'analysis_method' in result, "Analysis method should be reported"

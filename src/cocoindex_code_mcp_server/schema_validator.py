@@ -8,12 +8,11 @@ Prevents SQL injection and unknown column errors.
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Set
 
-# Valid database columns based on hybrid_search.py queries
-VALID_COLUMNS: Set[str] = {
-    'filename', 'language', 'code', 'functions', 'classes', 'imports',
-    'complexity_score', 'has_type_hints', 'has_async', 'has_classes',
-    'embedding', 'start', 'end', 'source_name', 'location', 'metadata_json'
-}
+# Import single source of truth for field mappings
+from .mappers import CONST_FIELD_MAPPINGS
+
+# Valid database columns from single source of truth
+VALID_COLUMNS: Set[str] = set(CONST_FIELD_MAPPINGS.keys())
 
 # Field aliases - map user-friendly names to actual column names
 FIELD_ALIASES: Dict[str, str] = {
@@ -53,7 +52,8 @@ class ValidationResult:
 class SchemaValidator:
     """Validates and maps database fields to prevent SQL injection and schema errors."""
 
-    def __init__(self, valid_columns: Optional[Set[str]] = None, field_aliases: Optional[Dict[str, str]] = None) -> None:
+    def __init__(self, valid_columns: Optional[Set[str]] = None,
+                 field_aliases: Optional[Dict[str, str]] = None) -> None:
         self.valid_columns = valid_columns or VALID_COLUMNS
         self.field_aliases = field_aliases or FIELD_ALIASES
 

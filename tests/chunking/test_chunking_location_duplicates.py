@@ -7,6 +7,7 @@ within the same file, causing PostgreSQL "ON CONFLICT DO UPDATE" errors.
 
 from types import FunctionType
 from typing import cast
+
 import pytest
 
 import cocoindex
@@ -203,7 +204,7 @@ class BaseAnalyzer(ABC):
     def calculate_complexity(self, code: str) -> int:
         """Calculate code complexity score. Override in subclasses."""
         # Simple line-based complexity as fallback
-        lines = [line.strip() for line in code.split('\\n') if line.strip()]
+        lines = [line.strip() for line in code.split('\n') if line.strip()]
         return len(lines)
 
     def has_type_annotations(self, code: str) -> bool:
@@ -323,7 +324,7 @@ class PythonAnalyzer(BaseAnalyzer):
             functions=functions,
             classes=classes,
             imports=imports,
-            complexity_score=len(code.split('\\n')),
+            complexity_score=len(code.split('\n),
             has_type_hints=': ' in code and '->' in code,
             has_async='async def' in code,
             has_classes=len(classes) > 0,
@@ -455,7 +456,7 @@ class TestChunkingLocationDuplicates:
 
         for filename, content, expected_lang in edge_cases:
             print(f"\n--- Testing {filename} ---")
-            print(f"Content: '{content.replace(chr(10), '\\n')}'")
+            print(f"Content: '{content.replace(chr(10), '\n')}'")
 
             language = cast(FunctionType, extract_language)(filename)
 
@@ -482,7 +483,7 @@ class TestChunkingLocationDuplicates:
                     # Show all chunks for edge cases
                     for i, chunk in enumerate(chunks):
                         print(
-                            f"  Chunk {i}: location='{chunk.location}', len={len(chunk.text)}, text='{chunk.text.replace(chr(10), '\\n')}'")
+                            f"  Chunk {i}: location='{chunk.location}', len={len(chunk.text)}, text='{chunk.text.replace(chr(10), '\n')}'")
 
                 except Exception as e:
                     print(f"Edge case chunking failed: {e}")

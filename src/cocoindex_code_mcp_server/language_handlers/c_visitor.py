@@ -8,9 +8,11 @@ Follows the same pattern as haskell_visitor.py by subclassing GenericMetadataVis
 import logging
 from typing import Any, Dict, List, Optional, Union
 
-from ..ast_visitor import GenericMetadataVisitor, NodeContext
-from cocoindex_code_mcp_server.ast_visitor import NodeContext
 from tree_sitter import Node
+
+from cocoindex_code_mcp_server.ast_visitor import NodeContext
+
+from ..ast_visitor import GenericMetadataVisitor, NodeContext
 
 LOGGER = logging.getLogger(__name__)
 
@@ -102,7 +104,7 @@ class CASTVisitor(GenericMetadataVisitor):
         except Exception as e:
             LOGGER.warning(f"Error extracting C typedef: {e}")
 
-    def _find_child_by_type(self, node: Node, target_type: str) -> Union[Node,None]:
+    def _find_child_by_type(self, node: Node, target_type: str) -> Union[Node, None]:
         """Find first child node of specified type."""
         for child in node.children:
             if child.type == target_type:
@@ -150,9 +152,11 @@ def analyze_c_code(code: str, filename: str = "") -> Dict[str, Any]:
 
         # Get results from visitor
         result = visitor.get_summary()
+        # Use display language name for database storage
+        from ..mappers import get_display_language_name
         result.update({
             'success': True,
-            'language': 'c',
+            'language': get_display_language_name('c'),
             'filename': filename,
             'line_count': code.count('\n') + 1,
             'char_count': len(code),

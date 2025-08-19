@@ -40,10 +40,10 @@ async def test_claude_desktop_simulation():
 
         # Check if process is still running
         if process.poll() is not None:
-            stdout, stderr = process.communicate()
+            stdout0, stderr0 = process.communicate()
             print("❌ Supergateway exited early!")
-            print(f"STDOUT: {stdout}")
-            print(f"STDERR: {stderr}")
+            print(f"STDOUT: {stdout0}")
+            print(f"STDERR: {stderr0}")
             return False
 
         print("✅ Supergateway started successfully")
@@ -64,68 +64,75 @@ async def test_claude_desktop_simulation():
         }
 
         print("📤 Sending initialize message...")
-        process.stdin.write(json.dumps(init_message) + '\n')
-        process.stdin.flush()
 
-        # Read response
-        print("📥 Reading initialize response...")
-        response_line = await asyncio.wait_for(
-            asyncio.create_task(asyncio.to_thread(process.stdout.readline)),
-            timeout=5.0
-        )
+        stdin = process.stdin
+        stdout = process.stdout
 
-        if response_line:
-            try:
-                response = json.loads(response_line.strip())
-                print(f"✅ Initialize response: {json.dumps(response, indent=2)}")
-            except json.JSONDecodeError as e:
-                print(f"❌ Failed to parse response: {response_line}")
-                print(f"Error: {e}")
+        if stdin is None or stdout is None:
+            print("❌ None: process.stdin or process.stdout")
         else:
-            print("❌ No response received for initialize")
+            stdin.write(json.dumps(init_message) + '\n')
+            stdin.flush()
 
-        # Send tools/list message
-        tools_message = {
-            "jsonrpc": "2.0",
-            "id": 2,
-            "method": "tools/list",
-            "params": {}
-        }
+            # Read response
+            print("📥 Reading initialize response...")
+            response_line = await asyncio.wait_for(
+                asyncio.create_task(asyncio.to_thread(stdout.readline)),
+                timeout=5.0
+            )
 
-        print("📤 Sending tools/list message...")
-        process.stdin.write(json.dumps(tools_message) + '\n')
-        process.stdin.flush()
+            if response_line:
+                try:
+                    response = json.loads(response_line.strip())
+                    print(f"✅ Initialize response: {json.dumps(response, indent=2)}")
+                except json.JSONDecodeError as e:
+                    print(f"❌ Failed to parse response: {response_line}")
+                    print(f"Error: {e}")
+            else:
+                print("❌ No response received for initialize")
 
-        # Read response
-        print("📥 Reading tools/list response...")
-        response_line = await asyncio.wait_for(
-            asyncio.create_task(asyncio.to_thread(process.stdout.readline)),
-            timeout=5.0
-        )
+            # Send tools/list message
+            tools_message = {
+                "jsonrpc": "2.0",
+                "id": 2,
+                "method": "tools/list",
+                "params": {}
+            }
 
-        if response_line:
-            try:
-                response = json.loads(response_line.strip())
-                print(f"✅ Tools/list response: {json.dumps(response, indent=2)}")
+            print("📤 Sending tools/list message...")
+            stdin.write(json.dumps(tools_message) + '\n')
+            stdin.flush()
 
-                # Check if tools are present
-                if "result" in response and "tools" in response["result"]:
-                    tools = response["result"]["tools"]
-                    print(f"🔧 Found {len(tools)} tools:")
-                    for tool in tools:
-                        print(f"   - {tool['name']}: {tool['description']}")
-                    return True
-                else:
-                    print("❌ No tools found in response")
+            # Read response
+            print("📥 Reading tools/list response...")
+            response_line = await asyncio.wait_for(
+                asyncio.create_task(asyncio.to_thread(stdout.readline)),
+                timeout=5.0
+            )
+
+            if response_line:
+                try:
+                    response = json.loads(response_line.strip())
+                    print(f"✅ Tools/list response: {json.dumps(response, indent=2)}")
+
+                    # Check if tools are present
+                    if "result" in response and "tools" in response["result"]:
+                        tools = response["result"]["tools"]
+                        print(f"🔧 Found {len(tools)} tools:")
+                        for tool in tools:
+                            print(f"   - {tool['name']}: {tool['description']}")
+                        return True
+                    else:
+                        print("❌ No tools found in response")
+                        return False
+
+                except json.JSONDecodeError as e:
+                    print(f"❌ Failed to parse response: {response_line}")
+                    print(f"Error: {e}")
                     return False
-
-            except json.JSONDecodeError as e:
-                print(f"❌ Failed to parse response: {response_line}")
-                print(f"Error: {e}")
+            else:
+                print("❌ No response received for tools/list")
                 return False
-        else:
-            print("❌ No response received for tools/list")
-            return False
 
     except asyncio.TimeoutError:
         print("❌ Timeout waiting for response")

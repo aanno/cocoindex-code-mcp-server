@@ -1,30 +1,16 @@
 #!/usr/bin/env python3
 """Test cases for value_contains functionality in keyword search parsers."""
 
-from typing import Union, cast, Optional, Callable, Tuple, List, Any
+from typing import Union, cast
+
 import pytest
 
-from cocoindex_code_mcp_server.keyword_search_parser import (
-    KeywordSearchParser as FallbackParser,
-)
-from cocoindex_code_mcp_server.keyword_search_parser import (
+from cocoindex_code_mcp_server.keyword_search_parser_lark import (
+    KeywordSearchParser,
     SearchCondition,
     SearchGroup,
     build_sql_where_clause,
 )
-
-try:
-    from cocoindex_code_mcp_server.keyword_search_parser_lark import (
-        KeywordSearchParser as LarkParser,
-        SearchCondition as LarkSearchCondition,
-        SearchGroup as LarkSearchGroup,
-    )
-    from cocoindex_code_mcp_server.keyword_search_parser_lark import (
-        build_sql_where_clause as lark_build_sql_where_clause,
-    )
-    LARK_AVAILABLE = True
-except ImportError:
-    LARK_AVAILABLE = False
 
 
 class TestValueContainsFallbackParser:
@@ -32,7 +18,7 @@ class TestValueContainsFallbackParser:
 
     def test_simple_value_contains(self):
         """Test basic value_contains parsing."""
-        parser = FallbackParser()
+        parser = KeywordSearchParser()
         result = parser.parse('value_contains(code, "function")')
 
         assert len(result.conditions) == 1
@@ -45,7 +31,7 @@ class TestValueContainsFallbackParser:
 
     def test_value_contains_with_quoted_value(self):
         """Test value_contains with quoted search string."""
-        parser = FallbackParser()
+        parser = KeywordSearchParser()
         result = parser.parse('value_contains(filename, "test file")')
 
         condition: Union[SearchCondition, SearchGroup] = result.conditions[0]
@@ -56,7 +42,7 @@ class TestValueContainsFallbackParser:
 
     def test_value_contains_with_unquoted_value(self):
         """Test value_contains with unquoted search string."""
-        parser = FallbackParser()
+        parser = KeywordSearchParser()
         result = parser.parse('value_contains(code, async)')
 
         condition: Union[SearchCondition, SearchGroup] = result.conditions[0]
@@ -67,7 +53,7 @@ class TestValueContainsFallbackParser:
 
     def test_value_contains_with_and_operator(self):
         """Test value_contains combined with AND operator."""
-        parser = FallbackParser()
+        parser = KeywordSearchParser()
         result = parser.parse('value_contains(code, "function") and language:python')
 
         assert len(result.conditions) == 2
@@ -88,7 +74,7 @@ class TestValueContainsFallbackParser:
 
     def test_value_contains_with_parentheses(self):
         """Test value_contains with parentheses grouping."""
-        parser = FallbackParser()
+        parser = KeywordSearchParser()
         result = parser.parse('(language:python or language:rust) and value_contains(code, "async")')
 
         assert len(result.conditions) == 2
@@ -130,36 +116,35 @@ class TestValueContainsSQLGeneration:
 
     def test_complex_value_contains_sql(self):
         """Test complex query with value_contains generates correct SQL."""
-        parser = FallbackParser()
+        parser = KeywordSearchParser()
         result = parser.parse('language:python and value_contains(code, "def")')
 
         where_clause, params = build_sql_where_clause(result)
 
-        assert "language = %s" in where_clause
+        assert "LOWER(language) = LOWER(%s)" in where_clause
         assert "code ILIKE %s" in where_clause
         assert "AND" in where_clause
         assert params == ["python", "%def%"]
 
 
-@pytest.mark.skipif(not LARK_AVAILABLE, reason="Lark parser not available")
 class TestValueContainsLarkParser:
     """Test value_contains functionality in the Lark parser."""
 
     def test_lark_value_contains_parsing(self):
         """Test that Lark parser handles value_contains correctly."""
-        parser = LarkParser()
+        parser = KeywordSearchParser()
         result = parser.parse('value_contains(code, "function")')
 
         assert len(result.conditions) == 1
-        condition: Union[LarkSearchCondition, LarkSearchGroup] = result.conditions[0]
-        cond = cast(LarkSearchCondition, condition)
+        condition: Union[SearchCondition, SearchGroup] = result.conditions[0]
+        cond = cast(SearchCondition, condition)
         assert cond.field == "code"
         assert cond.value == "function"
         assert cond.is_value_contains_check is True
 
     def test_lark_complex_value_contains_query(self):
         """Test complex Lark parser query with value_contains."""
-        parser = LarkParser()
+        parser = KeywordSearchParser()
         result = parser.parse('(language:python or language:rust) and value_contains(code, "async")')
 
         # Check the structure first
@@ -176,11 +161,11 @@ class TestValueContainsLarkParser:
                 break
         assert has_value_contains, "Should have a value_contains condition"
 
-        where_clause, params = lark_build_sql_where_clause(result)
+        where_clause, params = build_sql_where_clause(result)
 
         assert "code ILIKE %s" in where_clause
         assert "%async%" in params
-        assert "language = %s" in where_clause  # Should have both languages
+        assert "LOWER(language) = LOWER(%s)" in where_clause  # Should have both languages
         assert params == ['python', 'rust', '%async%']
 
 
@@ -189,7 +174,7 @@ class TestValueContainsEdgeCases:
 
     def test_value_contains_empty_string(self):
         """Test value_contains with empty search string."""
-        parser = FallbackParser()
+        parser = KeywordSearchParser()
         result = parser.parse('value_contains(code, "")')
 
         condition: Union[SearchCondition, SearchGroup] = result.conditions[0]
@@ -203,7 +188,7 @@ class TestValueContainsEdgeCases:
 
     def test_value_contains_special_characters(self):
         """Test value_contains with special characters."""
-        parser = FallbackParser()
+        parser = KeywordSearchParser()
         result = parser.parse('value_contains(code, "async/await")')
 
         condition: Union[SearchCondition, SearchGroup] = result.conditions[0]
@@ -215,23 +200,23 @@ class TestValueContainsEdgeCases:
 
     def test_value_contains_vs_exists_distinction(self):
         """Test that value_contains and exists are handled differently."""
-        parser = FallbackParser()
+        parser = KeywordSearchParser()
 
         # Test exists
         exists_result = parser.parse('exists(embedding)')
-        
+
         exists_condition: Union[SearchCondition, SearchGroup] = exists_result.conditions[0]
         cond = cast(SearchCondition, exists_condition)
-        
+
         assert cond.is_exists_check is True
         assert cond.is_value_contains_check is False
 
         # Test value_contains
         contains_result = parser.parse('value_contains(code, "test")')
-        
+
         contains_condition: Union[SearchCondition, SearchGroup] = contains_result.conditions[0]
         cond = cast(SearchCondition, contains_condition)
-        
+
         assert cond.is_exists_check is False
         assert cond.is_value_contains_check is True
 

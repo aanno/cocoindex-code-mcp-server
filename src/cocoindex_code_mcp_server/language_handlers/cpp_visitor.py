@@ -9,10 +9,12 @@ Updated to trigger CocoIndex reprocessing.
 import logging
 from typing import Any, Dict, List, Optional
 
+from tree_sitter import Node
+
+from cocoindex_code_mcp_server.ast_visitor import NodeContext
+
 from ..ast_visitor import NodeContext
 from .c_visitor import CASTVisitor
-from cocoindex_code_mcp_server.ast_visitor import NodeContext
-from tree_sitter import Node
 
 LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +24,7 @@ class CppASTVisitor(CASTVisitor):
 
     def __init__(self) -> None:
         super().__init__()
-        self.language = "cpp"
+        self.language = "CPP"
         # Inherit C functionality: self.functions, self.structs, self.enums, self.typedefs
         # Add C++-specific constructs
         self.classes: List[str] = []

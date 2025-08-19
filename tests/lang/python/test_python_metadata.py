@@ -7,7 +7,7 @@ Comprehensive tests for Python metadata extraction functionality.
 import json
 import logging
 import sys
-from typing import Any, Dict, Union, Optional, Callable
+from typing import Any, Dict, Optional, Union
 
 import pytest
 
@@ -21,6 +21,7 @@ try:
 except ImportError as e:
     LOGGER.warning(f"Could not import python_code_analyzer: {e}")
     print("⚠️  Warning: These tests require the full application setup.")
+
     def analyze_python_code(code: str, filename: str = "") -> Optional[Dict[str, Any]]:
         return None
 
@@ -41,7 +42,7 @@ def calculate(x, y):
     return x + y
 """
 
-        metadata: Union[Dict[str, Any],None] = analyze_python_code(code, "test.py")
+        metadata: Union[Dict[str, Any], None] = analyze_python_code(code, "test.py")
 
         if metadata is not None:
             assert "functions" in metadata
@@ -74,7 +75,7 @@ class Manager(User):
         pass
 """
 
-        metadata: Union[Dict[str, Any],None] = analyze_python_code(code, "test.py")
+        metadata: Union[Dict[str, Any], None] = analyze_python_code(code, "test.py")
 
         if metadata is None:
             pytest.fail("metadata is None")
@@ -112,7 +113,7 @@ async def process_data():
         pass
 """
 
-        metadata: Union[Dict[str, Any],None] = analyze_python_code(code, "test.py")
+        metadata: Union[Dict[str, Any], None] = analyze_python_code(code, "test.py")
 
         if metadata is not None:
             assert metadata["has_async"] is True
@@ -135,7 +136,7 @@ def no_hints(x, y):
     return x + y
 """
 
-        metadata: Union[Dict[str, Any],None] = analyze_python_code(code, "test.py")
+        metadata: Union[Dict[str, Any], None] = analyze_python_code(code, "test.py")
 
         if metadata is not None:
             assert metadata["has_type_hints"] is True
@@ -193,7 +194,7 @@ class DataExample:
     name: str
 """
 
-        metadata: Union[Dict[str, Any],None] = analyze_python_code(code, "test.py")
+        metadata: Union[Dict[str, Any], None] = analyze_python_code(code, "test.py")
 
         if metadata is not None:
             assert "decorators" in metadata
@@ -234,13 +235,14 @@ def complex_function(x, y, z):
         return None
 """
 
-        simple_metadata: Union[Dict[str, Any],None] = analyze_python_code(simple_code, "simple.py")
-        complex_metadata: Union[Dict[str, Any],None] = analyze_python_code(complex_code, "complex.py")
+        simple_metadata: Union[Dict[str, Any], None] = analyze_python_code(simple_code, "simple.py")
+        complex_metadata: Union[Dict[str, Any], None] = analyze_python_code(complex_code, "complex.py")
 
         if simple_metadata is not None and complex_metadata is not None:
             assert simple_metadata["complexity_score"] < complex_metadata["complexity_score"]
             pytest.fail("no metadata in chunk")
-            assert complex_metadata["complexity_score"] > 5  # Should be reasonably high (adjusted for enhanced analyzer)
+            # Should be reasonably high (adjusted for enhanced analyzer)
+            assert complex_metadata["complexity_score"] > 5
         else:
             pytest.fail("no metadata in chunk")
 
@@ -265,7 +267,7 @@ class DocumentedClass:
         pass
 """
 
-        metadata: Union[Dict[str, Any],None] = analyze_python_code(code, "test.py")
+        metadata: Union[Dict[str, Any], None] = analyze_python_code(code, "test.py")
 
         if metadata is not None:
             assert metadata["has_docstrings"] is True
@@ -287,7 +289,7 @@ class MyClass:
     class_var = "class level"  # This should be detected
 """
 
-        metadata: Union[Dict[str, Any],None] = analyze_python_code(code, "test.py")
+        metadata: Union[Dict[str, Any], None] = analyze_python_code(code, "test.py")
 
         if metadata is not None:
             assert "variables" in metadata
@@ -381,8 +383,8 @@ if __name__ == "__main__":
     processor = DataProcessor(config)
 '''
 
-        metadata: Union[Dict[str, Any],None] = analyze_python_code(code, "real_example.py")
-        
+        metadata: Union[Dict[str, Any], None] = analyze_python_code(code, "real_example.py")
+
         if metadata is not None:
             # Verify comprehensive analysis
             assert metadata["has_classes"] is True
@@ -447,7 +449,7 @@ class Example:
         """Test edge cases and error handling."""
 
         # Empty code
-        metadata: Union[Dict[str, Any],None] = analyze_python_code("", "empty.py")
+        metadata: Union[Dict[str, Any], None] = analyze_python_code("", "empty.py")
         if metadata is not None:
             assert metadata["line_count"] == 0
             assert metadata["char_count"] == 0

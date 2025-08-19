@@ -523,6 +523,152 @@ code_embeddings.collect(
 - **Type safety** - PostgreSQL enforces column types
 - **Backward compatibility** - metadata_json remains for experimental fields
 
+## Metadata Flow Patterns: The Key Breakthrough (January 2025)
+
+Based on major discoveries during chunking_method conflict resolution, here are the critical patterns for metadata handling in CocoIndex:
+
+### 1. **How to Add Properties to metadata_json**
+
+```python
+# In collector logic (cocoindex_config.py):
+def create_metadata_json(content, language, metadata_dict):
+    """Create metadata_json with standard fields."""
+    return {
+        # Analysis tracking
+        "analysis_method": metadata_dict.get("analysis_method", "unknown"),
+        "tree_sitter_chunking_error": metadata_dict.get("tree_sitter_chunking_error", False),
+        "tree_sitter_analyze_error": metadata_dict.get("tree_sitter_analyze_error", False),
+        
+        # Custom properties you want in metadata_json:
+        "file_size": len(content),
+        "has_tests": "test" in content.lower(),
+        "complexity_level": calculate_complexity(content)
+    }
+```
+
+### 2. **How to Promote metadata_json Properties to Results**
+
+Properties in metadata_json are **automatically promoted** to top-level result fields:
+
+```python
+# In schemas.py - validation automatically promotes ALL metadata_json fields:
+def validate_chunk_metadata(metadata: Dict[str, Any]) -> ChunkMetadata:
+    # If metadata_json contains {"analysis_method": "python_ast", "custom_field": "value"}
+    # Both become top-level fields in results:
+    if "metadata_json" in metadata:
+        validated["metadata_json"] = metadata["metadata_json"]
+        # All keys from metadata_json also become individual result fields
+    return validated
+```
+
+### 3. **How to Add Properties Directly to Results**
+
+```python
+# In collector - fields collected directly become result properties:
+code_embeddings.collect(
+    filename=file["filename"],
+    code=chunk["content"], 
+    # Direct result fields (not in metadata_json):
+    chunking_method=chunk["chunking_method"],  # From AST chunkers
+    functions=str(metadata_dict.get("functions", [])),
+    classes=str(metadata_dict.get("classes", [])),
+    complexity_score=metadata_dict.get("complexity_score", 0),
+    # This goes into metadata_json AND gets promoted:
+    metadata_json=metadata_json_dict
+)
+```
+
+### 4. **How to Handle Typed Flows (Dataclass + Conversion)**
+
+For AST chunking and other operations that return structured data:
+
+```python
+# Step 1: Define dataclass for CocoIndex processing
+@dataclass
+class ASTChunkRow:
+    content: str
+    location: str
+    start: int
+    end: int
+    chunking_method: str  # This becomes a result field
+
+# Step 2: CocoIndex operation returns typed data
+@op.executor_class()
+class ASTChunkExecutor:
+    def __call__(self, content: str, language: str) -> list[ASTChunkRow]:
+        # Return list of dataclass instances
+        return [ASTChunkRow(content=chunk, location=loc, ...)]
+
+# Step 3: Collector converts dataclass to dict and extracts fields
+for chunk in chunks:
+    if hasattr(chunk, 'chunking_method'):
+        chunking_method = chunk.chunking_method  # Extract from dataclass
+    elif isinstance(chunk, dict):
+        chunking_method = chunk.get("chunking_method", "unknown")
+    
+    code_embeddings.collect(
+        chunking_method=chunking_method,  # Direct field from dataclass
+        # ... other fields
+    )
+```
+
+### 5. **Critical Anti-Pattern: Conflicting Field Sources**
+
+**❌ AVOID**: Having the same field in both direct collection and metadata_json:
+
+```python
+# BAD - Creates confusion:
+code_embeddings.collect(
+    chunking_method=chunk["chunking_method"],  # Direct field
+    metadata_json={
+        "chunking_method": "different_value",  # CONFLICTS!
+        "other_data": "..."
+    }
+)
+# Results in confusing: chunking_method="value1" but metadata.chunking_method="value2"
+```
+
+**✅ SOLUTION**: Choose ONE source per field:
+
+```python
+# GOOD - Single source of truth:
+code_embeddings.collect(
+    chunking_method=chunk["chunking_method"],  # From AST chunkers only
+    metadata_json={
+        # chunking_method NOT included in metadata
+        "analysis_method": "python_ast",
+        "other_data": "..."
+    }
+)
+```
+
+### 6. **Field Promotion Debugging**
+
+To verify field promotion is working:
+
+```python
+# Check search results contain expected fields:
+results = hybrid_search_engine.search(vector_query="test", keyword_query="language:Python")
+for result in results[:3]:
+    print(f"Direct fields: chunking_method={result.get('chunking_method')}")
+    print(f"Metadata fields: {result.get('metadata_json', {}).keys()}")
+    print(f"Promoted fields: analysis_method={result.get('analysis_method')}")
+```
+
+### 7. **Schema Validation for New Fields**
+
+When adding new metadata fields, update schemas.py:
+
+```python
+class ChunkMetadata(TypedDict, total=False):
+    # Existing fields...
+    
+    # Your new fields:
+    file_size: int
+    has_tests: bool
+    complexity_level: str
+```
+
 ## Summary
 
 - **USE Vector types** with fixed dimensions for embeddings: `Vector[np.float32, Literal[384]]`
@@ -536,6 +682,10 @@ code_embeddings.collect(
 - **Custom metadata fields** should appear in evaluation outputs and database
 - **Load models once** at module level, not inside functions
 - **Always run setup** after changing collection schema or vector dimensions
+- **Avoid field conflicts** between direct collection and metadata_json
+- **Choose single source of truth** for each field (either direct or metadata_json)
+- **Use dataclass → dict conversion** for typed CocoIndex operations
+- **Leverage automatic field promotion** from metadata_json to results
 
 Following these updated practices will ensure proper pgvector integration, prevent database conflicts, and enable rich metadata collection in your CocoIndex flows.
 
@@ -672,3 +822,529 @@ When encountering type system errors:
 - **Handle both dict and string inputs** - Functions may receive either depending on context
 - **Escape regex special characters** - Language configuration regexes need proper escaping
 - **Test with minimal examples** - Isolate type issues before fixing in main codebase
+
+## Multi-Language Analysis Integration (January 2025)
+
+### 1. Backend vs Frontend Analysis Synchronization
+
+**⚠️ CRITICAL GOTCHA**: Multi-language analyzers may work in CocoIndex flows but fail in MCP server backends due to analysis function location mismatches.
+
+```python
+# ❌ PROBLEM: Backend only uses Python analyzer
+class PostgresBackend:
+    def _format_result(self, row, score_type):
+        if language.lower() == "python":
+            from ..lang.python.python_code_analyzer import analyze_python_code
+            metadata = analyze_python_code(code, filename)
+        else:
+            # All non-Python languages get empty metadata
+            metadata = {"analysis_method": "none", "functions": [], "classes": []}
+```
+
+**✅ SOLUTION**: Ensure backends use the same multi-language analysis as CocoIndex flows:
+
+```python
+class PostgresBackend:
+    def _format_result(self, row, score_type):
+        try:
+            # Use the same multi-language analyzer as CocoIndex flows
+            from ..cocoindex_config import extract_code_metadata
+            metadata_json_str = extract_code_metadata(code, language, filename)
+            analysis_metadata = json.loads(metadata_json_str)
+            
+            if analysis_metadata is not None:
+                pg_row.update({
+                    "functions": analysis_metadata.get("functions", []),
+                    "classes": analysis_metadata.get("classes", []),
+                    "imports": analysis_metadata.get("imports", []),
+                    "analysis_method": analysis_metadata.get("analysis_method", "unknown")
+                })
+        except Exception as e:
+            # Fallback to basic metadata with error logging
+            LOGGER.error(f"Multi-language analysis failed: {e}")
+            pg_row.update({"analysis_method": "error", "functions": [], "classes": []})
+```
+
+### 2. Language Case Sensitivity and Normalization
+
+**⚠️ CRITICAL GOTCHA**: Language strings from different sources use inconsistent casing, causing analyzer selection failures.
+
+```python
+# Sources of language case mismatches:
+"Python" vs "python" vs "PYTHON"    # File extensions vs user input vs database
+"C++" vs "cpp" vs "CPP"             # Database storage vs query parameters  
+"JavaScript" vs "javascript" vs "js" # Full names vs abbreviations
+```
+
+**✅ SOLUTION**: Implement comprehensive case-insensitive language matching:
+
+```python
+def select_language_analyzer(language: str) -> callable:
+    """Select appropriate analyzer with case-insensitive matching."""
+    lang_lower = language.lower() if language else ""
+    
+    # Handle all common variations
+    if lang_lower in ["python", "py"]:
+        from .language_handlers.python_visitor import analyze_python_code
+        return analyze_python_code
+    elif lang_lower == "rust":
+        from .language_handlers.rust_visitor import analyze_rust_code
+        return analyze_rust_code
+    elif lang_lower == "java":
+        from .language_handlers.java_visitor import analyze_java_code
+        return analyze_java_code
+    elif lang_lower in ["javascript", "js"]:
+        from .language_handlers.javascript_visitor import analyze_javascript_code
+        return analyze_javascript_code
+    elif lang_lower in ["typescript", "ts"]:
+        from .language_handlers.typescript_visitor import analyze_typescript_code
+        return analyze_typescript_code
+    elif lang_lower in ["cpp", "c++", "cxx"]:
+        from .language_handlers.cpp_visitor import analyze_cpp_code
+        return analyze_cpp_code
+    elif lang_lower == "c":
+        from .language_handlers.c_visitor import analyze_c_code
+        return analyze_c_code
+    elif lang_lower in ["kotlin", "kt"]:
+        from .language_handlers.kotlin_visitor import analyze_kotlin_code
+        return analyze_kotlin_code
+    elif lang_lower in ["haskell", "hs"]:
+        from .language_handlers.haskell_visitor import analyze_haskell_code
+        return analyze_haskell_code
+    else:
+        return None  # Use fallback basic analysis
+```
+
+### 3. SQL Query Language Matching
+
+**⚠️ CRITICAL GOTCHA**: Database queries with exact language matching fail when user input case differs from stored case.
+
+```python
+# ❌ PROBLEM: Exact case matching fails
+WHERE language = 'cpp'      # Fails if database has 'C++'
+WHERE language = 'CPP'      # Fails if user searches for 'cpp'
+```
+
+**✅ SOLUTION**: Use case-insensitive SQL comparisons for language fields:
+
+```python
+def build_sql_where_clause(search_group, table_alias=""):
+    """Build SQL WHERE clause with case-insensitive language matching."""
+    for condition in search_group.conditions:
+        if condition.field == "language":
+            # Use case-insensitive comparison for language field
+            where_parts.append(f"LOWER({prefix}language) = LOWER(%s)")
+            params.append(condition.value)
+        else:
+            # Use exact matching for other fields
+            where_parts.append(f"{prefix}{condition.field} = %s")
+            params.append(condition.value)
+```
+
+### 4. Language-Specific Dependencies and Fallbacks
+
+**⚠️ CRITICAL GOTCHA**: Missing tree-sitter language parsers cause silent analysis failures without clear error messages.
+
+```python
+# ❌ PROBLEM: Silent fallback when dependencies missing
+try:
+    import tree_sitter_javascript
+    language_obj = tree_sitter.Language(tree_sitter_javascript.language())
+except ImportError:
+    # Silent fallback - no clear indication of missing dependency
+    return None
+```
+
+**✅ SOLUTION**: Explicit dependency management with clear error reporting:
+
+```python
+def get_language_parser(language: str):
+    """Get tree-sitter parser with explicit dependency handling."""
+    try:
+        if language == 'javascript':
+            import tree_sitter_javascript
+            return tree_sitter.Language(tree_sitter_javascript.language())
+        elif language == 'rust':
+            import tree_sitter_rust
+            return tree_sitter.Language(tree_sitter_rust.language())
+        # ... other languages
+    except ImportError as e:
+        LOGGER.error(f"Missing tree-sitter dependency for {language}: {e}")
+        LOGGER.info(f"Install with: pip install tree-sitter-{language}")
+        return None
+    except Exception as e:
+        LOGGER.error(f"Failed to load {language} parser: {e}")
+        return None
+```
+
+**Dependency Management Best Practices:**
+```python
+# In pyproject.toml, ensure all required tree-sitter languages are listed:
+dependencies = [
+    "tree-sitter>=0.20.0",
+    "tree-sitter-python>=0.20.0",
+    "tree-sitter-rust>=0.20.0", 
+    "tree-sitter-java>=0.20.0",
+    "tree-sitter-javascript>=0.23.1",  # Note version requirements
+    "tree-sitter-typescript>=0.20.0",
+    # Add as needed for new language support
+]
+```
+
+### 5. Analysis Result Validation and Fallbacks
+
+**⚠️ CRITICAL GOTCHA**: Language analyzers may return incomplete results without proper success indicators.
+
+```python
+# ❌ PROBLEM: Missing success field causes fallback to basic analysis
+def analyze_language_code(code, language, filename):
+    """Analyzer without success indicator."""
+    return {
+        "functions": ["func1", "func2"],
+        "classes": ["Class1"],
+        "analysis_method": "language_ast_visitor"
+        # Missing: "success": True
+    }
+
+# Later validation fails:
+if not result.get("success", False):
+    # Falls back to basic analysis, losing rich metadata
+    return create_basic_metadata()
+```
+
+**✅ SOLUTION**: Ensure all language analyzers include success indicators:
+
+```python
+def analyze_language_code(code, language, filename):
+    """Language analyzer with proper success indication."""
+    try:
+        # Perform analysis...
+        metadata = {
+            'language': language,
+            'filename': filename,
+            'functions': extracted_functions,
+            'classes': extracted_classes,
+            'analysis_method': f'{language}_ast_visitor',
+            'success': True,  # ✅ Critical success indicator
+            'parse_errors': 0,
+            'complexity_score': calculated_complexity
+        }
+        return metadata
+    except Exception as e:
+        LOGGER.error(f"{language} analysis failed: {e}")
+        return {
+            'success': False,  # ✅ Clear failure indication
+            'error': str(e),
+            'analysis_method': 'basic_fallback'
+        }
+```
+
+### 6. Integration Testing for Multi-Language Support
+
+**✅ BEST PRACTICE**: Create comprehensive test suites that validate multi-language analysis across the entire stack:
+
+```python
+# Test matrix covering all layers:
+@pytest.mark.parametrize("language,file_extension,expected_functions", [
+    ("python", ".py", ["test_function"]),
+    ("rust", ".rs", ["fibonacci", "main"]),
+    ("java", ".java", ["calculateSum", "Person"]),
+    ("javascript", ".js", ["processData"]),
+    ("typescript", ".ts", ["validateInput"]),
+    ("cpp", ".cpp", ["fibonacci", "Person"]),
+    ("c", ".c", ["test_function"]),
+    ("kotlin", ".kt", ["dataProcessor"]),
+    ("haskell", ".hs", ["quicksort"])
+])
+def test_end_to_end_language_analysis(language, file_extension, expected_functions):
+    """Test complete pipeline from file reading to database storage."""
+    # 1. Test CocoIndex flow analysis
+    cocoindex_result = run_cocoindex_analysis(test_code, language)
+    assert cocoindex_result["analysis_method"] != "none"
+    
+    # 2. Test MCP server backend analysis  
+    mcp_result = query_mcp_server(f"language:{language}")
+    assert len(mcp_result["results"]) > 0
+    
+    # 3. Test database storage consistency
+    db_result = query_database(f"language = '{language}'")
+    assert db_result["analysis_method"] != "none"
+    
+    # 4. Test function extraction across all layers
+    for expected_func in expected_functions:
+        assert expected_func in cocoindex_result["functions"]
+        assert expected_func in mcp_result["results"][0]["functions"]
+        assert expected_func in db_result["functions"]
+```
+
+### 7. Multi-Language Analysis Migration Checklist
+
+When adding new language support or fixing existing languages:
+
+- [ ] **Add tree-sitter dependency** to pyproject.toml
+- [ ] **Create language-specific analyzer** in language_handlers/
+- [ ] **Update cocoindex_config.py** with case-insensitive language matching
+- [ ] **Update postgres_backend.py** to use extract_code_metadata
+- [ ] **Add SQL case-insensitive matching** for language queries
+- [ ] **Include success indicators** in analyzer return values
+- [ ] **Add integration tests** covering CocoIndex flow + MCP server + database
+- [ ] **Test with real files** to verify metadata extraction
+- [ ] **Document language-specific quirks** and dependencies
+
+### 8. Language Analysis Performance Considerations
+
+**✅ OPTIMIZATION**: Cache language analyzers and parsers to avoid repeated loading:
+
+```python
+# Global cache for expensive parser initialization
+_LANGUAGE_PARSERS = {}
+_LANGUAGE_ANALYZERS = {}
+
+def get_cached_analyzer(language: str):
+    """Get cached language analyzer to avoid repeated initialization."""
+    lang_key = language.lower()
+    
+    if lang_key not in _LANGUAGE_ANALYZERS:
+        analyzer = select_language_analyzer(language)
+        if analyzer:
+            _LANGUAGE_ANALYZERS[lang_key] = analyzer
+            LOGGER.info(f"Cached analyzer for {language}")
+    
+    return _LANGUAGE_ANALYZERS.get(lang_key)
+```
+
+This caching is particularly important for:
+- **Tree-sitter parser initialization** (expensive grammar loading)
+- **Model loading** for embedding-based analysis
+- **Regex compilation** for pattern-based metadata extraction
+
+## CocoIndex Type Inference and Fallback Models (January 2025)
+
+### 1. Understanding Fallback Model Warnings
+
+**⚠️ INFORMATIONAL GOTCHA**: CocoIndex may log "Using fallback model for DataSlice" warnings that appear concerning but are actually informational messages about the type inference system.
+
+```python
+# Example warning message that appears during flow compilation:
+cocoindex_code_mcp_server.cocoindex_config: INFO     Using fallback model for DataSlice(Str; [_root] [files AS files_1] .language)
+```
+
+**What this means:**
+- CocoIndex's static type analysis cannot determine the exact string type of certain fields during flow compilation
+- The engine falls back to a generic model for type inference rather than using specialized type handlers
+- This is a limitation of CocoIndex's static analysis, not an error in your code
+- The actual functionality (language detection, processing) works correctly regardless
+
+### 2. Common Scenarios Triggering Fallback Models
+
+**Language Detection Fields:**
+```python
+# This pattern often triggers fallback model warnings:
+file["language"] = file["filename"].transform(extract_language)
+
+# Even with proper function definition:
+@cocoindex.op.function()
+def extract_language(filename: str) -> str:
+    """Extract language from filename - works correctly."""
+    ext = os.path.splitext(filename)[1].lower()
+    return LANGUAGE_MAP.get(ext, "unknown")
+```
+
+**Dynamic Field Creation:**
+- Fields created through transform operations on DataSlices
+- String fields with values determined at runtime
+- Fields that depend on file content analysis
+
+### 3. Fallback Model Impact and Mitigation
+
+**✅ FUNCTIONAL IMPACT**: Minimal to none
+- Your flows execute correctly
+- Data is processed and stored properly  
+- Type checking still works at runtime
+
+**✅ PERFORMANCE IMPACT**: Generally negligible
+- Fallback models are typically just less optimized code paths
+- No significant performance degradation observed
+
+**⚠️ WHEN TO INVESTIGATE**: Only if you notice:
+- Actual processing failures
+- Incorrect data in outputs
+- Significant performance issues
+
+### 4. Improving Language Detection to Reduce Fallbacks
+
+**Enhanced language detection with better fallback handling:**
+
+```python
+@cocoindex.op.function()
+def extract_language(filename: str) -> str:
+    """Extract language with explicit fallback handling."""
+    basename = os.path.basename(filename)
+    
+    # Handle special files without extensions
+    if basename.lower() in ["makefile", "dockerfile", "jenkinsfile"]:
+        return basename.lower()
+    
+    # Handle special patterns
+    special_patterns = {
+        "cmakelists": "cmake",
+        "build.gradle": "gradle", 
+        "pom.xml": "maven",
+        "docker-compose": "dockerfile",
+        "go.": "go"
+    }
+    
+    for pattern, lang in special_patterns.items():
+        if pattern in basename.lower():
+            return lang
+    
+    # Get extension and map to language
+    ext = os.path.splitext(filename)[1].lower()
+    
+    if ext in TREE_SITTER_LANGUAGE_MAP:
+        return TREE_SITTER_LANGUAGE_MAP[ext]
+    elif ext:
+        # Return clean extension name for unknown extensions
+        return ext[1:] if ext.startswith('.') else ext
+    else:
+        # Explicit fallback for files without extensions
+        return "unknown"
+```
+
+**Benefits of explicit fallback handling:**
+- Consistent return values
+- Better debugging information
+- Reduced ambiguity in type inference
+
+### 5. Transform() Function Requirements for Type Safety
+
+**⚠️ CRITICAL GOTCHA**: CocoIndex's `transform()` method requires functions decorated with `@cocoindex.op.function()`, not lambda functions.
+
+```python
+# ❌ WRONG: Lambda functions cause "transform() can only be called on a CocoIndex function" errors
+chunk["analysis_method"] = chunk["metadata"].transform(
+    lambda x: json.loads(x).get("analysis_method", "unknown") if x else "unknown"
+)
+
+# ✅ CORRECT: Use proper CocoIndex function decorators
+@cocoindex.op.function()
+def extract_analysis_method_field(metadata_json: str) -> str:
+    """Extract analysis_method field from metadata JSON."""
+    try:
+        if not metadata_json:
+            return "unknown"
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
+        return str(metadata_dict.get("analysis_method", "unknown"))
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for analysis_method: {e}")
+        return "unknown"
+
+# Use the proper function:
+chunk["analysis_method"] = chunk["metadata"].transform(extract_analysis_method_field)
+```
+
+**Why this matters:**
+- CocoIndex needs to serialize and track function dependencies
+- Lambda functions cannot be properly serialized by the flow system
+- Decorated functions provide proper type information for the engine
+
+### 6. Creating Extractor Functions for Metadata Fields
+
+**Pattern for creating metadata field extractors:**
+
+```python
+# Template for metadata field extractors:
+@cocoindex.op.function()
+def extract_[field_name]_field(metadata_json: str) -> [return_type]:
+    """Extract [field_name] field from metadata JSON."""
+    try:
+        if not metadata_json:
+            return [default_value]
+        # Parse JSON string to dict
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
+        value = metadata_dict.get("[field_name]", [default_value])
+        return [type_conversion](value) if value is not None else [default_value]
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for [field_name]: {e}")
+        return [default_value]
+
+# Examples:
+@cocoindex.op.function()
+def extract_functions_field(metadata_json: str) -> str:
+    """Extract functions field from metadata JSON."""
+    try:
+        if not metadata_json:
+            return "[]"
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
+        functions = metadata_dict.get("functions", [])
+        return str(functions) if isinstance(functions, list) else str([functions]) if functions else "[]"
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for functions: {e}")
+        return "[]"
+
+@cocoindex.op.function()
+def extract_complexity_score_field(metadata_json: str) -> int:
+    """Extract complexity_score field from metadata JSON."""
+    try:
+        if not metadata_json:
+            return 0
+        metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
+        score = metadata_dict.get("complexity_score", 0)
+        return int(score) if isinstance(score, (int, float, str)) and str(score).isdigit() else 0
+    except Exception as e:
+        LOGGER.debug(f"Failed to parse metadata JSON for complexity_score: {e}")
+        return 0
+```
+
+### 7. Debugging Type Inference Issues
+
+**When encountering fallback model warnings:**
+
+1. **Verify functionality first** - Check if your flow actually works despite warnings
+2. **Check function decorators** - Ensure all transform functions use `@cocoindex.op.function()`
+3. **Validate return types** - Make sure function return types are consistent
+4. **Test with minimal examples** - Isolate the specific field causing issues
+5. **Consider if action is needed** - Most fallback warnings can be safely ignored
+
+**Debugging workflow:**
+```python
+# Test individual functions outside of flows:
+def test_language_extraction():
+    test_files = ['test.py', 'example.rs', 'README.md', 'unknown.xyz']
+    for filename in test_files:
+        result = extract_language(filename)
+        print(f"{filename} -> {result} (type: {type(result)})")
+
+# Verify the function works before worrying about type inference warnings
+```
+
+### 8. Best Practices for Type-Safe CocoIndex Functions
+
+**✅ Type Safety Checklist:**
+- Always use `@cocoindex.op.function()` decorators for transform functions
+- Provide explicit type annotations for parameters and return values
+- Handle edge cases with explicit default values
+- Use try-catch blocks for JSON parsing operations
+- Return consistent types from similar functions
+- Test functions independently before integration
+
+**✅ Acceptable Fallback Scenarios:**
+- Language detection from dynamic file analysis
+- Fields derived from runtime content analysis
+- Transform chains with complex data dependencies
+
+**⚠️ Investigate Further When:**
+- Functions fail to execute (not just warnings)
+- Data appears incorrectly in database
+- Performance significantly degrades
+- Type mismatches cause flow failures
+
+### Summary: Fallback Model Warnings
+
+- **Fallback model warnings are usually informational**, not errors
+- **Functionality typically works correctly** despite warnings
+- **Focus on actual failures** rather than warning messages
+- **Use proper `@cocoindex.op.function()` decorators** for all transform functions
+- **Improve language detection logic** with explicit fallback handling
+- **Create dedicated extractor functions** for metadata fields instead of lambda functions
+- **Test individual components** to verify they work before worrying about type inference

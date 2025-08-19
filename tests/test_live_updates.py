@@ -1,45 +1,42 @@
 #!/usr/bin/env python3
 
-import unittest
-from unittest.mock import patch
-
 import pytest
 
 
-class TestLiveUpdates(unittest.TestCase):
+class TestLiveUpdates:
     """Test live update functionality and command-line options."""
 
-    def test_live_argument_parsing(self):
+    def test_live_argument_parsing(self, mocker):
         """Test that --live and --poll arguments are parsed correctly."""
         from cocoindex_code_mcp_server.arg_parser_old import parse_args
 
         # Test --live flag
-        with patch('sys.argv', ['main_interactive_query.py', '--live']):
-            args = parse_args()
-            self.assertTrue(args.live)
-            self.assertEqual(args.poll, 0)  # Default no polling
+        mocker.patch('sys.argv', ['main_interactive_query.py', '--live'])
+        args = parse_args()
+        assert args.live == True
+        assert args.poll == 0  # Default no polling
 
         # Test --live with --poll
-        with patch('sys.argv', ['main_interactive_query.py', '--live', '--poll', '30']):
-            args = parse_args()
-            self.assertTrue(args.live)
-            self.assertEqual(args.poll, 30)
+        mocker.patch('sys.argv', ['main_interactive_query.py', '--live', '--poll', '30'])
+        args = parse_args()
+        assert args.live == True
+        assert args.poll == 30
 
         # Test --poll without --live (should work)
-        with patch('sys.argv', ['main_interactive_query.py', '--poll', '60']):
-            args = parse_args()
-            self.assertFalse(args.live)
-            self.assertEqual(args.poll, 60)
+        mocker.patch('sys.argv', ['main_interactive_query.py', '--poll', '60'])
+        args = parse_args()
+        assert args.live == False
+        assert args.poll == 60
 
-    def test_live_arguments_with_paths(self):
+    def test_live_arguments_with_paths(self, mocker):
         """Test live update arguments combined with paths."""
         from cocoindex_code_mcp_server.arg_parser_old import parse_args
 
-        with patch('sys.argv', ['main_interactive_query.py', '--live', '--poll', '15', '/path/to/code']):
-            args = parse_args()
-            self.assertTrue(args.live)
-            self.assertEqual(args.poll, 15)
-            self.assertEqual(args.paths, ['/path/to/code'])
+        mocker.patch('sys.argv', ['main_interactive_query.py', '--live', '--poll', '15', '/path/to/code'])
+        args = parse_args()
+        assert args.live == True
+        assert args.poll == 15
+        assert args.paths == ['/path/to/code']
 
     @pytest.mark.skip(reason="Config update logic changed")
     def test_global_config_updates(self):
@@ -56,9 +53,9 @@ class TestLiveUpdates(unittest.TestCase):
                         main()
 
                     # Check that global config was updated
-                    self.assertEqual(_global_flow_config['paths'], ['/test/path'])
-                    self.assertTrue(_global_flow_config['enable_polling'])  # Should be True since poll_interval > 0
-                    self.assertEqual(_global_flow_config['poll_interval'], 45)
+                    assert _global_flow_config['paths'] == ['/test/path']
+                    assert _global_flow_config['enable_polling'] == True  # Should be True since poll_interval > 0
+                    assert _global_flow_config['poll_interval'] == 45
 
     @pytest.mark.skip(reason="Polling logic implementation changed")
     def test_polling_enable_logic(self):
@@ -72,12 +69,12 @@ class TestLiveUpdates(unittest.TestCase):
                     # Test with poll_interval = 0 (should disable polling)
                     with patch('sys.argv', ['main_interactive_query.py', '--poll', '0', '/test']):
                         main()
-                    self.assertFalse(_global_flow_config['enable_polling'])
+                    assert _global_flow_config['enable_polling'] == False
 
                     # Test with poll_interval > 0 (should enable polling)
                     with patch('sys.argv', ['main_interactive_query.py', '--poll', '30', '/test']):
                         main()
-                    self.assertTrue(_global_flow_config['enable_polling'])
+                    assert _global_flow_config['enable_polling'] == True
 
     def test_live_update_flow_configuration(self):
         """Test that live update mode configures the flow correctly."""
@@ -95,9 +92,9 @@ class TestLiveUpdates(unittest.TestCase):
         _global_flow_config.update(test_config)
 
         # Verify configuration
-        self.assertEqual(_global_flow_config['paths'], ['/test/path1', '/test/path2'])
-        self.assertTrue(_global_flow_config['enable_polling'])
-        self.assertEqual(_global_flow_config['poll_interval'], 60)
+        assert _global_flow_config['paths'] == ['/test/path1', '/test/path2']
+        assert _global_flow_config['enable_polling'] == True
+        assert _global_flow_config['poll_interval'] == 60
 
         # Restore original config
         _global_flow_config.clear()
@@ -105,4 +102,4 @@ class TestLiveUpdates(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    pytest.main()

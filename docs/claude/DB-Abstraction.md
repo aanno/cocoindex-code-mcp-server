@@ -472,3 +472,137 @@ migrate_backend(
 - **Elasticsearch**: Traditional search with vector support
 
 This abstraction layer provides a solid foundation for extending the CocoIndex MCP Server to support any vector database while maintaining clean, type-safe, and MCP-compliant interfaces.
+
+## Adding New Fields to the Database Schema
+
+### Overview
+
+The CocoIndex MCP Server uses a sophisticated field mapping system that automatically handles database schema evolution. Adding new fields is streamlined through the `CONST_FIELD_MAPPINGS` in `mappers.py`, which serves as the single source of truth for all database fields.
+
+### General Process for Adding Fields
+
+#### Step 1: Update Field Mappings
+
+Add your new field to `CONST_FIELD_MAPPINGS` in `src/cocoindex_code_mcp_server/mappers.py`:
+
+```python
+CONST_FIELD_MAPPINGS = {
+    # ... existing fields ...
+    "your_new_field": "your_new_field",  # Database column name
+}
+```
+
+#### Step 2: Add Extraction Function (if from metadata)
+
+If your field comes from `metadata_json`, create an extraction function in `src/cocoindex_code_mcp_server/cocoindex_config.py`:
+
+```python
+@cocoindex.op.function()
+def extract_your_new_field(metadata_json: str) -> str:
+    """Extract your_new_field from metadata JSON."""
+    return extract_string_field(metadata_json, "your_new_field", "default_value")
+```
+
+#### Step 3: Add Field Transformation (if needed)
+
+If your field needs processing, add the transformation in the chunk processing section:
+
+```python
+# Around line 1420 in cocoindex_config.py
+chunk["your_new_field"] = chunk["extracted_metadata"].transform(extract_your_new_field)
+```
+
+#### Step 4: Automatic Collection
+
+The automated collection system will automatically include your field in the database operations. No manual updates to the `collect()` call are needed - this is handled dynamically via `CONST_FIELD_MAPPINGS`.
+
+### PostgreSQL-Specific Implementation
+
+PostgreSQL backend includes additional safeguards for schema evolution through dynamic column introspection.
+
+#### Column Introspection and Caching
+
+The PostgreSQL backend automatically detects available database columns and caches this information:
+
+```python
+# In postgres_backend.py
+@cached(column_cache)
+def _get_table_columns(pool: ConnectionPool, table_name: str) -> Set[str]:
+    """Get available columns from database with caching (60s TTL)."""
+    # Queries information_schema.columns for actual database schema
+```
+
+#### Dynamic Field Filtering
+
+The backend only selects fields that actually exist in the database:
+
+```python
+def _build_select_clause(self, include_distance: bool = False) -> Tuple[str, List[str]]:
+    """Build SELECT clause dynamically using only available DB columns."""
+    available_columns = self._get_available_columns()
+    
+    # Filter CONST_SELECTABLE_FIELDS to only those that exist
+    for field in CONST_SELECTABLE_FIELDS:
+        if field in available_columns:
+            fields.append(field)
+        else:
+            missing_fields.append(field)
+    
+    # Log warnings for missing expected fields
+    if new_missing_fields:
+        logger.warning(f"Expected columns missing: {sorted(new_missing_fields)}")
+```
+
+#### PostgreSQL Field Addition Workflow
+
+1. **Add to CONST_FIELD_MAPPINGS**: Your field is now tracked by the system
+2. **Run your application**: The backend detects the missing column and logs a warning
+3. **Add database column**: Use migration to add the actual column to PostgreSQL
+4. **Column automatically included**: On next run, the column introspection detects the new field and includes it in queries
+
+#### Example: Adding a `complexity_rating` Field
+
+```python
+# Step 1: Add to mappers.py
+CONST_FIELD_MAPPINGS = {
+    # ... existing fields ...
+    "complexity_rating": "complexity_rating",
+}
+
+# Step 2: Add extraction function (if from metadata)
+@cocoindex.op.function()
+def extract_complexity_rating_field(metadata_json: str) -> int:
+    """Extract complexity_rating from metadata JSON."""
+    return extract_int_field(metadata_json, "complexity_rating", 0)
+
+# Step 3: Add transformation (if needed)
+chunk["complexity_rating"] = chunk["extracted_metadata"].transform(extract_complexity_rating_field)
+
+# Step 4: Add PostgreSQL column (migration)
+ALTER TABLE codeembedding__code_embeddings 
+ADD COLUMN complexity_rating INTEGER DEFAULT 0;
+```
+
+#### Migration Handling
+
+For PostgreSQL, you'll need to add the actual column to your database schema:
+
+```sql
+-- Add the new column with appropriate type and default
+ALTER TABLE codeembedding__code_embeddings 
+ADD COLUMN your_new_field VARCHAR(255) DEFAULT '';
+
+-- Add index if needed for query performance
+CREATE INDEX IF NOT EXISTS idx_your_new_field 
+ON codeembedding__code_embeddings(your_new_field);
+```
+
+#### Benefits of This Approach
+
+1. **Graceful Degradation**: Application continues working even when database schema is behind
+2. **Warning System**: Clear logs about missing expected columns  
+3. **Automatic Integration**: New columns are automatically detected and used once added
+4. **Caching**: Column introspection is cached (60s TTL) for performance
+5. **Case Handling**: Automatic handling of PostgreSQL's lowercase table name conventions
+
+This system ensures robust database schema evolution while maintaining backward compatibility and providing clear feedback about schema mismatches.

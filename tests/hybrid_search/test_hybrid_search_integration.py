@@ -5,9 +5,8 @@ Integration tests for the hybrid search workflow.
 """
 
 import tempfile
-from unittest.mock import MagicMock, Mock, patch
-
 import pytest
+from unittest.mock import Mock
 
 # Package should be installed via maturin develop or pip install -e .
 
@@ -29,10 +28,14 @@ def temp_directory():
 class TestMainHybridSearchIntegration:
     """Integration tests for the main hybrid search entry point."""
 
-    @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
-    @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
-    def test_argument_parsing_basic(self, mock_load_dotenv: MagicMock, mock_cocoindex_init: MagicMock):
+    # @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
+    # @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
+    def test_argument_parsing_basic(self, mocker): 
+        # mock_load_dotenv: MagicMock, mock_cocoindex_init: MagicMock):
         """Test basic argument parsing."""
+        mock_load_dotenv = mocker.patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
+        mock_cocoindex_init = mocker.patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
+        
         try:
             from cocoindex_code_mcp_server.main_hybrid_search import (
                 determine_paths,
@@ -40,20 +43,25 @@ class TestMainHybridSearchIntegration:
             )
 
             # Test default arguments
-            with patch('sys.argv', ['main_hybrid_search.py']):
-                args = parse_hybrid_search_args()
-                paths = determine_paths(args)
+            mocker.patch('sys.argv', ['main_hybrid_search.py'])
+            args = parse_hybrid_search_args()
+            paths = determine_paths(args)
 
-                assert paths is None  # Should use default
-                assert not args.no_live  # Live updates enabled by default
-                assert args.poll == 60  # Default polling interval
+            assert paths is None  # Should use default
+            assert not args.no_live  # Live updates enabled by default
+            assert args.poll == 60  # Default polling interval
         except ImportError:
             pytest.skip("CocoIndex not available in test environment")
 
-    @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
-    @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
-    def test_argument_parsing_custom_paths(self, mock_load_dotenv: MagicMock, mock_cocoindex_init: MagicMock):
+    # @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
+    # @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
+    def test_argument_parsing_custom_paths(self, mocker): 
+        # mock_load_dotenv: MagicMock, mock_cocoindex_init: MagicMock)
         """Test argument parsing with custom paths."""
+        mock_load_dotenv = mocker.patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
+        mock_cocoindex_init = mocker.patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
+
+        
         try:
             from cocoindex_code_mcp_server.main_hybrid_search import (
                 determine_paths,
@@ -61,72 +69,85 @@ class TestMainHybridSearchIntegration:
             )
 
             # Test with positional paths
-            with patch('sys.argv', ['main_hybrid_search.py', '/path1', '/path2']):
-                args = parse_hybrid_search_args()
-                paths = determine_paths(args)
+            mocker.patch('sys.argv', ['main_hybrid_search.py', '/path1', '/path2'])
+            args = parse_hybrid_search_args()
+            paths = determine_paths(args)
 
-                assert paths == ['/path1', '/path2']
+            assert paths == ['/path1', '/path2']
         except ImportError:
             pytest.skip("CocoIndex not available in test environment")
 
-    @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
-    @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
-    def test_argument_parsing_no_live(self, mock_load_dotenv: MagicMock, mock_cocoindex_init: MagicMock):
+    # @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
+    # @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
+    def test_argument_parsing_no_live(self, mocker): 
+        # mock_load_dotenv: MagicMock, mock_cocoindex_init: MagicMock)
         """Test argument parsing with live updates disabled."""
+        mock_load_dotenv = mocker.patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
+        mock_cocoindex_init = mocker.patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
+        
         try:
             from cocoindex_code_mcp_server.main_hybrid_search import (
                 parse_hybrid_search_args,
             )
 
-            with patch('sys.argv', ['main_hybrid_search.py', '--no-live']):
-                args = parse_hybrid_search_args()
+            mocker.patch('sys.argv', ['main_hybrid_search.py', '--no-live'])
+            args = parse_hybrid_search_args()
 
-                assert args.no_live
+            assert args.no_live
         except ImportError:
             pytest.skip("CocoIndex not available in test environment")
 
-    @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
-    @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
-    def test_argument_parsing_custom_poll(self, mock_load_dotenv: MagicMock, mock_cocoindex_init: MagicMock):
+    # @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
+    # @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
+    def test_argument_parsing_custom_poll(self, mocker): 
+        # mock_load_dotenv: MagicMock, mock_cocoindex_init: MagicMock)
         """Test argument parsing with custom polling interval."""
+        mock_load_dotenv = mocker.patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
+        mock_cocoindex_init = mocker.patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
+
         try:
             from cocoindex_code_mcp_server.main_hybrid_search import (
                 parse_hybrid_search_args,
             )
 
-            with patch('sys.argv', ['main_hybrid_search.py', '--poll', '30']):
-                args = parse_hybrid_search_args()
+            mocker.patch('sys.argv', ['main_hybrid_search.py', '--poll', '30'])
+            args = parse_hybrid_search_args()
 
-                assert args.poll == 30
+            assert args.poll == 30
         except ImportError:
             pytest.skip("CocoIndex not available in test environment")
 
-    @patch('cocoindex_code_mcp_server.main_hybrid_search.update_flow_config')
-    @patch('cocoindex_code_mcp_server.main_hybrid_search.run_interactive_hybrid_search')
-    @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
     @pytest.mark.skip(reason='Integration test needs complex database mocking')
-    @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
-    def test_main_workflow_no_live(self, mock_load_dotenv, mock_cocoindex_init,
-                                   mock_run_interactive, mock_update_config):
+    # @patch('cocoindex_code_mcp_server.main_hybrid_search.update_flow_config')
+    # @patch('cocoindex_code_mcp_server.main_hybrid_search.run_interactive_hybrid_search')
+    # @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
+    # @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
+    def test_main_workflow_no_live(self, mocker): 
+        # mock_load_dotenv, mock_cocoindex_init, mock_run_interactive, mock_update_config)
         """Test main workflow without live updates."""
+        mock_load_dotenv = mocker.patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
+        mock_cocoindex_init = mocker.patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
+        mock_run_interactive = mocker.patch('cocoindex_code_mcp_server.main_hybrid_search.run_interactive_hybrid_search')
+        mock_update_config = mocker.patch('cocoindex_code_mcp_server.main_hybrid_search.update_flow_config')
+        
         try:
             from cocoindex_code_mcp_server.main_hybrid_search import main
 
             # Mock the flow update
-            with patch('main_hybrid_search.code_embedding_flow') as mock_flow:
-                mock_flow.update.return_value = {"processed": 10}
+            mock_flow = mocker.patch('main_hybrid_search.code_embedding_flow')
+            mock_flow.update.return_value = {"processed": 10}
 
-                with patch('sys.argv', ['main_hybrid_search.py', '--no-live']):
-                    main()
+            mocker.patch('sys.argv', ['main_hybrid_search.py', '--no-live'])
+            main()
 
-                    # Verify configuration was updated
-                    mock_update_config.assert_called_once()
+            # Verify configuration was updated
+            mock_update_config.assert_called_once()
 
-                    # Verify flow update was called
-                    mock_flow.update.assert_called_once()
+            # Verify flow update was called
+            mock_flow.update.assert_called_once()
 
-                    # Verify interactive search was started
-                    mock_run_interactive.assert_called_once()
+            # Verify interactive search was started
+            mock_run_interactive.assert_called_once()
         except ImportError:
             pytest.skip("CocoIndex not available in test environment")
 
@@ -152,14 +173,20 @@ class TestWorkflowIntegration:
 
         return mock_pool, mock_conn, mock_cursor
 
-    @patch('cocoindex_code_mcp_server.cocoindex_code_mcp_server.hybrid_search.os.getenv')
-    @patch('cocoindex_code_mcp_server.cocoindex_code_mcp_server.hybrid_search.ConnectionPool')
-    def test_interactive_hybrid_search_workflow(self, mock_pool_class, mock_getenv, mock_database_setup):
+    # @patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.os.getenv')
+    # @patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.ConnectionPool')
+    def test_interactive_hybrid_search_workflow(self, mocker): 
+        # mock_pool_class, mock_getenv, mock_database_setup):
         """Test the complete interactive hybrid search workflow."""
+        mock_getenv = mocker.patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.os.getenv')
+        mock_pool_class = mocker.patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.ConnectionPool')
+        
         try:
             # Mock environment and database setup
             mock_getenv.return_value = "postgresql://test"
-            mock_pool, mock_conn, mock_cursor = mock_database_setup
+            mock_pool = mocker.Mock()
+            mock_conn = mocker.Mock()
+            mock_cursor = mocker.Mock()
             mock_pool_class.return_value = mock_pool
 
             # Mock database results
@@ -168,23 +195,23 @@ class TestWorkflowIntegration:
             ]
 
             # Mock user input
-            with patch('builtins.input') as mock_input:
-                # Simulate user entering queries and then empty query to quit
-                mock_input.side_effect = [
-                    "authentication functions",  # vector query
-                    "language:python",           # keyword query
-                    "",                         # empty query to quit
-                ]
+            mock_input = mocker.patch('builtins.input')
+            # Simulate user entering queries and then empty query to quit
+            mock_input.side_effect = [
+                "authentication functions",  # vector query
+                "language:python",           # keyword query
+                "",                         # empty query to quit
+            ]
 
-                from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
-                    run_interactive_hybrid_search,
-                )
+            from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
+                run_interactive_hybrid_search,
+            )
 
-                # Should not raise any exceptions
-                run_interactive_hybrid_search()
+            # Should not raise any exceptions
+            run_interactive_hybrid_search()
 
-                # Verify database connection was created
-                mock_pool_class.assert_called_once_with("postgresql://test")
+            # Verify database connection was created
+            mock_pool_class.assert_called_once_with("postgresql://test")
         except ImportError:
             pytest.skip("CocoIndex not available in test environment")
 
@@ -297,9 +324,12 @@ class TestWorkflowIntegration:
 class TestConfigurationIntegration:
     """Test configuration and setup integration."""
 
-    @patch('cocoindex_code_mcp_server.cocoindex_config.code_embedding_flow')
-    def test_flow_configuration_update(self, mock_flow: MagicMock):
+    # @patch('cocoindex_code_mcp_server.cocoindex_config.code_embedding_flow')
+    def test_flow_configuration_update(self, mocker): 
+        # mock_flow: MagicMock)
         """Test that flow configuration is properly updated."""
+        mock_flow = mocker.patch('cocoindex_code_mcp_server.cocoindex_config.code_embedding_flow')
+        
         try:
             from cocoindex_code_mcp_server.cocoindex_config import update_flow_config
 
@@ -319,9 +349,12 @@ class TestConfigurationIntegration:
         except ImportError:
             pytest.skip("CocoIndex not available in test environment")
 
-    @patch('cocoindex_code_mcp_server.cocoindex_config.code_embedding_flow')
-    def test_flow_configuration_defaults(self, mock_flow: MagicMock):
+    # @patch('cocoindex_code_mcp_server.cocoindex_config.code_embedding_flow')
+    def test_flow_configuration_defaults(self, mocker):
+        # mock_flow: MagicMock):
         """Test flow configuration with default values."""
+        mock_flow = mocker.patch('cocoindex_code_mcp_server.cocoindex_config.code_embedding_flow')
+        
         try:
             from cocoindex_code_mcp_server.cocoindex_config import update_flow_config
 
@@ -354,7 +387,9 @@ class TestErrorHandling:
             mock_pool = Mock()
             mock_pool.connection.side_effect = Exception("Database connection failed")
 
-            from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
+            from cocoindex_code_mcp_server.keyword_search_parser_lark import (
+                KeywordSearchParser,
+            )
             parser = KeywordSearchParser()
             engine = HybridSearchEngine(
                 table_name="test_embeddings",
@@ -413,7 +448,9 @@ class TestErrorHandling:
 
             mock_pool = Mock()
 
-            from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
+            from cocoindex_code_mcp_server.keyword_search_parser_lark import (
+                KeywordSearchParser,
+            )
             parser = KeywordSearchParser()
             engine = HybridSearchEngine(
                 table_name="test_embeddings",
@@ -475,7 +512,9 @@ class TestPerformanceCharacteristics:
 
     def test_query_complexity_handling(self):
         """Test handling of complex queries."""
-        from cocoindex_code_mcp_server.keyword_search_parser import KeywordSearchParser
+        from cocoindex_code_mcp_server.keyword_search_parser_lark import (
+            KeywordSearchParser,
+        )
 
         parser = KeywordSearchParser()
 

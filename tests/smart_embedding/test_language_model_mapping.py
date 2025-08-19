@@ -6,6 +6,7 @@ Tests that different programming languages are correctly mapped to appropriate e
 
 from types import FunctionType
 from typing import cast
+
 import pytest
 
 from cocoindex_code_mcp_server.cocoindex_config import (

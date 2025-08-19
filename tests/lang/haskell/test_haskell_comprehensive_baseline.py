@@ -10,7 +10,7 @@ Compares our specialized HaskellASTVisitor implementation against multiple basel
 
 import json
 from pathlib import Path
-from typing import List, Optional, Set, Union, Any, Dict
+from typing import Any, Dict, List, Optional, Set, Union
 
 import pytest
 
@@ -40,7 +40,7 @@ class HaskellBaselineComparison:
     def __init__(self):
         """Initialize with test fixture."""
         # Load the test Haskell file
-        self.fixture_path = Path(__file__).parent.parent.parent / 'fixtures' / 'test_haskell.hs'
+        self.fixture_path = Path(__file__).parent.parent.parent / 'fixtures' / 'lang_examples' / 'HaskellExample1.hs'
 
         if not self.fixture_path.exists():
             raise FileNotFoundError(f"Test fixture not found: {self.fixture_path}")
@@ -374,7 +374,8 @@ class TestHaskellComprehensiveBaseline:
         """Set up comparison suite."""
         self.comparison = HaskellBaselineComparison()
 
-    def test_comprehensive_baseline_comparison(self) -> Dict[str, Union[str, int, List[str], Dict[str, Union[Dict[str, Union[str, List[str], int, bool, Dict[str, int], List[Dict[str, Union[str, bool, int]]], Dict[str, Optional[Union[str, int, Dict[str, int], List[str], bool, List[Dict[str, Union[str, bool, int]]]]]]]], Dict[str, Union[str, List[str], int, bool, Dict[str, int], Dict[str, Optional[Union[str, int, Dict[str, int], List[str], bool, List[Dict[str, Union[str, bool, int]]]]]]]], Dict[str, Union[str, List[str], int, bool]]]], Dict[str, Dict[str, Union[float, Set[str]]]]]]:
+    def test_comprehensive_baseline_comparison(self) -> Dict[str, Union[str, int, List[str], Dict[str, Union[Dict[str, Union[str, List[str], int, bool, Dict[str, int], List[Dict[str, Union[str, bool, int]]], Dict[str, Optional[Union[str, int, Dict[str, int], List[str], bool, List[Dict[str, Union[str, bool, int]]]]]]]],
+                                                                                                             Dict[str, Union[str, List[str], int, bool, Dict[str, int], Dict[str, Optional[Union[str, int, Dict[str, int], List[str], bool, List[Dict[str, Union[str, bool, int]]]]]]]], Dict[str, Union[str, List[str], int, bool]]]], Dict[str, Dict[str, Union[float, Set[str]]]]]]:
         """Run comprehensive comparison test."""
         summary = self.comparison.run_comprehensive_comparison()
 

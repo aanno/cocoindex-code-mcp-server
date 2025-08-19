@@ -8,11 +8,7 @@ Enhanced with tree-sitter AST analysis and multi-level fallback strategies.
 import ast
 import json
 import re
-from typing import Any, Dict, List, Set, Optional, Union
-
-from tree_sitter import Node
-
-from cocoindex_code_mcp_server.language_handlers.python_handler import PythonClass, PythonFunction, PythonImport
+from typing import Any, Dict, List, Optional, Set, Union
 
 from . import LOGGER
 
@@ -119,7 +115,8 @@ class PythonCodeAnalyzer:
             # Remove from visited set when done (allow revisiting in different contexts)
             self.visited_nodes.discard(node_id)
 
-    def _extract_function_info(self, node: ast.FunctionDef | ast.AsyncFunctionDef, class_context: Optional[str] = None, is_async: bool = False) -> None:
+    def _extract_function_info(self, node: ast.FunctionDef | ast.AsyncFunctionDef,
+                               class_context: Optional[str] = None, is_async: bool = False) -> None:
         """Extract information about function definitions."""
         func_info: Dict[str, Any] = {
             "name": node.name,
@@ -399,6 +396,14 @@ class PythonCodeAnalyzer:
             "private_methods": [f['name'] for f in self.functions if f['is_private']],
             "dunder_methods": [f['name'] for f in self.functions if f['is_dunder']],
 
+            # Promoted metadata fields for database columns
+            "analysis_method": "python_code_analyzer",
+            # don't set chunking method in analyzer
+            # "chunking_method": "ast_tree_sitter",
+            # "tree_sitter_chunking_error": False,
+            "tree_sitter_analyze_error": False,
+            "decorators_used": list(set(self.decorators)),
+
             # Additional metadata (RAG-pychunk: additional_metadata)
             "additional_metadata": {
                 "analysis_method": "python_ast",
@@ -500,7 +505,7 @@ class PythonCodeAnalyzer:
             "has_async": has_async,
             "has_classes": has_classes,
             "decorators_used": [],  # Could regex for @decorator if needed
-            "analysis_method": "regex_fallback",
+            "analysis_method": "python_regex_fallback",
         }
 
         # Add metadata_json field for compatibility
@@ -510,7 +515,7 @@ class PythonCodeAnalyzer:
         return fallback_metadata
 
 
-def analyze_python_code(code: str, filename: str = "") -> Union[Dict[str, Any],None]:
+def analyze_python_code(code: str, filename: str = "") -> Union[Dict[str, Any], None]:
     """
     Enhanced Python code analysis with tree-sitter support and fallback strategies.
 

@@ -11,19 +11,18 @@ import os
 import pytest
 from dotenv import load_dotenv
 from psycopg_pool import ConnectionPool
+import cocoindex
+
+from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
+    HybridSearchEngine,
+    format_results_readable,
+)
+from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
+
+from .cocoindex_util import get_default_db_name
 
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)
-
-try:
-    from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
-        HybridSearchEngine,
-        format_results_readable,
-    )
-    from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
-except ImportError as e:
-    LOGGER.warning(f"Could not import hybrid_search module: {e}")
-    print("⚠️  Warning: These are integration tests that require the full application setup.")
 
 
 @pytest.mark.integration
@@ -34,14 +33,18 @@ class TestMetadataSearch:
     def setup_search_engine(self):
         """Setup search engine for testing."""
         load_dotenv()
+        cocoindex.init()
+        # Import flow to register it
+        from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow
 
         db_url = os.getenv("COCOINDEX_DATABASE_URL")
         if not db_url:
             pytest.skip("COCOINDEX_DATABASE_URL not set")
 
         try:
+            name = get_default_db_name()
             self.pool = ConnectionPool(db_url)
-            self.search_engine = HybridSearchEngine("code_embeddings", KeywordSearchParser(), pool=self.pool)
+            self.search_engine = HybridSearchEngine(name, KeywordSearchParser(), pool=self.pool)
 
             # Check if the required table exists
             with self.pool.connection() as conn:
@@ -49,19 +52,19 @@ class TestMetadataSearch:
                     cur.execute("""
                         SELECT EXISTS (
                             SELECT FROM information_schema.tables
-                            WHERE table_name = 'code_embeddings'
+                            WHERE table_name = %s
                         );
-                    """)
+                    """, (name,))
                     if cur is not None:
                         one = cur.fetchone()
                         if one is not None:
                             table_exists = one[0]
                             if not table_exists:
-                                pytest.skip("code_embeddings table does not exist - database not initialized")
+                                pytest.skip(f"{name} table does not exist - database not initialized")
                         else:
-                                pytest.skip("code_embeddings table does not exist - database not initialized")
+                            pytest.skip(f"{name} table does not exist - database not initialized")
                     else:
-                        pytest.fail("code_embeddings table does not exist - database not initialized")
+                        pytest.fail(f"{name} table does not exist - database not initialized")
         except Exception as e:
             pytest.skip(f"Could not connect to database or check table: {e}")
 
@@ -164,8 +167,9 @@ def run_manual_metadata_search():
         return
 
     try:
+        name = get_default_db_name()
         pool = ConnectionPool(db_url)
-        search_engine = HybridSearchEngine("code_embeddings", KeywordSearchParser(), pool=pool)
+        search_engine = HybridSearchEngine(name, KeywordSearchParser(), pool=pool)
     except Exception as e:
         print(f"❌ Could not connect to database: {e}")
         return

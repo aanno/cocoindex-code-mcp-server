@@ -5,8 +5,6 @@ Haskell-specific AST node handler for tree-sitter based analysis.
 Handles Haskell-specific constructs like data types, type classes, modules, etc.
 """
 
-from cocoindex_code_mcp_server.ast_visitor import Position
-from tree_sitter import Node
 import os
 import re
 
@@ -14,6 +12,10 @@ import re
 import sys
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
+
+from tree_sitter import Node
+
+from cocoindex_code_mcp_server.ast_visitor import Position
 
 from ..ast_visitor import NodeContext
 from . import LOGGER
@@ -470,7 +472,7 @@ class HaskellNodeHandler:
     # def _handle_type_declaration(self, context: NodeContext) -> Dict[str, Any]:
     #     """Handle type synonym declarations."""
     #     return self._handle_type_declaration(context, 'type')
-    
+
     def _handle_data_declaration(self, context: NodeContext) -> Dict[str, Any]:
         return self._handle_type_declaration(context, 'data')
 

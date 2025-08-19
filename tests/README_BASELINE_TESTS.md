@@ -19,7 +19,7 @@ The test compares three analysis methods:
 
 ### Test Fixture
 
-The test uses `tests/fixtures/test_haskell.hs` which contains:
+The test uses `tests/fixtures/lang_examples/HaskellExample1.hs` which contains:
 - **7 functions**: `fibonacci`, `sumList`, `treeMap`, `compose`, `addTen`, `multiplyByTwo`, `main`
 - **2 data types**: `Person`, `Tree`
 
@@ -93,7 +93,7 @@ You can import and run the test programmatically:
 
 ```python
 import sys
-sys.path.append('tests/lang/haskell')
+# sys.path.append('tests/lang/haskell')
 from test_haskell_comprehensive_baseline import TestHaskellComprehensiveBaseline
 
 # Create test instance and run comparison

@@ -7,14 +7,15 @@ This avoids the complexity of trying to wrap chunks in a generic tree-sitter int
 
 import os
 import sys
-from typing import Any, Dict, Union
+from typing import Any, Dict
 
 from tree_sitter import Node
+
+from cocoindex_code_mcp_server.ast_visitor import Position
 
 from ..ast_visitor import GenericMetadataVisitor, NodeContext
 from ..language_handlers.haskell_handler import HaskellNodeHandler
 from . import LOGGER
-from cocoindex_code_mcp_server.ast_visitor import Position
 
 # Import from parent directory
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
@@ -43,25 +44,35 @@ class HaskellASTVisitor(GenericMetadataVisitor):
             return self._fallback_analysis(code, filename)
 
         try:
-            # Get chunks directly from haskell_tree_sitter
-            chunks = haskell_tree_sitter.get_haskell_ast_chunks_with_fallback(code)
+            # Use enhanced error-aware chunking
+            chunking_result = haskell_tree_sitter.get_haskell_ast_chunks_enhanced(code)
 
             # Process each chunk using our handler
-            for chunk in chunks:
+            for chunk in chunking_result.chunks():
                 self._process_chunk(chunk, code)
 
-            # Build metadata result
+            # Build metadata result with error information
+            error_stats = chunking_result.error_stats()
+            # Use display language name for database storage
+            from ..mappers import get_display_language_name
             metadata = {
-                'language': 'haskell',
+                'language': get_display_language_name('haskell'),
                 'filename': filename,
                 'line_count': len(code.split('\n')),
                 'char_count': len(code),
                 'analysis_method': 'haskell_chunk_visitor',
+                'chunking_method': chunking_result.chunking_method(),
                 'errors': self.errors,
                 'node_stats': self.node_stats,
                 'complexity_score': self.complexity_score,
-                'parse_errors': 0,  # haskell_tree_sitter handles parse errors internally
-                'tree_language': 'haskell_tree_sitter'
+                'parse_errors': error_stats.error_count(),
+                'error_count': error_stats.error_count(),
+                'nodes_with_errors': error_stats.nodes_with_errors(),
+                'should_fallback': error_stats.should_fallback(),
+                'coverage_complete': chunking_result.coverage_complete(),
+                'tree_language': 'haskell_tree_sitter',
+                'tree_sitter_analyze_error': 'true' if error_stats.error_count() > 0 else 'false',
+                'success': True
             }
 
             # Add Haskell-specific metadata from handler
@@ -103,8 +114,10 @@ class HaskellASTVisitor(GenericMetadataVisitor):
         """Fallback to basic text analysis when haskell_tree_sitter isn't available."""
         lines = code.split('\n')
 
+        # Use display language name for database storage
+        from ..mappers import get_display_language_name
         return {
-            'language': 'haskell',
+            'language': get_display_language_name('haskell'),
             'filename': filename,
             'line_count': len(lines),
             'char_count': len(code),
@@ -114,6 +127,7 @@ class HaskellASTVisitor(GenericMetadataVisitor):
             'complexity_score': 0,
             'parse_errors': 0,
             'tree_language': 'fallback',
+            'tree_sitter_analyze_error': 'false',  # No tree-sitter used in fallback
 
             # Basic Haskell-specific analysis
             'module': None,
@@ -167,7 +181,7 @@ class HaskellChunkContext(NodeContext):
         from ..ast_visitor import Position
         line = 1
         byte_offset = 0
-        
+
         # Handle both tree-sitter node and chunk interfaces
         if hasattr(self.node, 'start_point'):
             point = self.node.start_point
@@ -189,7 +203,7 @@ class HaskellChunkContext(NodeContext):
                     line = int(start_line_attr) if isinstance(start_line_attr, (int, float, str)) else 1
                 except (ValueError, TypeError):
                     line = 1
-                
+
         if hasattr(self.node, 'start_byte'):
             start_byte_attr = getattr(self.node, 'start_byte')
             if callable(start_byte_attr):
@@ -203,7 +217,7 @@ class HaskellChunkContext(NodeContext):
                     byte_offset = int(start_byte_attr) if isinstance(start_byte_attr, (int, float, str)) else 0
                 except (ValueError, TypeError):
                     byte_offset = 0
-            
+
         return Position(
             line=line,
             column=0,  # haskell_tree_sitter doesn't provide column info

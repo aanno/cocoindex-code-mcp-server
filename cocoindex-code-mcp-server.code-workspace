@@ -18,11 +18,13 @@
 		"python.analysis.typeCheckingMode": "basic",
 		"python.languageServer": "Pylance",
 		"flake8.args": [
-			"--exclude = [\".git\", \"__pycache__\", \".venv\", \"build\", \"dist\", \"docs\"]", "--max-line-length=120", 
+			"--exclude = [\".git\", \"__pycache__\", \".venv\", \"build\", \"dist\", \"docs\"]",
+			"--max-line-length=120",
 			"--extend-ignore = [\"E203\", \"W503\"]"
 		],
 		"autopep8.args": [
-			"--max_line_length", "120"
+			"--max_line_length",
+			"120"
 		]
 	},
 	"tasks": {
@@ -117,6 +119,22 @@
 				"request": "launch",
 				"program": "${file}",
 				"console": "integratedTerminal"
+			},
+			{
+				"name": "Python: Debug current pytest file",
+				"type": "debugpy",
+				"request": "launch",
+				"module": "pytest",
+				"args": [
+					"-c",
+					"pytest.ini",
+					"${file}"
+				],
+				"console": "integratedTerminal",
+				"purpose": [
+					"debug-test"
+				],
+				"justMyCode": false
 			},
 			{
 				"name": "debugpy: MCP RAG Server (IT)",

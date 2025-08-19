@@ -7,6 +7,7 @@ Tests that embedding functions are properly defined and configured.
 import inspect
 
 import pytest
+import cocoindex
 
 from cocoindex_code_mcp_server.cocoindex_config import (
     SMART_EMBEDDING_AVAILABLE,
@@ -19,6 +20,12 @@ from cocoindex_code_mcp_server.cocoindex_config import (
 
 class TestEmbeddingFunctions:
     """Test smart embedding function definitions and configurations."""
+
+    @pytest.fixture(autouse=True)
+    def setup_cocoindex(self):
+        """Setup CocoIndex before each test."""
+        cocoindex.init()
+        yield
 
     def test_smart_embedding_enabled(self):
         """Test that smart embedding is enabled."""
@@ -69,7 +76,9 @@ class TestEmbeddingFunctions:
             docstring = func.__doc__.lower()
 
             for keyword in keywords:
-                assert keyword.lower() in docstring, f"{getattr(func, '__name__', str(func))} docstring should mention '{keyword}'"
+                assert keyword.lower() in docstring, f"{
+                    getattr(
+                        func, '__name__', str(func))} docstring should mention '{keyword}'"
 
     def test_transform_flow_decorators(self):
         """Test that embedding functions are properly decorated with @cocoindex.transform_flow()."""
@@ -99,7 +108,9 @@ class TestEmbeddingFunctions:
 
             # Check parameter annotation (this might be complex due to CocoIndex types)
             text_param = sig.parameters['text']
-            assert text_param.annotation is not None, f"{getattr(func, '__name__', str(func))} 'text' parameter should have type annotation"
+            assert text_param.annotation is not None, f"{
+                getattr(
+                    func, '__name__', str(func))} 'text' parameter should have type annotation"
 
     def test_all_functions_defined(self):
         """Test that all required embedding functions are defined."""

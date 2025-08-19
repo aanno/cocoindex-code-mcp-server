@@ -5,11 +5,13 @@ JavaScript-specific AST visitor for metadata extraction.
 Follows the same pattern as other language visitors by subclassing GenericMetadataVisitor.
 """
 
-from tree_sitter import Node
 import logging
 from typing import Any, Dict, List, Optional
 
+from tree_sitter import Node
+
 from ..ast_visitor import GenericMetadataVisitor, NodeContext
+from ..parser_util import update_defaults
 
 LOGGER = logging.getLogger(__name__)
 
@@ -203,14 +205,24 @@ def analyze_javascript_code(code: str, language: str = "javascript", filename: s
 
         # Get results from visitor
         result = visitor.get_summary()
-        result.update({
+        # result.update({
+        update_defaults(result, {
             'success': True,
             'language': language,
             'filename': filename,
             'line_count': code.count('\n') + 1,
             'char_count': len(code),
             'parse_errors': 0,
-            'tree_language': str(parser.language) if parser else None
+            'tree_language': str(parser.language) if parser else None,
+            # Required metadata fields for promoted column implementation
+            # don't set chunking method in analyzer
+            # "chunking_method": "ast_tree_sitter",
+            # "tree_sitter_chunking_error": False,
+            'tree_sitter_analyze_error': False,
+            'decorators_used': [],  # JavaScript doesn't commonly use decorators
+            'has_type_hints': language.lower() in ['typescript', 'ts'],  # TypeScript has type hints
+            'has_async': any('async' in func.lower() for func in result.get('functions', [])),
+            'has_classes': len(result.get('classes', [])) > 0
         })
 
         LOGGER.debug(

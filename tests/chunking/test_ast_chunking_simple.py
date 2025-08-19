@@ -4,7 +4,7 @@
 Simple test of ASTChunk functionality.
 """
 
-from astchunk import ASTChunkBuilder
+from astchunk import ASTChunkBuilder  # type: ignore
 
 
 def test_astchunk_import():

@@ -6,7 +6,7 @@ Each handler implements the NodeHandler protocol for a specific programming lang
 """
 
 import logging
-from typing import Any, Optional
+from typing import Any, Dict, Optional, Type
 
 LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ except ImportError:
     HASKELL_HANDLER_AVAILABLE = False
 
 # Registry of available handlers
-from typing import Dict, Any, Type
+
 AVAILABLE_HANDLERS: Dict[str, Type[Any]] = {}
 
 if PYTHON_HANDLER_AVAILABLE:

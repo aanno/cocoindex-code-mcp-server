@@ -15,11 +15,14 @@ from psycopg_pool import ConnectionPool
 import cocoindex
 from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow
 from cocoindex_code_mcp_server.db.pgvector.hybrid_search import HybridSearchEngine
+from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
+
+from ..cocoindex_util import get_default_db_name
 
 # Package should be installed via maturin develop or pip install -e .
 
 # TODO:
-# The e2e tests are failing because they're trying to access a real database table code_embeddings that doesn't exist. 
+# The e2e tests are failing because they're trying to access a real database table code_embeddings that doesn't exist.
 # These are integration tests that expect actual database setup.
 
 LOGGER = logging.getLogger(__name__)
@@ -60,9 +63,9 @@ def db_pool():
 @pytest.fixture
 def search_engine(db_pool):
     """Create HybridSearchEngine instance."""
-    from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
+    name = get_default_db_name()
     parser = KeywordSearchParser()
-    return HybridSearchEngine(table_name="code_embeddings", parser=parser, pool=db_pool)
+    return HybridSearchEngine(table_name=name, parser=parser, pool=db_pool)
 
 
 @pytest.mark.integration

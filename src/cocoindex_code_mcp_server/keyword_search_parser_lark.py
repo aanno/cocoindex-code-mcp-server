@@ -11,22 +11,12 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, List, Union
 
-try:
-    from lark import Lark, Token, Transformer
-    from lark.exceptions import LarkError, ParseError
-    LARK_AVAILABLE = True
-except ImportError:
-    LARK_AVAILABLE = False
-
-# Import the fallback parser components
-from .keyword_search_parser import KeywordSearchParser as FallbackParser
-from .keyword_search_parser import (
-    build_sql_where_clause as fallback_build_sql_where_clause,
-)
-FALLBACK_AVAILABLE = True
+from lark import Lark, Token, Transformer
+from lark.exceptions import LarkError, ParseError
 
 # Configure logging
 logger = logging.getLogger(__name__)
+
 
 class Operator(Enum):
     AND = "and"
@@ -133,36 +123,27 @@ class KeywordSearchParser:
         self.transformer = KeywordSearchTransformer()
         self.fallback_parser = None
 
-        if LARK_AVAILABLE:
-            try:
-                # Load the grammar file
-                grammar_path = Path(__file__).parent / "grammars" / "keyword_search.lark"
-                if grammar_path.exists():
-                    with open(grammar_path, 'r') as f:
-                        grammar = f.read()
+        try:
+            # Load the grammar file
+            grammar_path = Path(__file__).parent / "grammars" / "keyword_search.lark"
+            if grammar_path.exists():
+                with open(grammar_path, 'r') as f:
+                    grammar = f.read()
 
-                    self.lark_parser = Lark(
-                        grammar,
-                        parser='lalr',
-                        transformer=self.transformer,
-                        # Make keywords case insensitive
-                        lexer_callbacks={
-                            'UNQUOTED_VALUE': lambda t: Token('UNQUOTED_VALUE', t.value),
-                        }
-                    )
-                else:
-                    logger.warning(f"Grammar file not found at {grammar_path}, falling back to regex parser")
-            except Exception as e:
-                logger.warning(f"Failed to initialize Lark parser ({e}), falling back to regex parser")
-
-        # Initialize fallback parser if Lark is not available or failed
-        if self.lark_parser is None:
-            if FALLBACK_AVAILABLE:
-                self.fallback_parser = FallbackParser()
-                if not LARK_AVAILABLE:
-                    logger.warning("Lark not available, using regex-based parser")
+                self.lark_parser = Lark(
+                    grammar,
+                    parser='lalr',
+                    transformer=self.transformer,
+                    # Make keywords case insensitive
+                    lexer_callbacks={
+                        'UNQUOTED_VALUE': lambda t: Token('UNQUOTED_VALUE', t.value),
+                    }
+                )
             else:
-                logger.error("No parser available - neither Lark nor fallback parser could be loaded")
+                logger.warning(f"Grammar file not found at {grammar_path}, falling back to regex parser")
+        except Exception as e:
+            logger.warning(f"Failed to initialize Lark parser ({e}), falling back to regex parser")
+            raise
 
     def parse(self, query: str) -> SearchGroup:
         """
@@ -185,26 +166,19 @@ class KeywordSearchParser:
         if not query or not query.strip():
             return SearchGroup(conditions=[])
 
-        # Try Lark parser first
-        if self.lark_parser is not None:
-            try:
-                # Normalize case for keywords
-                normalized_query = self._normalize_keywords(query.strip())
+        try:
+            # Normalize case for keywords
+            normalized_query = self._normalize_keywords(query.strip())
+            if self.lark_parser is not None:
                 tree = self.lark_parser.parse(normalized_query)
                 # The tree is already transformed to SearchGroup during parsing
                 return tree  # type: ignore
-            except (LarkError, ParseError) as e:
-                logger.warning(f"Lark parser failed ({e}), falling back to regex parser")
-
-        # Fall back to regex parser
-        if self.fallback_parser is not None:
-            fallback_result = self.fallback_parser.parse(query)
-            # Convert fallback SearchGroup to our SearchGroup
-            return self._convert_from_fallback(fallback_result)
-        else:
-            # Last resort: return empty group
-            logger.error("No parser available")
-            return SearchGroup(conditions=[])
+            else:
+                logger.warning("No lark parser found, falling back to regex parser")
+                raise LarkError("No lark parser found")
+        except (LarkError, ParseError) as e:
+            logger.warning(f"Lark parser failed ({e}), falling back to regex parser")
+            raise
 
     def _normalize_keywords(self, query: str) -> str:
         """Normalize keywords to lowercase for case-insensitive parsing."""
@@ -229,36 +203,6 @@ class KeywordSearchParser:
 
         return result
 
-    def _convert_from_fallback(self, fallback_group: Any) -> SearchGroup:
-        """Convert fallback SearchGroup to our SearchGroup."""
-        from .keyword_search_parser import SearchGroup as FallbackSearchGroup, SearchCondition as FallbackSearchCondition
-        
-        if not isinstance(fallback_group, FallbackSearchGroup):
-            return SearchGroup(conditions=[])
-            
-        conditions: List[Union[SearchCondition, SearchGroup]] = []
-        for condition in fallback_group.conditions:
-            if isinstance(condition, FallbackSearchCondition):
-                # Convert SearchCondition
-                new_condition = SearchCondition(
-                    field=condition.field,
-                    value=condition.value,
-                    is_exists_check=getattr(condition, 'is_exists_check', False),
-                    is_value_contains_check=getattr(condition, 'is_value_contains_check', False)
-                )
-                conditions.append(new_condition)
-            elif isinstance(condition, FallbackSearchGroup):
-                # Recursively convert nested groups
-                converted_group = self._convert_from_fallback(condition)
-                conditions.append(converted_group)
-                
-        operator = Operator.AND
-        if hasattr(fallback_group, 'operator'):
-            if fallback_group.operator == "or":
-                operator = Operator.OR
-                
-        return SearchGroup(conditions=conditions, operator=operator)
-
 
 def build_sql_where_clause(search_group: SearchGroup, table_alias: str = "") -> tuple[str, List[Any]]:
     """
@@ -282,6 +226,13 @@ def build_sql_where_clause(search_group: SearchGroup, table_alias: str = "") -> 
 
     for condition in search_group.conditions:
         if isinstance(condition, SearchCondition):
+            # Handle special _text field first before validation
+            if condition.field == "_text":
+                # General text search across code content - map to 'code' field
+                where_parts.append(f"{prefix}code ILIKE %s")
+                params.append(f"%{condition.value}%")
+                continue
+                
             # Validate and map field name to prevent SQL injection and unknown column errors
             field_result = schema_validator.validate_field(condition.field)
             if not field_result.is_valid:
@@ -295,13 +246,22 @@ def build_sql_where_clause(search_group: SearchGroup, table_alias: str = "") -> 
                 # value_contains(field, "search_string") -> field ILIKE %search_string%
                 where_parts.append(f"{prefix}{validated_field} ILIKE %s")
                 params.append(f"%{condition.value}%")
-            elif condition.field == "_text":
-                # General text search across code content - map to 'code' field
-                where_parts.append(f"{prefix}code ILIKE %s")
-                params.append(f"%{condition.value}%")
             else:
-                where_parts.append(f"{prefix}{validated_field} = %s")
-                params.append(condition.value)
+                # Use case-insensitive comparison for better language matching
+                if validated_field == 'language':
+                    where_parts.append(f"LOWER({prefix}{validated_field}) = LOWER(%s)")
+                    params.append(condition.value)
+                else:
+                    # Check if this is an array field that needs special handling
+                    array_fields = {"functions", "classes", "imports"}
+                    if validated_field in array_fields:
+                        # These fields are stored as string representations of Python lists
+                        # Use LIKE to find the value within the string representation
+                        where_parts.append(f"{prefix}{validated_field} LIKE %s")
+                        params.append(f"%'{condition.value}'%")
+                    else:
+                        where_parts.append(f"{prefix}{validated_field} = %s")
+                        params.append(condition.value)
         elif isinstance(condition, SearchGroup):
             sub_where, sub_params = build_sql_where_clause(condition, table_alias)
             where_parts.append(f"({sub_where})")
@@ -330,7 +290,6 @@ if __name__ == "__main__":
     ]
 
     print(f"Using Lark parser: {parser.lark_parser is not None}")
-    print(f"LARK_AVAILABLE: {LARK_AVAILABLE}")
 
     for query in test_queries:
         print(f"\nQuery: {query}")

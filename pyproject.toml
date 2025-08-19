@@ -19,7 +19,8 @@ dependencies = [
     "astchunk @ git+https://github.com/yilinjz/astchunk.git",
     "lark-parser>=0.12.0",
     "prompt-toolkit>=3.0.0",
-    "asyncpg>=0.29.0",
+    "cachetools>=6.1.0",
+    "click>=8.2.1",
     "tree-sitter>=0.23.0,<0.24.0",
     "tree-sitter-python>=0.23.6",
     "tree-sitter-c-sharp>=0.23.1",
@@ -29,6 +30,7 @@ dependencies = [
     "tree-sitter-cpp>=0.22.3,<0.23.0",
     "tree-sitter-rust>=0.21.2,<0.23.0",
     "tree-sitter-kotlin>=1.0.0",
+    "tree-sitter-javascript>=0.23.1",
 ]
 
 [project.optional-dependencies]
@@ -66,6 +68,7 @@ build = [
     # linting
     "pydocstyle>=6.3.0",
     "ruff>=0.4.0",
+    # "asyncpg>=0.29.0",
 ]
 
 [tool.maturin]
@@ -111,7 +114,9 @@ max_line_length = 120
 check_untyped_defs = true
 ignore_missing_imports = false
 local_partial_types = false
+exclude = ["tests/fixtures/"]
 
 [[tool.mypy.overrides]]
-module = ["pgvector.*", "mypy-astchunk.*", "astchunk.*"]
+module = ["pgvector.*", "astchunk.*", "cachetools.*"]
 ignore_missing_imports = true
+ignore_errors = true

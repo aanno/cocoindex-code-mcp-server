@@ -8,6 +8,7 @@ from the proposed-rag-metadata.md specification.
 import json
 import logging
 import sys
+
 import pytest
 
 # Set up logger for tests
@@ -269,7 +270,13 @@ nested_structure = [
             print("-" * 40)
 
             node_rel = metadata.get('node_relationships', {})
-            expected_rel_fields = ["parent", "children", "scope", "contains", "class_hierarchies", "import_dependencies"]
+            expected_rel_fields = [
+                "parent",
+                "children",
+                "scope",
+                "contains",
+                "class_hierarchies",
+                "import_dependencies"]
 
             for rel_field in expected_rel_fields:
                 if rel_field in node_rel:
@@ -284,7 +291,7 @@ nested_structure = [
 
             add_meta = metadata.get('additional_metadata', {})
             expected_add_fields = ["analysis_method", "parser_version", "extracted_at",
-                                "total_functions", "total_classes", "total_imports", "code_patterns"]
+                                   "total_functions", "total_classes", "total_imports", "code_patterns"]
 
             for add_field in expected_add_fields:
                 if add_field in add_meta:

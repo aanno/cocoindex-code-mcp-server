@@ -7,7 +7,8 @@ Moved from src/python_code_analyzer.py to tests/
 
 import logging
 import sys
-from typing import Any, Union, Dict
+from typing import Any, Dict, Union
+
 import pytest
 
 from cocoindex_code_mcp_server.lang.python.python_code_analyzer import (
@@ -103,7 +104,7 @@ def test_python_analyzer_edge_cases() -> None:
     """Test edge cases for the Python analyzer."""
 
     # Test empty code
-    empty_metadata: Union[Dict[str, Any],None] = analyze_python_code("", "empty.py")
+    empty_metadata: Union[Dict[str, Any], None] = analyze_python_code("", "empty.py")
     if empty_metadata is not None:
         assert empty_metadata['line_count'] == 1
         assert len(empty_metadata['functions']) == 0
@@ -113,7 +114,7 @@ def test_python_analyzer_edge_cases() -> None:
 
     # Test minimal code
     minimal_code = "x = 1"
-    minimal_metadata: Union[Dict[str, Any],None] = analyze_python_code(minimal_code, "minimal.py")
+    minimal_metadata: Union[Dict[str, Any], None] = analyze_python_code(minimal_code, "minimal.py")
     if minimal_metadata is not None:
         assert minimal_metadata['language'].lower() == 'python'  # Handle case variations
         assert minimal_metadata['line_count'] == 1
@@ -122,7 +123,7 @@ def test_python_analyzer_edge_cases() -> None:
 
     # Test syntax error handling
     broken_code = "def broken(:\n    pass"
-    broken_metadata: Union[Dict[str, Any],None] = analyze_python_code(broken_code, "broken.py")
+    broken_metadata: Union[Dict[str, Any], None] = analyze_python_code(broken_code, "broken.py")
     # Should handle gracefully and return basic metadata
     if broken_metadata is not None:
         assert 'language' in broken_metadata
@@ -213,7 +214,7 @@ VERSION = "1.0.0"
 DEBUG = True
 '''
 
-    metadata: Union[Dict[str, Any],None] = analyze_python_code(comprehensive_code, "comprehensive.py")
+    metadata: Union[Dict[str, Any], None] = analyze_python_code(comprehensive_code, "comprehensive.py")
 
     if metadata is not None:
         # Verify comprehensive analysis
