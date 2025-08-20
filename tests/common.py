@@ -642,7 +642,7 @@ class CocoIndexTestInfrastructure:
             from cocoindex_code_mcp_server.backends import QueryFilters
 
             parser = KeywordSearchParser()
-            filters = parser.parse_query(keyword_query)
+            filters = parser.parse(keyword_query)
 
             # Call backend method directly
             search_results = self.backend.keyword_search(
