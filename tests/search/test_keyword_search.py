@@ -22,12 +22,7 @@ from ..common import (
     generate_test_timestamp,
     parse_jsonc_file,
 )
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
+from ..search_config import SearchTestConfig
 
 
 @pytest.mark.skipif(not COCOINDEX_AVAILABLE, reason="CocoIndex infrastructure not available")
@@ -51,15 +46,19 @@ class TestKeywordSearch:
         # Copy complete directory structure to preserve package structure for Java, Haskell, etc.
         copy_directory_structure(fixtures_dir, tmp_dir)
 
-        # Set up CocoIndex infrastructure with configurable parameters
+        # Create search test configuration with defaults:
+        # --paths /workspaces/rust, --no-live, --default-embedding, --log-level DEBUG
+        config = SearchTestConfig(
+            # Use default settings which match your requirements:
+            # paths=["/workspaces/rust"], no_live=True, default_embedding=True, log_level="DEBUG"
+        )
+        
+        # Log configuration for debugging
+        logger = logging.getLogger(__name__)
+        config.log_configuration(logger)
 
-        # Create and initialize infrastructure
-        async with CocoIndexTestInfrastructure(
-            paths=["/workspaces/rust"],
-            enable_polling=False,
-            default_chunking=False,
-            default_language_handler=False
-        ) as infrastructure:
+        # Create and initialize infrastructure using configuration
+        async with CocoIndexTestInfrastructure(**config.to_infrastructure_kwargs()) as infrastructure:
 
             # CocoIndex indexing completes synchronously during infrastructure setup
             # No need to wait - infrastructure is ready for searches

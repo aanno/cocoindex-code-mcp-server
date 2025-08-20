@@ -2,16 +2,19 @@
 
 ## Overview
 
-This document describes the test organization for all search functionality in the CocoIndex project, including hybrid search, vector-only search, and keyword-only search.
+This document describes the comprehensive test organization for all search functionality in the CocoIndex project, including hybrid search, vector-only search, and keyword-only search. The test suite provides extensive coverage across multiple programming languages with easy configuration management.
 
 ## Test Structure
 
-### Test Files
+### Core Search Test Files
 
-#### Core Search Tests
-- **`test_hybrid_search.py`** - Tests for hybrid search functionality using test fixtures
-- **`test_full_text_search.py`** - Tests for vector-only (semantic) search functionality  
-- **`test_keyword_search.py`** - Tests for keyword-only (metadata) search functionality
+#### Main Search Test Files
+- **`test_hybrid_search.py`** - Hybrid search combining vector similarity and keyword filtering (17 tests)
+- **`test_full_text_search.py`** - Vector-only semantic search functionality (15 tests)  
+- **`test_keyword_search.py`** - Keyword-only metadata filtering search (16 tests)
+
+#### Configuration Management
+- **`search_config.py`** - `SearchTestConfig` class for unified test configuration
 
 #### Engine and Parser Tests
 - **`test_hybrid_search_keyword_parser.py`** - Tests for keyword search parser functionality
@@ -20,9 +23,56 @@ This document describes the test organization for all search functionality in th
 - **`conftest.py`** - Shared pytest fixtures and configuration
 
 ### Test Fixtures
-- **`fixtures/hybrid_search.jsonc`** - Test cases for hybrid search validation
-- **`fixtures/full_text_search.jsonc`** - Test cases for vector-only search validation
-- **`fixtures/keyword_search.jsonc`** - Test cases for keyword-only search validation
+- **`fixtures/hybrid_search.jsonc`** - 17 test cases for hybrid search validation across multiple languages
+- **`fixtures/full_text_search.jsonc`** - 15 test cases for vector-only search validation
+- **`fixtures/keyword_search.jsonc`** - 16 test cases for keyword-only search validation
+
+## Search Test Configuration System
+
+### SearchTestConfig Class
+
+All three main search test files use a unified configuration system via the `SearchTestConfig` class that mirrors command-line options from `main_mcp_server.py`:
+
+```python
+from tests.search_config import SearchTestConfig
+
+# Create configuration with defaults optimized for testing
+config = SearchTestConfig(
+    paths=["/workspaces/rust"],        # --paths
+    no_live=True,                      # --no-live (disabled)
+    default_embedding=True,            # --default-embedding (enabled)
+    default_chunking=False,            # --default-chunking (disabled)
+    default_language_handler=False,    # --default-language-handler (disabled)
+    chunk_factor_percent=100,          # --chunk-factor-percent
+    log_level="DEBUG",                 # --log-level
+    poll_interval=30                   # --poll-interval
+)
+
+# Apply configuration to infrastructure
+async with CocoIndexTestInfrastructure(**config.to_infrastructure_kwargs()) as infrastructure:
+    # Run tests with configured infrastructure
+```
+
+### Configuration Features
+
+- **Unified Settings**: Consistent configuration across all search test types
+- **Debug Logging**: Built-in configuration logging with visual indicators
+- **Infrastructure Integration**: Direct conversion to infrastructure parameters
+- **Flexible Defaults**: Optimized defaults for testing while maintaining configurability
+
+### Configuration Output Example
+
+When tests run, you'll see configuration details:
+```
+🔧 Search Test Configuration:
+  📁 Paths: ['/workspaces/rust']  
+  🔴 Live updates: DISABLED
+  🎯 Default embedding: ENABLED
+  🎯 Default chunking: DISABLED
+  🎯 Default language handler: DISABLED
+  📏 Chunk factor: 100%
+  📊 Log level: DEBUG
+```
 
 ### Test Organization with Pytest Markers
 
@@ -150,86 +200,74 @@ pytest -v tests/test_hybrid_search_keyword_parser.py
 - Performance characteristics
 - Error handling scenarios
 
-## Configuration
+## Running Search Tests
 
-### pytest.ini
-The project includes a `pytest.ini` file with:
-- Marker definitions
-- Test path configuration
-- Default options for strict marker checking
+### Quick Start Commands
 
-### conftest.py
-Shared fixtures include:
-- Mock database components
-- Sample search results
-- Mock embedding functions
-- Test environment setup
+```bash
+# Run all search tests with configuration logging
+pytest ./tests/search/ -v -s
 
-## Test Status
+# Run individual search test types
+pytest tests/search/test_hybrid_search.py -v -s
+pytest tests/search/test_full_text_search.py -v -s  
+pytest tests/search/test_keyword_search.py -v -s
+
+# Run with specific test methods
+pytest tests/search/test_hybrid_search.py::TestMCPDirect::test_hybrid_search_validation -v -s
+```
+
+### Configuration Customization
+
+To customize test configuration, modify the `SearchTestConfig` instantiation in test files:
+
+```python
+# Custom configuration example
+config = SearchTestConfig(
+    paths=["/custom/path"],
+    log_level="INFO",
+    chunk_factor_percent=50,
+    default_embedding=False
+)
+```
+
+## Test Status and Results
 
 ### Working Tests ✅
-- **Core Search Tests**: All three search types have comprehensive test coverage
-- **Keyword Parser**: All core functionality working (28/29 tests passing)  
-- **Test Infrastructure**: CocoIndex infrastructure setup and teardown working
-- **Test Results**: Automatic saving to `/test-results/search-{type}/` directories
+- **Core Search Tests**: All three search types with comprehensive coverage (48 total tests)
+  - Hybrid search: 17 tests across multiple programming languages
+  - Vector search: 15 tests for semantic code understanding  
+  - Keyword search: 16 tests for metadata-based filtering
+- **Configuration System**: SearchTestConfig provides unified, easy-to-use configuration
+- **Test Infrastructure**: CocoIndex infrastructure with proper setup/teardown
+- **Test Results**: Automatic saving to organized `/test-results/search-{type}/` directories
 - **Fixture Loading**: JSONC test fixtures properly parsed and executed
 
-### Known Issues ⚠️
-- Some engine tests require CocoIndex dependencies that have circular import issues
-- Complex nested parentheses parsing has one edge case (marked as skipped)
-- External dependency tests are automatically skipped when dependencies unavailable
-- Some backend integration tests need database mocking improvements
+### Test Result Organization
+Test results are automatically saved with timestamps:
+- `/test-results/search-hybrid/` - Hybrid search results combining vector + keyword
+- `/test-results/search-vector/` - Vector-only semantic search results  
+- `/test-results/search-keyword/` - Keyword-only metadata filter results
+
+### Configuration Features ✨
+- **Easy Setup**: Default configuration optimized for testing environment
+- **Visual Feedback**: Configuration logging with emojis and clear formatting
+- **Flexible Overrides**: Customize any setting while keeping sensible defaults
+- **Infrastructure Integration**: Direct parameter mapping to CocoIndex infrastructure
 
 ## Best Practices
 
-### Writing New Tests
-1. Use appropriate pytest markers
-2. Follow the fixture pattern established in conftest.py
-3. Mock external dependencies appropriately
-4. Write clear, descriptive test names
-5. Group related tests in classes
+### Running Tests
+1. Use `-v -s` flags for verbose output and configuration visibility
+2. Test individual search types when debugging specific functionality  
+3. Check `/test-results/` directories for detailed search result analysis
+4. Modify `SearchTestConfig` defaults for custom test environments
 
-### Test Organization
-- Unit tests should be isolated and fast
-- Integration tests can have external dependencies
-- Use markers consistently for filtering
-- Keep test files focused on specific components
-
-## Migration from unittest
-
-The tests were successfully migrated from unittest to pytest format:
-- Converted `self.assert*` to `assert` statements
-- Replaced `setUp()` with pytest fixtures
-- Added pytest markers for organization
-- Maintained all test functionality
-
-## Example Usage
-
-```bash
-# Run all search tests
-pytest ./tests/search/ -v
-
-# Run only fast unit tests
-pytest -m "unit and not slow"
-
-# Run all search type tests
-pytest -m "hybrid_search or vector_search or keyword_search"
-
-# Run hybrid search integration tests
-pytest -m "integration and hybrid_search"
-
-# Run keyword parser tests with verbose output
-pytest -m "keyword_parser" -v
-
-# Run all tests except external dependency tests
-pytest -m "not external"
-
-# Run specific test classes
-pytest tests/search/test_hybrid_search.py::TestMCPDirect
-pytest tests/search/test_full_text_search.py::TestFullTextSearch
-pytest tests/search/test_keyword_search.py::TestKeywordSearch
-pytest tests/search/test_hybrid_search_keyword_parser.py::TestKeywordSearchParser
-```
+### Configuration Management
+1. Keep default configuration optimized for common testing scenarios
+2. Override specific parameters when testing edge cases
+3. Use debug logging to verify configuration is applied correctly
+4. Maintain consistency across all three search test types
 
 ## Test Results and Debugging
 
