@@ -255,13 +255,46 @@ Test results are automatically saved with timestamps:
 - **Flexible Overrides**: Customize any setting while keeping sensible defaults
 - **Infrastructure Integration**: Direct parameter mapping to CocoIndex infrastructure
 
+## Database Comparison Enhancement
+
+### Enhanced Test Analysis (2025-08-20)
+
+All three search test methods now include comprehensive **database comparison functionality** that analyzes test failures by comparing search results with actual PostgreSQL database contents:
+
+#### Key Features
+- **Root Cause Analysis**: Identifies exactly why tests fail by comparing expected results with database reality
+- **Automatic Database Queries**: Connects to PostgreSQL and analyzes indexed code records
+- **Detailed Discrepancy Reports**: Shows specific mismatches (e.g., "Expected complexity_score > 2, but max found in DB is 0")
+- **Sample Record Display**: Shows actual database record content to understand what's indexed
+
+#### Enhanced Test Files
+- **`tests/db_comparison.py`** - Core database comparison utility with `DatabaseComparator` class
+- **`tests/common.py`** - Enhanced with database comparison for all search test functions
+- **All search test files** - Now provide detailed database analysis on failures
+
+#### Example Enhanced Error Output
+```
+🔍 Database Comparison Analysis (KEYWORD SEARCH):
+  ❌ Expected complexity_score > 2.0, but max found in DB is 0
+  ❌ Expected non-empty functions, but 33 records have empty functions
+📋 Database has 50 matching records
+  Sample DB record: complexity_score=0, has_classes=true, language=Haskell, functions=''
+```
+
+#### Critical Issues Identified
+1. **Complexity Score Calculation**: All records show complexity_score=0 instead of expected values
+2. **Function Extraction Failures**: Many records have empty function names despite containing functions
+3. **Language-Specific Extraction Issues**: Rust, Java, JavaScript, TypeScript function parsing problems
+4. **Analysis Method Problems**: Various tree-sitter parsers not extracting metadata correctly
+
 ## Best Practices
 
-### Running Tests
-1. Use `-v -s` flags for verbose output and configuration visibility
+### Running Tests with Database Analysis
+1. Use `-v -s` flags for verbose output and database comparison visibility
 2. Test individual search types when debugging specific functionality  
 3. Check `/test-results/` directories for detailed search result analysis
-4. Modify `SearchTestConfig` defaults for custom test environments
+4. Review database comparison reports to identify indexing pipeline issues
+5. Modify `SearchTestConfig` defaults for custom test environments
 
 ### Configuration Management
 1. Keep default configuration optimized for common testing scenarios
