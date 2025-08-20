@@ -24,6 +24,7 @@ from ..common import (
     run_cocoindex_hybrid_search_tests,
 )
 from ..search_config import SearchTestConfig
+from ..db_comparison import compare_test_with_database
 
 
 @pytest.mark.skipif(not COCOINDEX_AVAILABLE, reason="CocoIndex infrastructure not available")
@@ -31,7 +32,6 @@ from ..search_config import SearchTestConfig
 class TestMCPDirect:
     """Direct CocoIndex MCP tests without integration server."""
 
-    @pytest.mark.xfail(reason="Hybrid search tests not ready for prime time")
     async def test_hybrid_search_validation(self):
         """Test hybrid search functionality using direct CocoIndex infrastructure."""
 

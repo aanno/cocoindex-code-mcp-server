@@ -779,9 +779,34 @@ async def run_cocoindex_hybrid_search_tests(
                             break
 
                     if not found_match:
+                        # Enhanced error reporting with database comparison for hybrid search
+                        try:
+                            from .db_comparison import compare_test_with_database
+                            db_comparison = await compare_test_with_database(
+                                test_name, query, expected_item, results
+                            )
+                            db_report = f"\n🔍 Database Comparison Analysis (HYBRID SEARCH):\n"
+                            for discrepancy in db_comparison.discrepancies:
+                                db_report += f"  ❌ {discrepancy}\n"
+                            
+                            if db_comparison.matching_db_records:
+                                db_report += f"\n📋 Database has {len(db_comparison.matching_db_records)} matching records\n"
+                                # Show sample DB record metadata
+                                if db_comparison.matching_db_records:
+                                    sample_record = db_comparison.matching_db_records[0]
+                                    db_report += f"  Sample DB record: complexity_score={sample_record.get('complexity_score', 'N/A')}, "
+                                    db_report += f"has_classes={sample_record.get('has_classes', 'N/A')}, "
+                                    db_report += f"language={sample_record.get('language', 'N/A')}, "
+                                    db_report += f"functions='{sample_record.get('functions', 'N/A')[:50]}...'\n"
+                            
+                            error_with_db_analysis = f"No matching result found for expected item: {expected_item}{db_report}"
+                        except Exception as db_error:
+                            logging.warning(f"Database comparison failed for hybrid search: {db_error}")
+                            error_with_db_analysis = f"No matching result found for expected item: {expected_item}"
+                        
                         failed_tests.append({
                             "test": test_name,
-                            "error": f"No matching result found for expected item: {expected_item}",
+                            "error": error_with_db_analysis,
                             "query": query,
                             "actual_results": [{
                                 "filename": r.get("filename"),
@@ -802,3 +827,111 @@ async def run_cocoindex_hybrid_search_tests(
             })
 
     return failed_tests
+
+async def run_cocoindex_vector_search_tests(
+      test_cases: List[Dict[str, Any]],
+      infrastructure: CocoIndexTestInfrastructure,
+      run_timestamp: str
+  ) -> List[Dict[str, Any]]:
+      """
+      Run vector-only search tests using CocoIndex infrastructure directly.
+
+      Args:
+          test_cases: List of test case definitions
+          infrastructure: Initialized CocoIndex infrastructure
+          run_timestamp: Timestamp for result saving
+
+      Returns:
+          List of failed test cases with error details
+      """
+      failed_tests = []
+
+      for test_case in test_cases:
+          test_name = test_case["name"]
+          description = test_case["description"]
+          query = test_case["query"]
+          expected_results = test_case["expected_results"]
+
+          logging.info(f"Running vector search test: {test_name}")
+          logging.info(f"Description: {description}")
+
+          try:
+              # Execute vector-only search using infrastructure backend
+              search_data = await infrastructure.perform_vector_search(query)
+
+              results = search_data.get("results", [])
+              total_results = len(results)
+
+              # Save search results to test-results directory
+              save_search_results(test_name, query, search_data, run_timestamp,
+  "search-vector")
+
+              # Check minimum results requirement
+              min_results = expected_results.get("min_results", 1)
+              if total_results < min_results:
+                  failed_tests.append({
+                      "test": test_name,
+                      "error": f"Expected at least {min_results} results, got {total_results}",
+                      "query": query
+                  })
+                  continue
+
+              # Check expected results using common helper
+              if "should_contain" in expected_results:
+                  for expected_item in expected_results["should_contain"]:
+                      found_match = False
+
+                      for result_item in results:
+                          match_found, _ = compare_expected_vs_actual(expected_item, result_item)
+                          if match_found:
+                              found_match = True
+                              break
+
+                      if not found_match:
+                          # Enhanced error reporting with database comparison for vector search
+                          try:
+                              from .db_comparison import compare_test_with_database
+                              db_comparison = await compare_test_with_database(
+                                  test_name, query, expected_item, results
+                              )
+                              db_report = f"\n🔍 Database Comparison Analysis (VECTOR SEARCH):\n"
+                              for discrepancy in db_comparison.discrepancies:
+                                  db_report += f"  ❌ {discrepancy}\n"
+
+                              if db_comparison.matching_db_records:
+                                  db_report += f"\n📋 Database has {len(db_comparison.matching_db_records)} matching records\n"
+                                  # Show sample DB record metadata
+                                  if db_comparison.matching_db_records:
+                                      sample_record = db_comparison.matching_db_records[0]
+                                      db_report += f"  Sample DB record: complexity_score={sample_record.get('complexity_score', 'N/A')}, "
+                                      db_report += f"has_classes={sample_record.get('has_classes', 'N/A')}, "
+                                      db_report += f"language={sample_record.get('language', 'N/A')}, "
+                                      db_report += f"functions='{sample_record.get('functions', 'N/A')[:50]}...'\n"
+
+                              error_with_db_analysis = f"No matching result found  for expected item: {expected_item}{db_report}"
+                          except Exception as db_error:
+                              logging.warning(f"Database comparison failed for  vector search: {db_error}")
+                              error_with_db_analysis = f"No matching result found  for expected item: {expected_item}"
+
+                          failed_tests.append({
+                              "test": test_name,
+                              "error": error_with_db_analysis,
+                              "query": query,
+                              "actual_results": [{
+                                  "filename": r.get("filename"),
+                                  "metadata_summary": {
+                                      "classes": r.get("classes", []),
+                                      "functions": r.get("functions", []),
+                                      "imports": r.get("imports", []),
+                                      "analysis_method": r.get("metadata_json",{}).get("analysis_method", "unknown")
+                                  }
+                              } for r in results[:3]]  # Show first 3 results for debugging
+                          })
+          except Exception as e:
+              failed_tests.append({
+                  "test": test_name,
+                  "error": f"Test execution failed: {str(e)}",
+                  "query": query
+              })
+
+      return failed_tests
