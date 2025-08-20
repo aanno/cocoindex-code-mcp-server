@@ -23,6 +23,7 @@ from ..common import (
     parse_jsonc_file,
 )
 from ..search_config import SearchTestConfig
+from ..db_comparison import compare_test_with_database
 
 
 @pytest.mark.skipif(not COCOINDEX_AVAILABLE, reason="CocoIndex infrastructure not available")
@@ -143,9 +144,32 @@ async def run_cocoindex_keyword_search_tests(
                             break
 
                     if not found_match:
+                        # Enhanced error reporting with database comparison
+                        try:
+                            db_comparison = await compare_test_with_database(
+                                test_name, query, expected_item, results
+                            )
+                            db_report = f"\n🔍 Database Comparison Analysis:\n"
+                            for discrepancy in db_comparison.discrepancies:
+                                db_report += f"  ❌ {discrepancy}\n"
+                            
+                            if db_comparison.matching_db_records:
+                                db_report += f"\n📋 Database has {len(db_comparison.matching_db_records)} matching records\n"
+                                # Show sample DB record metadata
+                                if db_comparison.matching_db_records:
+                                    sample_record = db_comparison.matching_db_records[0]
+                                    db_report += f"  Sample DB record: complexity_score={sample_record.get('complexity_score', 'N/A')}, "
+                                    db_report += f"has_classes={sample_record.get('has_classes', 'N/A')}, "
+                                    db_report += f"functions='{sample_record.get('functions', 'N/A')[:50]}...'\n"
+                            
+                            error_with_db_analysis = f"No matching result found for expected item: {expected_item}{db_report}"
+                        except Exception as db_error:
+                            logging.warning(f"Database comparison failed: {db_error}")
+                            error_with_db_analysis = f"No matching result found for expected item: {expected_item}"
+                        
                         failed_tests.append({
                             "test": test_name,
-                            "error": f"No matching result found for expected item: {expected_item}",
+                            "error": error_with_db_analysis,
                             "query": query,
                             "actual_results": [{
                                 "filename": r.get("filename"),
