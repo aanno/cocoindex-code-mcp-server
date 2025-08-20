@@ -63,9 +63,9 @@ class RustASTVisitor(GenericMetadataVisitor):
                     text = child.text
                     if text is not None:
                         func_name = text.decode('utf-8')
-                    self.functions.append(func_name)
-                    LOGGER.debug(f"Found Rust function: {func_name}")
-                    break  # Take the first identifier (function name)
+                        self.functions.append(func_name)
+                        LOGGER.debug(f"Found Rust function: {func_name}")
+                        break  # Take the first identifier (function name)
         except Exception as e:
             LOGGER.warning(f"Error extracting Rust function: {e}")
 
