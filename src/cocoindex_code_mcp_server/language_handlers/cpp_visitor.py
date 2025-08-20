@@ -39,7 +39,10 @@ class CppASTVisitor(CASTVisitor):
         # Track node statistics
         self.node_stats[node_type] = self.node_stats.get(node_type, 0) + 1
 
-        # Handle C++-specific constructs first
+        
+        # Update complexity score based on node type (inherited from GenericMetadataVisitor)
+        self._update_complexity(node_type)
+# Handle C++-specific constructs first
         if node_type == 'class_specifier':
             self._extract_class(node)
         elif node_type == 'namespace_definition':

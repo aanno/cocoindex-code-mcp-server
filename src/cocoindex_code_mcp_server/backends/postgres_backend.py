@@ -16,7 +16,7 @@ from numpy.typing import NDArray
 from pgvector.psycopg import register_vector
 from psycopg_pool import ConnectionPool
 
-from ..keyword_search_parser_lark import build_sql_where_clause
+from ..keyword_search_parser_lark import build_sql_where_clause, Operator
 from ..mappers import CONST_SELECTABLE_FIELDS, PostgresFieldMapper, ResultMapper
 from ..schemas import (
     SearchResult,
@@ -182,19 +182,30 @@ class PostgresBackend(VectorStoreBackend):
         with self.pool.connection() as conn:
             with conn.cursor() as cur:
                 select_clause, available_fields = self._build_select_clause()
-                cur.execute(
-                    f"""
+                
+                query = f"""
                     SELECT {select_clause}, 0.0 as distance
                     FROM {self.table_name}
                     WHERE {where_clause}
                     ORDER BY filename, start
                     LIMIT %s
-                    """,
-                    params + [top_k],
-                )
+                    """
+                
+                query_params = params + [top_k]
+                
+                # Log the SQL query for debugging
+                logger.info(f"🔍 Keyword Search SQL Query:")
+                logger.info(f"   Query: {query}")
+                logger.info(f"   Params: {query_params}")
+                
+                cur.execute(query, query_params)
+                results = cur.fetchall()
+                
+                logger.info(f"📊 Query returned {len(results)} results")
+                
                 return [
                     self._format_result(row, available_fields, score_type="keyword")
-                    for row in cur.fetchall()
+                    for row in results
                 ]
 
     def hybrid_search(
@@ -321,11 +332,12 @@ class PostgresBackend(VectorStoreBackend):
         # Create a mock search group compatible with existing parser
 
         class MockSearchGroup:
-            def __init__(self, conditions: List[Any]) -> None:
+            def __init__(self, conditions: List[Any], operator: str = "AND") -> None:
                 self.conditions = conditions
-                self.operator = "and"
+                # Convert string to Operator enum for compatibility with build_sql_where_clause
+                self.operator = Operator.OR if operator.upper() == "OR" else Operator.AND
 
-        search_group = MockSearchGroup(filters.conditions)
+        search_group = MockSearchGroup(filters.conditions, filters.operator)
         return build_sql_where_clause(search_group)  # type: ignore
 
     def _format_result(self, row: Tuple[Any, ...], available_fields: List[str],

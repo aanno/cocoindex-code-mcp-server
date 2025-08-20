@@ -37,7 +37,10 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
         # Track node statistics
         self.node_stats[node_type] = self.node_stats.get(node_type, 0) + 1
 
-        # Handle TypeScript-specific constructs first
+        
+        # Update complexity score based on node type (inherited from GenericMetadataVisitor)
+        self._update_complexity(node_type)
+# Handle TypeScript-specific constructs first
         if node_type == 'interface_declaration':
             self._extract_interface(node)
         elif node_type == 'type_alias_declaration':
