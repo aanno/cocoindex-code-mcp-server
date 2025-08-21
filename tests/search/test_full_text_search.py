@@ -58,8 +58,10 @@ class TestFullTextSearch:
         logger = logging.getLogger(__name__)
         config.log_configuration(logger)
 
-        # Create and initialize infrastructure using configuration
-        async with CocoIndexTestInfrastructure(**config.to_infrastructure_kwargs()) as infrastructure:
+        # Create and initialize infrastructure using configuration with vector test type
+        infrastructure_kwargs = config.to_infrastructure_kwargs()
+        infrastructure_kwargs['test_type'] = 'vector'  # Use separate vector test table
+        async with CocoIndexTestInfrastructure(**infrastructure_kwargs) as infrastructure:
 
             # CocoIndex indexing completes synchronously during infrastructure setup
             # No need to wait - infrastructure is ready for searches

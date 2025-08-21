@@ -383,7 +383,8 @@ class CocoIndexTestInfrastructure:
         default_language_handler: bool = False,
         chunk_factor_percent: int = 100,
         enable_polling: bool = False,
-        poll_interval: int = 30
+        poll_interval: int = 30,
+        test_type: Optional[str] = None
     ):
         if not COCOINDEX_AVAILABLE:
             raise RuntimeError("CocoIndex infrastructure not available. Check imports.")
@@ -395,12 +396,15 @@ class CocoIndexTestInfrastructure:
         self.chunk_factor_percent = chunk_factor_percent
         self.enable_polling = enable_polling
         self.poll_interval = poll_interval
+        self.test_type = test_type  # 'keyword', 'vector', 'hybrid', or None for main flow
 
         # Infrastructure components
         self.hybrid_search_engine: Optional[HybridSearchEngine] = None
         self.backend: Optional[VectorStoreBackend] = None
         self.shutdown_event = threading.Event()
         self.background_thread: Optional[threading.Thread] = None
+        self.flow_def = None
+        self.table_name: Optional[str] = None
 
         # Logging
         self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
@@ -426,16 +430,57 @@ class CocoIndexTestInfrastructure:
             cocoindex.init()
             self.logger.info("✅ CocoIndex library initialized with database")
 
-            # Update flow configuration with test parameters
-            update_flow_config(
-                paths=self.paths,
-                enable_polling=self.enable_polling,
-                poll_interval=self.poll_interval,
-                use_default_embedding=self.default_embedding,
-                use_default_chunking=self.default_chunking,
-                use_default_language_handler=self.default_language_handler,
-                chunk_factor_percent=self.chunk_factor_percent
-            )
+            # Determine which flow to use based on test type
+            if self.test_type:
+                # Use separate test flow for each test type
+                from .search_test_flows import (
+                    keyword_search_test_flow,
+                    vector_search_test_flow,
+                    hybrid_search_test_flow,
+                    get_test_table_name
+                )
+                
+                flow_mapping = {
+                    'keyword': keyword_search_test_flow,
+                    'vector': vector_search_test_flow,
+                    'hybrid': hybrid_search_test_flow
+                }
+                
+                if self.test_type not in flow_mapping:
+                    raise ValueError(f"Unknown test type: {self.test_type}. Must be one of {list(flow_mapping.keys())}")
+                
+                self.flow_def = flow_mapping[self.test_type]
+                self.table_name = get_test_table_name(self.test_type)
+                
+                self.logger.info(f"🔧 Using {self.test_type} test flow with table: {self.table_name}")
+                
+                # Update flow configuration for the specific test flow
+                from cocoindex_code_mcp_server.cocoindex_config import update_specific_flow_config
+                update_specific_flow_config(
+                    flow_def=self.flow_def,
+                    paths=self.paths,
+                    enable_polling=self.enable_polling,
+                    poll_interval=self.poll_interval,
+                    use_default_embedding=self.default_embedding,
+                    use_default_chunking=self.default_chunking,
+                    use_default_language_handler=self.default_language_handler,
+                    chunk_factor_percent=self.chunk_factor_percent
+                )
+            else:
+                # Use main flow configuration
+                self.logger.info("🔧 Using main CodeEmbedding flow")
+                from .cocoindex_util import get_default_db_name
+                self.table_name = get_default_db_name()
+                
+                update_flow_config(
+                    paths=self.paths,
+                    enable_polling=self.enable_polling,
+                    poll_interval=self.poll_interval,
+                    use_default_embedding=self.default_embedding,
+                    use_default_chunking=self.default_chunking,
+                    use_default_language_handler=self.default_language_handler,
+                    chunk_factor_percent=self.chunk_factor_percent
+                )
 
             # Log configuration
             self.logger.info(f"📁 Paths: {self.paths}")
@@ -447,10 +492,20 @@ class CocoIndexTestInfrastructure:
 
             # Run initial flow update to process files
             self.logger.info("🔄 Running initial flow update...")
-            run_flow_update(
-                live_update=self.enable_polling,
-                poll_interval=self.poll_interval
-            )
+            if self.test_type:
+                # Run specific test flow
+                from cocoindex_code_mcp_server.cocoindex_config import run_specific_flow_update
+                run_specific_flow_update(
+                    flow_def=self.flow_def,
+                    live_update=self.enable_polling,
+                    poll_interval=self.poll_interval
+                )
+            else:
+                # Run main flow
+                run_flow_update(
+                    live_update=self.enable_polling,
+                    poll_interval=self.poll_interval
+                )
             self.logger.info("✅ Flow update completed")
             self.logger.info("📚 CocoIndex indexing completed and ready for searches")
 
@@ -477,8 +532,10 @@ class CocoIndexTestInfrastructure:
 
         backend_type = os.getenv("BACKEND_TYPE", "postgres")
 
-        # Get table name from flow configuration
-        table_name = get_default_db_name()
+        # Use the table name determined during setup
+        table_name = self.table_name
+        if not table_name:
+            raise ValueError("Table name not set. Ensure setup() was called first.")
 
         self.logger.info(f"🔧 Initializing {backend_type} backend with table: {table_name}")
 

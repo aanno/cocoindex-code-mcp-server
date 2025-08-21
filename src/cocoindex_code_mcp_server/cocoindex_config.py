@@ -1738,3 +1738,73 @@ def run_flow_update(live_update: bool = False, poll_interval: int = 30) -> None:
         # Regular one-time update mode
         stats = code_embedding_flow.update()
         LOGGER.info("Updated index: %s", stats)
+
+
+def update_specific_flow_config(
+    flow_def,
+    paths: Union[List[str], None] = None, 
+    enable_polling: bool = False, 
+    poll_interval: int = 30,
+    use_default_embedding: bool = False, 
+    use_default_chunking: bool = False,
+    use_default_language_handler: bool = False, 
+    chunk_factor_percent: int = 100
+) -> None:
+    """Update the global flow configuration for a specific flow definition."""
+    global _global_flow_config
+
+    # Scale chunking parameters if needed
+    scale_chunking_params(chunk_factor_percent)
+
+    _global_flow_config.update({
+        'paths': paths or ["tmp"],
+        'enable_polling': enable_polling,
+        'poll_interval': poll_interval,
+        'use_default_embedding': use_default_embedding,
+        'use_default_chunking': use_default_chunking,
+        'use_default_language_handler': use_default_language_handler
+    })
+    
+    LOGGER.info(f"✅ Updated flow config for {flow_def.__name__}: paths={paths}, chunking={chunk_factor_percent}%")
+
+
+def run_specific_flow_update(
+    flow_def, 
+    live_update: bool = False, 
+    poll_interval: int = 30
+) -> None:
+    """Run a specific flow update (one-time or live)."""
+    if live_update:
+        LOGGER.info(f"🔄 Starting live update mode for {flow_def.__name__}...")
+        if poll_interval > 0:
+            LOGGER.info(f"📊 File polling enabled: {poll_interval} seconds")
+        else:
+            LOGGER.info("📊 Event-based monitoring (no polling)")
+
+        # Setup the flow first
+        flow_def.setup()
+
+        # Initial update
+        LOGGER.info("🚀 Initial index build...")
+        stats = flow_def.update()
+        LOGGER.info("Initial index built: %s", stats)
+
+        # Start live updater
+        LOGGER.info("👁️  Starting live file monitoring...")
+        live_options = cocoindex.FlowLiveUpdaterOptions(
+            live_mode=True,
+            print_stats=True
+        )
+
+        with cocoindex.FlowLiveUpdater(flow_def, live_options) as updater:
+            LOGGER.info("✅ Live update mode active. Press Ctrl+C to stop.")
+            try:
+                updater.wait()
+            except KeyboardInterrupt:
+                LOGGER.info("\n⏹️  Stopping live update mode...")
+
+    else:
+        # Regular one-time update mode
+        LOGGER.info(f"🔄 Running one-time update for {flow_def.__name__}...")
+        stats = flow_def.update()
+        LOGGER.info("Updated index: %s", stats)
