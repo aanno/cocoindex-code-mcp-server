@@ -689,6 +689,21 @@ class ChunkMetadata(TypedDict, total=False):
 
 Following these updated practices will ensure proper pgvector integration, prevent database conflicts, and enable rich metadata collection in your CocoIndex flows.
 
+## Table Separation Implementation (January 2025)
+
+Successfully implemented parameterized CocoIndex flows for test isolation, resolving critical "column 'chunking_method' does not exist" errors and enabling parallel test execution.
+
+**Key Achievement:** Created separate database tables for each test type:
+- `keywordsearchtest_code_embeddings` for keyword search tests
+- `vectorsearchtest_code_embeddings` for vector search tests  
+- `hybridsearchtest_code_embeddings` for hybrid search tests
+
+**Technical Solution:** Used `cocoindex.open_flow()` with parameterized flow definitions that reuse main flow logic but export to different table names.
+
+**Schema Compatibility:** Included all 40+ metadata fields from main flow to prevent SQL column errors, including critical fields like `chunking_method`, error tracking fields, and language-specific metadata.
+
+**Result:** Tests now run successfully in isolation (17.48s runtime, 50+ records) without SQL syntax errors or table conflicts.
+
 ## Real-World Lessons Learned
 
 ### PostgreSQL Conflict Resolution
@@ -1348,3 +1363,345 @@ def test_language_extraction():
 - **Improve language detection logic** with explicit fallback handling
 - **Create dedicated extractor functions** for metadata fields instead of lambda functions
 - **Test individual components** to verify they work before worrying about type inference
+
+## Parameterized Flows for Test Isolation (January 2025)
+
+### 1. Table Separation Problem
+
+**⚠️ CRITICAL TESTING GOTCHA**: Multiple test suites using the same CocoIndex flow share the same database table, causing test isolation failures and data conflicts.
+
+```python
+# ❌ PROBLEM: All tests use the same table
+@cocoindex.flow_def(name="CodeEmbedding")
+def code_embedding_flow(flow_builder, data_scope):
+    # All flows with this name use: codeembedding__code_embeddings
+    code_embeddings.export(
+        "code_embeddings",
+        cocoindex.targets.Postgres(),  # Same table for all tests!
+        primary_key_fields=["filename", "location"]
+    )
+
+# Result: keyword_search tests interfere with vector_search tests
+```
+
+**✅ SOLUTION**: Use parameterized flows with `cocoindex.open_flow()` for test-specific table names:
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class SearchTestFlowParameters:
+    """Parameters for search test flows."""
+    source_path: str
+    target_table_name: str
+
+def search_test_flow_def(params: SearchTestFlowParameters):
+    """
+    Create a parameterized flow definition for search tests.
+    
+    This reuses the same flow logic but allows different source paths and table names.
+    """
+    def _flow_def(flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope):
+        # Import all necessary functions from main flow
+        from cocoindex_code_mcp_server.cocoindex_config import (
+            SOURCE_CONFIG, extract_language, get_chunking_params, 
+            code_to_embedding, extract_code_metadata, 
+            # Import ALL metadata extraction functions to match main flow schema
+            extract_functions_field, extract_classes_field, extract_imports_field,
+            extract_complexity_score_field, extract_has_type_hints_field,
+            extract_analysis_method_field, extract_chunking_method_field,
+            extract_tree_sitter_chunking_error_field, extract_success_field,
+            # ... import all other extract_*_field functions
+            convert_dataslice_to_string, list_to_space_separated_str, CUSTOM_LANGUAGES
+        )
+        
+        # Configure source with the specified path
+        source_config = SOURCE_CONFIG.copy()
+        source_config['path'] = params.source_path
+        
+        data_scope["files"] = flow_builder.add_source(
+            cocoindex.sources.LocalFile(**source_config)
+        )
+        
+        code_embeddings = data_scope.add_collector()
+        
+        with data_scope["files"].row() as file:
+            file["language"] = file["filename"].transform(extract_language)
+            file["chunking_params"] = file["language"].transform(get_chunking_params)
+            
+            # Use same chunking logic as main flow
+            raw_chunks = file["content"].transform(
+                cocoindex.functions.SplitRecursively(custom_languages=CUSTOM_LANGUAGES),
+                language=file["language"],
+                chunk_size=file["chunking_params"]["chunk_size"],
+                min_chunk_size=file["chunking_params"]["min_chunk_size"],
+                chunk_overlap=file["chunking_params"]["chunk_overlap"],
+            )
+            
+            with raw_chunks.row() as chunk:
+                chunk["embedding"] = chunk["text"].call(code_to_embedding)
+                chunk["extracted_metadata"] = chunk["text"].transform(
+                    extract_code_metadata,
+                    language=file["language"],
+                    filename=file["filename"],
+                    existing_metadata_json=""
+                )
+                
+                # Extract ALL metadata fields to match main flow schema
+                chunk["functions"] = chunk["extracted_metadata"].transform(extract_functions_field)
+                chunk["classes"] = chunk["extracted_metadata"].transform(extract_classes_field)
+                chunk["imports"] = chunk["extracted_metadata"].transform(extract_imports_field)
+                chunk["complexity_score"] = chunk["extracted_metadata"].transform(extract_complexity_score_field)
+                chunk["has_type_hints"] = chunk["extracted_metadata"].transform(extract_has_type_hints_field)
+                chunk["analysis_method"] = chunk["extracted_metadata"].transform(extract_analysis_method_field)
+                chunk["chunking_method"] = chunk["extracted_metadata"].transform(extract_chunking_method_field)
+                # ... extract all other metadata fields
+                
+                code_embeddings.collect(
+                    filename=file["filename"],
+                    language=file["language"],
+                    location=chunk["location"],
+                    code=chunk["text"].transform(convert_dataslice_to_string),
+                    embedding=chunk["embedding"],
+                    start=chunk["start"],
+                    end=chunk["end"],
+                    source_name="files",
+                    metadata_json=chunk["extracted_metadata"],
+                    
+                    # Include ALL metadata fields from main flow
+                    complexity_score=chunk["complexity_score"],
+                    has_type_hints=chunk["has_type_hints"],
+                    analysis_method=chunk["analysis_method"],
+                    chunking_method=chunk["chunking_method"],
+                    # ... include all other metadata fields
+                    
+                    # Convert list fields to space-separated strings
+                    functions=chunk["functions"].transform(list_to_space_separated_str),
+                    classes=chunk["classes"].transform(list_to_space_separated_str),
+                    imports=chunk["imports"].transform(list_to_space_separated_str),
+                    # ... convert all other list fields
+                )
+        
+        # Export to the specified target table
+        code_embeddings.export(
+            "code_embeddings",
+            cocoindex.targets.Postgres(table_name=params.target_table_name),  # ✅ Parameterized table name
+            primary_key_fields=["filename", "location", "source_name"],
+            vector_indexes=[
+                cocoindex.VectorIndexDef(
+                    field_name="embedding", 
+                    metric=cocoindex.VectorSimilarityMetric.COSINE_SIMILARITY,
+                )
+            ],
+        )
+    
+    return _flow_def
+
+def create_search_test_flow(test_type: str, source_path: str = "tmp"):
+    """
+    Create a search test flow for the specified test type.
+    
+    Args:
+        test_type: One of 'keyword', 'vector', 'hybrid'
+        source_path: Path to the source files (default: "tmp")
+    
+    Returns:
+        Configured CocoIndex flow instance
+    """
+    # Generate table name based on test type
+    table_names = {
+        'keyword': 'keywordsearchtest_code_embeddings',
+        'vector': 'vectorsearchtest_code_embeddings', 
+        'hybrid': 'hybridsearchtest_code_embeddings'
+    }
+    
+    if test_type not in table_names:
+        raise ValueError(f"Unknown test type: {test_type}. Must be one of {list(table_names.keys())}")
+    
+    table_name = table_names[test_type]
+    flow_name = f"SearchTest_{test_type.title()}"
+    
+    # Create parameters for this test flow
+    params = SearchTestFlowParameters(
+        source_path=source_path,
+        target_table_name=table_name
+    )
+    
+    # Open flow with parameterized definition
+    flow = cocoindex.open_flow(flow_name, search_test_flow_def(params))
+    return flow
+```
+
+### 2. Key Benefits of Parameterized Flows
+
+**✅ Test Isolation:**
+- Each test type gets its own dedicated table
+- No data conflicts between different test suites
+- Parallel test execution without interference
+
+**✅ Schema Consistency:**
+- Reuses the same flow logic as the main production flow
+- Ensures test and production schemas remain synchronized
+- Automatically includes all metadata fields (chunking_method, etc.)
+
+**✅ Maintenance Efficiency:**
+- Single source of truth for flow logic
+- Updates to main flow automatically propagate to test flows
+- No need to manually sync test flow definitions
+
+### 3. Implementation in Test Infrastructure
+
+```python
+class CocoIndexTestInfrastructure:
+    def __init__(self, test_type: str = None, **kwargs):
+        self.test_type = test_type
+        self.flow_def = None
+        self.table_name = None
+        
+    async def setup(self) -> None:
+        """Set up test infrastructure with parameterized flows."""
+        if self.test_type:
+            from .search_test_flows import get_search_test_flow, get_test_table_name
+            self.flow_def = get_search_test_flow(self.test_type)
+            self.table_name = get_test_table_name(self.test_type)
+        else:
+            # Use default flow for general tests
+            from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow
+            self.flow_def = code_embedding_flow
+            
+        # Setup the flow
+        if self.flow_def:
+            self.flow_def.setup()
+            
+        # Initialize search engine with test-specific table
+        await self._initialize_search_engine()
+        
+    async def _initialize_search_engine(self) -> None:
+        """Initialize search engine with test-specific table name."""
+        table_name = self.table_name if self.table_name else get_default_db_name()
+        if not table_name:
+            raise ValueError("Table name not set. Ensure setup() was called first.")
+            
+        # Create search engine with parameterized table name
+        self.search_engine = HybridSearchEngine(
+            db_name=table_name,  # ✅ Use test-specific table
+            # ... other parameters
+        )
+```
+
+### 4. Usage in Tests
+
+```python
+# Test setup with table separation
+infrastructure_kwargs = config.to_infrastructure_kwargs()
+infrastructure_kwargs['test_type'] = 'keyword'  # ✅ Use separate keyword test table
+
+async with CocoIndexTestInfrastructure(**infrastructure_kwargs) as infrastructure:
+    # This creates and uses keywordsearchtest_code_embeddings table
+    # No interference with other test types
+    
+    results = await infrastructure.search_engine.search(
+        keyword_query="language:python"
+    )
+    # Tests run in complete isolation
+```
+
+### 5. Critical Implementation Details
+
+**⚠️ CRITICAL**: Include ALL metadata fields from the main flow to prevent SQL column errors:
+
+```python
+# ❌ WRONG: Missing fields cause "column 'chunking_method' does not exist" errors
+code_embeddings.collect(
+    filename=file["filename"],
+    # Missing: chunking_method, tree_sitter_chunking_error, etc.
+)
+
+# ✅ CORRECT: Include ALL fields that exist in main flow schema
+code_embeddings.collect(
+    filename=file["filename"],
+    # Core fields
+    complexity_score=chunk["complexity_score"],
+    analysis_method=chunk["analysis_method"],
+    chunking_method=chunk["chunking_method"],  # ✅ Critical field
+    # Error tracking fields
+    tree_sitter_chunking_error=chunk["tree_sitter_chunking_error"],
+    tree_sitter_analyze_error=chunk["tree_sitter_analyze_error"],
+    success=chunk["success"],
+    # Language-specific fields (empty for non-matching languages)
+    has_module=chunk["has_module"],  # Haskell
+    # JSON fields for complex data
+    class_details=chunk["class_details"],
+    function_details=chunk["function_details"],
+    # List fields converted to space-separated strings
+    functions=chunk["functions"].transform(list_to_space_separated_str),
+    classes=chunk["classes"].transform(list_to_space_separated_str),
+    # ... ALL other fields from main flow
+)
+```
+
+### 6. Parameterized Flow Best Practices
+
+**✅ Schema Synchronization:**
+- Import ALL extraction functions from main flow configuration
+- Include ALL metadata fields in the collector call
+- Use the same chunking logic as production
+- Apply the same vector index configuration
+
+**✅ Table Naming Convention:**
+- Use descriptive prefixes: `keywordsearchtest_`, `vectorsearchtest_`, `hybridsearchtest_`
+- Suffix with `_code_embeddings` to match main table pattern
+- Ensure table names are valid PostgreSQL identifiers
+
+**✅ Parameter Design:**
+- Use dataclasses for type safety: `SearchTestFlowParameters`
+- Include both source path and target table name for flexibility
+- Allow parameterization of other configuration options as needed
+
+**✅ Flow Management:**
+- Use `cocoindex.open_flow()` with descriptive flow names
+- Cache flow instances to avoid repeated initialization
+- Ensure proper flow setup and cleanup in test infrastructure
+
+### 7. Troubleshooting Parameterized Flows
+
+**Common Issues and Solutions:**
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| `column 'chunking_method' does not exist` | Missing fields in test flow collector | Import and include ALL metadata extraction functions from main flow |
+| `Table not found` errors | Flow setup not called | Ensure `flow_def.setup()` is called before `flow_def.update()` |
+| `Search engine using wrong table` | Hard-coded table names in search engine | Pass parameterized table name to search engine initialization |
+| `Type mismatch` errors | Inconsistent metadata field types | Use same extraction functions as main flow for type consistency |
+| `Flow name conflicts` | Multiple flows with same name | Use unique flow names: `SearchTest_Keyword`, `SearchTest_Vector`, etc. |
+
+### 8. Migration from Shared to Parameterized Flows
+
+**Step-by-step migration process:**
+
+1. **Create parameterized flow definition** in separate module (e.g., `search_test_flows.py`)
+2. **Import ALL functions** from main flow configuration to ensure schema compatibility
+3. **Update test infrastructure** to use parameterized flows based on test type
+4. **Modify search engine initialization** to accept table name parameter
+5. **Update test configurations** to specify test type for table separation
+6. **Verify schema compatibility** by running tests and checking for missing column errors
+7. **Clean up old shared tables** once migration is complete
+
+**Verification checklist:**
+- [ ] Each test type creates its own table
+- [ ] All metadata fields from main flow are included
+- [ ] Search functionality works with test-specific tables
+- [ ] Tests can run in parallel without conflicts
+- [ ] Schema matches main flow exactly
+
+### Summary: Parameterized Flow Pattern
+
+The parameterized flow pattern using `cocoindex.open_flow()` solves test isolation problems by:
+
+- **Creating separate tables** for each test type while reusing flow logic
+- **Maintaining schema consistency** through shared extraction functions
+- **Enabling parallel testing** without data conflicts
+- **Simplifying maintenance** with single source of truth for flow definitions
+- **Supporting flexible configuration** through dataclass parameters
+
+This pattern is essential for robust test suites that need to process the same data types (code embeddings) in isolation without interfering with each other or production systems.
