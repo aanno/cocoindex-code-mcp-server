@@ -47,11 +47,12 @@ class TestKeywordSearch:
         # Copy complete directory structure to preserve package structure for Java, Haskell, etc.
         copy_directory_structure(fixtures_dir, tmp_dir)
 
-        # Create search test configuration with defaults:
-        # --paths /workspaces/rust, --no-live, --default-embedding, --log-level DEBUG
+        # Create search test configuration with only tmp directory for faster processing:
         config = SearchTestConfig(
-            # Use default settings which match your requirements:
-            # paths=["/workspaces/rust"], no_live=True, default_embedding=True, log_level="DEBUG"
+            paths=[str(tmp_dir)],  # Only process the copied test files, not entire repo
+            no_live=True,
+            default_embedding=True,
+            log_level="DEBUG"
         )
         
         # Log configuration for debugging

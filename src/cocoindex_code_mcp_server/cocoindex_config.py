@@ -1765,7 +1765,8 @@ def update_specific_flow_config(
         'use_default_language_handler': use_default_language_handler
     })
     
-    LOGGER.info(f"✅ Updated flow config for {flow_def.__name__}: paths={paths}, chunking={chunk_factor_percent}%")
+    flow_name = getattr(flow_def, '__name__', str(flow_def))
+    LOGGER.info(f"✅ Updated flow config for {flow_name}: paths={paths}, chunking={chunk_factor_percent}%")
 
 
 def run_specific_flow_update(
@@ -1775,7 +1776,8 @@ def run_specific_flow_update(
 ) -> None:
     """Run a specific flow update (one-time or live)."""
     if live_update:
-        LOGGER.info(f"🔄 Starting live update mode for {flow_def.__name__}...")
+        flow_name = getattr(flow_def, '__name__', str(flow_def))
+        LOGGER.info(f"🔄 Starting live update mode for {flow_name}...")
         if poll_interval > 0:
             LOGGER.info(f"📊 File polling enabled: {poll_interval} seconds")
         else:
@@ -1805,6 +1807,7 @@ def run_specific_flow_update(
 
     else:
         # Regular one-time update mode
-        LOGGER.info(f"🔄 Running one-time update for {flow_def.__name__}...")
+        flow_name = getattr(flow_def, '__name__', str(flow_def))
+        LOGGER.info(f"🔄 Running one-time update for {flow_name}...")
         stats = flow_def.update()
         LOGGER.info("Updated index: %s", stats)

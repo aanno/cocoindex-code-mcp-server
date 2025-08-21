@@ -430,49 +430,29 @@ class CocoIndexTestInfrastructure:
             cocoindex.init()
             self.logger.info("✅ CocoIndex library initialized with database")
 
-            # Determine which flow to use based on test type
+            # Use the main flow for all cases
+            from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow
+            self.flow_def = code_embedding_flow
+            
             if self.test_type:
-                # Use separate test flow for each test type
-                from .search_test_flows import (
-                    keyword_search_test_flow,
-                    vector_search_test_flow,
-                    hybrid_search_test_flow,
-                    get_test_table_name
-                )
-                
-                flow_mapping = {
-                    'keyword': keyword_search_test_flow,
-                    'vector': vector_search_test_flow,
-                    'hybrid': hybrid_search_test_flow
+                # Generate test-specific table name for isolation
+                test_prefixes = {
+                    'keyword': 'keywordsearchtest',
+                    'vector': 'vectorsearchtest', 
+                    'hybrid': 'hybridsearchtest'
                 }
-                
-                if self.test_type not in flow_mapping:
-                    raise ValueError(f"Unknown test type: {self.test_type}. Must be one of {list(flow_mapping.keys())}")
-                
-                self.flow_def = flow_mapping[self.test_type]
-                self.table_name = get_test_table_name(self.test_type)
-                
-                self.logger.info(f"🔧 Using {self.test_type} test flow with table: {self.table_name}")
-                
-                # Update flow configuration for the specific test flow
-                from cocoindex_code_mcp_server.cocoindex_config import update_specific_flow_config
-                update_specific_flow_config(
-                    flow_def=self.flow_def,
-                    paths=self.paths,
-                    enable_polling=self.enable_polling,
-                    poll_interval=self.poll_interval,
-                    use_default_embedding=self.default_embedding,
-                    use_default_chunking=self.default_chunking,
-                    use_default_language_handler=self.default_language_handler,
-                    chunk_factor_percent=self.chunk_factor_percent
-                )
+                prefix = test_prefixes.get(self.test_type, f'{self.test_type}test')
+                self.table_name = f"{prefix}__code_embeddings"
+                self.logger.info(f"🔧 Using main flow with {self.test_type} test table: {self.table_name}")
             else:
-                # Use main flow configuration
-                self.logger.info("🔧 Using main CodeEmbedding flow")
+                # Use default table name
                 from .cocoindex_util import get_default_db_name
                 self.table_name = get_default_db_name()
+                self.logger.info("🔧 Using main CodeEmbedding flow")
                 
-                update_flow_config(
+            # Update flow configuration
+            from cocoindex_code_mcp_server.cocoindex_config import update_flow_config
+            update_flow_config(
                     paths=self.paths,
                     enable_polling=self.enable_polling,
                     poll_interval=self.poll_interval,

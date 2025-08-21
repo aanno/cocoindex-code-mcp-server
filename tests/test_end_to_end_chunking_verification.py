@@ -34,6 +34,7 @@ class TestEndToEndChunkingVerification:
         cocoindex.init()
         # Import the flow to register it
         from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow
+        _ = code_embedding_flow  # Use the import to avoid linting warnings
         yield
 
     def get_database_connection(self):
