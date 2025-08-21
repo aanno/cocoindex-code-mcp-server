@@ -307,28 +307,14 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                     from .language_handlers.rust_visitor import analyze_rust_code
                     metadata = analyze_rust_code(text, filename)
                 elif lang_lower == "java":
-                    # Check if chunking_method is already set to astchunk_library (preserve it)
+                    # Always use Java AST visitor for proper analysis
+                    from .language_handlers.java_visitor import analyze_java_code
+                    metadata = analyze_java_code(text, filename)
+                    
+                    # Preserve chunking method if it was already set by AST chunking
                     if preserve_chunking_method == "astchunk_library":
-                        LOGGER.debug("Preserving ASTChunk chunking_method for Java")
-                        metadata = {
-                            "analysis_method": "astchunk_library",
-                            "chunking_method": "astchunk_library",
-                            "functions": [],
-                            "classes": [],
-                            "imports": [],
-                            "has_classes": False,
-                            "has_async": False,
-                            "has_type_hints": False,
-                            "complexity_score": 0,
-                            "decorators_used": [],
-                            "dunder_methods": [],
-                            "tree_sitter_chunking_error": False,
-                            "tree_sitter_analyze_error": False,
-                            "success": True
-                        }
-                    else:
-                        from .language_handlers.java_visitor import analyze_java_code
-                        metadata = analyze_java_code(text, filename)
+                        LOGGER.debug("Preserving ASTChunk chunking_method for Java while keeping AST analysis")
+                        metadata["chunking_method"] = "astchunk_library"
                 elif lang_lower in ["javascript", "js"]:
                     # Check if chunking_method is already set to astchunk_library (preserve it)
                     if preserve_chunking_method == "astchunk_library":
