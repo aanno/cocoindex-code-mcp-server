@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional, Tuple
 # Load environment variables at module level
 from dotenv import load_dotenv
 
-from .cocoindex_util import get_default_db_name
+
 
 load_dotenv()
 
@@ -430,29 +430,26 @@ class CocoIndexTestInfrastructure:
             cocoindex.init()
             self.logger.info("✅ CocoIndex library initialized with database")
 
-            # Use the main flow for all cases
-            from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow
-            self.flow_def = code_embedding_flow
-            
             if self.test_type:
-                # Generate test-specific table name for isolation
-                test_prefixes = {
-                    'keyword': 'keywordsearchtest',
-                    'vector': 'vectorsearchtest', 
-                    'hybrid': 'hybridsearchtest'
-                }
-                prefix = test_prefixes.get(self.test_type, f'{self.test_type}test')
-                self.table_name = f"{prefix}__code_embeddings"
-                self.logger.info(f"🔧 Using main flow with {self.test_type} test table: {self.table_name}")
+                # Use parameterized test flows for isolation
+                from .search_test_flows import get_search_test_flow, get_test_table_name
+                
+                self.flow_def = get_search_test_flow(self.test_type)
+                self.table_name = get_test_table_name(self.test_type)
+                self.logger.info(f"🔧 Using {self.test_type} test flow with table: {self.table_name}")
             else:
+                # Use the main flow
+                from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow
+                self.flow_def = code_embedding_flow
                 # Use default table name
                 from .cocoindex_util import get_default_db_name
                 self.table_name = get_default_db_name()
                 self.logger.info("🔧 Using main CodeEmbedding flow")
                 
-            # Update flow configuration
-            from cocoindex_code_mcp_server.cocoindex_config import update_flow_config
-            update_flow_config(
+            # Update flow configuration (only for main flow)
+            if not self.test_type:
+                from cocoindex_code_mcp_server.cocoindex_config import update_flow_config
+                update_flow_config(
                     paths=self.paths,
                     enable_polling=self.enable_polling,
                     poll_interval=self.poll_interval,
@@ -472,20 +469,13 @@ class CocoIndexTestInfrastructure:
 
             # Run initial flow update to process files
             self.logger.info("🔄 Running initial flow update...")
-            if self.test_type:
-                # Run specific test flow
-                from cocoindex_code_mcp_server.cocoindex_config import run_specific_flow_update
-                run_specific_flow_update(
-                    flow_def=self.flow_def,
-                    live_update=self.enable_polling,
-                    poll_interval=self.poll_interval
-                )
-            else:
-                # Run main flow
-                run_flow_update(
-                    live_update=self.enable_polling,
-                    poll_interval=self.poll_interval
-                )
+            self.logger.info(f"🔧 Setting up flow...")
+            self.flow_def.setup()
+            self.logger.info("✅ Flow setup completed")
+            
+            self.logger.info("🔄 Running flow update...")
+            stats = self.flow_def.update()
+            self.logger.info(f"📊 Flow update stats: {stats}")
             self.logger.info("✅ Flow update completed")
             self.logger.info("📚 CocoIndex indexing completed and ready for searches")
 
@@ -549,8 +539,10 @@ class CocoIndexTestInfrastructure:
         # Create parser
         parser = KeywordSearchParser()
 
-        # Get table name from flow configuration
-        table_name = get_default_db_name()
+        # Get table name from test infrastructure configuration
+        table_name = self.table_name
+        if not table_name:
+            raise ValueError("Table name not set. Ensure setup() was called first.")
 
         # Initialize hybrid search engine
         self.hybrid_search_engine = HybridSearchEngine(
