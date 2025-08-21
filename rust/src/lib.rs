@@ -190,6 +190,7 @@ pub struct ChunkingResult {
 pub struct ChunkingContext {
     pub ancestors: Vec<ContextNode>,
     pub max_chunk_size: usize,
+    pub min_chunk_size: usize,
     pub current_module: Option<String>,
     pub current_class: Option<String>,
     pub current_function: Option<String>,
@@ -319,6 +320,7 @@ fn extract_semantic_chunks_with_recursive_splitting(tree: &Tree, source: &str, p
     let mut context = ChunkingContext {
         ancestors: Vec::new(),
         max_chunk_size: params.max_chunk_size,
+        min_chunk_size: params.min_chunk_size,
         current_module: None,
         current_class: None,
         current_function: None,
@@ -389,6 +391,7 @@ fn extract_semantic_chunks_with_error_handling(tree: &Tree, source: &str) -> Chu
     let mut context = ChunkingContext {
         ancestors: Vec::new(),
         max_chunk_size: 2000,
+        min_chunk_size: 300,
         current_module: None,
         current_class: None,
         current_function: None,
@@ -472,16 +475,31 @@ fn extract_chunks_with_recursive_splitting(
     let mut new_context = context.clone();
     update_context_for_node(&node, source, &mut new_context);
     
-    // Define semantic chunk types
+    // Define semantic chunk types - removed "module" to prevent tiny chunks
     let chunk_node_types = [
         "signature", "function", "bind", "data_type", "class", 
-        "instance", "import", "haddock", "module",
+        "instance", "import", "haddock",
     ];
     
     if chunk_node_types.contains(&node_type) {
         let start_byte = node.start_byte();
         let end_byte = node.end_byte();
         let chunk_size = end_byte - start_byte;
+        
+        // Check if chunk meets minimum size requirement to avoid tiny chunks
+        if chunk_size < new_context.min_chunk_size {
+            // Skip chunks that are too small - process children instead
+            if cursor.goto_first_child() {
+                loop {
+                    extract_chunks_with_recursive_splitting(cursor, source, chunks, &new_context, error_stats);
+                    if !cursor.goto_next_sibling() {
+                        break;
+                    }
+                }
+                cursor.goto_parent();
+            }
+            return;
+        }
         
         // Check if this node is too large and needs recursive splitting
         if chunk_size > new_context.max_chunk_size {

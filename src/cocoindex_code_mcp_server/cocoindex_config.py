@@ -375,8 +375,45 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                     from .language_handlers.kotlin_visitor import analyze_kotlin_code
                     metadata = analyze_kotlin_code(text, filename)
                 elif lang_lower in ["haskell", "hs"]:
-                    from .language_handlers.haskell_visitor import analyze_haskell_code
-                    metadata = analyze_haskell_code(text, filename)
+                    # Modern Haskell analysis using AST chunks
+                    from .lang.haskell.haskell_ast_chunker import extract_haskell_ast_chunks
+                    chunks = extract_haskell_ast_chunks(text)
+                    
+                    # Extract aggregated metadata from chunks  
+                    functions = []
+                    classes = []
+                    data_types = []
+                    modules = []
+                    
+                    for chunk in chunks:
+                        if isinstance(chunk, dict) and 'metadata' in chunk:
+                            chunk_meta = chunk['metadata']
+                            if 'function_name' in chunk_meta:
+                                func_name = chunk_meta['function_name'] 
+                                if func_name not in functions:
+                                    functions.append(func_name)
+                            if 'class_name' in chunk_meta:
+                                class_name = chunk_meta['class_name']
+                                if class_name not in classes:
+                                    classes.append(class_name)
+                            if 'module_name' in chunk_meta:
+                                module_name = chunk_meta['module_name']
+                                if module_name not in modules:
+                                    modules.append(module_name)
+                    
+                    metadata = {
+                        "analysis_method": "rust_haskell_ast",
+                        "functions": functions,
+                        "classes": classes,
+                        "data_types": data_types,
+                        "modules": modules,
+                        "imports": [],
+                        "has_classes": len(classes) > 0,
+                        "has_module": len(modules) > 0,
+                        "complexity_score": len(functions) * 2 + len(classes) * 3,  # Simple heuristic
+                        "tree_sitter_chunking_error": False,
+                        "tree_sitter_analyze_error": False,
+                    }
                 else:
                     LOGGER.debug(f"No specialized analyzer for language: {language}")
 
@@ -426,13 +463,11 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                 "has_classes": False,
                 "decorators_used": [],
                 "analysis_method": "unknown_analysis",
-                # NOTE: chunking_method removed from metadata - it comes from AST chunkers only
+                "chunking_method": preserve_chunking_method or "ast_tree_sitter",
                 "tree_sitter_chunking_error": False,
                 "tree_sitter_analyze_error": False,
                 "dunder_methods": [],
             }
-
-            # NOTE: chunking_method preservation removed - it comes from AST chunkers only
 
             update_defaults(result, defaults)
         else:
@@ -457,13 +492,10 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
             "has_classes": False,
             "decorators_used": [],
             "analysis_method": "error_fallback",
-            # Promoted metadata fields for database columns
-            # NOTE: chunking_method removed from metadata - it comes from AST chunkers only
+            "chunking_method": preserve_chunking_method or "ast_tree_sitter_fallback",
             "tree_sitter_chunking_error": True,  # True because we had an error
             "tree_sitter_analyze_error": True,   # True because we had an error
         }
-
-        # NOTE: chunking_method preservation removed - it comes from AST chunkers only
         return json.dumps(fallback_result)
 
 

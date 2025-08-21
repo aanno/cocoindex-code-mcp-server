@@ -67,7 +67,7 @@
       "expected_results": {
         "should_contain": [
           {
-            "filename_pattern": ".*(tmp/)?test_rust\\.rs$",
+            "filename_pattern": ".*(tmp/)?rust_example_1\\.rs$",
             "expected_metadata": {
               "language": "rust",
               "functions": "!empty",
@@ -216,7 +216,7 @@
       "expected_results": {
         "should_contain": [
           {
-            "filename_pattern": ".*(tmp/)?test_haskell\\.hs$",
+            "filename_pattern": ".*(tmp/)?HaskellExample1\\.hs$",
             "expected_metadata": {
               "language": "haskell",
               "functions": "!empty",
@@ -253,12 +253,12 @@
       "name": "filename_pattern_filter",
       "description": "Search for specific filename patterns using metadata filter",
       "query": {
-        "keyword_query": "filename:python_handler"
+        "keyword_query": "filename:python_example_1"
       },
       "expected_results": {
         "should_contain": [
           {
-            "filename_pattern": ".*python_handler\\.py$",
+            "filename_pattern": ".*python_example_1\\.py$",
             "expected_metadata": {
               "classes": "!empty",
               "functions": "!empty",
