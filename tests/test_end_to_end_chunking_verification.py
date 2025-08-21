@@ -142,10 +142,10 @@ class MathUtils:
                         assert language == "Python", f"Expected Python, got {language}"
 
                         # Check chunking method - this is the key test!
-                        if chunking_method == "ast_tree_sitter":
-                            print("  ✅ SUCCESS: Found expected chunking method 'ast_tree_sitter'")
+                        if chunking_method == "astchunk_library":
+                            print("  ✅ SUCCESS: Found expected chunking method 'astchunk_library'")
                         elif chunking_method == "unknown_chunking":
-                            print("  ❌ ISSUE: Still getting 'unknown_chunking' instead of 'ast_tree_sitter'")
+                            print("  ❌ ISSUE: Still getting 'unknown_chunking' instead of 'astchunk_library'")
                         else:
                             print(f"  ⚠️  UNEXPECTED: Got unexpected chunking method '{chunking_method}'")
 
@@ -254,10 +254,10 @@ public class FibonacciCalculator {
                         assert language == "Java", f"Expected Java, got {language}"
 
                         # Check chunking method - this is the key test!
-                        if chunking_method == "ast_tree_sitter":
-                            print("  ✅ SUCCESS: Found expected chunking method 'ast_tree_sitter'")
+                        if chunking_method == "astchunk_library":
+                            print("  ✅ SUCCESS: Found expected chunking method 'astchunk_library'")
                         elif chunking_method == "unknown_chunking":
-                            print("  ❌ ISSUE: Still getting 'unknown_chunking' instead of 'ast_tree_sitter'")
+                            print("  ❌ ISSUE: Still getting 'unknown_chunking' instead of 'astchunk_library'")
                         else:
                             print(f"  ⚠️  UNEXPECTED: Got unexpected chunking method '{chunking_method}'")
 

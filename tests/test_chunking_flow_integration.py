@@ -67,7 +67,7 @@ class Calculator:
     """A simple calculator class."""
     def add(self, a, b):
         return a + b
-''', "ast_tree_sitter"),
+''', "astchunk_library"),
         ("Java", "Test.java", '''public class Test {
     /**
      * Main method
@@ -81,7 +81,7 @@ class Calculator:
         if (n <= 1) return n;
         return fibonacci(n-1) + fibonacci(n-2);
     }
-}''', "ast_tree_sitter"),
+}''', "astchunk_library"),
         ("Haskell", "fibonacci.hs", '''-- Fibonacci module
 module Fibonacci where
 

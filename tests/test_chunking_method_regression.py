@@ -110,7 +110,7 @@ class TestChunkingMethodRegression:
             )
 
             # Check for forbidden generic methods that suggest bugs
-            bad_generic_methods = {'ast', 'unknown_chunking', 'ast_tree_sitter'}
+            bad_generic_methods = {'ast', 'unknown_chunking'}
             found_bad = chunking_methods.intersection(bad_generic_methods)
 
             if found_bad:

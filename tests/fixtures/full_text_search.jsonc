@@ -111,7 +111,7 @@
       "expected_results": {
         "should_contain": [
           {
-            "filename_pattern": ".*(tmp/)?test_rust\\.rs$",
+            "filename_pattern": ".*(tmp/)?rust_example_1\\.rs$",
             "expected_metadata": {
               "functions": "!empty",
               "has_classes": false,

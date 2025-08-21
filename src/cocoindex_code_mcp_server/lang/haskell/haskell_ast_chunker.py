@@ -587,7 +587,16 @@ def extract_haskell_ast_chunks(content: str) -> List[Dict[str, Any]]:
             }
             legacy_chunks.append(legacy_chunk)
 
-        LOGGER.info(f"✅ Rust Haskell chunking produced {len(legacy_chunks)} chunks with proper method names")
+        # Check if chunks have function metadata before claiming success
+        chunks_with_functions = sum(1 for chunk in legacy_chunks 
+                                  if isinstance(chunk.get('metadata', {}), dict) 
+                                  and 'function_name' in chunk['metadata'])
+        
+        if chunks_with_functions > 0:
+            LOGGER.info(f"✅ Rust Haskell chunking produced {len(legacy_chunks)} chunks, {chunks_with_functions} with function metadata")
+        else:
+            LOGGER.warning(f"⚠️ Rust Haskell chunking produced {len(legacy_chunks)} chunks but NO function metadata - likely using regex fallback")
+            LOGGER.debug(f"Sample chunk metadata keys: {list(legacy_chunks[0]['metadata'].keys()) if legacy_chunks and 'metadata' in legacy_chunks[0] else 'none'}")
         return legacy_chunks
 
     except Exception as e:
@@ -872,7 +881,8 @@ class HaskellChunkExecutor:
         try:
             # Try Rust-based Haskell chunking first
             chunks = extract_haskell_ast_chunks(content)
-            LOGGER.info(f"✅ Rust Haskell chunking produced {len(chunks)} chunks")
+            # More accurate logging about chunk content
+            LOGGER.info(f"✅ Rust Haskell chunking produced {len(chunks)} chunks (via HaskellChunkExecutor)")
             return self._convert_chunks_to_haskell_chunk_rows(chunks)
             
         except Exception as e:

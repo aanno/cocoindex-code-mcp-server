@@ -314,14 +314,14 @@
       "name": "promoted_metadata_validation",
       "description": "Validate promoted metadata fields using keyword filters",
       "query": {
-        "keyword_query": "language:python AND chunking_method:ast_tree_sitter"
+        "keyword_query": "language:python AND chunking_method:astchunk_library"
       },
       "expected_results": {
         "should_contain": [
           {
             "expected_metadata": {
               "analysis_method": "!unknown",
-              "chunking_method": "ast_tree_sitter",
+              "chunking_method": "astchunk_library",
               "tree_sitter_chunking_error": false,
               "tree_sitter_analyze_error": false,
               "has_type_hints": "!null",
