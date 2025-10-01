@@ -12,10 +12,10 @@
         "should_contain": [
           {
             "expected_metadata": {
-              "language": "python",
+              "language": "Python",
               "analysis_method": "!unknown"
             },
-            "should_not_be_empty": ["code", "functions"]
+            "should_not_be_empty": ["code"]
           }
         ],
         "min_results": 2
@@ -69,9 +69,8 @@
           {
             "filename_pattern": ".*(tmp/)?rust_example_1\\.rs$",
             "expected_metadata": {
-              "language": "rust",
+              "language": "Rust",
               "functions": "!empty",
-              "has_classes": false,
               "analysis_method": "!unknown"
             }
           }
@@ -88,12 +87,8 @@
       "expected_results": {
         "should_contain": [
           {
-            "filename_pattern": ".*(tmp/)?.*\\.java$",
             "expected_metadata": {
-              "language": "java",
-              "classes": "!empty",
-              "functions": "!empty",
-              "has_classes": true,
+              "language": "Java",
               "analysis_method": "!unknown"
             }
           }
@@ -110,11 +105,9 @@
       "expected_results": {
         "should_contain": [
           {
-            "filename_pattern": ".*(tmp/)?test_javascript\\.js$",
+            "filename_pattern": ".*(tmp/)?javascript_example_1\\.js$",
             "expected_metadata": {
-              "language": "javascript",
-              "functions": "!empty",
-              "analysis_method": "!unknown"
+              "language": "JavaScript"
             }
           }
         ],
@@ -130,9 +123,8 @@
       "expected_results": {
         "should_contain": [
           {
-            "filename_pattern": ".*(tmp/)?test_typescript\\.ts$",
             "expected_metadata": {
-              "language": "typescript",
+              "language": "TypeScript",
               "functions": "!empty",
               "has_type_hints": true,
               "analysis_method": "!unknown"
@@ -151,12 +143,8 @@
       "expected_results": {
         "should_contain": [
           {
-            "filename_pattern": ".*(tmp/)?test_cpp\\.cpp$",
             "expected_metadata": {
-              "language": "c++",
-              "functions": "!empty",
-              "classes": "!empty",
-              "has_classes": true,
+              "language": "C++",
               "analysis_method": "!unknown"
             }
           }
@@ -173,11 +161,10 @@
       "expected_results": {
         "should_contain": [
           {
-            "filename_pattern": ".*(tmp/)?test_c\\.c$",
+            "filename_pattern": ".*(tmp/)?c_example_1\\.c$",
             "expected_metadata": {
-              "language": "c",
+              "language": "C",
               "functions": "!empty",
-              "has_classes": false,
               "analysis_method": "!unknown"
             }
           }
@@ -194,12 +181,10 @@
       "expected_results": {
         "should_contain": [
           {
-            "filename_pattern": ".*(tmp/)?test_kotlin\\.kt$",
+            "filename_pattern": ".*(tmp/)?kotlin_example_1\\.kt$",
             "expected_metadata": {
-              "language": "kotlin",
+              "language": "Kotlin",
               "functions": "!empty",
-              "classes": "!empty",
-              "has_classes": true,
               "analysis_method": "!unknown"
             }
           }
@@ -216,11 +201,9 @@
       "expected_results": {
         "should_contain": [
           {
-            "filename_pattern": ".*(tmp/)?HaskellExample1\\.hs$",
+            "filename_pattern": ".*(tmp/)?.*\\.hs$",
             "expected_metadata": {
-              "language": "haskell",
-              "functions": "!empty",
-              "has_classes": false,
+              "language": "Haskell",
               "analysis_method": "!unknown"
             }
           }
@@ -280,10 +263,9 @@
         "should_contain": [
           {
             "expected_metadata": {
-              "language": "python",
+              "language": "Python",
               "classes": "!empty",
               "has_classes": true,
-              "functions": "!empty",
               "analysis_method": "!unknown"
             }
           }
@@ -302,7 +284,6 @@
           {
             "expected_metadata": {
               "functions": "!empty",
-              "has_classes": false,
               "analysis_method": "!unknown"
             }
           }

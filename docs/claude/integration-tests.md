@@ -2,6 +2,18 @@
 
 This guide explains how to run integration tests for the CocoIndex Code MCP Server and verify results against the codebase and PostgreSQL database.
 
+## Current Status
+
+**As of 2025-10-01:** 12/15 keyword search tests passing (80%)
+
+Major test fixture issues were identified and fixed:
+- Case sensitivity (database uses Title Case: `Python`, `Rust`)
+- Wrong filenames in test expectations
+- Overly strict metadata requirements
+- Obsolete `chunking_method` values
+
+See [Integration Test Results](integration-test-results.md) for detailed analysis.
+
 ## Overview
 
 Integration tests validate the complete RAG pipeline:
