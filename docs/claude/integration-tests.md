@@ -4,13 +4,16 @@ This guide explains how to run integration tests for the CocoIndex Code MCP Serv
 
 ## Current Status
 
-**As of 2025-10-01:** 12/15 keyword search tests passing (80%)
+**As of 2025-10-01:**
+- **Keyword Search:** 12/15 tests passing (80%)
+- **Hybrid Search:** Fixing test fixtures (in progress)
 
 Major test fixture issues were identified and fixed:
-- Case sensitivity (database uses Title Case: `Python`, `Rust`)
-- Wrong filenames in test expectations
+- Case sensitivity (database uses Title Case: `Python`, `Rust`, `Java`, etc.)
+- Wrong filenames in test expectations (`test_*.ext` → `*_example_1.ext`)
 - Overly strict metadata requirements
-- Obsolete `chunking_method` values
+- Obsolete `chunking_method` values (`astchunk_library` → `ast_tree_sitter`)
+- False `has_classes: false` requirements for Rust/C/Haskell
 
 See [Integration Test Results](integration-test-results.md) for detailed analysis.
 
@@ -51,11 +54,17 @@ Tests combined keyword filtering + vector similarity ranking.
 ### Basic Test Execution
 
 ```bash
-# Run all keyword search tests
+# Run keyword search tests
 pytest -c pytest.ini ./tests/search/test_keyword_search.py
 
+# Run hybrid search tests
+pytest -c pytest.ini ./tests/search/test_hybrid_search.py
+
+# Run vector search tests
+pytest -c pytest.ini ./tests/search/test_vector_search.py
+
 # Run specific test
-pytest -c pytest.ini ./tests/search/test_keyword_search.py::test_python_language_filter
+pytest -c pytest.ini ./tests/search/test_keyword_search.py::TestKeywordSearch::test_keyword_search_validation
 
 # Run with verbose output
 pytest -c pytest.ini ./tests/search/test_keyword_search.py -v
@@ -67,13 +76,17 @@ pytest -c pytest.ini ./tests/search/
 ### Clean Results Before Testing
 
 ```bash
-# Clear previous test results
+# Clear previous keyword search test results
 rm -r test-results/search-keyword/*
-rm -r test-results/search-vector/*
-rm -r test-results/search-hybrid/*
-
-# Run tests
 pytest -c pytest.ini ./tests/search/test_keyword_search.py
+
+# Clear previous hybrid search test results
+rm -r test-results/search-hybrid/*
+pytest -c pytest.ini ./tests/search/test_hybrid_search.py
+
+# Clear all search test results
+rm -r test-results/search-*/*
+pytest -c pytest.ini ./tests/search/
 ```
 
 ### Test Configuration
