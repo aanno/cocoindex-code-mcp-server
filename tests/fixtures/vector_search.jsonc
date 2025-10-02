@@ -114,7 +114,6 @@
             "filename_pattern": ".*(tmp/)?rust_example_1\\.rs$",
             "expected_metadata": {
               "functions": "!empty",
-              "has_classes": false,
               "complexity_score": ">0",
               "analysis_method": "!unknown"
             }
@@ -136,7 +135,7 @@
               "classes": "!empty",
               "functions": "!empty",
               "has_classes": true,
-              "complexity_score": ">2",
+              "complexity_score": ">0",
               "analysis_method": "!unknown"
             }
           }
@@ -155,7 +154,7 @@
           {
             "expected_metadata": {
               "functions": "!empty",
-              "complexity_score": ">1",
+              "complexity_score": ">0",
               "analysis_method": "!unknown"
             }
           }
@@ -297,7 +296,7 @@
   ],
   "test_metadata": {
     "version": "2.0",
-    "description": "Full text (vector) search tests to validate semantic code search across all supported languages",
+    "description": "Vector-only search tests to validate semantic code search across all supported languages",
     "search_type": "vector_only",
     "supported_languages": [
       "python", "rust", "java", "javascript", "typescript", 

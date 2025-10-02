@@ -4,16 +4,18 @@ This guide explains how to run integration tests for the CocoIndex Code MCP Serv
 
 ## Current Status
 
-**As of 2025-10-01:**
+**As of 2025-10-02:**
 - **Keyword Search:** 12/15 tests passing (80%)
-- **Hybrid Search:** Fixing test fixtures (in progress)
+- **Hybrid Search:** Test fixtures fixed (awaiting execution)
+- **Vector Search:** Test fixtures fixed (awaiting execution)
 
-Major test fixture issues were identified and fixed:
+Major test fixture issues identified and fixed across all search types:
 - Case sensitivity (database uses Title Case: `Python`, `Rust`, `Java`, etc.)
 - Wrong filenames in test expectations (`test_*.ext` → `*_example_1.ext`)
-- Overly strict metadata requirements
+- Overly strict metadata requirements (complexity scores, field requirements)
 - Obsolete `chunking_method` values (`astchunk_library` → `ast_tree_sitter`)
-- False `has_classes: false` requirements for Rust/C/Haskell
+- False `has_classes: false` requirements for Rust/C/Haskell (structs counted as classes)
+- Overly strict complexity scores (`>2` or `>3` → `>0`)
 
 See [Integration Test Results](integration-test-results.md) for detailed analysis.
 
@@ -41,8 +43,13 @@ Tests metadata-based filtering without vector similarity:
 
 ### 2. Vector Search Tests
 **Location:** `tests/search/test_vector_search.py`
+**Fixture:** `tests/fixtures/vector_search.jsonc`
 
-Tests semantic similarity search using embeddings.
+Tests semantic similarity search using embeddings only (no keyword filtering):
+- Semantic code pattern searches (AST, algorithms, data structures)
+- Programming paradigm searches (OOP, functional, concurrent)
+- Domain-specific searches (database, error handling, design patterns)
+- Cross-language concept searches (fibonacci, inheritance, generics)
 
 ### 3. Hybrid Search Tests
 **Location:** `tests/search/test_hybrid_search.py`
@@ -97,9 +104,9 @@ pytest -c pytest.ini ./tests/search/
 ### Test Configuration
 
 Tests use fixtures from:
-- `tests/fixtures/keyword_search.jsonc` - Keyword search test cases
-- `tests/fixtures/vector_search.jsonc` - Vector search test cases
-- `tests/fixtures/hybrid_search.jsonc` - Hybrid search test cases
+- `tests/fixtures/keyword_search.jsonc` - Keyword search test cases (15 tests)
+- `tests/fixtures/vector_search.jsonc` - Vector search test cases (15 tests)
+- `tests/fixtures/hybrid_search.jsonc` - Hybrid search test cases (17 tests)
 
 Test code files:
 - `tmp/` - Sample code files in various languages (Python, Rust, Java, C, C++, JavaScript, TypeScript, Kotlin, Haskell)

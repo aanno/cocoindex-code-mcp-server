@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Full Text Search Tests
+Vector Search Tests
 
 This module contains tests for vector-only search functionality using CocoIndex
 infrastructure directly. These tests validate semantic code search capabilities
@@ -28,8 +28,8 @@ from ..search_config import SearchTestConfig
 
 @pytest.mark.skipif(not COCOINDEX_AVAILABLE, reason="CocoIndex infrastructure not available")
 @pytest.mark.asyncio
-class TestFullTextSearch:
-    """Full text (vector-only) search tests using CocoIndex infrastructure."""
+class TestVectorSearch:
+    """Vector-only search tests using CocoIndex infrastructure."""
 
     async def test_vector_search_validation(self):
         """Test vector-only search functionality using direct CocoIndex infrastructure."""
@@ -67,7 +67,7 @@ class TestFullTextSearch:
             # No need to wait - infrastructure is ready for searches
 
             # Load test cases from fixture file
-            fixture_path = Path(__file__).parent.parent / "fixtures" / "full_text_search.jsonc"
+            fixture_path = Path(__file__).parent.parent / "fixtures" / "vector_search.jsonc"
             test_data = parse_jsonc_file(fixture_path)
 
             # Run vector search tests using direct infrastructure
