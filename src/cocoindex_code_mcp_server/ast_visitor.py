@@ -283,16 +283,23 @@ class GenericMetadataVisitor(ASTVisitor):
             'switch_statement': 2, 'case_statement': 1,
             'try_statement': 1, 'catch_clause': 1, 'except_clause': 1,
 
-            # Functions and methods
+            # Functions and methods (including language-specific variants)
             'function_definition': 2, 'method_definition': 2, 'function_declaration': 2,
-            'lambda': 1, 'arrow_function': 1,
+            'method_declaration': 2,  # Java/C#
+            'constructor_declaration': 2,  # Java/C#
+            'lambda': 1, 'arrow_function': 1, 'lambda_expression': 1,
 
             # Classes and structures
             'class_definition': 3, 'class_declaration': 3, 'struct_declaration': 3,
+            'interface_declaration': 2,  # Java/C#
 
             # Advanced constructs
             'generator_expression': 2, 'list_comprehension': 1,
             'with_statement': 1, 'async_function_definition': 2,
+            
+            # Exception handling
+            'try_with_resources_statement': 1,  # Java
+            'catch_clause': 1, 'finally_clause': 1,
         }
 
         weight = complexity_weights.get(node_type, 0)

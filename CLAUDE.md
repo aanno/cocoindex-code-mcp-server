@@ -14,17 +14,34 @@ python -m cocoindex_code_mcp_server.main_mcp_server
 Our code is mypy compatible! Use the type checking script:
 
 ```bash
-./scripts/mypy-check.sh
+./scripts/mypy-check.sh # and
+./scripts/mypy-check-tests.sh
 ```
 
 - If you are technically stuck or unsure about the next step, ask for help.
 - cocoindex is a complex beast, so don't hesitate to ask for clarification or guidance.
-- Test should be pytest at ./tests (NOT at ./src/cocoindex_code_mcp_server/tests).
+- Tests should be pytest at ./tests (NOT at ./src/cocoindex_code_mcp_server/tests).
+- Tests should use pytest and pytest plugins only (i.e. don't use unittest).
 - Think about using our own RAG (MCP server 'cocoindex-rag') before using grep or search.
 - Never try to start/stop our RAG MCP server, just ask, I will do it for you.
 - Use gw-memory to store and retrieve information about the codebase.
   + Tag all entries with 'cocoindex_code_mcp_server' to indicate they are related to the code MCP server.
   + After you have been started, it is a good idea to retrieve what's has been stored lately, so you have the latest context.
+
+## MCP tool usage
+
+Don't use tool 'vscode-mcp-server - execute_shell_command_code (MCP)' because of
+issues. Instead, use bash directly.
+
+For editing file, use tool 'Opened changes in Visual Studio Code'. This is 
+much better than tool 'update'. But if you use tool 'update', don't forget to 
+use tool 'filesystem - read_text_file (MCP)' before that. Otherwise you get the
+following error: File has not been read yet. Read it first before writing to it.
+
+## DB connections
+
+DB connection properties could be found in .env and should be loaded with load_dotenv.
+There are many examples how to do this throughout our code.
 
 ## Project Overview
 

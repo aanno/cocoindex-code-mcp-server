@@ -38,7 +38,10 @@ class RustASTVisitor(GenericMetadataVisitor):
         # Track node statistics
         self.node_stats[node_type] = self.node_stats.get(node_type, 0) + 1
 
-        # Extract Rust-specific constructs
+        
+        # Update complexity score based on node type (inherited from GenericMetadataVisitor)
+        self._update_complexity(node_type)
+# Extract Rust-specific constructs
         if node_type == 'function_item':
             self._extract_function(node)
         elif node_type == 'struct_item':
@@ -63,9 +66,9 @@ class RustASTVisitor(GenericMetadataVisitor):
                     text = child.text
                     if text is not None:
                         func_name = text.decode('utf-8')
-                    self.functions.append(func_name)
-                    LOGGER.debug(f"Found Rust function: {func_name}")
-                    break  # Take the first identifier (function name)
+                        self.functions.append(func_name)
+                        LOGGER.debug(f"Found Rust function: {func_name}")
+                        break  # Take the first identifier (function name)
         except Exception as e:
             LOGGER.warning(f"Error extracting Rust function: {e}")
 

@@ -307,28 +307,14 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                     from .language_handlers.rust_visitor import analyze_rust_code
                     metadata = analyze_rust_code(text, filename)
                 elif lang_lower == "java":
-                    # Check if chunking_method is already set to astchunk_library (preserve it)
+                    # Always use Java AST visitor for proper analysis
+                    from .language_handlers.java_visitor import analyze_java_code
+                    metadata = analyze_java_code(text, filename)
+                    
+                    # Preserve chunking method if it was already set by AST chunking
                     if preserve_chunking_method == "astchunk_library":
-                        LOGGER.debug("Preserving ASTChunk chunking_method for Java")
-                        metadata = {
-                            "analysis_method": "astchunk_library",
-                            "chunking_method": "astchunk_library",
-                            "functions": [],
-                            "classes": [],
-                            "imports": [],
-                            "has_classes": False,
-                            "has_async": False,
-                            "has_type_hints": False,
-                            "complexity_score": 0,
-                            "decorators_used": [],
-                            "dunder_methods": [],
-                            "tree_sitter_chunking_error": False,
-                            "tree_sitter_analyze_error": False,
-                            "success": True
-                        }
-                    else:
-                        from .language_handlers.java_visitor import analyze_java_code
-                        metadata = analyze_java_code(text, filename)
+                        LOGGER.debug("Preserving ASTChunk chunking_method for Java while keeping AST analysis")
+                        metadata["chunking_method"] = "astchunk_library"
                 elif lang_lower in ["javascript", "js"]:
                     # Check if chunking_method is already set to astchunk_library (preserve it)
                     if preserve_chunking_method == "astchunk_library":
@@ -389,8 +375,45 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                     from .language_handlers.kotlin_visitor import analyze_kotlin_code
                     metadata = analyze_kotlin_code(text, filename)
                 elif lang_lower in ["haskell", "hs"]:
-                    from .language_handlers.haskell_visitor import analyze_haskell_code
-                    metadata = analyze_haskell_code(text, filename)
+                    # Modern Haskell analysis using AST chunks
+                    from .lang.haskell.haskell_ast_chunker import extract_haskell_ast_chunks
+                    chunks = extract_haskell_ast_chunks(text)
+                    
+                    # Extract aggregated metadata from chunks  
+                    functions = []
+                    classes = []
+                    data_types = []
+                    modules = []
+                    
+                    for chunk in chunks:
+                        if isinstance(chunk, dict) and 'metadata' in chunk:
+                            chunk_meta = chunk['metadata']
+                            if 'function_name' in chunk_meta:
+                                func_name = chunk_meta['function_name'] 
+                                if func_name not in functions:
+                                    functions.append(func_name)
+                            if 'class_name' in chunk_meta:
+                                class_name = chunk_meta['class_name']
+                                if class_name not in classes:
+                                    classes.append(class_name)
+                            if 'module_name' in chunk_meta:
+                                module_name = chunk_meta['module_name']
+                                if module_name not in modules:
+                                    modules.append(module_name)
+                    
+                    metadata = {
+                        "analysis_method": "rust_haskell_ast",
+                        "functions": functions,
+                        "classes": classes,
+                        "data_types": data_types,
+                        "modules": modules,
+                        "imports": [],
+                        "has_classes": len(classes) > 0,
+                        "has_module": len(modules) > 0,
+                        "complexity_score": len(functions) * 2 + len(classes) * 3,  # Simple heuristic
+                        "tree_sitter_chunking_error": False,
+                        "tree_sitter_analyze_error": False,
+                    }
                 else:
                     LOGGER.debug(f"No specialized analyzer for language: {language}")
 
@@ -440,13 +463,11 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                 "has_classes": False,
                 "decorators_used": [],
                 "analysis_method": "unknown_analysis",
-                # NOTE: chunking_method removed from metadata - it comes from AST chunkers only
+                "chunking_method": preserve_chunking_method or "ast_tree_sitter",
                 "tree_sitter_chunking_error": False,
                 "tree_sitter_analyze_error": False,
                 "dunder_methods": [],
             }
-
-            # NOTE: chunking_method preservation removed - it comes from AST chunkers only
 
             update_defaults(result, defaults)
         else:
@@ -471,13 +492,10 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
             "has_classes": False,
             "decorators_used": [],
             "analysis_method": "error_fallback",
-            # Promoted metadata fields for database columns
-            # NOTE: chunking_method removed from metadata - it comes from AST chunkers only
+            "chunking_method": preserve_chunking_method or "ast_tree_sitter_fallback",
             "tree_sitter_chunking_error": True,  # True because we had an error
             "tree_sitter_analyze_error": True,   # True because we had an error
         }
-
-        # NOTE: chunking_method preservation removed - it comes from AST chunkers only
         return json.dumps(fallback_result)
 
 
@@ -1719,4 +1737,77 @@ def run_flow_update(live_update: bool = False, poll_interval: int = 30) -> None:
     else:
         # Regular one-time update mode
         stats = code_embedding_flow.update()
+        LOGGER.info("Updated index: %s", stats)
+
+
+def update_specific_flow_config(
+    flow_def,
+    paths: Union[List[str], None] = None, 
+    enable_polling: bool = False, 
+    poll_interval: int = 30,
+    use_default_embedding: bool = False, 
+    use_default_chunking: bool = False,
+    use_default_language_handler: bool = False, 
+    chunk_factor_percent: int = 100
+) -> None:
+    """Update the global flow configuration for a specific flow definition."""
+    global _global_flow_config
+
+    # Scale chunking parameters if needed
+    scale_chunking_params(chunk_factor_percent)
+
+    _global_flow_config.update({
+        'paths': paths or ["tmp"],
+        'enable_polling': enable_polling,
+        'poll_interval': poll_interval,
+        'use_default_embedding': use_default_embedding,
+        'use_default_chunking': use_default_chunking,
+        'use_default_language_handler': use_default_language_handler
+    })
+    
+    flow_name = getattr(flow_def, '__name__', str(flow_def))
+    LOGGER.info(f"✅ Updated flow config for {flow_name}: paths={paths}, chunking={chunk_factor_percent}%")
+
+
+def run_specific_flow_update(
+    flow_def, 
+    live_update: bool = False, 
+    poll_interval: int = 30
+) -> None:
+    """Run a specific flow update (one-time or live)."""
+    if live_update:
+        flow_name = getattr(flow_def, '__name__', str(flow_def))
+        LOGGER.info(f"🔄 Starting live update mode for {flow_name}...")
+        if poll_interval > 0:
+            LOGGER.info(f"📊 File polling enabled: {poll_interval} seconds")
+        else:
+            LOGGER.info("📊 Event-based monitoring (no polling)")
+
+        # Setup the flow first
+        flow_def.setup()
+
+        # Initial update
+        LOGGER.info("🚀 Initial index build...")
+        stats = flow_def.update()
+        LOGGER.info("Initial index built: %s", stats)
+
+        # Start live updater
+        LOGGER.info("👁️  Starting live file monitoring...")
+        live_options = cocoindex.FlowLiveUpdaterOptions(
+            live_mode=True,
+            print_stats=True
+        )
+
+        with cocoindex.FlowLiveUpdater(flow_def, live_options) as updater:
+            LOGGER.info("✅ Live update mode active. Press Ctrl+C to stop.")
+            try:
+                updater.wait()
+            except KeyboardInterrupt:
+                LOGGER.info("\n⏹️  Stopping live update mode...")
+
+    else:
+        # Regular one-time update mode
+        flow_name = getattr(flow_def, '__name__', str(flow_def))
+        LOGGER.info(f"🔄 Running one-time update for {flow_name}...")
+        stats = flow_def.update()
         LOGGER.info("Updated index: %s", stats)

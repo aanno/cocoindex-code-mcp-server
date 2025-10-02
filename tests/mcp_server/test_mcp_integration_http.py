@@ -16,7 +16,7 @@ import pytest_asyncio
 from dotenv import load_dotenv
 
 # Import our common MCP client
-from tests.mcp_client import MCPHTTPClient, MCPTestClient
+from ..mcp_client import MCPHTTPClient, MCPTestClient
 
 # Configure logging
 logging.basicConfig(
@@ -395,7 +395,7 @@ class DataProcessor:
         """Test hybrid search functionality against expected results from fixtures."""
         import time
 
-        from tests.common import (
+        from ..common import (
             compare_expected_vs_actual,
             copy_directory_structure,
             format_test_failure_report,

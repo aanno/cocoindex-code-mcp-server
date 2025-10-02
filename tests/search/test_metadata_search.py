@@ -19,7 +19,7 @@ from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
 )
 from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
 
-from .cocoindex_util import get_default_db_name
+from ..cocoindex_util import get_default_db_name
 
 # Set up logger for tests
 LOGGER = logging.getLogger(__name__)

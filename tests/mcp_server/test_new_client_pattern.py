@@ -11,7 +11,7 @@ import pytest
 import pytest_asyncio
 from dotenv import load_dotenv
 
-from tests.mcp_client import MCPTestClient
+from ..mcp_client import MCPTestClient
 
 
 @pytest_asyncio.fixture

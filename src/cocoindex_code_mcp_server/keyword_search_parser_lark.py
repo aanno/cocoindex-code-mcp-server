@@ -255,10 +255,10 @@ def build_sql_where_clause(search_group: SearchGroup, table_alias: str = "") -> 
                     # Check if this is an array field that needs special handling
                     array_fields = {"functions", "classes", "imports"}
                     if validated_field in array_fields:
-                        # These fields are stored as string representations of Python lists
-                        # Use LIKE to find the value within the string representation
-                        where_parts.append(f"{prefix}{validated_field} LIKE %s")
-                        params.append(f"%'{condition.value}'%")
+                        # These fields are stored as space-separated strings
+                        # Use ILIKE to find the value as a substring
+                        where_parts.append(f"{prefix}{validated_field} ILIKE %s")
+                        params.append(f"%{condition.value}%")
                     else:
                         where_parts.append(f"{prefix}{validated_field} = %s")
                         params.append(condition.value)

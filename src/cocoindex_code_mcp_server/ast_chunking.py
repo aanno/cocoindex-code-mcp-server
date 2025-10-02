@@ -70,8 +70,16 @@ class ASTChunkExecutor:
     spec: ASTChunkSpec
     _builders: Dict[str, Any] = {}
 
-    def analyze(self, content: Any, language: Any = "auto") -> type:
-        """Analyze method required by CocoIndex to determine return type."""
+    def analyze(self, content: Any = None, language: Any = "auto") -> type:
+        """Analyze method required by CocoIndex to determine return type.
+
+        Args:
+            content: Schema information for content parameter (OpArgSchema, not actual content)
+            language: Schema information for language parameter (OpArgSchema, not actual value)
+
+        Returns:
+            The return type for this operation
+        """
         return list[ASTChunkRow]
 
     def _convert_chunks_to_ast_chunk_rows(self, chunks: List[ChunkRow]) -> list[ASTChunkRow]:
