@@ -46,8 +46,13 @@ Tests semantic similarity search using embeddings.
 
 ### 3. Hybrid Search Tests
 **Location:** `tests/search/test_hybrid_search.py`
+**Fixture:** `tests/fixtures/hybrid_search.jsonc`
 
-Tests combined keyword filtering + vector similarity ranking.
+Tests combined keyword filtering + vector similarity ranking:
+- Language-specific semantic searches (Python, Rust, Java, JavaScript, TypeScript, C++, C, Kotlin, Haskell)
+- Cross-language pattern searches (fibonacci implementations, class definitions)
+- Metadata validation with semantic relevance
+- Configurable vector/keyword weighting
 
 ## Running Tests
 
@@ -424,6 +429,119 @@ pip install pytest psycopg python-dotenv
 6. **Verify against source**: Compare with actual code files in `tmp/`
 7. **Document issues**: Record any failures or unexpected results
 
+## Hybrid Search Testing
+
+### Hybrid Search Overview
+
+Hybrid search combines:
+1. **Keyword Filtering**: Metadata-based filtering (language, functions, classes, etc.)
+2. **Vector Similarity**: Semantic similarity using embeddings
+3. **Weighted Ranking**: Configurable weights for keyword vs vector scores
+
+### Test Categories
+
+#### 1. Language-Specific Semantic Searches
+Tests semantic queries combined with language filters:
+```json
+{
+  "query": {
+    "vector_query": "struct implementation methods",
+    "keyword_query": "language:Rust"
+  }
+}
+```
+
+#### 2. Cross-Language Pattern Searches
+Tests semantic patterns across multiple languages:
+```json
+{
+  "query": {
+    "vector_query": "fibonacci recursive algorithm implementation",
+    "keyword_query": "functions:fibonacci"
+  }
+}
+```
+
+#### 3. Metadata Validation
+Tests metadata fields with semantic relevance:
+```json
+{
+  "query": {
+    "vector_query": "python class functions",
+    "keyword_query": "language:Python has_classes:true"
+  }
+}
+```
+
+### Running Hybrid Search Tests
+
+```bash
+# Clean results
+rm -r test-results/search-hybrid/*
+
+# Run tests
+pytest -c pytest.ini ./tests/search/test_hybrid_search.py
+
+# View results
+ls -lh test-results/search-hybrid/
+cat test-results/search-hybrid/<test_name>_*.json | jq .
+```
+
+### Analyzing Hybrid Search Results
+
+Hybrid search results include both keyword and vector components:
+
+```python
+import json
+
+# Load hybrid search result
+with open('test-results/search-hybrid/java_class_inheritance_search_*.json') as f:
+    result = json.load(f)
+
+# Check query used
+print(f"Vector query: {result['query']['vector_query']}")
+print(f"Keyword query: {result['query']['keyword_query']}")
+
+# Check results
+for r in result['search_results']['results']:
+    print(f"File: {r['filename']}")
+    print(f"  Language: {r['language']}")
+    print(f"  Classes: {r['classes']}")
+    print(f"  Functions: {r['functions']}")
+```
+
+### Hybrid vs Keyword Comparison
+
+```bash
+# Run both test types
+pytest -c pytest.ini ./tests/search/test_keyword_search.py
+pytest -c pytest.ini ./tests/search/test_hybrid_search.py
+
+# Compare results
+python3 << 'EOF'
+import json
+import glob
+
+keyword_results = glob.glob('test-results/search-keyword/*.json')
+hybrid_results = glob.glob('test-results/search-hybrid/*.json')
+
+print(f"Keyword tests: {len(keyword_results)}")
+print(f"Hybrid tests: {len(hybrid_results)}")
+
+# Compare specific test
+kw_file = 'test-results/search-keyword/python_language_filter_*.json'
+hy_file = 'test-results/search-hybrid/basename_python_language_filter_*.json'
+
+if glob.glob(kw_file) and glob.glob(hy_file):
+    kw = json.load(open(glob.glob(kw_file)[0]))
+    hy = json.load(open(glob.glob(hy_file)[0]))
+
+    print(f"\nPython results:")
+    print(f"  Keyword-only: {kw['search_results']['total_results']} results")
+    print(f"  Hybrid: {hy['search_results']['total_results']} results")
+EOF
+```
+
 ## Continuous Integration
 
 For CI/CD pipelines:
@@ -438,7 +556,7 @@ export COCOINDEX_DATABASE_URL="postgres://cocoindex:cocoindex@host.docker.intern
 # Clean previous results
 rm -rf test-results/search-*/*
 
-# Run tests
+# Run all search tests
 pytest -c pytest.ini ./tests/search/ -v --tb=short
 
 # Verify results
