@@ -498,7 +498,7 @@ fn extract_chunks_with_recursive_splitting(
                 }
                 cursor.goto_parent();
             }
-            return;
+            // Don't return here - continue to allow processing of sibling nodes
         }
         
         // Check if this node is too large and needs recursive splitting
