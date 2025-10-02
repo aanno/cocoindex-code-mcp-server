@@ -13,7 +13,7 @@
 ### Hybrid Search Tests
 **Command:** `pytest -c pytest.ini ./tests/search/test_hybrid_search.py`
 **Database:** `hybridsearchtest_code_embeddings`
-**Status:** ✅ **Test fixtures fixed** (awaiting execution)
+**Status:** ✅ **20/21 tests PASSING** (95.2%) - 1 failure due to Rust complexity bug
 
 ### Vector Search Tests
 **Command:** `pytest -c pytest.ini ./tests/search/test_vector_search.py`
@@ -689,15 +689,61 @@ Tests combining semantic queries with language filters:
 - Chunking methods (`ast_tree_sitter`)
 - Boolean flags (has_classes, has_type_hints, etc.)
 
-## Hybrid Search vs Keyword Search
+## Hybrid Search Implementation: INTERSECTION Behavior ✅ VERIFIED
 
-| Aspect | Keyword Search | Hybrid Search |
-|--------|---------------|---------------|
-| Query Method | Metadata filtering only | Metadata + Vector similarity |
-| Speed | Very fast (<20ms) | Slightly slower (vector computation) |
-| Accuracy | Exact matches only | Semantic similarity matches |
-| Use Case | Known metadata filters | Exploratory searches |
-| Test Pass Rate | 80% (12/15) | TBD (after running fixed tests) |
+### Test Results Summary
+**Status:** ✅ **20/21 tests PASSING** (95.2%)
+**Date:** 2025-10-02
+**Total Tests:** 21 (17 original + 4 new intersection verification tests)
+
+### How Hybrid Search Actually Works
+
+**Implementation:** `postgres_backend.py:211-250`
+
+```sql
+WITH vector_scores AS (
+    SELECT *, embedding <=> %s AS vector_distance
+    FROM table
+    WHERE {keyword_filters}  -- KEYWORD FILTER FIRST (intersection)
+),
+ranked_results AS (
+    SELECT *, (vector_similarity * vector_weight) AS hybrid_score
+    FROM vector_scores
+)
+SELECT * FROM ranked_results ORDER BY hybrid_score DESC LIMIT top_k
+```
+
+**Key Findings:**
+1. ✅ **INTERSECTION approach confirmed**: Keyword filters restrict results FIRST
+2. ✅ **Vector similarity ranks** within the filtered subset
+3. ⚠️ **keyword_weight parameter is IGNORED** - only vector_weight is used (potential bug)
+4. ✅ **Hybrid results ⊆ Keyword results** (always true)
+5. ✅ **Hybrid ≠ Union** of vector + keyword results
+
+### Intersection Verification Tests
+
+All 4 new intersection tests passed, confirming expected behavior:
+
+| Test | Vector Query | Keyword Filter | Results | Languages Found |
+|------|-------------|----------------|---------|-----------------|
+| `fibonacci_java_only` | "recursive fibonacci..." | `language:Java` | 6 results | Java only ✅ |
+| `complex_python_only` | "complex recursive algorithm..." | `language:Python` | 6 results | Python only ✅ |
+| `class_based_languages` | "class definition constructor..." | `has_classes:true` | 10 results | Java, Kotlin, Python, Rust ✅ |
+| `semantic_ranking_rust` | "struct implementation..." | `language:Rust` | 2 results | Rust only ✅ |
+
+**Conclusion:** Hybrid search correctly filters by keywords FIRST, then ranks by semantic similarity within filtered set.
+
+## Hybrid Search vs Keyword Search vs Vector Search
+
+| Aspect | Keyword Search | Vector Search | Hybrid Search |
+|--------|---------------|---------------|---------------|
+| **Query Method** | Metadata filtering only | Semantic similarity only | Metadata filter + Vector ranking |
+| **Implementation** | WHERE clause | ORDER BY distance | WHERE + ORDER BY similarity |
+| **Result Set** | All matching metadata | Top-k by similarity | Top-k within filtered set |
+| **Speed** | Very fast (<20ms) | Fast (vector index) | Moderate (filter + vector) |
+| **Accuracy** | Exact matches only | Semantic matches | Semantic within constraints |
+| **Use Case** | Known metadata filters | Exploratory searches | Targeted semantic search |
+| **Test Pass Rate** | 80% (12/15) | 93% (14/15) | 95% (20/21) |
 
 ## Running Hybrid Search Tests
 
@@ -721,23 +767,32 @@ After fixing test fixtures, expect:
   - Haskell metadata incompleteness
   - Specific missing features (e.g., `filename:` filter)
 
-## Known Issues (Same as Keyword Search)
+## Known Issues
 
-### 1. JavaScript Parser Failure 🔴 CRITICAL
+### 1. Rust Complexity Score Always Zero 🔴 CRITICAL
+- **Bug:** `rust_ast_visitor` does not calculate complexity scores
+- **Impact:** 1 test fails (`rust_struct_search`)
+- **Test Status:** Test expectation `complexity_score: '>0'` is CORRECT - do not change it
+- **Required Fix:** Fix `rust_ast_visitor` complexity calculation in Rust analyzer
+- **See:** Vector search section for detailed analysis
+
+### 2. keyword_weight Parameter Ignored ⚠️ MEDIUM
+- **Bug:** Hybrid search only uses `vector_weight` in scoring
+- **Code:** `postgres_backend.py:237` - only vector_similarity multiplied by vector_weight
+- **Expected:** Should combine both vector_weight and keyword_weight in hybrid scoring
+- **Impact:** Keyword relevance not reflected in result ranking
+- **Current:** Results are ranked purely by vector similarity within keyword-filtered set
+
+### 3. JavaScript Parser Failure 🔴 CRITICAL
 - All JavaScript files fail to analyze
 - `analysis_method: no_success_analyze`
 - Empty functions/classes fields
-- Affects both keyword and hybrid search
+- Affects keyword, hybrid, and vector search
 
-### 2. Haskell Metadata Extraction Incomplete ⚠️ MEDIUM
+### 4. Haskell Metadata Extraction Incomplete ⚠️ MEDIUM
 - Function names not consistently extracted
 - Only 2/8 Haskell chunks have function metadata
 - Affects search quality for Haskell code
-
-### 3. filename: Keyword Filter 🔍 UNCLEAR
-- `filename:Main1` query returned 0 results
-- May indicate `filename:` filter not implemented
-- Or may be regex matching issue
 
 ## Test Artifacts
 

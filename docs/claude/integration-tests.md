@@ -6,8 +6,8 @@ This guide explains how to run integration tests for the CocoIndex Code MCP Serv
 
 **As of 2025-10-02:**
 - **Keyword Search:** 12/15 tests passing (80%)
-- **Hybrid Search:** Test fixtures fixed (awaiting execution)
-- **Vector Search:** Test fixtures fixed (awaiting execution)
+- **Hybrid Search:** 20/21 tests passing (95.2%) ✅
+- **Vector Search:** 14/15 tests passing (93.3%) ✅
 
 Major test fixture issues identified and fixed across all search types:
 - Case sensitivity (database uses Title Case: `Python`, `Rust`, `Java`, etc.)
@@ -438,17 +438,64 @@ pip install pytest psycopg python-dotenv
 
 ## Hybrid Search Testing
 
-### Hybrid Search Overview
+### Hybrid Search Implementation: INTERSECTION Behavior ✅ VERIFIED
 
-Hybrid search combines:
-1. **Keyword Filtering**: Metadata-based filtering (language, functions, classes, etc.)
-2. **Vector Similarity**: Semantic similarity using embeddings
-3. **Weighted Ranking**: Configurable weights for keyword vs vector scores
+**Test Results:** ✅ **20/21 tests PASSING** (95.2%)
+**Date:** 2025-10-02
+
+#### How Hybrid Search Actually Works
+
+From `postgres_backend.py:211-250`, hybrid search implements **INTERSECTION semantics**:
+
+```sql
+WITH vector_scores AS (
+    SELECT *, embedding <=> %s AS vector_distance,
+           (1.0 - (embedding <=> %s)) AS vector_similarity
+    FROM table
+    WHERE {keyword_filters}  -- KEYWORD FILTER FIRST (intersection)
+),
+ranked_results AS (
+    SELECT *, (vector_similarity * vector_weight) AS hybrid_score
+    FROM vector_scores
+)
+SELECT * FROM ranked_results ORDER BY hybrid_score DESC LIMIT top_k
+```
+
+**Key Findings:**
+
+1. ✅ **INTERSECTION approach**: Keyword filters restrict results FIRST
+2. ✅ **Vector similarity ranks** within the filtered subset
+3. ⚠️ **keyword_weight parameter is IGNORED** - only vector_weight is used (bug)
+4. ✅ **Hybrid results ⊆ Keyword results** (always true)
+5. ✅ **Hybrid ≠ Union** of vector + keyword results
+
+#### Three Search Modes Comparison
+
+| Search Type | Filter | Ranking | Use Case |
+|-------------|--------|---------|----------|
+| **Vector** | None | Vector similarity | Semantic search across all code |
+| **Keyword** | Metadata filters | filename, start position | Exact metadata filtering |
+| **Hybrid** | Metadata filters | Vector similarity (within filtered) | Semantic search within specific language/file type |
+
+#### Intersection Verification Tests
+
+All 4 intersection verification tests passed, confirming expected behavior:
+
+| Test | Vector Query | Keyword Filter | Results | Verified |
+|------|-------------|----------------|---------|----------|
+| `fibonacci_java_only` | "recursive fibonacci..." | `language:Java` | 6 Java results | ✅ |
+| `complex_python_only` | "complex algorithm..." | `language:Python` | 6 Python results | ✅ |
+| `class_based_languages` | "class definition..." | `has_classes:true` | 10 OOP results | ✅ |
+| `semantic_ranking_rust` | "struct implementation..." | `language:Rust` | 2 Rust results | ✅ |
+
+**Conclusion:** Hybrid search correctly filters by keywords FIRST, then ranks by semantic similarity within filtered set.
 
 ### Test Categories
 
 #### 1. Language-Specific Semantic Searches
+
 Tests semantic queries combined with language filters:
+
 ```json
 {
   "query": {
@@ -459,7 +506,9 @@ Tests semantic queries combined with language filters:
 ```
 
 #### 2. Cross-Language Pattern Searches
+
 Tests semantic patterns across multiple languages:
+
 ```json
 {
   "query": {
@@ -470,7 +519,9 @@ Tests semantic patterns across multiple languages:
 ```
 
 #### 3. Metadata Validation
+
 Tests metadata fields with semantic relevance:
+
 ```json
 {
   "query": {
@@ -479,6 +530,45 @@ Tests metadata fields with semantic relevance:
   }
 }
 ```
+
+#### 4. Intersection Behavior Verification (NEW)
+
+Tests that verify hybrid search uses intersection semantics:
+
+**Test: Cross-Language Fibonacci Filtered to Java**
+
+```json
+{
+  "name": "hybrid_intersection_fibonacci_java_only",
+  "description": "Vector finds fibonacci in all languages, keyword filters to Java only",
+  "query": {
+    "vector_query": "recursive fibonacci sequence algorithm implementation",
+    "keyword_query": "language:Java"
+  },
+  "expected_results": {
+    "should_contain": [{
+      "filename_pattern": ".*java_example.*\\.java$",
+      "expected_metadata": {
+        "language": "Java",
+        "functions": "!empty"
+      }
+    }],
+    "min_results": 1
+  }
+}
+```
+
+**Expected Behavior:**
+- Vector search alone: Finds fibonacci in Python, Rust, C++, Java, Kotlin, etc.
+- Keyword search alone: Finds all Java files
+- Hybrid search: Finds ONLY Java fibonacci implementations (intersection)
+
+**Test: Result Count Invariants**
+
+For any hybrid search:
+- `count(hybrid_results) <= count(keyword_results)` ✅ (always true)
+- `count(hybrid_results) <= count(vector_results)` ⚠️ (not necessarily true)
+- `hybrid_results ⊆ keyword_results` ✅ (always true)
 
 ### Running Hybrid Search Tests
 

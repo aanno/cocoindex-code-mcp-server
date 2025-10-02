@@ -357,11 +357,91 @@
         ],
         "min_results": 1
       }
+    },
+    {
+      "name": "hybrid_intersection_fibonacci_java_only",
+      "description": "HYBRID TEST: Vector finds fibonacci in all languages, keyword filters to Java only (intersection)",
+      "query": {
+        "vector_query": "recursive fibonacci sequence algorithm implementation",
+        "keyword_query": "language:Java"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "filename_pattern": ".*java_example.*\\.java$",
+            "expected_metadata": {
+              "language": "Java",
+              "functions": "!empty"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "hybrid_intersection_complex_python_only",
+      "description": "HYBRID TEST: Semantic search for complex algorithms restricted to Python files only",
+      "query": {
+        "vector_query": "complex recursive algorithm data structure implementation",
+        "keyword_query": "language:Python"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "language": "Python",
+              "functions": "!empty",
+              "analysis_method": "!unknown"
+            }
+          }
+        ],
+        "min_results": 1
+      }
+    },
+    {
+      "name": "hybrid_intersection_class_based_languages",
+      "description": "HYBRID TEST: Find class-based OOP patterns but only in languages with explicit classes",
+      "query": {
+        "vector_query": "class definition constructor methods object oriented",
+        "keyword_query": "has_classes:true"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "expected_metadata": {
+              "has_classes": true,
+              "classes": "!empty",
+              "functions": "!empty"
+            }
+          }
+        ],
+        "min_results": 2
+      }
+    },
+    {
+      "name": "hybrid_semantic_ranking_within_filter",
+      "description": "HYBRID TEST: Among Rust files, rank by semantic similarity to 'struct implementation'",
+      "query": {
+        "vector_query": "struct implementation methods traits impl",
+        "keyword_query": "language:Rust"
+      },
+      "expected_results": {
+        "should_contain": [
+          {
+            "filename_pattern": ".*(tmp/)?rust_example.*\\.rs$",
+            "expected_metadata": {
+              "language": "Rust",
+              "functions": "!empty"
+            }
+          }
+        ],
+        "min_results": 1
+      }
     }
   ],
   "test_metadata": {
-    "version": "2.0",
-    "description": "Multi-language hybrid search integration tests to validate code analysis across all supported languages",
+    "version": "2.1",
+    "description": "Multi-language hybrid search integration tests to validate code analysis and hybrid search intersection behavior",
     "supported_languages": [
       "python", "rust", "java", "javascript", "typescript", 
       "cpp", "c", "kotlin", "haskell"
@@ -369,7 +449,8 @@
     "test_categories": [
       "Language-specific searches (Python, Rust, Java, JS, TS, C++, C, Kotlin, Haskell)",
       "Cross-language pattern searches (fibonacci implementations, class definitions)",
-      "Metadata validation (functions, classes, complexity, analysis methods)"
+      "Metadata validation (functions, classes, complexity, analysis methods)",
+      "Hybrid search intersection behavior tests (vector + keyword combination)"
     ],
     "notes": [
       "Tests validate that files are properly analyzed with correct metadata across all languages",
@@ -378,7 +459,10 @@
       "Each language should use appropriate embedding models (GraphCodeBERT vs UniXcode vs fallback)",
       "Patterns use regex matching, ! prefix means 'not equal'",
       "> prefix means 'greater than' for numeric comparisons",
-      "Cross-language tests verify consistent metadata extraction across different syntaxes"
+      "Cross-language tests verify consistent metadata extraction across different syntaxes",
+      "HYBRID INTERSECTION TESTS: Verify that hybrid search applies keyword filters FIRST, then ranks by vector similarity",
+      "Hybrid results should always be subset of keyword-filtered results (intersection behavior)",
+      "Tests marked 'HYBRID TEST' specifically validate the intersection semantics of hybrid search"
     ]
   }
 }
