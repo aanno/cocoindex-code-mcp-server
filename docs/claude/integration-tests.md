@@ -101,6 +101,98 @@ rm -r test-results/search-*/*
 pytest -c pytest.ini ./tests/search/
 ```
 
+### Clear Database Tables for Re-indexing
+
+**⚠️ CRITICAL:** When code changes affect analysis logic (e.g., complexity calculation, metadata extraction), you MUST clear BOTH embeddings tables AND tracking tables to force re-indexing.
+
+#### Why This Is Needed
+
+CocoIndex uses tracking tables to avoid re-processing unchanged files:
+- Each flow has a tracking table: `{test_type}searchtest__cocoindex_tracking`
+- Tracks which files have been processed and their fingerprints
+- If source files are unchanged, flow reports "NO CHANGE" and skips processing
+- This causes tests to use stale data even after code fixes
+
+#### Database Tables to Clear
+
+**Embeddings Tables:**
+```sql
+keywordsearchtest_code_embeddings
+vectorsearchtest_code_embeddings
+hybridsearchtest_code_embeddings
+```
+
+**Tracking Tables (critical!):**
+```sql
+searchtest_keyword__cocoindex_tracking
+searchtest_vector__cocoindex_tracking
+searchtest_hybrid__cocoindex_tracking
+```
+
+#### Clear Database Script
+
+```bash
+python3 << 'EOF'
+import psycopg
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+db_url = os.getenv("COCOINDEX_DATABASE_URL")
+conn = psycopg.connect(db_url)
+cur = conn.cursor()
+
+# Tables to clear
+embeddings_tables = [
+    'keywordsearchtest_code_embeddings',
+    'vectorsearchtest_code_embeddings',
+    'hybridsearchtest_code_embeddings'
+]
+
+tracking_tables = [
+    'searchtest_keyword__cocoindex_tracking',
+    'searchtest_vector__cocoindex_tracking',
+    'searchtest_hybrid__cocoindex_tracking'
+]
+
+# Clear embeddings tables
+for table in embeddings_tables:
+    cur.execute(f"DELETE FROM {table};")
+    count = cur.rowcount
+    print(f"✅ Deleted {count} records from {table}")
+
+# Clear tracking tables (critical for re-indexing!)
+for table in tracking_tables:
+    cur.execute(f"DELETE FROM {table};")
+    count = cur.rowcount
+    print(f"✅ Deleted {count} records from {table}")
+
+conn.commit()
+cur.close()
+conn.close()
+print("\n✅ Database cleared - ready for fresh indexing")
+EOF
+```
+
+#### When to Clear Database Tables
+
+Clear database tables in these scenarios:
+
+1. **After fixing analysis bugs** (e.g., Rust complexity calculation)
+2. **After changing metadata extraction logic** (e.g., adding new node types)
+3. **After modifying AST visitors** (e.g., updating complexity weights)
+4. **When test files show stale metadata** (e.g., complexity_score=0 after fix)
+5. **When flow reports "NO CHANGE" but you expect changes**
+
+**Example scenario:**
+```
+1. Bug: Rust files have complexity_score=0
+2. Fix: Add Rust node types to complexity_weights
+3. Test: Still fails with complexity_score=0 (stale data!)
+4. Clear: Delete from both embeddings AND tracking tables
+5. Retest: Now shows correct complexity_score=16 ✅
+```
+
 ### Test Configuration
 
 Tests use fixtures from:

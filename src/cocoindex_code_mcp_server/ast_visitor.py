@@ -296,10 +296,24 @@ class GenericMetadataVisitor(ASTVisitor):
             # Advanced constructs
             'generator_expression': 2, 'list_comprehension': 1,
             'with_statement': 1, 'async_function_definition': 2,
-            
+
             # Exception handling
             'try_with_resources_statement': 1,  # Java
             'catch_clause': 1, 'finally_clause': 1,
+
+            # Rust-specific node types
+            'function_item': 2,  # Rust function
+            'match_expression': 2,  # Rust match (like switch)
+            'match_arm': 1,  # Rust match arm (like case)
+            'if_let_expression': 1,  # Rust if let
+            'while_let_expression': 1,  # Rust while let
+            'loop_expression': 1,  # Rust infinite loop
+            'for_expression': 1,  # Rust for loop
+            'closure_expression': 1,  # Rust closure/lambda
+            'struct_item': 3,  # Rust struct definition
+            'enum_item': 3,  # Rust enum definition
+            'impl_item': 2,  # Rust implementation block
+            'trait_item': 2,  # Rust trait definition
         }
 
         weight = complexity_weights.get(node_type, 0)

@@ -234,7 +234,7 @@ class PostgresBackend(VectorStoreBackend):
                     ),
                     ranked_results AS (
                         SELECT *,
-                               (vector_similarity * %s) AS hybrid_score
+                               (vector_similarity * %s + %s) AS hybrid_score
                         FROM vector_scores
                     )
                     SELECT *, hybrid_score
@@ -242,7 +242,7 @@ class PostgresBackend(VectorStoreBackend):
                     ORDER BY hybrid_score DESC
                     LIMIT %s
                     """,
-                    [query_vector, query_vector] + params + [vector_weight, top_k],
+                    [query_vector, query_vector] + params + [vector_weight, keyword_weight, top_k],
                 )
                 return [
                     self._format_result(row, available_fields, score_type="hybrid")
