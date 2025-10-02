@@ -147,11 +147,14 @@ def analyze_cpp_code(code: str, language: str = "cpp", filename: str = "") -> Di
         walker = TreeWalker(code, tree)
         walker.walk(visitor)
 
+        # Normalize language to Title Case for consistency with database schema
+        normalized_language = "C++" if language.lower() in ["cpp", "cc", "cxx", "c++"] else language
+
         # Get results from visitor
         result = visitor.get_summary()
         result.update({
             'success': True,
-            'language': language,
+            'language': normalized_language,
             'filename': filename,
             'line_count': code.count('\n') + 1,
             'char_count': len(code),

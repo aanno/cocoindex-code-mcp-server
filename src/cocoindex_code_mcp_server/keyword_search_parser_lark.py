@@ -252,11 +252,12 @@ def build_sql_where_clause(search_group: SearchGroup, table_alias: str = "") -> 
                     where_parts.append(f"LOWER({prefix}{validated_field}) = LOWER(%s)")
                     params.append(condition.value)
                 else:
-                    # Check if this is an array field that needs special handling
-                    array_fields = {"functions", "classes", "imports"}
-                    if validated_field in array_fields:
-                        # These fields are stored as space-separated strings
-                        # Use ILIKE to find the value as a substring
+                    # Check if this is a field that needs pattern matching
+                    pattern_match_fields = {"functions", "classes", "imports", "filename"}
+                    if validated_field in pattern_match_fields:
+                        # These fields use ILIKE for substring/pattern matching
+                        # Arrays (functions, classes, imports) are stored as space-separated strings
+                        # filename supports partial matching (e.g., filename:python_example matches python_example_1.py)
                         where_parts.append(f"{prefix}{validated_field} ILIKE %s")
                         params.append(f"%{condition.value}%")
                     else:

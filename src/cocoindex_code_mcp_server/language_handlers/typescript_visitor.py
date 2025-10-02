@@ -181,12 +181,15 @@ def analyze_typescript_code(code: str, language: str = "typescript", filename: s
         walker = TreeWalker(code, tree)
         walker.walk(visitor)
 
+        # Normalize language to Title Case for consistency with database schema
+        normalized_language = "TypeScript" if language.lower() in ["typescript", "ts", "tsx"] else language
+
         # Get results from visitor
         result = visitor.get_summary()
         # result.update({
         update_defaults(result, {
             'success': True,
-            'language': language,
+            'language': normalized_language,
             'filename': filename,
             'line_count': code.count('\n') + 1,
             'char_count': len(code),
