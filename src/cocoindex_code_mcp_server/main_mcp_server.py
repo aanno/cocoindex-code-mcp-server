@@ -302,7 +302,7 @@ def main(
             logger.info(f"  Clearing embeddings table: {embeddings_table}")
             logger.info(f"  Clearing tracking table:   {tracking_table}")
 
-            # Clear tables using SQL DELETE
+            # Clear tables using SQL TRUNCATE (faster and resets auto-increment)
             conn = psycopg.connect(database_url)
             cur = conn.cursor()
 
@@ -315,9 +315,12 @@ def main(
                     );
                 """, (embeddings_table,))
                 if cur.fetchone()[0]:
-                    cur.execute(f"DELETE FROM {embeddings_table};")
-                    count = cur.rowcount
-                    logger.info(f"  ✅ Deleted {count} records from {embeddings_table}")
+                    # Get count before truncating (for logging)
+                    cur.execute(f"SELECT COUNT(*) FROM {embeddings_table};")
+                    count = cur.fetchone()[0]
+                    # TRUNCATE is faster than DELETE and resets auto-increment
+                    cur.execute(f"TRUNCATE TABLE {embeddings_table} RESTART IDENTITY CASCADE;")
+                    logger.info(f"  ✅ Truncated {embeddings_table} ({count} records removed)")
                 else:
                     logger.info(f"  ⚠️  Table {embeddings_table} does not exist yet")
 
@@ -329,9 +332,12 @@ def main(
                     );
                 """, (tracking_table,))
                 if cur.fetchone()[0]:
-                    cur.execute(f"DELETE FROM {tracking_table};")
-                    count = cur.rowcount
-                    logger.info(f"  ✅ Deleted {count} records from {tracking_table}")
+                    # Get count before truncating (for logging)
+                    cur.execute(f"SELECT COUNT(*) FROM {tracking_table};")
+                    count = cur.fetchone()[0]
+                    # TRUNCATE is faster than DELETE and resets auto-increment
+                    cur.execute(f"TRUNCATE TABLE {tracking_table} RESTART IDENTITY CASCADE;")
+                    logger.info(f"  ✅ Truncated {tracking_table} ({count} records removed)")
                 else:
                     logger.info(f"  ⚠️  Table {tracking_table} does not exist yet")
 

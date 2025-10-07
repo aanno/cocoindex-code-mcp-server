@@ -16,7 +16,7 @@ Successfully implemented automatic table clearing for both integration tests and
 - Clears embeddings tables: `keywordsearchtest_code_embeddings`, `vectorsearchtest_code_embeddings`, `hybridsearchtest_code_embeddings`
 - Clears tracking tables: `searchtest_keyword__cocoindex_tracking`, `searchtest_vector__cocoindex_tracking`, `searchtest_hybrid__cocoindex_tracking`
 - Can clear specific test type or all tables
-- Uses SQL `DELETE FROM` after checking table existence
+- Uses SQL `TRUNCATE TABLE ... RESTART IDENTITY CASCADE` for fast clearing and auto-increment reset
 
 **Integration:**
 - Automatically called in `CocoIndexTestInfrastructure.setup()` (line 528-530)
@@ -42,8 +42,8 @@ clear_test_tables()          # Clear ALL test tables (rarely needed)
 **Output shows isolation:**
 ```
 📋 Clearing ONLY keyword test tables (not affecting other test types)
-✅ Deleted 39 records from keywordsearchtest_code_embeddings
-✅ Deleted 18 records from searchtest_keyword__cocoindex_tracking
+✅ Truncated keywordsearchtest_code_embeddings (39 records removed)
+✅ Truncated searchtest_keyword__cocoindex_tracking (18 records removed)
 # Vector and hybrid tables remain untouched!
 ```
 
@@ -56,7 +56,7 @@ clear_test_tables()          # Clear ALL test tables (rarely needed)
 **What it does:**
 - Clears embeddings table: `CodeEmbedding__code_embeddings`
 - Clears tracking table: `CodeEmbedding__cocoindex_tracking`
-- Uses SQL `DELETE FROM` statements
+- Uses SQL `TRUNCATE TABLE ... RESTART IDENTITY CASCADE` for fast clearing and auto-increment reset
 - Runs before flow configuration
 
 **Usage:**
@@ -73,19 +73,26 @@ python -m cocoindex_code_mcp_server.main_mcp_server --rescan --paths /path/to/co
 🗑️  Rescan mode enabled - clearing database and tracking tables...
   Clearing embeddings table: CodeEmbedding__code_embeddings
   Clearing tracking table:   CodeEmbedding__cocoindex_tracking
-  ✅ Deleted 39 records from CodeEmbedding__code_embeddings
-  ✅ Deleted 18 records from CodeEmbedding__cocoindex_tracking
+  ✅ Truncated CodeEmbedding__code_embeddings (39 records removed)
+  ✅ Truncated CodeEmbedding__cocoindex_tracking (18 records removed)
 ✅ Rescan complete - tables cleared, ready for fresh indexing
 ```
 
-## Why SQL DELETE Instead of flow.drop()?
+## Why SQL TRUNCATE Instead of flow.drop()?
 
 **Issue Found**: `flow.drop()` hangs indefinitely (times out after 30+ seconds)
 
-**Current Solution**: Direct SQL `DELETE FROM` statements
-- Proven to work (used in manual process)
-- Fast and reliable
+**Current Solution**: Direct SQL `TRUNCATE TABLE ... RESTART IDENTITY CASCADE`
+- **Faster than DELETE** - optimized by database engine for bulk removal
+- **Resets auto-increment** - table identity/sequence columns reset to 1
+- **Proven to work** - used in manual process
 - Works for both tests and MCP server
+
+**TRUNCATE vs DELETE:**
+| Operation | Performance | Resets Auto-Increment | Use Case |
+|-----------|-------------|----------------------|----------|
+| `DELETE FROM table` | Slower (row-by-row) | No | Partial deletes |
+| `TRUNCATE TABLE table` | Fast (bulk) | Yes | Full table reset |
 
 **Future Optimization**: Could investigate `flow.drop_async()` with diagnostics per user suggestion:
 ```python
@@ -123,11 +130,11 @@ await flow.drop_async()
 
 ## Testing
 
-**Integration tests**: ✅ Verified working
+**Integration tests**: ✅ Verified working with TRUNCATE
 ```bash
 pytest tests/search/test_vector_search.py -v
 # Output: "🗑️  Clearing vector test tables for fresh indexing..."
-# Output: "✅ Deleted 39 records from vectorsearchtest_code_embeddings"
+# Output: "✅ Truncated vectorsearchtest_code_embeddings (39 records removed)"
 ```
 
 **MCP Server**: Ready for end-to-end testing

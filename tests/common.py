@@ -387,7 +387,7 @@ def clear_test_tables(test_type: Optional[str] = None) -> None:
         }
         logging.info(f"📋 Clearing ALL test tables (keyword, vector, hybrid)")
 
-    # Clear tables using SQL DELETE
+    # Clear tables using SQL TRUNCATE (faster and resets auto-increment)
     conn = psycopg.connect(database_url)
     cur = conn.cursor()
 
@@ -402,9 +402,12 @@ def clear_test_tables(test_type: Optional[str] = None) -> None:
                 );
             """, (table,))
             if cur.fetchone()[0]:
-                cur.execute(f"DELETE FROM {table};")
-                count = cur.rowcount
-                logging.info(f"✅ Deleted {count} records from {table}")
+                # Get count before truncating (for logging)
+                cur.execute(f"SELECT COUNT(*) FROM {table};")
+                count = cur.fetchone()[0]
+                # TRUNCATE is faster than DELETE and resets auto-increment
+                cur.execute(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE;")
+                logging.info(f"✅ Truncated {table} ({count} records removed)")
             else:
                 logging.info(f"⚠️  Table {table} does not exist, skipping")
 
@@ -417,9 +420,12 @@ def clear_test_tables(test_type: Optional[str] = None) -> None:
                 );
             """, (table,))
             if cur.fetchone()[0]:
-                cur.execute(f"DELETE FROM {table};")
-                count = cur.rowcount
-                logging.info(f"✅ Deleted {count} records from {table}")
+                # Get count before truncating (for logging)
+                cur.execute(f"SELECT COUNT(*) FROM {table};")
+                count = cur.fetchone()[0]
+                # TRUNCATE is faster than DELETE and resets auto-increment
+                cur.execute(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE;")
+                logging.info(f"✅ Truncated {table} ({count} records removed)")
             else:
                 logging.info(f"⚠️  Table {table} does not exist, skipping")
 
