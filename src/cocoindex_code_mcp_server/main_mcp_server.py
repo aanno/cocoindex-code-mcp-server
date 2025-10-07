@@ -251,6 +251,7 @@ def get_mcp_resources() -> list[types.Resource]:
 @click.option("--port", default=3000, help="Port to listen on for HTTP")
 @click.option("--log-level", default="INFO", help="Logging level")
 @click.option("--json-response", is_flag=True, default=False, help="Enable JSON responses instead of SSE streams")
+@click.option("--rescan", is_flag=True, default=False, help="Clear database and tracking tables before starting to force re-indexing")
 def main(
     paths: tuple,
     explicit_paths: tuple,
@@ -263,6 +264,7 @@ def main(
     port: int,
     log_level: str,
     json_response: bool,
+    rescan: bool,
 ) -> int:
     """CocoIndex RAG MCP Server - Model Context Protocol server for hybrid code search."""
 
@@ -279,6 +281,74 @@ def main(
     # Load environment and initialize CocoIndex
     load_dotenv()
     cocoindex.init()
+
+    # Handle rescan flag - clear database tables to force re-indexing
+    if rescan:
+        logger.info("🗑️  Rescan mode enabled - clearing database and tracking tables...")
+        try:
+            import psycopg
+            from .cocoindex_config import code_embedding_flow
+
+            # Get database connection
+            database_url = os.getenv("DATABASE_URL") or os.getenv("COCOINDEX_DATABASE_URL")
+            if not database_url:
+                logger.error("❌ DATABASE_URL not found - cannot perform rescan")
+                return 1
+
+            # Get table names for the main flow
+            embeddings_table = cocoindex.utils.get_target_default_name(code_embedding_flow, "code_embeddings")
+            tracking_table = f"{code_embedding_flow.name}__cocoindex_tracking"
+
+            logger.info(f"  Clearing embeddings table: {embeddings_table}")
+            logger.info(f"  Clearing tracking table:   {tracking_table}")
+
+            # Clear tables using SQL DELETE
+            conn = psycopg.connect(database_url)
+            cur = conn.cursor()
+
+            try:
+                # Clear embeddings table
+                cur.execute("""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables
+                        WHERE table_name = %s
+                    );
+                """, (embeddings_table,))
+                if cur.fetchone()[0]:
+                    cur.execute(f"DELETE FROM {embeddings_table};")
+                    count = cur.rowcount
+                    logger.info(f"  ✅ Deleted {count} records from {embeddings_table}")
+                else:
+                    logger.info(f"  ⚠️  Table {embeddings_table} does not exist yet")
+
+                # Clear tracking table (critical for re-indexing!)
+                cur.execute("""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables
+                        WHERE table_name = %s
+                    );
+                """, (tracking_table,))
+                if cur.fetchone()[0]:
+                    cur.execute(f"DELETE FROM {tracking_table};")
+                    count = cur.rowcount
+                    logger.info(f"  ✅ Deleted {count} records from {tracking_table}")
+                else:
+                    logger.info(f"  ⚠️  Table {tracking_table} does not exist yet")
+
+                conn.commit()
+                logger.info("✅ Rescan complete - tables cleared, ready for fresh indexing")
+
+            except Exception as e:
+                conn.rollback()
+                logger.error(f"❌ Failed to clear tables: {e}")
+                return 1
+            finally:
+                cur.close()
+                conn.close()
+
+        except Exception as e:
+            logger.error(f"❌ Rescan failed: {e}")
+            return 1
 
     # Determine paths to use
     final_paths = None

@@ -338,6 +338,100 @@ def validate_search_results(
     return failed_tests
 
 
+def clear_test_tables(test_type: Optional[str] = None) -> None:
+    """
+    Clear embeddings and tracking tables for integration tests.
+
+    This is critical for forcing CocoIndex to re-index files after code changes.
+    Without clearing tracking tables, CocoIndex will skip unchanged files even
+    if embeddings tables are empty.
+
+    Args:
+        test_type: Specific test type to clear ('keyword', 'vector', 'hybrid'),
+                  or None to clear all test tables
+    """
+    import psycopg
+
+    database_url = os.getenv("DATABASE_URL") or os.getenv("COCOINDEX_DATABASE_URL")
+    if not database_url:
+        raise ValueError("DATABASE_URL or COCOINDEX_DATABASE_URL not found in environment")
+
+    # Define table mappings
+    embeddings_tables = {
+        'keyword': 'keywordsearchtest_code_embeddings',
+        'vector': 'vectorsearchtest_code_embeddings',
+        'hybrid': 'hybridsearchtest_code_embeddings'
+    }
+
+    tracking_tables = {
+        'keyword': 'searchtest_keyword__cocoindex_tracking',
+        'vector': 'searchtest_vector__cocoindex_tracking',
+        'hybrid': 'searchtest_hybrid__cocoindex_tracking'
+    }
+
+    # Determine which tables to clear
+    if test_type:
+        if test_type not in embeddings_tables:
+            raise ValueError(f"Unknown test type: {test_type}. Must be one of {list(embeddings_tables.keys())}")
+        tables_to_clear = {
+            'embeddings': [embeddings_tables[test_type]],
+            'tracking': [tracking_tables[test_type]]
+        }
+    else:
+        # Clear all test tables
+        tables_to_clear = {
+            'embeddings': list(embeddings_tables.values()),
+            'tracking': list(tracking_tables.values())
+        }
+
+    # Clear tables using SQL DELETE
+    conn = psycopg.connect(database_url)
+    cur = conn.cursor()
+
+    try:
+        # Clear embeddings tables
+        for table in tables_to_clear['embeddings']:
+            # Check if table exists first
+            cur.execute("""
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables
+                    WHERE table_name = %s
+                );
+            """, (table,))
+            if cur.fetchone()[0]:
+                cur.execute(f"DELETE FROM {table};")
+                count = cur.rowcount
+                logging.info(f"✅ Deleted {count} records from {table}")
+            else:
+                logging.info(f"⚠️  Table {table} does not exist, skipping")
+
+        # Clear tracking tables (critical for re-indexing!)
+        for table in tables_to_clear['tracking']:
+            cur.execute("""
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables
+                    WHERE table_name = %s
+                );
+            """, (table,))
+            if cur.fetchone()[0]:
+                cur.execute(f"DELETE FROM {table};")
+                count = cur.rowcount
+                logging.info(f"✅ Deleted {count} records from {table}")
+            else:
+                logging.info(f"⚠️  Table {table} does not exist, skipping")
+
+        conn.commit()
+        logging.info("✅ Database cleared - ready for fresh indexing")
+
+    except Exception as e:
+        conn.rollback()
+        logging.error(f"❌ Failed to clear tables: {e}")
+        raise
+    finally:
+        cur.close()
+        conn.close()
+
+
 def format_test_failure_report(failed_tests: List[Dict[str, Any]]) -> str:
     """
     Format a comprehensive failure report for failed tests.
@@ -429,6 +523,11 @@ class CocoIndexTestInfrastructure:
 
             cocoindex.init()
             self.logger.info("✅ CocoIndex library initialized with database")
+
+            # Clear test tables to force re-indexing (critical for fresh test data)
+            if self.test_type:
+                self.logger.info(f"🗑️  Clearing {self.test_type} test tables for fresh indexing...")
+                clear_test_tables(self.test_type)
 
             if self.test_type:
                 # Use parameterized test flows for isolation
