@@ -373,16 +373,19 @@ def clear_test_tables(test_type: Optional[str] = None) -> None:
     if test_type:
         if test_type not in embeddings_tables:
             raise ValueError(f"Unknown test type: {test_type}. Must be one of {list(embeddings_tables.keys())}")
+        # Only clear tables for this specific test type
         tables_to_clear = {
             'embeddings': [embeddings_tables[test_type]],
             'tracking': [tracking_tables[test_type]]
         }
+        logging.info(f"📋 Clearing ONLY {test_type} test tables (not affecting other test types)")
     else:
-        # Clear all test tables
+        # Clear all test tables (only used for manual cleanup, not by tests)
         tables_to_clear = {
             'embeddings': list(embeddings_tables.values()),
             'tracking': list(tracking_tables.values())
         }
+        logging.info(f"📋 Clearing ALL test tables (keyword, vector, hybrid)")
 
     # Clear tables using SQL DELETE
     conn = psycopg.connect(database_url)

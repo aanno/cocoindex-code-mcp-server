@@ -20,18 +20,31 @@ Successfully implemented automatic table clearing for both integration tests and
 
 **Integration:**
 - Automatically called in `CocoIndexTestInfrastructure.setup()` (line 528-530)
-- Each test run starts with fresh tables
+- **Each test ONLY clears its own tables** (keyword test doesn't affect vector/hybrid tables)
+- Test isolation: Running keyword test leaves vector/hybrid data intact
+- Each test run starts with fresh tables for that specific test type
 - No manual cleanup needed
 
 **Usage:**
 ```python
-# Automatic - called during test setup
-pytest tests/search/test_vector_search.py
+# Automatic - called during test setup (ONLY clears that test's tables)
+pytest tests/search/test_vector_search.py   # Clears ONLY vector tables
+pytest tests/search/test_keyword_search.py  # Clears ONLY keyword tables
+pytest tests/search/test_hybrid_search_integration.py  # Clears ONLY hybrid tables
 
 # Manual if needed
 from tests.common import clear_test_tables
-clear_test_tables('vector')  # Clear specific test type
-clear_test_tables()          # Clear all test tables
+clear_test_tables('vector')  # Clear ONLY vector test tables
+clear_test_tables('keyword') # Clear ONLY keyword test tables
+clear_test_tables()          # Clear ALL test tables (rarely needed)
+```
+
+**Output shows isolation:**
+```
+📋 Clearing ONLY keyword test tables (not affecting other test types)
+✅ Deleted 39 records from keywordsearchtest_code_embeddings
+✅ Deleted 18 records from searchtest_keyword__cocoindex_tracking
+# Vector and hybrid tables remain untouched!
 ```
 
 ### 2. MCP Server (main_mcp_server.py) ✅
