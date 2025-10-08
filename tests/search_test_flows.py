@@ -31,6 +31,9 @@ def search_test_flow_def(params: SearchTestFlowParameters):
         from cocoindex_code_mcp_server.cocoindex_config import (
             SOURCE_CONFIG, extract_language, get_chunking_params,
             code_to_embedding, get_default_embedding_model_name, extract_code_metadata, extract_functions_field,
+            get_embedding_model_group, get_embedding_model_name,
+            graphcodebert_embedding, unixcoder_embedding, fallback_embedding,
+            SMART_EMBEDDING_AVAILABLE,
             extract_classes_field, extract_imports_field, extract_complexity_score_field,
             extract_has_type_hints_field, extract_has_async_field, extract_has_classes_field,
             extract_analysis_method_field, extract_chunking_method_field,
@@ -72,10 +75,28 @@ def search_test_flow_def(params: SearchTestFlowParameters):
             
             # Work with raw chunks directly - they are already a collection
             # SplitRecursively returns chunks with 'text' field, not 'content'
+
+            # Add model group for smart embedding selection
+            if SMART_EMBEDDING_AVAILABLE:
+                with raw_chunks.row() as chunk:
+                    chunk["model_group"] = file["language"].transform(get_embedding_model_group)
+
             with raw_chunks.row() as chunk:
-                chunk["embedding"] = chunk["text"].call(code_to_embedding)
-                # Store embedding model (test flows use default embedding)
-                chunk["embedding_model"] = chunk["text"].transform(get_default_embedding_model_name)
+                # Use smart embeddings (language-specific models) like main flow
+                if SMART_EMBEDDING_AVAILABLE:
+                    model_group = chunk["model_group"]
+                    if model_group == "graphcodebert":
+                        chunk["embedding"] = chunk["text"].call(graphcodebert_embedding)
+                    elif model_group == "unixcoder":
+                        chunk["embedding"] = chunk["text"].call(unixcoder_embedding)
+                    else:  # fallback
+                        chunk["embedding"] = chunk["text"].call(fallback_embedding)
+                    # Store the actual embedding model name used
+                    chunk["embedding_model"] = chunk["model_group"].transform(get_embedding_model_name)
+                else:
+                    # Fallback if smart embeddings not available
+                    chunk["embedding"] = chunk["text"].call(code_to_embedding)
+                    chunk["embedding_model"] = chunk["text"].transform(get_default_embedding_model_name)
                 chunk["extracted_metadata"] = chunk["text"].transform(
                     extract_code_metadata,
                     language=file["language"],
