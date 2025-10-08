@@ -35,31 +35,89 @@ The implementation has been tested and verified:
 
 - ✅ Column `embedding_model` exists in database schema
 - ✅ Data correctly populated with model identifiers
-- ✅ Smart embeddings working with multiple models:
-  - `sentence-transformers/all-MiniLM-L6-v2` (default/fallback)
-  - `microsoft/graphcodebert-base` (Python, Java, JavaScript, etc.)
-  - `microsoft/unixcoder-base` (Rust, TypeScript, C#, etc.)
+- ✅ Smart embeddings working with multiple models (all 768D):
+  - `sentence-transformers/all-mpnet-base-v2` (default/fallback) - 768D
+  - `microsoft/graphcodebert-base` (Python, Java, JavaScript, etc.) - 768D
+  - `microsoft/unixcoder-base` (Rust, TypeScript, C#, etc.) - 768D
 
 ### Critical Constraint
 
 **You cannot compare embedding vectors created with different models!** The `embedding_model` field ensures all vector similarity searches are filtered to only compare embeddings from the same model.
+
+## Vector Dimension Standardization: 768D
+
+**Date:** 2025-10-08
+
+### Decision: Switch to 768D Embeddings
+
+All embedding models now produce **768-dimensional vectors** for consistency and quality:
+
+**Previous Configuration (384D mixed):**
+
+- ❌ `sentence-transformers/all-MiniLM-L6-v2`: 384D (fallback)
+- ❌ `microsoft/graphcodebert-base`: 768D → projected to 384D
+- ❌ `microsoft/unixcoder-base`: 768D → projected to 384D
+
+**New Configuration (768D unified):**
+
+- ✅ `sentence-transformers/all-mpnet-base-v2`: 768D native (fallback)
+- ✅ `microsoft/graphcodebert-base`: 768D native
+- ✅ `microsoft/unixcoder-base`: 768D native
+
+### Rationale
+
+1. **Correctness:** Using models at native resolution avoids projection mismatch bugs
+2. **Quality:** all-mpnet-base-v2 has significantly better semantic quality than all-MiniLM-L6-v2
+3. **Simplicity:** Single dimension (768D) easier to reason about and debug
+4. **Standards:** 768D is standard for BERT-based models, pgvector handles efficiently
+
+### Trade-offs
+
+**Benefits:**
+
+- ✅ No information loss from dimension projection
+- ✅ Better semantic search quality
+- ✅ Consistent dimensions across all models
+- ✅ Native model resolution
+
+**Costs:**
+
+- ❌ 2x storage increase (768D vs 384D)
+- ❌ Marginally slower similarity search (negligible with HNSW index)
+- ❌ Slower embedding generation for fallback model
+
+### Migration Requirements
+
+**Database Migration:**
+
+- pgvector automatically adjusts to vector dimensions on first insert
+- Requires full `--rescan` to regenerate all embeddings with new models
+- Old 384D data will be replaced with new 768D embeddings
+
+**Breaking Change:**
+
+- Yes - all existing embeddings must be regenerated
+- No backward compatibility with 384D embeddings
 
 ## Search Parameter Requirements
 
 ### Vector Search: REQUIRED `language` OR `embedding_model`
 
 **Why Required:**
+
 - Query must be embedded using a specific model
 - Cannot search across all models (would require 3 separate embeddings + merge results)
 - Must filter database to only search embeddings from the same model
 
 **Implementation:**
+
 - User MUST provide `language` OR `embedding_model` parameter
 - Parameter determines which embedding model to use for query embedding
 - Query is embedded ONCE with the appropriate model
 - Database filtered to only search embeddings from that model
 
 **Example:**
+
 ```python
 # Search Python code using GraphCodeBERT embeddings
 results = search_engine.vector_search(
@@ -77,16 +135,19 @@ results = search_engine.vector_search(
 ### Keyword Search: OPTIONAL `language`/`embedding_model`
 
 **Why Optional:**
+
 - Keyword search doesn't use embeddings (metadata filtering only)
 - Users can filter by language in the keyword query itself: `"language:python OR language:rust"`
 - Allows general metadata queries across all languages
 
 **Implementation:**
+
 - `language` and `embedding_model` parameters are OPTIONAL
 - No validation required
 - Allows flexible cross-language metadata searches
 
 **Example:**
+
 ```python
 # Search across all languages
 results = search_engine.keyword_search(
@@ -102,16 +163,19 @@ results = search_engine.keyword_search(
 ### Hybrid Search: REQUIRED `language` OR `embedding_model`
 
 **Why Required:**
+
 - Combines vector similarity with keyword filtering
 - Must filter by embedding_model for valid vector comparisons
 - Same reasoning as vector search
 
 **Implementation:**
+
 - User MUST provide `language` OR `embedding_model` parameter
 - Parameter determines embedding model for both query embedding and database filtering
 - Ensures only embeddings from same model are compared
 
 **Example:**
+
 ```python
 # Hybrid search within Python code
 results = search_engine.hybrid_search(
@@ -124,7 +188,8 @@ results = search_engine.hybrid_search(
 ### Error Messages
 
 **Missing required parameter:**
-```
+
+```python
 ValueError: Either 'language' or 'embedding_model' parameter is required for search.
 This ensures you only get results from the appropriate embedding model.
 Examples: language='Python', embedding_model='microsoft/graphcodebert-base'

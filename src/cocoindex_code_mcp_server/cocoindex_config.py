@@ -35,7 +35,7 @@ LOGGER = logging.getLogger(__name__)  # root logger
 
 # Models will be instantiated directly (HuggingFace handles caching)
 
-DEFAULT_TRANSFORMER_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+DEFAULT_TRANSFORMER_MODEL = "sentence-transformers/all-mpnet-base-v2"  # 768D - matches GraphCodeBERT/UniXcoder
 STACKTRACE = False
 
 # Import our custom extensions
