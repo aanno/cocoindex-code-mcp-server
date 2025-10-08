@@ -691,6 +691,8 @@ class CocoIndexTestInfrastructure:
         top_k = arguments.get("top_k", 10)
         vector_weight = arguments.get("vector_weight", 0.7)
         keyword_weight = arguments.get("keyword_weight", 0.3)
+        language = arguments.get("language")
+        embedding_model = arguments.get("embedding_model")
 
         try:
             # Use HybridSearchEngine which already converts to dictionaries
@@ -699,7 +701,9 @@ class CocoIndexTestInfrastructure:
                 keyword_query=keyword_query,
                 top_k=top_k,
                 vector_weight=vector_weight,
-                keyword_weight=keyword_weight
+                keyword_weight=keyword_weight,
+                language=language,
+                embedding_model=embedding_model
             )
 
             return {

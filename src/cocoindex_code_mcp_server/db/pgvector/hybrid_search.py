@@ -23,6 +23,8 @@ from cocoindex_code_mcp_server.backends import (
 from cocoindex_code_mcp_server.cocoindex_config import (
     code_embedding_flow,
     code_to_embedding,
+    graphcodebert_embedding,
+    unixcoder_embedding,
     language_to_embedding_model,
 )
 from cocoindex_code_mcp_server.keyword_search_parser_lark import (
@@ -69,6 +71,25 @@ class HybridSearchEngine:
         """Access to the table name via backend."""
         return getattr(self.backend, 'table_name', None)
 
+    def _get_embedding_function(self, embedding_model: str):
+        """
+        Select the appropriate embedding function based on the model name.
+
+        Args:
+            embedding_model: The embedding model identifier
+
+        Returns:
+            Callable that embeds text using the specified model
+        """
+        # Map model names to embedding functions
+        if 'graphcodebert' in embedding_model.lower():
+            return lambda q: graphcodebert_embedding.eval(q)
+        elif 'unixcoder' in embedding_model.lower():
+            return lambda q: unixcoder_embedding.eval(q)
+        else:
+            # Default to sentence-transformers model
+            return lambda q: code_to_embedding.eval(q)
+
     def search(
         self,
         vector_query: str,
@@ -95,17 +116,30 @@ class HybridSearchEngine:
             List of search results with combined scoring
 
         Note:
-            You can provide either `language` OR `embedding_model` (or neither for default).
+            You MUST provide either `language` OR `embedding_model`.
             If `embedding_model` is provided, it takes precedence.
             If `language` is provided, it will be mapped to the appropriate embedding model.
+
+        Raises:
+            ValueError: If neither `language` nor `embedding_model` is provided
         """
+        # CRITICAL: Require language or embedding_model for predictable results
+        # Without this, default model could return unexpected results from wrong embedding space
+        if language is None and embedding_model is None:
+            raise ValueError(
+                "Either 'language' or 'embedding_model' parameter is required for search. "
+                "This ensures you only get results from the appropriate embedding model. "
+                "Examples: language='Python', embedding_model='microsoft/graphcodebert-base'"
+            )
+
         # Resolve embedding model to use for filtering
-        # Priority: embedding_model > language > default
+        # Priority: embedding_model > language
         model_to_use = embedding_model
         if model_to_use is None and language is not None:
             model_to_use = language_to_embedding_model(language)
-        if model_to_use is None:
-            model_to_use = self.embedding_model
+
+        # Select the appropriate embedding function based on the model
+        embedding_func_to_use = self._get_embedding_function(model_to_use)
 
         # Parse keyword query
         search_group = self.parser.parse(keyword_query)
@@ -119,7 +153,8 @@ class HybridSearchEngine:
         # CRITICAL: Always pass embedding_model to ensure we only compare vectors from the same model
         if vector_query.strip() and filters:
             # Both vector and keyword search
-            query_vector = self.embedding_func(vector_query)
+            # Use the selected embedding function (not default self.embedding_func)
+            query_vector = embedding_func_to_use(vector_query)
             results = self.backend.hybrid_search(
                 query_vector=query_vector,
                 filters=filters,
@@ -130,7 +165,8 @@ class HybridSearchEngine:
             )
         elif vector_query.strip():
             # Vector search only
-            query_vector = self.embedding_func(vector_query)
+            # Use the selected embedding function (not default self.embedding_func)
+            query_vector = embedding_func_to_use(vector_query)
             results = self.backend.vector_search(
                 query_vector=query_vector,
                 top_k=top_k,
