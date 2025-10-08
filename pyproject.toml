@@ -22,15 +22,15 @@ dependencies = [
     "cachetools>=6.1.0",
     "click>=8.2.1",
     "tree-sitter>=0.23.0,<0.24.0",
-    "tree-sitter-python>=0.23.6",
-    "tree-sitter-c-sharp>=0.23.1",
-    "tree-sitter-java>=0.23.5",
-    "tree-sitter-typescript>=0.23.2",
+    "tree-sitter-python>=0.23.6,<0.24.0",
+    "tree-sitter-c-sharp>=0.23.1,<0.24.0",
+    "tree-sitter-java>=0.23.5,<0.24.0",
+    "tree-sitter-typescript>=0.23.2,<0.24.0",
     "tree-sitter-c>=0.21.4,<0.23.0",
     "tree-sitter-cpp>=0.22.3,<0.23.0",
     "tree-sitter-rust>=0.21.2,<0.23.0",
     "tree-sitter-kotlin>=1.0.0",
-    "tree-sitter-javascript>=0.23.1,<0.25.0",  # 0.25.0 uses language v15, incompatible with tree-sitter v14
+    "tree-sitter-javascript>=0.23.1,<0.24.0",  # 0.25.0 uses language v15, incompatible with tree-sitter v14
 ]
 
 [project.optional-dependencies]
