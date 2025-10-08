@@ -47,9 +47,10 @@ class VectorStoreBackend(ABC):
     def vector_search(
         self,
         query_vector: NDArray[np.float32],
-        top_k: int = 10
+        top_k: int = 10,
+        embedding_model: str | None = None
     ) -> List[SearchResult]:
-        """Perform pure vector similarity search."""
+        """Perform pure vector similarity search with optional embedding model filter."""
 
     @abstractmethod
     def keyword_search(
@@ -66,9 +67,10 @@ class VectorStoreBackend(ABC):
         filters: QueryFilters,
         top_k: int = 10,
         vector_weight: float = 0.7,
-        keyword_weight: float = 0.3
+        keyword_weight: float = 0.3,
+        embedding_model: str | None = None
     ) -> List[SearchResult]:
-        """Perform hybrid search combining vector and keyword search."""
+        """Perform hybrid search combining vector and keyword search with optional embedding model filter."""
 
     @abstractmethod
     def configure(self, **options: Any) -> None:

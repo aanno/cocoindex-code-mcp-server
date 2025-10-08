@@ -23,6 +23,7 @@ from cocoindex_code_mcp_server.backends import (
 from cocoindex_code_mcp_server.cocoindex_config import (
     code_embedding_flow,
     code_to_embedding,
+    language_to_embedding_model,
 )
 from cocoindex_code_mcp_server.keyword_search_parser_lark import (
     KeywordSearchParser,
@@ -35,7 +36,8 @@ class HybridSearchEngine:
     def __init__(self, table_name: str, parser: KeywordSearchParser,
                  backend: Union[VectorStoreBackend, None] = None,
                  pool: Union[ConnectionPool, None] = None,
-                 embedding_func=None) -> None:
+                 embedding_func=None,
+                 embedding_model: str | None = None) -> None:
         # Support both new backend interface and legacy direct pool access
         if backend is not None:
             self.backend = backend
@@ -50,6 +52,12 @@ class HybridSearchEngine:
 
         self.parser = parser or KeywordSearchParser()
         self.embedding_func = embedding_func or (lambda q: code_to_embedding.eval(q))
+
+        # CRITICAL: Store embedding model to filter search results
+        # You cannot compare vectors from different embedding models!
+        # If not provided, use the default transformer model
+        from cocoindex_code_mcp_server.cocoindex_config import DEFAULT_TRANSFORMER_MODEL
+        self.embedding_model = embedding_model or DEFAULT_TRANSFORMER_MODEL
 
     @property
     def pool(self):
@@ -67,7 +75,9 @@ class HybridSearchEngine:
         keyword_query: str,
         top_k: int = 10,
         vector_weight: float = 0.7,
-        keyword_weight: float = 0.3
+        keyword_weight: float = 0.3,
+        language: str | None = None,
+        embedding_model: str | None = None
     ) -> List[Dict[str, Any]]:
         """
         Perform hybrid search combining vector similarity and keyword filtering.
@@ -78,10 +88,25 @@ class HybridSearchEngine:
             top_k: Number of results to return
             vector_weight: Weight for vector similarity score (0-1)
             keyword_weight: Weight for keyword match score (0-1)
+            language: Programming language to filter by (e.g., "Python", "Rust")
+            embedding_model: Specific embedding model to filter by (e.g., "microsoft/graphcodebert-base")
 
         Returns:
             List of search results with combined scoring
+
+        Note:
+            You can provide either `language` OR `embedding_model` (or neither for default).
+            If `embedding_model` is provided, it takes precedence.
+            If `language` is provided, it will be mapped to the appropriate embedding model.
         """
+        # Resolve embedding model to use for filtering
+        # Priority: embedding_model > language > default
+        model_to_use = embedding_model
+        if model_to_use is None and language is not None:
+            model_to_use = language_to_embedding_model(language)
+        if model_to_use is None:
+            model_to_use = self.embedding_model
+
         # Parse keyword query
         search_group = self.parser.parse(keyword_query)
 
@@ -91,6 +116,7 @@ class HybridSearchEngine:
             filters = QueryFilters(conditions=search_group.conditions)
 
         # Use backend abstraction for search operations
+        # CRITICAL: Always pass embedding_model to ensure we only compare vectors from the same model
         if vector_query.strip() and filters:
             # Both vector and keyword search
             query_vector = self.embedding_func(vector_query)
@@ -99,14 +125,19 @@ class HybridSearchEngine:
                 filters=filters,
                 top_k=top_k,
                 vector_weight=vector_weight,
-                keyword_weight=keyword_weight
+                keyword_weight=keyword_weight,
+                embedding_model=model_to_use  # CRITICAL: Filter by resolved embedding model
             )
         elif vector_query.strip():
             # Vector search only
             query_vector = self.embedding_func(vector_query)
-            results = self.backend.vector_search(query_vector=query_vector, top_k=top_k)
+            results = self.backend.vector_search(
+                query_vector=query_vector,
+                top_k=top_k,
+                embedding_model=model_to_use  # CRITICAL: Filter by resolved embedding model
+            )
         elif filters:
-            # Keyword search only
+            # Keyword search only (no embedding model filter needed)
             results = self.backend.keyword_search(filters=filters, top_k=top_k)
         else:
             # No valid query

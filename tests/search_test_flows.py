@@ -29,11 +29,11 @@ def search_test_flow_def(params: SearchTestFlowParameters):
     def _flow_def(flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope):
         # Import necessary functions from main flow
         from cocoindex_code_mcp_server.cocoindex_config import (
-            SOURCE_CONFIG, extract_language, get_chunking_params, 
-            code_to_embedding, extract_code_metadata, extract_functions_field, 
-            extract_classes_field, extract_imports_field, extract_complexity_score_field, 
-            extract_has_type_hints_field, extract_has_async_field, extract_has_classes_field, 
-            extract_analysis_method_field, extract_chunking_method_field, 
+            SOURCE_CONFIG, extract_language, get_chunking_params,
+            code_to_embedding, get_default_embedding_model_name, extract_code_metadata, extract_functions_field,
+            extract_classes_field, extract_imports_field, extract_complexity_score_field,
+            extract_has_type_hints_field, extract_has_async_field, extract_has_classes_field,
+            extract_analysis_method_field, extract_chunking_method_field,
             extract_tree_sitter_chunking_error_field, extract_tree_sitter_analyze_error_field,
             extract_decorators_used_field, extract_dunder_methods_field, extract_success_field,
             extract_parse_errors_field, extract_char_count_field, extract_docstring_field,
@@ -70,10 +70,12 @@ def search_test_flow_def(params: SearchTestFlowParameters):
                 chunk_overlap=file["chunking_params"]["chunk_overlap"],
             )
             
-            # Work with raw chunks directly - they are already a collection  
+            # Work with raw chunks directly - they are already a collection
             # SplitRecursively returns chunks with 'text' field, not 'content'
             with raw_chunks.row() as chunk:
                 chunk["embedding"] = chunk["text"].call(code_to_embedding)
+                # Store embedding model (test flows use default embedding)
+                chunk["embedding_model"] = chunk["text"].transform(get_default_embedding_model_name)
                 chunk["extracted_metadata"] = chunk["text"].transform(
                     extract_code_metadata,
                     language=file["language"],
@@ -131,11 +133,12 @@ def search_test_flow_def(params: SearchTestFlowParameters):
                     location=chunk["location"],
                     code=chunk["text"].transform(convert_dataslice_to_string),
                     embedding=chunk["embedding"],
+                    embedding_model=chunk["embedding_model"],  # CRITICAL: Store which model was used
                     start=chunk["start"],
                     end=chunk["end"],
                     source_name="files",
                     metadata_json=chunk["extracted_metadata"],
-                    
+
                     # Core metadata fields
                     complexity_score=chunk["complexity_score"],
                     has_type_hints=chunk["has_type_hints"],

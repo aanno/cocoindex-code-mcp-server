@@ -44,7 +44,8 @@ class QdrantBackend(VectorStoreBackend):
     def vector_search(
         self,
         query_vector: NDArray[np.float32],
-        top_k: int = 10
+        top_k: int = 10,
+        embedding_model: str | None = None
     ) -> List[SearchResult]:
         """Perform pure vector similarity search using Qdrant."""
         # TODO: Implement Qdrant vector search
@@ -80,7 +81,8 @@ class QdrantBackend(VectorStoreBackend):
         filters: QueryFilters,
         top_k: int = 10,
         vector_weight: float = 0.7,
-        keyword_weight: float = 0.3
+        keyword_weight: float = 0.3,
+        embedding_model: str | None = None
     ) -> List[SearchResult]:
         """Perform hybrid search combining vector similarity and payload filtering."""
         # TODO: Implement Qdrant hybrid search

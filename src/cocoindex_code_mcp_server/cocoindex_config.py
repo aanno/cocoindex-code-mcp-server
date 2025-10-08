@@ -1310,6 +1310,62 @@ def get_embedding_model_group(language: str) -> str:
 
 
 @cocoindex.op.function()
+def get_embedding_model_name(model_group: str) -> str:
+    """
+    Get the actual embedding model name from the model group.
+
+    This is critical for embedding_model metadata field - we need to store
+    which model was used so we can filter searches to only compare embeddings
+    from the same model (you cannot compare vectors from different models).
+
+    Args:
+        model_group: One of 'graphcodebert', 'unixcoder', 'fallback'
+
+    Returns:
+        The actual model identifier (e.g., 'microsoft/graphcodebert-base')
+    """
+    if model_group in LANGUAGE_MODEL_GROUPS:
+        return LANGUAGE_MODEL_GROUPS[model_group]['model']
+    # Fallback to default model if group not found
+    return DEFAULT_TRANSFORMER_MODEL
+
+
+@cocoindex.op.function()
+def get_default_embedding_model_name(content: str) -> str:
+    """
+    Return the default embedding model name when smart embeddings are disabled.
+
+    This is used when --default-embedding flag is set.
+    """
+    return DEFAULT_TRANSFORMER_MODEL
+
+
+def language_to_embedding_model(language: str) -> str:
+    """
+    Map a language to its appropriate embedding model name.
+
+    This is a regular Python function (not a CocoIndex operation) for use
+    in search code where we need to resolve language -> embedding_model.
+
+    Args:
+        language: Programming language (e.g., "Python", "Rust", "JavaScript")
+
+    Returns:
+        The embedding model identifier to use for this language
+    """
+    lang_lower = language.lower()
+
+    for group_name, group_info in LANGUAGE_MODEL_GROUPS.items():
+        if group_name == 'fallback':
+            continue  # Handle fallback last
+        if lang_lower in group_info['languages']:
+            return group_info['model']
+
+    # Default to fallback model for unrecognized languages
+    return LANGUAGE_MODEL_GROUPS['fallback']['model']
+
+
+@cocoindex.op.function()
 def get_cocoindex_split_recursively_chunking_method(content: str) -> str:
     """Return chunking method for default SplitRecursively chunking."""
     return "cocoindex_split_recursively"
@@ -1495,9 +1551,13 @@ def code_embedding_flow(
                     else:  # fallback
                         LOGGER.info(f"Using fallback model for {file['language']}")
                         chunk["embedding"] = chunk["content"].call(fallback_embedding)
+                    # Store the actual embedding model name (critical for search filtering)
+                    chunk["embedding_model"] = chunk["model_group"].transform(get_embedding_model_name)
                 else:
                     LOGGER.info("Using default embedding")
                     chunk["embedding"] = chunk["content"].call(code_to_embedding)
+                    # Store the default embedding model name
+                    chunk["embedding_model"] = chunk["content"].transform(get_default_embedding_model_name)
 
                 # Extract metadata using appropriate method based on configuration
                 use_default_language_handler = _global_flow_config.get('use_default_language_handler', False)
@@ -1593,6 +1653,7 @@ def code_embedding_flow(
                     location=chunk["location"],
                     code=chunk["content"].transform(convert_dataslice_to_string),
                     embedding=chunk["embedding"],
+                    embedding_model=chunk["embedding_model"],  # CRITICAL: Store which model was used
                     start=chunk["start"],
                     end=chunk["end"],
                     source_name=source_name,  # Add source name for identification

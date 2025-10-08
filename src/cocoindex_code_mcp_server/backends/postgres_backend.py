@@ -8,7 +8,7 @@ into the standardized VectorStoreBackend interface.
 """
 
 import logging
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Set, Tuple, Union
 
 import numpy as np
 from cachetools import TTLCache, cached
@@ -148,22 +148,44 @@ class PostgresBackend(VectorStoreBackend):
     def vector_search(
         self,
         query_vector: NDArray[np.float32],
-        top_k: int = 10
+        top_k: int = 10,
+        embedding_model: str | None = None
     ) -> List[SearchResult]:
-        """Perform pure vector similarity search using pgvector."""
+        """
+        Perform pure vector similarity search using pgvector.
+
+        CRITICAL: embedding_model parameter ensures we only compare vectors from the same model.
+        You cannot compare embedding vectors created with different models!
+
+        Args:
+            query_vector: The query embedding vector
+            top_k: Number of results to return
+            embedding_model: Filter to only search embeddings from this model (e.g., 'sentence-transformers/all-MiniLM-L6-v2')
+        """
         with self.pool.connection() as conn:
             register_vector(conn)
             with conn.cursor() as cur:
                 select_clause, available_fields = self._build_select_clause(
                     include_distance=True, distance_alias="distance")
+
+                # Build WHERE clause for embedding_model filter
+                where_clause = ""
+                params: List[Union[NDArray[np.float32], str, int]] = [query_vector]
+                if embedding_model:
+                    where_clause = "WHERE embedding_model = %s"
+                    params.append(embedding_model)
+
+                params.append(top_k)
+
                 cur.execute(
                     f"""
                     SELECT {select_clause}
                     FROM {self.table_name}
+                    {where_clause}
                     ORDER BY distance
                     LIMIT %s
                     """,
-                    (query_vector, top_k),
+                    tuple(params),
                 )
                 return [
                     self._format_result(row, available_fields, score_type="vector")
@@ -214,10 +236,30 @@ class PostgresBackend(VectorStoreBackend):
         filters: QueryFilters,
         top_k: int = 10,
         vector_weight: float = 0.7,
-        keyword_weight: float = 0.3
+        keyword_weight: float = 0.3,
+        embedding_model: str | None = None
     ) -> List[SearchResult]:
-        """Perform hybrid search combining vector and keyword search."""
+        """
+        Perform hybrid search combining vector and keyword search.
+
+        CRITICAL: embedding_model parameter ensures we only compare vectors from the same model.
+        You cannot compare embedding vectors created with different models!
+
+        Args:
+            query_vector: The query embedding vector
+            filters: Keyword/metadata filters
+            top_k: Number of results to return
+            vector_weight: Weight for vector similarity (0-1)
+            keyword_weight: Weight for keyword matching (0-1)
+            embedding_model: Filter to only search embeddings from this model
+        """
         where_clause, params = self._build_where_clause(filters)
+
+        # CRITICAL: Add embedding_model filter to WHERE clause
+        # This ensures we only compare embeddings from the same model
+        if embedding_model:
+            where_clause = f"({where_clause}) AND embedding_model = %s"
+            params.append(embedding_model)
 
         with self.pool.connection() as conn:
             register_vector(conn)
