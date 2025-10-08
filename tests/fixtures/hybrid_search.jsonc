@@ -333,11 +333,10 @@
     },
     {
       "name": "cross_language_class_search",
-      "description": "Search for class definitions across object-oriented languages",
+      "description": "Search for class definitions across object-oriented languages (automatically selects appropriate embedding model per language)",
       "query": {
         "vector_query": "class constructor method inheritance",
-        "keyword_query": "has_classes:true",
-        "embedding_model": "sentence-transformers/all-mpnet-base-v2"
+        "keyword_query": "has_classes:true"
       },
       "expected_results": {
         "should_contain": [
@@ -418,11 +417,11 @@
     },
     {
       "name": "hybrid_intersection_class_based_languages",
-      "description": "HYBRID TEST: Find class-based OOP patterns but only in languages with explicit classes",
+      "description": "HYBRID TEST: Find class-based OOP patterns but only in languages with explicit classes (uses GraphCodeBERT)",
       "query": {
         "vector_query": "class definition constructor methods object oriented",
         "keyword_query": "has_classes:true",
-        "embedding_model": "sentence-transformers/all-mpnet-base-v2"
+        "embedding_model": "microsoft/graphcodebert-base"
       },
       "expected_results": {
         "should_contain": [

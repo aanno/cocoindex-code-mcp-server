@@ -28,28 +28,30 @@
 
 **Analysis:** Search results are CORRECT (show proper `analysis_method: "tree_sitter+python_code_analyzer"`, non-empty code, etc.) but test validation logic fails to recognize matches. This is a **test infrastructure bug**, not a search bug.
 
-### Hybrid Search Tests ❌
+### Hybrid Search Tests ✅
 **Command:** `pytest -c pytest.ini ./tests/search/test_hybrid_search.py`
 **Database:** `hybridsearchtest_code_embeddings`
-**Status:** ❌ **0/17 tests PASSING** (0%) - Embedding model mismatch issue
-**Failures:** All 17 tests returning 0 results
+**Status:** ✅ **14/17 tests PASSING** (82%) - Smart embeddings working!
+**Failures:** 3 tests with outdated embedding_model filters
 
-**Root Cause:** Embedding model mismatch between indexing and search:
-- **At Indexing Time:** All chunks embedded with `sentence-transformers/all-mpnet-base-v2` (fallback model)
-- **At Search Time:** Hybrid search uses `language` parameter to select embedding model (e.g., GraphCodeBERT for Python)
-- **Result:** Query embeddings don't match stored embeddings, causing 0 results
-
-**Database Analysis:**
+**Smart Embeddings Verified:**
 ```
-All 39 chunks use: sentence-transformers/all-mpnet-base-v2
-  Python: 6 chunks (should use GraphCodeBERT)
-  Rust: 2 chunks (should use UniXcoder)
-  Java, C++, etc.: 31 chunks (correctly use fallback)
+microsoft/graphcodebert-base: Python, Java, JavaScript, C, C++ (21 chunks)
+microsoft/unixcoder-base: Rust, TypeScript, Kotlin (10 chunks)
+sentence-transformers/all-mpnet-base-v2: Haskell (8 chunks)
 ```
 
-**Issue:** The indexing process is not using language-specific models even with `default_embedding=False`. This needs investigation into why smart embeddings aren't being selected during indexing.
+**Remaining Failures (Test Fixture Issues):**
+1. `cross_language_class_search`: Explicitly filters to fallback model, but classes are in GraphCodeBERT chunks
+2. `hybrid_intersection_class_based_languages`: Same issue - fallback model filter excludes Python/Java
+3. `hybrid_intersection_complex_python_only`: Minor validation issue with function metadata
 
-**Next Steps:** Fix smart embedding selection during indexing, or adjust hybrid search to use consistent embedding model at both index and query time.
+**Root Cause:** These 3 tests specify `embedding_model: sentence-transformers/all-mpnet-base-v2` explicitly in their queries, which was correct for default embeddings but incompatible with smart embeddings where each language uses its optimal model.
+
+**Fix Required:** Update test fixtures to either:
+- Remove explicit `embedding_model` parameter for cross-language searches
+- Use language-specific `embedding_model` values
+- Mark as `fail_expected` with appropriate `fail_reason`
 
 ---
 
