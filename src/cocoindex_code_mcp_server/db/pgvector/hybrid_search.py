@@ -104,43 +104,26 @@ class HybridSearchEngine:
         Perform hybrid search combining vector similarity and keyword filtering.
 
         Args:
-            vector_query: Text to embed and search for semantic similarity
+            vector_query: Text to embed and search for semantic similarity (empty string for keyword-only)
             keyword_query: Keyword search query for metadata filtering
             top_k: Number of results to return
             vector_weight: Weight for vector similarity score (0-1)
             keyword_weight: Weight for keyword match score (0-1)
-            language: Programming language to filter by (e.g., "Python", "Rust")
-            embedding_model: Specific embedding model to filter by (e.g., "microsoft/graphcodebert-base")
+            language: Programming language to filter by (e.g., "Python", "Rust") - REQUIRED if vector_query is used
+            embedding_model: Specific embedding model to filter by (e.g., "microsoft/graphcodebert-base") - REQUIRED if vector_query is used
 
         Returns:
             List of search results with combined scoring
 
         Note:
-            You MUST provide either `language` OR `embedding_model`.
-            If `embedding_model` is provided, it takes precedence.
-            If `language` is provided, it will be mapped to the appropriate embedding model.
+            - For vector or hybrid search (when vector_query is not empty): You MUST provide either `language` OR `embedding_model`
+            - For keyword-only search (when vector_query is empty): language/embedding_model are OPTIONAL
+            - If `embedding_model` is provided, it takes precedence over `language`
+            - If `language` is provided, it will be mapped to the appropriate embedding model
 
         Raises:
-            ValueError: If neither `language` nor `embedding_model` is provided
+            ValueError: If neither `language` nor `embedding_model` is provided when vector_query is used
         """
-        # CRITICAL: Require language or embedding_model for predictable results
-        # Without this, default model could return unexpected results from wrong embedding space
-        if language is None and embedding_model is None:
-            raise ValueError(
-                "Either 'language' or 'embedding_model' parameter is required for search. "
-                "This ensures you only get results from the appropriate embedding model. "
-                "Examples: language='Python', embedding_model='microsoft/graphcodebert-base'"
-            )
-
-        # Resolve embedding model to use for filtering
-        # Priority: embedding_model > language
-        model_to_use = embedding_model
-        if model_to_use is None and language is not None:
-            model_to_use = language_to_embedding_model(language)
-
-        # Select the appropriate embedding function based on the model
-        embedding_func_to_use = self._get_embedding_function(model_to_use)
-
         # Parse keyword query
         search_group = self.parser.parse(keyword_query)
 
@@ -150,10 +133,20 @@ class HybridSearchEngine:
             filters = QueryFilters(conditions=search_group.conditions)
 
         # Use backend abstraction for search operations
-        # CRITICAL: Always pass embedding_model to ensure we only compare vectors from the same model
         if vector_query.strip() and filters:
-            # Both vector and keyword search
-            # Use the selected embedding function (not default self.embedding_func)
+            # Both vector and keyword search - REQUIRE language or embedding_model
+            if language is None and embedding_model is None:
+                raise ValueError(
+                    "Either 'language' or 'embedding_model' parameter is required for search. "
+                    "This ensures you only get results from the appropriate embedding model. "
+                    "Examples: language='Python', embedding_model='microsoft/graphcodebert-base'"
+                )
+
+            # Resolve embedding model to use for filtering
+            model_to_use = embedding_model or language_to_embedding_model(language)
+            embedding_func_to_use = self._get_embedding_function(model_to_use)
+
+            # Hybrid search with embedding
             query_vector = embedding_func_to_use(vector_query)
             results = self.backend.hybrid_search(
                 query_vector=query_vector,
@@ -164,8 +157,19 @@ class HybridSearchEngine:
                 embedding_model=model_to_use  # CRITICAL: Filter by resolved embedding model
             )
         elif vector_query.strip():
-            # Vector search only
-            # Use the selected embedding function (not default self.embedding_func)
+            # Vector search only - REQUIRE language or embedding_model
+            if language is None and embedding_model is None:
+                raise ValueError(
+                    "Either 'language' or 'embedding_model' parameter is required for search. "
+                    "This ensures you only get results from the appropriate embedding model. "
+                    "Examples: language='Python', embedding_model='microsoft/graphcodebert-base'"
+                )
+
+            # Resolve embedding model to use for filtering
+            model_to_use = embedding_model or language_to_embedding_model(language)
+            embedding_func_to_use = self._get_embedding_function(model_to_use)
+
+            # Vector-only search
             query_vector = embedding_func_to_use(vector_query)
             results = self.backend.vector_search(
                 query_vector=query_vector,
