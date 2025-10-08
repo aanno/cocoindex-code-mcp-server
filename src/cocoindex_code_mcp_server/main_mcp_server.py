@@ -296,8 +296,9 @@ def main(
                 return 1
 
             # Get table names for the main flow
-            embeddings_table = cocoindex.utils.get_target_default_name(code_embedding_flow, "code_embeddings")
-            tracking_table = f"{code_embedding_flow.name}__cocoindex_tracking"
+            # PostgreSQL stores table names in lowercase, so we need to lowercase them for queries
+            embeddings_table = cocoindex.utils.get_target_default_name(code_embedding_flow, "code_embeddings").lower()
+            tracking_table = f"{code_embedding_flow.name}__cocoindex_tracking".lower()
 
             logger.info(f"  Clearing embeddings table: {embeddings_table}")
             logger.info(f"  Clearing tracking table:   {tracking_table}")
@@ -307,6 +308,9 @@ def main(
             cur = conn.cursor()
 
             try:
+                # Use psycopg's sql module for safe identifier quoting
+                from psycopg import sql
+
                 # Clear embeddings table
                 cur.execute("""
                     SELECT EXISTS (
@@ -316,10 +320,10 @@ def main(
                 """, (embeddings_table,))
                 if cur.fetchone()[0]:
                     # Get count before truncating (for logging)
-                    cur.execute(f"SELECT COUNT(*) FROM {embeddings_table};")
+                    cur.execute(sql.SQL("SELECT COUNT(*) FROM {}").format(sql.Identifier(embeddings_table)))
                     count = cur.fetchone()[0]
                     # TRUNCATE is faster than DELETE and resets auto-increment
-                    cur.execute(f"TRUNCATE TABLE {embeddings_table} RESTART IDENTITY CASCADE;")
+                    cur.execute(sql.SQL("TRUNCATE TABLE {} RESTART IDENTITY CASCADE").format(sql.Identifier(embeddings_table)))
                     logger.info(f"  ✅ Truncated {embeddings_table} ({count} records removed)")
                 else:
                     logger.info(f"  ⚠️  Table {embeddings_table} does not exist yet")
@@ -333,10 +337,10 @@ def main(
                 """, (tracking_table,))
                 if cur.fetchone()[0]:
                     # Get count before truncating (for logging)
-                    cur.execute(f"SELECT COUNT(*) FROM {tracking_table};")
+                    cur.execute(sql.SQL("SELECT COUNT(*) FROM {}").format(sql.Identifier(tracking_table)))
                     count = cur.fetchone()[0]
                     # TRUNCATE is faster than DELETE and resets auto-increment
-                    cur.execute(f"TRUNCATE TABLE {tracking_table} RESTART IDENTITY CASCADE;")
+                    cur.execute(sql.SQL("TRUNCATE TABLE {} RESTART IDENTITY CASCADE").format(sql.Identifier(tracking_table)))
                     logger.info(f"  ✅ Truncated {tracking_table} ({count} records removed)")
                 else:
                     logger.info(f"  ⚠️  Table {tracking_table} does not exist yet")

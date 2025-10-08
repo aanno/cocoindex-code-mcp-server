@@ -357,16 +357,17 @@ def clear_test_tables(test_type: Optional[str] = None) -> None:
         raise ValueError("DATABASE_URL or COCOINDEX_DATABASE_URL not found in environment")
 
     # Define table mappings
+    # PostgreSQL stores table names in lowercase, so we need to lowercase them for queries
     embeddings_tables = {
-        'keyword': 'keywordsearchtest_code_embeddings',
-        'vector': 'vectorsearchtest_code_embeddings',
-        'hybrid': 'hybridsearchtest_code_embeddings'
+        'keyword': 'keywordsearchtest_code_embeddings'.lower(),
+        'vector': 'vectorsearchtest_code_embeddings'.lower(),
+        'hybrid': 'hybridsearchtest_code_embeddings'.lower()
     }
 
     tracking_tables = {
-        'keyword': 'searchtest_keyword__cocoindex_tracking',
-        'vector': 'searchtest_vector__cocoindex_tracking',
-        'hybrid': 'searchtest_hybrid__cocoindex_tracking'
+        'keyword': 'searchtest_keyword__cocoindex_tracking'.lower(),
+        'vector': 'searchtest_vector__cocoindex_tracking'.lower(),
+        'hybrid': 'searchtest_hybrid__cocoindex_tracking'.lower()
     }
 
     # Determine which tables to clear
@@ -392,6 +393,9 @@ def clear_test_tables(test_type: Optional[str] = None) -> None:
     cur = conn.cursor()
 
     try:
+        # Use psycopg's sql module for safe identifier quoting
+        from psycopg import sql
+
         # Clear embeddings tables
         for table in tables_to_clear['embeddings']:
             # Check if table exists first
@@ -403,10 +407,10 @@ def clear_test_tables(test_type: Optional[str] = None) -> None:
             """, (table,))
             if cur.fetchone()[0]:
                 # Get count before truncating (for logging)
-                cur.execute(f"SELECT COUNT(*) FROM {table};")
+                cur.execute(sql.SQL("SELECT COUNT(*) FROM {}").format(sql.Identifier(table)))
                 count = cur.fetchone()[0]
                 # TRUNCATE is faster than DELETE and resets auto-increment
-                cur.execute(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE;")
+                cur.execute(sql.SQL("TRUNCATE TABLE {} RESTART IDENTITY CASCADE").format(sql.Identifier(table)))
                 logging.info(f"✅ Truncated {table} ({count} records removed)")
             else:
                 logging.info(f"⚠️  Table {table} does not exist, skipping")
@@ -421,10 +425,10 @@ def clear_test_tables(test_type: Optional[str] = None) -> None:
             """, (table,))
             if cur.fetchone()[0]:
                 # Get count before truncating (for logging)
-                cur.execute(f"SELECT COUNT(*) FROM {table};")
+                cur.execute(sql.SQL("SELECT COUNT(*) FROM {}").format(sql.Identifier(table)))
                 count = cur.fetchone()[0]
                 # TRUNCATE is faster than DELETE and resets auto-increment
-                cur.execute(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE;")
+                cur.execute(sql.SQL("TRUNCATE TABLE {} RESTART IDENTITY CASCADE").format(sql.Identifier(table)))
                 logging.info(f"✅ Truncated {table} ({count} records removed)")
             else:
                 logging.info(f"⚠️  Table {table} does not exist, skipping")
