@@ -130,6 +130,7 @@ def save_search_results(
     query: Dict[str, Any],
     search_data: Dict[str, Any],
     run_timestamp: str,
+    test_type: str = "hybrid",
     results_base_dir: str = "/workspaces/rust/test-results"
 ) -> None:
     """
@@ -140,13 +141,14 @@ def save_search_results(
         query: The search query that was executed
         search_data: The search results data
         run_timestamp: Timestamp for consistent naming across test run
+        test_type: Type of search test ('keyword', 'vector', 'hybrid')
         results_base_dir: Base directory for test results
     """
     # Use the provided run timestamp for consistent naming across the test run
     filename = f"{test_name}_{run_timestamp}.json"
 
     # Ensure directory exists
-    results_dir = os.path.join(results_base_dir, "search-hybrid")
+    results_dir = os.path.join(results_base_dir, f"search-{test_type}")
     os.makedirs(results_dir, exist_ok=True)
 
     # Prepare complete result data
@@ -903,7 +905,7 @@ async def run_cocoindex_hybrid_search_tests(
             total_results = len(results)
 
             # Save search results to test-results directory
-            save_search_results(test_name, query, search_data, run_timestamp)
+            save_search_results(test_name, query, search_data, run_timestamp, test_type="hybrid")
 
             # Check minimum results requirement
             min_results = expected_results.get("min_results", 1)
@@ -1011,8 +1013,7 @@ async def run_cocoindex_vector_search_tests(
               total_results = len(results)
 
               # Save search results to test-results directory
-              save_search_results(test_name, query, search_data, run_timestamp,
-  "search-vector")
+              save_search_results(test_name, query, search_data, run_timestamp, test_type="vector")
 
               # Check minimum results requirement
               min_results = expected_results.get("min_results", 1)

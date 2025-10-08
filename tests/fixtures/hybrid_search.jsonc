@@ -316,7 +316,7 @@
       "query": {
         "vector_query": "fibonacci recursive algorithm implementation",
         "keyword_query": "functions:fibonacci",
-        "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
+        "embedding_model": "sentence-transformers/all-mpnet-base-v2"
       },
       "expected_results": {
         "should_contain": [
@@ -337,7 +337,7 @@
       "query": {
         "vector_query": "class constructor method inheritance",
         "keyword_query": "has_classes:true",
-        "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
+        "embedding_model": "sentence-transformers/all-mpnet-base-v2"
       },
       "expected_results": {
         "should_contain": [
@@ -422,7 +422,7 @@
       "query": {
         "vector_query": "class definition constructor methods object oriented",
         "keyword_query": "has_classes:true",
-        "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
+        "embedding_model": "sentence-transformers/all-mpnet-base-v2"
       },
       "expected_results": {
         "should_contain": [

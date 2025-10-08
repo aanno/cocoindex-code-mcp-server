@@ -18,7 +18,7 @@ class SearchTestConfig:
         paths: Optional[List[str]] = None,
         no_live: bool = True,  # --no-live default: True (disable live updates for tests)
         chunk_factor_percent: int = 100,
-        default_embedding: bool = True,  # --default-embedding default: True for tests
+        default_embedding: bool = False,  # USE SMART EMBEDDINGS (language-specific models)
         default_chunking: bool = False,
         default_language_handler: bool = False,
         log_level: str = "DEBUG",  # --log-level default: DEBUG for tests

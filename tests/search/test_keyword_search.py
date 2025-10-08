@@ -51,7 +51,6 @@ class TestKeywordSearch:
         config = SearchTestConfig(
             paths=[str(tmp_dir)],  # Only process the copied test files, not entire repo
             no_live=True,
-            default_embedding=True,
             log_level="DEBUG"
         )
         

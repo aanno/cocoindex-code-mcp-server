@@ -1,12 +1,13 @@
 {
   // Test cases for full text (vector) search functionality
-  // Each test contains: name, query (vector_query only), and expected results
+  // Each test contains: name, query (vector_query + language/embedding_model), and expected results
   "tests": [
     {
       "name": "basename_semantic_search",
       "description": "Search for 'basename' using semantic similarity - should find relevant code patterns",
       "query": {
-        "vector_query": "basename file path extraction"
+        "vector_query": "basename file path extraction",
+        "embedding_model": "microsoft/graphcodebert-base"
       },
       "expected_results": {
         "should_contain": [
@@ -16,7 +17,10 @@
               "complexity_score": ">0",
               "analysis_method": "!unknown"
             },
-            "should_not_be_empty": ["code", "functions"]
+            "should_not_be_empty": [
+              "code",
+              "functions"
+            ]
           }
         ],
         "min_results": 1
@@ -26,7 +30,8 @@
       "name": "ast_visitor_pattern_search",
       "description": "Search for AST visitor pattern using semantic understanding",
       "query": {
-        "vector_query": "AST visitor pattern tree traversal"
+        "vector_query": "AST visitor pattern tree traversal",
+        "embedding_model": "microsoft/graphcodebert-base"
       },
       "expected_results": {
         "should_contain": [
@@ -46,7 +51,8 @@
       "name": "python_handler_semantic_search",
       "description": "Search for Python language handler using semantic similarity",
       "query": {
-        "vector_query": "python language handler processing"
+        "vector_query": "python language handler processing",
+        "language": "Python"
       },
       "expected_results": {
         "should_contain": [
@@ -66,7 +72,8 @@
       "name": "complex_algorithm_search",
       "description": "Search for complex algorithms using semantic understanding",
       "query": {
-        "vector_query": "complex algorithm implementation recursive"
+        "vector_query": "complex algorithm implementation recursive",
+        "embedding_model": "microsoft/graphcodebert-base"
       },
       "expected_results": {
         "should_contain": [
@@ -86,7 +93,8 @@
       "name": "class_definition_search",
       "description": "Search for class definitions using semantic similarity",
       "query": {
-        "vector_query": "class definition constructor methods"
+        "vector_query": "class definition constructor methods",
+        "embedding_model": "microsoft/graphcodebert-base"
       },
       "expected_results": {
         "should_contain": [
@@ -106,7 +114,8 @@
       "name": "rust_struct_implementation_search",
       "description": "Search for Rust struct implementations using semantic understanding",
       "query": {
-        "vector_query": "rust struct implementation methods traits"
+        "vector_query": "rust struct implementation methods traits",
+        "language": "Rust"
       },
       "expected_results": {
         "should_contain": [
@@ -123,10 +132,11 @@
       }
     },
     {
-      "name": "inheritance_polymorphism_search", 
+      "name": "inheritance_polymorphism_search",
       "description": "Search for inheritance and polymorphism concepts using semantic similarity",
       "query": {
-        "vector_query": "inheritance polymorphism abstract class extends"
+        "vector_query": "inheritance polymorphism abstract class extends",
+        "embedding_model": "microsoft/graphcodebert-base"
       },
       "expected_results": {
         "should_contain": [
@@ -147,7 +157,8 @@
       "name": "generics_template_search",
       "description": "Search for generic programming and templates using semantic understanding",
       "query": {
-        "vector_query": "generic programming templates type parameters"
+        "vector_query": "generic programming templates type parameters",
+        "embedding_model": "microsoft/graphcodebert-base"
       },
       "expected_results": {
         "should_contain": [
@@ -166,7 +177,8 @@
       "name": "functional_programming_search",
       "description": "Search for functional programming patterns using semantic similarity",
       "query": {
-        "vector_query": "functional programming higher order functions recursion"
+        "vector_query": "functional programming higher order functions recursion",
+        "embedding_model": "microsoft/graphcodebert-base"
       },
       "expected_results": {
         "should_contain": [
@@ -185,7 +197,8 @@
       "name": "data_structures_search",
       "description": "Search for data structure implementations using semantic understanding",
       "query": {
-        "vector_query": "data structures arrays lists trees graphs"
+        "vector_query": "data structures arrays lists trees graphs",
+        "embedding_model": "microsoft/graphcodebert-base"
       },
       "expected_results": {
         "should_contain": [
@@ -204,7 +217,8 @@
       "name": "error_handling_search",
       "description": "Search for error handling patterns using semantic similarity",
       "query": {
-        "vector_query": "error handling exceptions try catch finally"
+        "vector_query": "error handling exceptions try catch finally",
+        "embedding_model": "microsoft/graphcodebert-base"
       },
       "expected_results": {
         "should_contain": [
@@ -222,7 +236,8 @@
       "name": "async_concurrent_search",
       "description": "Search for asynchronous and concurrent programming patterns",
       "query": {
-        "vector_query": "asynchronous concurrent threading async await"
+        "vector_query": "asynchronous concurrent threading async await",
+        "embedding_model": "microsoft/graphcodebert-base"
       },
       "expected_results": {
         "should_contain": [
@@ -240,7 +255,8 @@
       "name": "fibonacci_algorithm_search",
       "description": "Search for fibonacci algorithm implementations using semantic understanding",
       "query": {
-        "vector_query": "fibonacci sequence recursive dynamic programming"
+        "vector_query": "fibonacci sequence recursive dynamic programming",
+        "embedding_model": "microsoft/graphcodebert-base"
       },
       "expected_results": {
         "should_contain": [
@@ -259,7 +275,8 @@
       "name": "design_patterns_search",
       "description": "Search for common design patterns using semantic similarity",
       "query": {
-        "vector_query": "design patterns observer factory singleton strategy"
+        "vector_query": "design patterns observer factory singleton strategy",
+        "embedding_model": "microsoft/graphcodebert-base"
       },
       "expected_results": {
         "should_contain": [
@@ -279,7 +296,8 @@
       "name": "database_operations_search",
       "description": "Search for database operations and SQL patterns using semantic understanding",
       "query": {
-        "vector_query": "database operations SQL queries CRUD operations"
+        "vector_query": "database operations SQL queries CRUD operations",
+        "embedding_model": "microsoft/graphcodebert-base"
       },
       "expected_results": {
         "should_contain": [
@@ -299,8 +317,15 @@
     "description": "Vector-only search tests to validate semantic code search across all supported languages",
     "search_type": "vector_only",
     "supported_languages": [
-      "python", "rust", "java", "javascript", "typescript", 
-      "cpp", "c", "kotlin", "haskell"
+      "python",
+      "rust",
+      "java",
+      "javascript",
+      "typescript",
+      "cpp",
+      "c",
+      "kotlin",
+      "haskell"
     ],
     "test_categories": [
       "Semantic code pattern searches (AST, algorithms, data structures)",

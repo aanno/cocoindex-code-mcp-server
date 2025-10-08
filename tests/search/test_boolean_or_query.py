@@ -39,7 +39,6 @@ class TestBooleanOrQuery:
         config = SearchTestConfig(
             paths=[str(tmp_dir)],
             no_live=True,
-            default_embedding=True,
             log_level="INFO",
         )
 
@@ -122,7 +121,6 @@ class TestBooleanOrQuery:
         config = SearchTestConfig(
             paths=[str(tmp_dir)],
             no_live=True,
-            default_embedding=True,
             log_level="INFO",
         )
 
@@ -167,7 +165,6 @@ class TestBooleanOrQuery:
         config = SearchTestConfig(
             paths=[str(tmp_dir)],
             no_live=True,
-            default_embedding=True,
             log_level="INFO",
         )
 
