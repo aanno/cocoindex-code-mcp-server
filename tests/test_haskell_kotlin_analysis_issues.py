@@ -14,7 +14,7 @@ from pathlib import Path
 import haskell_tree_sitter as hts
 import pytest
 
-from cocoindex_code_mcp_server.language_handlers.haskell_visitor import (
+from cocoindex_code_mcp_server.language_handlers.haskell_handler import (
     analyze_haskell_code,
 )
 from cocoindex_code_mcp_server.language_handlers.kotlin_visitor import (
@@ -112,13 +112,11 @@ add x y = x + y
         assert 'functions' in result
         assert 'imports' in result
 
-    @pytest.mark.xfail(reason="Known issue: Complex Haskell files fail AST parsing")
-    def test_haskell_complex_file_fails_ast_parsing(self):
-        """Test that demonstrates the Haskell analysis bug with complex files.
+    def test_haskell_complex_file_ast_parsing(self):
+        """Test that Haskell analysis works with complex files.
 
-        This test is marked as expected to fail because the complex Haskell file
-        causes get_haskell_ast_chunks to return 0 chunks, falling back to regex
-        chunking that the handler can't process.
+        This test verifies that complex Haskell files are properly analyzed using
+        the Rust-based tree-sitter implementation with proper fallback handling.
         """
         # Load the actual test file that's failing
         test_file = Path(__file__).parent / "fixtures" / "lang_examples" / "HaskellExample1.hs"
@@ -128,15 +126,15 @@ add x y = x + y
         with open(test_file, 'r') as f:
             complex_haskell = f.read()
 
-        # This is the bug: complex file returns 0 AST chunks
+        # Verify AST chunking produces chunks for complex files
         ast_chunks = hts.get_haskell_ast_chunks(complex_haskell)
-        assert len(ast_chunks) > 0, "Complex Haskell file should produce AST chunks but doesn't (BUG)"
+        assert len(ast_chunks) > 0, "Complex Haskell file should produce AST chunks"
 
-        # Fallback works but produces wrong chunk types
+        # Verify fallback also works if needed
         fallback_chunks = hts.get_haskell_ast_chunks_with_fallback(complex_haskell)
         assert len(fallback_chunks) > 0, "Fallback should produce chunks"
 
-        # All fallback chunks are regex_chunks which handler can't process
+        # Verify chunks have proper types that handler can process
         chunk_types = [chunk.node_type() for chunk in fallback_chunks]
         proper_types = ['function', 'bind', 'signature', 'module', 'import', 'data']
         has_proper_types = any(chunk_type in proper_types for chunk_type in chunk_types)

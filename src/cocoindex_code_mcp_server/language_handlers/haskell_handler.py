@@ -1108,3 +1108,109 @@ class HaskellNodeHandler:
                 for imp in self.imports
             ]
         }
+
+
+def analyze_haskell_code(content: str, filename: str = "") -> Dict[str, Any]:
+    """
+    Analyze Haskell code using the current Rust-based implementation.
+
+    This function provides compatibility with the old haskell_visitor.analyze_haskell_code
+    interface while using the modern Rust-based tree-sitter implementation.
+
+    Args:
+        content: Haskell source code to analyze
+        filename: Optional filename for context
+
+    Returns:
+        Dictionary containing analysis results with keys:
+        - success: bool indicating if analysis succeeded
+        - analysis_method: string describing the method used
+        - functions: list of function names
+        - imports: list of import module names
+        - classes: list of type class names (empty for Haskell as it uses 'type_classes')
+        - data_classes: list of data type names
+        - data_types: list of all data type names
+        - type_classes: list of type class names
+        - complexity_score: int complexity metric
+        - (and other metadata fields)
+    """
+    try:
+        # Import haskell_tree_sitter here to avoid import errors if not available
+        import haskell_tree_sitter
+
+        # Use Rust-based chunking to get AST chunks
+        chunks = haskell_tree_sitter.get_haskell_ast_chunks_with_fallback(content)
+
+        if len(chunks) == 0:
+            LOGGER.warning(f"No chunks produced for Haskell file {filename}")
+            return {
+                'success': False,
+                'analysis_method': 'haskell_chunk_visitor',
+                'functions': [],
+                'imports': [],
+                'classes': [],
+                'data_classes': [],
+                'data_types': [],
+                'type_classes': [],
+                'complexity_score': 0,
+                'error': 'No AST chunks produced'
+            }
+
+        # Create handler and process chunks
+        handler = HaskellNodeHandler()
+
+        for chunk in chunks:
+            # Create a minimal Node-like object for the chunk
+            class ChunkNode:
+                """Adapter to make chunk compatible with NodeContext."""
+                def __init__(self, chunk):
+                    self._chunk = chunk
+                    self.type = chunk.node_type()
+                    self.start_byte = chunk.start_byte()
+                    self.end_byte = chunk.end_byte()
+
+                def node_type(self):
+                    return self._chunk.node_type()
+
+                def text(self):
+                    return self._chunk.text()
+
+            # Create proper NodeContext with all required fields
+            chunk_node = ChunkNode(chunk)
+            context = NodeContext(
+                node=chunk_node,  # type: ignore[arg-type]
+                parent=None,
+                depth=0,
+                scope_stack=[],
+                source_text=content
+            )
+
+            handler.extract_metadata(context)
+
+        # Get summary
+        summary = handler.get_summary()
+
+        # Add compatibility fields
+        summary.update({
+            'success': True,
+            'analysis_method': 'haskell_chunk_visitor',
+            'classes': summary.get('type_classes', []),  # Compatibility: map type_classes to classes
+            'data_classes': summary.get('data_types', []),  # Compatibility: map data_types to data_classes
+        })
+
+        return summary
+
+    except Exception as e:
+        LOGGER.error(f"Haskell analysis failed for {filename}: {e}")
+        return {
+            'success': False,
+            'analysis_method': 'haskell_chunk_visitor',
+            'functions': [],
+            'imports': [],
+            'classes': [],
+            'data_classes': [],
+            'data_types': [],
+            'type_classes': [],
+            'complexity_score': 0,
+            'error': str(e)
+        }

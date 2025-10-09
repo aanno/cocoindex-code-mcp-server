@@ -166,7 +166,7 @@ class TestHaskellVisitorIntegration:
     def test_haskell_visitor_good_code(self):
         """Test Haskell visitor with good code."""
         try:
-            from cocoindex_code_mcp_server.language_handlers.haskell_visitor import (
+            from cocoindex_code_mcp_server.language_handlers.haskell_handler import (
                 analyze_haskell_code,
             )
         except ImportError:
@@ -192,7 +192,7 @@ multiply x y = x * y
     def test_haskell_visitor_minor_errors(self):
         """Test Haskell visitor with code that has minor errors."""
         try:
-            from cocoindex_code_mcp_server.language_handlers.haskell_visitor import (
+            from cocoindex_code_mcp_server.language_handlers.haskell_handler import (
                 analyze_haskell_code,
             )
         except ImportError:
@@ -219,7 +219,7 @@ multiply x y = x * y
     def test_haskell_visitor_buggy_code(self):
         """Test Haskell visitor with very buggy code."""
         try:
-            from cocoindex_code_mcp_server.language_handlers.haskell_visitor import (
+            from cocoindex_code_mcp_server.language_handlers.haskell_handler import (
                 analyze_haskell_code,
             )
         except ImportError:

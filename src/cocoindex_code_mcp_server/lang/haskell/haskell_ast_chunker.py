@@ -155,6 +155,9 @@ class EnhancedHaskellChunker:
     """
     Enhanced Haskell chunker inspired by ASTChunk techniques.
     Provides configurable chunking with rich metadata and multiple fallback strategies.
+
+    Note: This class is deprecated but still used internally by HaskellChunkExecutor
+    as a fallback implementation when Rust-based chunking fails.
     """
 
     def __init__(self, config: Optional[HaskellChunkConfig] = None) -> None:
@@ -558,8 +561,9 @@ class CompatibleChunk:
 def extract_haskell_ast_chunks(content: str) -> List[Dict[str, Any]]:
     """
     Enhanced AST-based Haskell chunking using the fixed Rust implementation.
-    
-    This function maintains backward compatibility for existing usage points.
+
+    This function maintains backward compatibility for existing usage points and is
+    still used internally by utility code (ast_chunking.py, cocoindex_config.py).
 
     Args:
         content: Haskell source code

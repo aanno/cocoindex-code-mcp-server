@@ -6,7 +6,7 @@ from typing import Set
 import pytest
 
 from cocoindex_code_mcp_server.ast_visitor import analyze_code
-from cocoindex_code_mcp_server.language_handlers.haskell_visitor import (
+from cocoindex_code_mcp_server.language_handlers.haskell_handler import (
     analyze_haskell_code,
 )
 
