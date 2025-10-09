@@ -323,8 +323,8 @@ class TestBuildSqlWhereClause:
 
         where_clause, params = build_sql_where_clause(group)
 
-        assert where_clause == "LOWER(language) = LOWER(%s) AND filename = %s"
-        assert params == ["python", "main_interactive_query.py"]
+        assert where_clause == "LOWER(language) = LOWER(%s) AND filename ILIKE %s"
+        assert params == ["python", "%main_interactive_query.py%"]
 
     def test_or_conditions(self):
         """Test OR conditions."""

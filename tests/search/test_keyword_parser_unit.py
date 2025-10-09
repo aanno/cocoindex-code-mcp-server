@@ -29,16 +29,22 @@ def test_keyword_search_parser_boolean_or():
 
     result = parser.parse(query)
 
+    # Import Operator enum for comparisons
+    from cocoindex_code_mcp_server.keyword_search_parser_lark import Operator
+
     # Check that the result is a SearchGroup with OR operator
     assert hasattr(result, "operator"), "Result should have an operator attribute"
-    assert result.operator == "OR", "Operator should be OR"
+    assert result.operator == Operator.OR, "Operator should be OR"
 
     # Check that we have conditions
     assert hasattr(result, "conditions"), "Result should have conditions"
     assert len(result.conditions) == 2, "Should have 2 conditions for 'a OR b'"
 
-    # Check individual conditions
-    for i, condition in enumerate(result.conditions):
+    # Check individual conditions - OR queries create nested SearchGroups
+    for i, group in enumerate(result.conditions):
+        assert hasattr(group, "conditions"), f"Group {i} should have conditions"
+        assert len(group.conditions) == 1, f"Group {i} should have 1 condition"
+        condition = group.conditions[0]
         assert hasattr(condition, "field"), f"Condition {i} should have field"
         assert hasattr(condition, "value"), f"Condition {i} should have value"
         assert condition.field == "language", "Field should be language"
@@ -67,10 +73,11 @@ def test_keyword_search_parser_simple_query():
     query = "language:python"
     result = parser.parse(query)
 
-    # Should have a single condition
-    assert hasattr(result, "field"), "Simple query should have field"
-    assert result.field == "language", "Field should be language"
-    assert result.value == "python", "Value should be python"
+    # Should have a single condition in a SearchGroup
+    assert hasattr(result, "conditions"), "Result should have conditions"
+    assert len(result.conditions) == 1, "Should have exactly 1 condition"
+    assert result.conditions[0].field == "language", "Field should be language"
+    assert result.conditions[0].value == "python", "Value should be python"
 
     # Test SQL generation
     where_clause, params = build_sql_where_clause(result)
@@ -91,9 +98,12 @@ def test_keyword_search_parser_and_query():
     query = "language:python AND functions:fibonacci"
     result = parser.parse(query)
 
+    # Import Operator enum for comparisons
+    from cocoindex_code_mcp_server.keyword_search_parser_lark import Operator
+
     # Check that the result is a SearchGroup with AND operator
     assert hasattr(result, "operator"), "Result should have an operator attribute"
-    assert result.operator == "AND", "Operator should be AND"
+    assert result.operator == Operator.AND, "Operator should be AND"
 
     # Check that we have conditions
     assert hasattr(result, "conditions"), "Result should have conditions"
@@ -121,16 +131,23 @@ def test_keyword_search_parser_field_value_pairs(query, expected_field, expected
     parser = KeywordSearchParser()
     result = parser.parse(query)
 
-    assert result.field == expected_field, f"Field should be {expected_field}"
-    assert result.value == expected_value, f"Value should be {expected_value}"
+    # Parser now returns SearchGroup with conditions list
+    assert hasattr(result, "conditions"), "Result should have conditions"
+    assert len(result.conditions) == 1, "Should have exactly 1 condition"
+    assert result.conditions[0].field == expected_field, f"Field should be {expected_field}"
+    assert result.conditions[0].value == expected_value, f"Value should be {expected_value}"
 
 
 def test_keyword_search_parser_invalid_query():
-    """Test that invalid queries raise appropriate errors."""
+    """Test that plain text queries are treated as text search."""
     from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
 
     parser = KeywordSearchParser()
 
-    # Test invalid query format
-    with pytest.raises(Exception):  # Could be SyntaxError or custom parse error
-        parser.parse("invalid query without colon")
+    # Plain text without colon is now treated as text search
+    result = parser.parse("invalid query without colon")
+    assert hasattr(result, "conditions"), "Result should have conditions"
+    assert len(result.conditions) == 1, "Should have exactly 1 condition"
+    # Parser treats plain text as a text field search
+    assert result.conditions[0].field == "_text", "Field should be _text for plain text queries"
+    assert result.conditions[0].value == "invalid query without colon", "Value should be the query text"

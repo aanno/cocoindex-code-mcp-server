@@ -253,7 +253,7 @@ class TestHybridSearchEngine:
         assert result["language"] == "Python"
         assert result["code"] == "def test():"
         assert result["score"] == 0.8
-        assert result["score_type"] == "vector_similarity"
+        assert result["score_type"] == SearchResultType.VECTOR_SIMILARITY
 
     def test_search_keyword_only(self, hybrid_engine_with_backend: HybridSearchEngine,
                                  mock_backend: MockVectorStoreBackend,
@@ -283,7 +283,7 @@ class TestHybridSearchEngine:
         # Verify results format
         assert len(results) == 1
         result = results[0]
-        assert result["score_type"] == "keyword_match"
+        assert result["score_type"] == SearchResultType.KEYWORD_MATCH
 
     def test_search_hybrid(self, mocker,
                            hybrid_engine_with_backend: HybridSearchEngine,
@@ -326,7 +326,7 @@ class TestHybridSearchEngine:
         # Verify results format
         assert len(results) == 1
         result = results[0]
-        assert result["score_type"] == "hybrid_combined"
+        assert result["score_type"] == SearchResultType.HYBRID_COMBINED
         assert result["score"] == 0.75
 
     def test_search_empty_queries(self, hybrid_engine_with_backend: HybridSearchEngine, mock_parser):
@@ -378,7 +378,7 @@ class TestHybridSearchEngine:
         assert result_dict["start"] == {"line": 1}
         assert result_dict["end"] == {"line": 3}
         assert result_dict["source"] == "files"
-        assert result_dict["score_type"] == "hybrid"
+        assert result_dict["score_type"] == SearchResultType.HYBRID_COMBINED
         assert result_dict["functions"] == ["test"]
         assert result_dict["complexity"] == 5
 

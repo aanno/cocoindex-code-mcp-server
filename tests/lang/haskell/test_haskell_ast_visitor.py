@@ -173,14 +173,14 @@ _helperFunction s = "Helper: " ++ s
             self.sample_haskell_code,
             filename='module.hs'
         )
-        assert metadata_hs['language'] == 'haskell'
+        assert metadata_hs['language'] == 'Haskell'
 
         # Test .lhs extension (literate Haskell)
         metadata_lhs = self.analyzer.analyze_code(
             self.sample_haskell_code,
             filename='module.lhs'
         )
-        assert metadata_lhs['language'] == 'haskell'
+        assert metadata_lhs['language'] == 'Haskell'
 
     def test_fallback_behavior(self):
         """Test fallback behavior when tree-sitter parsing fails."""

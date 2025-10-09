@@ -22,7 +22,7 @@ Our code is mypy compatible! Use the type checking script:
 - cocoindex is a complex beast, so don't hesitate to ask for clarification or guidance.
 - Tests should be pytest at ./tests (NOT at ./src/cocoindex_code_mcp_server/tests).
 - Tests should use pytest and pytest plugins only (i.e. don't use unittest).
-- Think about using our own RAG (MCP server 'cocoindex-rag') before using grep or search.
+- You MUST use our own RAG (MCP server 'cocoindex-rag') each time before using grep or search.
 - Never try to start/stop our RAG MCP server, just ask, I will do it for you.
 - Use gw-memory to store and retrieve information about the codebase.
   + Tag all entries with 'cocoindex_code_mcp_server' to indicate they are related to the code MCP server.
