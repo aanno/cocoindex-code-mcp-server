@@ -378,35 +378,46 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                     # Modern Haskell analysis using AST chunks
                     from .lang.haskell.haskell_ast_chunker import extract_haskell_ast_chunks
                     chunks = extract_haskell_ast_chunks(text)
-                    
-                    # Extract aggregated metadata from chunks  
-                    functions = []
+
+                    # Extract aggregated metadata from chunks
+                    functions = set()
                     classes = []
                     data_types = []
-                    modules = []
-                    
+                    modules = set()
+
                     for chunk in chunks:
                         if isinstance(chunk, dict) and 'metadata' in chunk:
                             chunk_meta = chunk['metadata']
+                            # Extract function names from metadata
                             if 'function_name' in chunk_meta:
-                                func_name = chunk_meta['function_name'] 
-                                if func_name not in functions:
-                                    functions.append(func_name)
-                            if 'class_name' in chunk_meta:
-                                class_name = chunk_meta['class_name']
-                                if class_name not in classes:
-                                    classes.append(class_name)
+                                functions.add(chunk_meta['function_name'])
+                            # Extract functions array if present
+                            if 'functions' in chunk_meta:
+                                try:
+                                    funcs = json.loads(chunk_meta['functions']) if isinstance(chunk_meta['functions'], str) else chunk_meta['functions']
+                                    functions.update(funcs)
+                                except:
+                                    pass
+                            # Extract modules array if present
+                            if 'modules' in chunk_meta:
+                                try:
+                                    mods = json.loads(chunk_meta['modules']) if isinstance(chunk_meta['modules'], str) else chunk_meta['modules']
+                                    modules.update(mods)
+                                except:
+                                    pass
+                            # Extract single module_name if present
                             if 'module_name' in chunk_meta:
-                                module_name = chunk_meta['module_name']
-                                if module_name not in modules:
-                                    modules.append(module_name)
-                    
+                                modules.add(chunk_meta['module_name'])
+                            # Extract classes
+                            if 'class_name' in chunk_meta and chunk_meta['class_name'] not in classes:
+                                classes.append(chunk_meta['class_name'])
+
                     metadata = {
                         "analysis_method": "rust_haskell_ast",
-                        "functions": functions,
+                        "functions": list(functions),
                         "classes": classes,
                         "data_types": data_types,
-                        "modules": modules,
+                        "modules": list(modules),
                         "imports": [],
                         "has_classes": len(classes) > 0,
                         "has_module": len(modules) > 0,

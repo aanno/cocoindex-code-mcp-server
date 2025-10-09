@@ -1190,21 +1190,44 @@ def analyze_haskell_code(content: str, filename: str = "") -> Dict[str, Any]:
         # Get summary
         summary = handler.get_summary()
 
-        # Determine chunking method from chunks
+        # Determine chunking method and extract module info from chunks
         chunking_method = 'rust_haskell_ast'
         has_errors = False
+        module_names = set()
         for chunk in chunks:
             chunk_metadata = chunk.metadata() if hasattr(chunk, 'metadata') and callable(chunk.metadata) else {}
             if 'chunking_method' in chunk_metadata:
                 chunking_method = chunk_metadata['chunking_method']
             if chunk_metadata.get('has_error') == 'true' or chunk_metadata.get('tree_sitter_chunking_error') == 'true':
                 has_errors = True
+            # Extract module names from metadata
+            if 'modules' in chunk_metadata:
+                import json
+                try:
+                    modules_list = json.loads(chunk_metadata['modules'])
+                    module_names.update(modules_list)
+                except:
+                    pass
+
+        # Determine the main module (first in alphabetical order, excluding imported modules)
+        main_module = None
+        if module_names:
+            # The main module is typically the first module that's not an import
+            # For now, just use the first module alphabetically
+            main_module = sorted(module_names)[0] if module_names else None
 
         # Add compatibility fields for test expectations
         summary.update({
             'success': True,
+            'language': 'Haskell',  # Display language name
+            'filename': filename,
+            'line_count': len(content.split('\n')),
+            'char_count': len(content),
             'analysis_method': 'haskell_chunk_visitor',
             'chunking_method': chunking_method,
+            'module': main_module,
+            'modules': list(module_names) if module_names else [],
+            'has_module_declaration': main_module is not None,
             'classes': summary.get('type_classes', []),  # Compatibility: map type_classes to classes
             'data_classes': summary.get('data_types', []),  # Compatibility: map data_types to data_classes
             'error_count': 0,  # Would need to count actual errors from chunks
@@ -1219,6 +1242,10 @@ def analyze_haskell_code(content: str, filename: str = "") -> Dict[str, Any]:
         LOGGER.error(f"Haskell analysis failed for {filename}: {e}")
         return {
             'success': False,
+            'language': 'Haskell',
+            'filename': filename,
+            'line_count': len(content.split('\n')) if content else 0,
+            'char_count': len(content) if content else 0,
             'analysis_method': 'haskell_chunk_visitor',
             'functions': [],
             'imports': [],
