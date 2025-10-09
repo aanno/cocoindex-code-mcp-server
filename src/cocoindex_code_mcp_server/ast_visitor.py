@@ -588,7 +588,8 @@ class MultiLevelAnalyzer:
             'line_count': len(code.split('\n')),
             'char_count': len(code),
             'analysis_method': 'unknown',
-            'errors': []
+            'errors': [],
+            'success': True  # Analysis completed (even if with fallback)
         }
 
         # Strategy 1: Tree-sitter AST parsing

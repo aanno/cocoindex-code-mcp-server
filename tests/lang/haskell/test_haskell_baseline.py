@@ -11,6 +11,8 @@ from cocoindex_code_mcp_server.language_handlers.haskell_handler import (
 )
 
 
+@pytest.mark.haskell
+@pytest.mark.unit
 class TestHaskellBaseline:
     """Test Haskell analysis with baseline comparison."""
 
