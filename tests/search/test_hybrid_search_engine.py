@@ -34,7 +34,7 @@ class MockVectorStoreBackend(VectorStoreBackend):
         self.keyword_search_calls = []
         self.hybrid_search_calls = []
 
-    def vector_search(self, query_vector: ndarray, top_k: int = 10) -> List[SearchResult]:
+    def vector_search(self, query_vector: ndarray, top_k: int = 10, embedding_model: str = None) -> List[SearchResult]:
         self.vector_search_calls.append((query_vector, top_k))
         return [
             SearchResult(
@@ -67,7 +67,7 @@ class MockVectorStoreBackend(VectorStoreBackend):
         ]
 
     def hybrid_search(self, query_vector: ndarray, filters: QueryFilters, top_k: int = 10,
-                      vector_weight: float = 0.7, keyword_weight: float = 0.3) -> List[SearchResult]:
+                      vector_weight: float = 0.7, keyword_weight: float = 0.3, embedding_model: str = None) -> List[SearchResult]:
         self.hybrid_search_calls.append((query_vector, filters, top_k, vector_weight, keyword_weight))
         return [
             SearchResult(
@@ -218,14 +218,18 @@ class TestHybridSearchEngine:
         assert engine.backend == mock_backend
         assert engine.parser == mock_parser_instance
 
-    def test_search_vector_only(self, mocker, hybrid_engine_with_backend: HybridSearchEngine, mock_backend: MockVectorStoreBackend):
+    def test_search_vector_only(self, mocker,
+                                 hybrid_engine_with_backend: HybridSearchEngine,
+                                 mock_backend: MockVectorStoreBackend,
+                                 mock_parser,
+                                 mock_embedding_func):
         """Test search with vector query only."""
-        mock_parser = mocker.Mock()
-        mock_embedding_func = mocker.Mock()
-
         # Mock parser to return empty search group
         empty_group = SearchGroup(conditions=[])
         mock_parser.parse.return_value = empty_group
+
+        # Mock _get_embedding_function to return our mock embedding func
+        mocker.patch.object(hybrid_engine_with_backend, '_get_embedding_function', return_value=mock_embedding_func)
 
         # Execute search with required language parameter
         results = hybrid_engine_with_backend.search("test query", "", top_k=5, language="Python")
@@ -249,15 +253,13 @@ class TestHybridSearchEngine:
         assert result["language"] == "Python"
         assert result["code"] == "def test():"
         assert result["score"] == 0.8
-        assert result["score_type"] == "vector"
+        assert result["score_type"] == "vector_similarity"
 
-    def test_search_keyword_only(self, mocker, hybrid_engine_with_backend: HybridSearchEngine,
-                                 mock_backend: MockVectorStoreBackend):
-        # mock_parser: Mock, mock_embedding_func: Mock):
+    def test_search_keyword_only(self, hybrid_engine_with_backend: HybridSearchEngine,
+                                 mock_backend: MockVectorStoreBackend,
+                                 mock_parser,
+                                 mock_embedding_func):
         """Test search with keyword query only."""
-        mock_parser = mocker.Mock()
-        mock_embedding_func = mocker.Mock()
-        
         # Mock parser to return a search group with conditions
         condition = SearchCondition(field="language", value="python")
         search_group = SearchGroup(conditions=[condition])
@@ -281,18 +283,21 @@ class TestHybridSearchEngine:
         # Verify results format
         assert len(results) == 1
         result = results[0]
-        assert result["score_type"] == "keyword"
+        assert result["score_type"] == "keyword_match"
 
-    def test_search_hybrid(self, mocker, hybrid_engine_with_backend: HybridSearchEngine,
-                           mock_backend: MockVectorStoreBackend):
+    def test_search_hybrid(self, mocker,
+                           hybrid_engine_with_backend: HybridSearchEngine,
+                           mock_backend: MockVectorStoreBackend,
+                           mock_parser,
+                           mock_embedding_func):
         """Test hybrid search with both vector and keyword queries."""
-        mock_parser = mocker.Mock()
-        mock_embedding_func = mocker.Mock()
-
         # Mock parser to return a search group with conditions
         condition = SearchCondition(field="language", value="python")
         search_group = SearchGroup(conditions=[condition])
         mock_parser.parse.return_value = search_group
+
+        # Mock _get_embedding_function to return our mock embedding func
+        mocker.patch.object(hybrid_engine_with_backend, '_get_embedding_function', return_value=mock_embedding_func)
 
         # Execute search with required language parameter
         results = hybrid_engine_with_backend.search(
@@ -321,14 +326,11 @@ class TestHybridSearchEngine:
         # Verify results format
         assert len(results) == 1
         result = results[0]
-        assert result["score_type"] == "hybrid"
+        assert result["score_type"] == "hybrid_combined"
         assert result["score"] == 0.75
 
-    def test_search_empty_queries(self, mocker, hybrid_engine_with_backend: HybridSearchEngine): 
-        # mock_parser: Mock)
+    def test_search_empty_queries(self, hybrid_engine_with_backend: HybridSearchEngine, mock_parser):
         """Test search with empty queries."""
-        mock_parser = mocker.Mock()
-        
         # Mock parser to return empty search group for empty string
         empty_group = SearchGroup(conditions=[])
         mock_parser.parse.return_value = empty_group

@@ -9,7 +9,8 @@ import pytest
 class TestHaskellParsing:
     """Test the haskell-tree-sitter extension functionality."""
 
-    def setUp(self):
+    def setup_method(self):
+        """Setup test fixtures for each test method."""
         self.sample_haskell_code = '''
 module Main where
 
