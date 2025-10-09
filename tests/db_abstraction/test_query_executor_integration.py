@@ -5,6 +5,7 @@ Integration tests db_abstraction: QueryExecutor with backend integration.
 
 import asyncio
 from typing import List
+
 import pytest
 
 from cocoindex_code_mcp_server.query_abstraction import QueryBuilder, QueryExecutor
@@ -19,10 +20,10 @@ from cocoindex_code_mcp_server.schemas import (
 class TestQueryExecutorIntegration:
     """Test QueryExecutor integration with real backends."""
 
-    def test_query_executor_with_mock_backend(self):
+    def test_query_executor_with_mock_backend(self, mocker):
         """Test QueryExecutor with a mocked backend."""
         # Create mock backend
-        mock_backend = Mock()
+        mock_backend = mocker.Mock()
 
         # Mock SearchResult with proper ChunkMetadata
         mock_metadata: ChunkMetadata = {
@@ -158,10 +159,10 @@ class TestQueryExecutorIntegration:
 
 
 @pytest.mark.asyncio
-async def test_async_query_execution():
+async def test_async_query_execution(mocker):
     """Test async QueryExecutor execution."""
     # Mock backend with async-compatible methods
-    mock_backend = Mock()
+    mock_backend = mocker.Mock()
 
     mock_result = SearchResult(
         filename="async_test.py",

@@ -5,7 +5,6 @@ Tests for PostgreSQL backend implementation.
 """
 
 from typing import Any, Dict, List
-from unittest.mock import Mock, patch
 
 import numpy as np
 import pytest
@@ -364,12 +363,12 @@ class TestPostgresBackend:
         assert len(info["indexes"]) == 2
         assert info["indexes"][0]["name"] == "idx_embedding_cosine"
 
-    def test_close(self, postgres_backend):
+    def test_close(self, mocker, postgres_backend):
         """Test backend cleanup."""
         backend, _, _ = postgres_backend
 
         # Add close method to pool mock
-        setattr(backend.pool, 'close', Mock())
+        setattr(backend.pool, 'close', mocker.Mock())
 
         # Test close
         backend.close()
@@ -477,7 +476,7 @@ class TestPostgresBackend:
         assert result.metadata["filename"] == "test.js"
         assert result.metadata["language"] == "JavaScript"
 
-    def test_build_where_clause(self, postgres_backend):
+    def test_build_where_clause(self, mocker, postgres_backend):
         """Test QueryFilters to SQL WHERE clause conversion."""
         backend, _, _ = postgres_backend
 
@@ -485,19 +484,19 @@ class TestPostgresBackend:
         filters = QueryFilters(conditions=[SearchCondition(field="language", value="Python")])
 
         # Test WHERE clause building (this tests the mock search group creation)
-        with patch('cocoindex_code_mcp_server.backends.postgres_backend.build_sql_where_clause') as mock_build:
-            mock_build.return_value = ("language = %s", ["Python"])
+        mock_build = mocker.patch('cocoindex_code_mcp_server.backends.postgres_backend.build_sql_where_clause')
+        mock_build.return_value = ("language = %s", ["Python"])
 
-            where_clause, params = backend._build_where_clause(filters)
+        where_clause, params = backend._build_where_clause(filters)
 
-            # Verify mock was called with properly structured search group
-            mock_build.assert_called_once()
-            search_group = mock_build.call_args[0][0]
-            assert hasattr(search_group, 'conditions')
-            assert len(search_group.conditions) == 1
-            condition = search_group.conditions[0]
-            assert condition.field == "language"
-            assert condition.value == "Python"
+        # Verify mock was called with properly structured search group
+        mock_build.assert_called_once()
+        search_group = mock_build.call_args[0][0]
+        assert hasattr(search_group, 'conditions')
+        assert len(search_group.conditions) == 1
+        condition = search_group.conditions[0]
+        assert condition.field == "language"
+        assert condition.value == "Python"
 
-            assert where_clause == "language = %s"
-            assert params == ["Python"]
+        assert where_clause == "language = %s"
+        assert params == ["Python"]

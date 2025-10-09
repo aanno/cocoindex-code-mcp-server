@@ -167,15 +167,14 @@ class TestHybridSearchEngine:
         assert engine.parser == mock_parser
         assert engine.embedding_func == mock_embedding_func
 
-    # @patch('cocoindex_code_mcp_server.backends.BackendFactory.create_backend')
     def test_initialization_legacy_pool(self, mocker):
-        # mock_factory: MagicMock, mock_pool: MagicMock, mock_parser: Mock, mock_embedding_func: Mock)
         """Test engine initialization with legacy pool parameter."""
-        mock_factory = mocker.MagicMock()
         mock_pool = mocker.MagicMock()
-        mock_embedding_func = mocker.patch('cocoindex_code_mcp_server.backends.BackendFactory.create_backend')
-        
+        mock_parser = mocker.Mock()
+        mock_embedding_func = mocker.Mock()
+
         mock_backend = MockVectorStoreBackend()
+        mock_factory = mocker.patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.BackendFactory.create_backend')
         mock_factory.return_value = mock_backend
 
         engine = HybridSearchEngine(
@@ -204,23 +203,14 @@ class TestHybridSearchEngine:
 
     # @patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.KeywordSearchParser')
     # @patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.cocoindex.utils.get_target_default_name')
-    # @patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.code_to_embedding')
-    # @patch('cocoindex_code_mcp_server.backends.BackendFactory.create_backend')
-    def test_initialization_with_defaults(self, mocker): 
-        # mock_factory: MagicMock, mock_embedding: MagicMock,
-        # mock_get_name: MagicMock, mock_parser_class: MagicMock, mock_pool: MagicMock)
+    def test_initialization_with_defaults(self, mocker):
         """Test engine initialization with default values."""
-        mock_factory = mocker.MagicMock()
-        mock_embedding = mocker.patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.KeywordSearchParser')
-        mock_get_name = mocker.patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.cocoindex.utils.get_target_default_name')
-        mock_parser_class = mocker.patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.code_to_embedding')
-        mock_pool = mocker.patch('cocoindex_code_mcp_server.backends.BackendFactory.create_backend')
-        
-        mock_backend = MockVectorStoreBackend()
-        mock_factory.return_value = mock_backend
+        mock_pool = mocker.MagicMock()
         mock_parser_instance = mocker.Mock()
-        mock_parser_class.return_value = mock_parser_instance
-        mock_get_name.return_value = "default_table"
+
+        mock_backend = MockVectorStoreBackend()
+        mock_factory = mocker.patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.BackendFactory.create_backend')
+        mock_factory.return_value = mock_backend
 
         engine = HybridSearchEngine(table_name="default_table", parser=mock_parser_instance, pool=mock_pool)
 
@@ -229,17 +219,16 @@ class TestHybridSearchEngine:
         assert engine.parser == mock_parser_instance
 
     def test_search_vector_only(self, mocker, hybrid_engine_with_backend: HybridSearchEngine, mock_backend: MockVectorStoreBackend):
-        # mock_parser: Mock, mock_embedding_func: Mock):
         """Test search with vector query only."""
         mock_parser = mocker.Mock()
         mock_embedding_func = mocker.Mock()
-        
+
         # Mock parser to return empty search group
         empty_group = SearchGroup(conditions=[])
         mock_parser.parse.return_value = empty_group
 
-        # Execute search
-        results = hybrid_engine_with_backend.search("test query", "", top_k=5)
+        # Execute search with required language parameter
+        results = hybrid_engine_with_backend.search("test query", "", top_k=5, language="Python")
 
         # Verify embedding function was called
         mock_embedding_func.assert_called_once_with("test query")
@@ -295,24 +284,24 @@ class TestHybridSearchEngine:
         assert result["score_type"] == "keyword"
 
     def test_search_hybrid(self, mocker, hybrid_engine_with_backend: HybridSearchEngine,
-                           mock_backend: MockVectorStoreBackend): 
-        # mock_parser: Mock, mock_embedding_func: Mock):
+                           mock_backend: MockVectorStoreBackend):
         """Test hybrid search with both vector and keyword queries."""
         mock_parser = mocker.Mock()
         mock_embedding_func = mocker.Mock()
-        
+
         # Mock parser to return a search group with conditions
         condition = SearchCondition(field="language", value="python")
         search_group = SearchGroup(conditions=[condition])
         mock_parser.parse.return_value = search_group
 
-        # Execute search
+        # Execute search with required language parameter
         results = hybrid_engine_with_backend.search(
             "test query",
             "language:python",
             top_k=5,
             vector_weight=0.6,
-            keyword_weight=0.4)
+            keyword_weight=0.4,
+            language="Python")
 
         # Verify embedding function was called
         mock_embedding_func.assert_called_once_with("test query")
@@ -552,8 +541,8 @@ class TestBackendIntegration:
         empty_group = SearchGroup(conditions=[])
         mock_parser.parse.return_value = empty_group
 
-        # Test vector search
-        hybrid_engine_with_backend.search("query", "", top_k=3)
+        # Test vector search (requires language parameter)
+        hybrid_engine_with_backend.search("query", "", top_k=3, language="Python")
         assert len(mock_backend.vector_search_calls) == 1
 
         # Test keyword search
@@ -562,6 +551,6 @@ class TestBackendIntegration:
         hybrid_engine_with_backend.search("", "lang:py", top_k=3)
         assert len(mock_backend.keyword_search_calls) == 1
 
-        # Test hybrid search
-        hybrid_engine_with_backend.search("query", "lang:py", top_k=3)
+        # Test hybrid search (requires language parameter)
+        hybrid_engine_with_backend.search("query", "lang:py", top_k=3, language="Python")
         assert len(mock_backend.hybrid_search_calls) == 1
