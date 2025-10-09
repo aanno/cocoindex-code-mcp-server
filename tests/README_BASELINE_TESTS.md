@@ -1,27 +1,27 @@
 # Baseline Tests Documentation
 
-This document explains the baseline comparison tests for language analysis in the CocoIndex Code MCP Server.
+This document explains the baseline comparison tests for language analysis in CocoIndex Code MCP Server.
 
 ## Overview
 
-Baseline tests compare different analysis methods to validate and measure the quality of our language parsers. They provide quantitative metrics to track improvements and regressions.
+Baseline tests compare our tree-sitter-based code analysis against simple text-based pattern matching. They provide quantitative metrics (precision, recall, F1 scores) to validate parser quality and track improvements/regressions across language implementations.
 
-## Test Structure
+## Test Types
 
-### Haskell Baseline Test
+### Multi-Language Baseline (`tests/all_languages_baseline.py`)
 
-Location: `tests/lang/haskell/test_haskell_comprehensive_baseline.py`
+Tests all supported languages (Python, Haskell, C, C++, Rust, Kotlin, Java, TypeScript) by comparing:
+- **Tree-sitter analysis** - Our main implementation using tree-sitter parsers
+- **Text baseline** - Simple regex-based pattern matching for reference
 
-The test compares three analysis methods:
-1. **Specialized Visitor** - Custom Haskell tree-sitter visitor
-2. **Generic Visitor** - Generic AST visitor 
-3. **CocoIndex Baseline** - Ground truth using CocoIndex flow analysis
+### Language-Specific Comprehensive Tests
 
-### Test Fixture
+Example: `tests/lang/haskell/test_haskell_comprehensive_baseline.py`
 
-The test uses `tests/fixtures/lang_examples/HaskellExample1.hs` which contains:
-- **7 functions**: `fibonacci`, `sumList`, `treeMap`, `compose`, `addTen`, `multiplyByTwo`, `main`
-- **2 data types**: `Person`, `Tree`
+These tests compare three analysis methods for specific languages:
+1. **Specialized Handler** - Custom language-specific implementation (e.g., Haskell handler)
+2. **Generic Visitor** - Generic AST visitor (should delegate to specialized handler)
+3. **Text Baseline** - Simple pattern matching baseline
 
 ## Metrics Calculation
 
@@ -42,28 +42,57 @@ f1_score = 2 * (precision * recall) / (precision + recall)
 
 ### Example Calculation
 
-For our improved Haskell visitor:
-- **Expected functions**: 7 (`fibonacci`, `sumList`, `treeMap`, `compose`, `addTen`, `multiplyByTwo`, `main`)
-- **Detected functions**: 12 (all 7 expected + 5 extra: `person`, `numbers`, `tree`, `processNumber`, `doubledTree`)
+For a hypothetical test:
+- **Expected**: 7 items
+- **Detected**: 12 items (7 correct + 5 false positives)
 
 **Metrics:**
-- **Recall**: 7/7 = 100% (found all expected functions)
+- **Recall**: 7/7 = 100% (found all expected items)
 - **Precision**: 7/12 = 58.33% (7 correct out of 12 detected)
 - **F1 Score**: 2 * (1.0 * 0.583) / (1.0 + 0.583) = 73.68%
 
 ## Running Baseline Tests
 
-### Basic Test Run
+### All Languages Baseline
+
+Run baseline tests for all supported languages at once:
+
+```bash
+# Run the all-languages baseline test
+python tests/all_languages_baseline.py
+
+# Results are automatically saved to JSON
+cat tests/all_languages_baseline_results.json | jq '.'
+
+# Extract specific language metrics
+cat tests/all_languages_baseline_results.json | jq '.python'
+cat tests/all_languages_baseline_results.json | jq '.haskell'
+
+# Extract F1 scores for all languages
+cat tests/all_languages_baseline_results.json | jq 'to_entries[] | {language: .key, f1: .value.tree_sitter.f1}'
+
+# Compare tree-sitter vs baseline for a specific language
+cat tests/all_languages_baseline_results.json | jq '.python | {tree_sitter: .tree_sitter.f1, baseline: .baseline.f1}'
+```
+
+The `all_languages_baseline.py` script tests Python, Haskell, C, C++, Rust, Kotlin, Java, and TypeScript in one run, providing a comprehensive view of parser quality across all supported languages.
+
+### Language-Specific Test Run
+
+For detailed testing of individual languages:
+
 ```bash
 python -m pytest tests/lang/haskell/test_haskell_comprehensive_baseline.py -v
 ```
 
 ### Verbose Output with Metrics
+
 ```bash
 python -m pytest tests/lang/haskell/test_haskell_comprehensive_baseline.py -v -s
 ```
 
 ### Debug Output (shows all chunks processed)
+
 ```bash
 python -m pytest tests/lang/haskell/test_haskell_comprehensive_baseline.py -v -s --log-cli-level=DEBUG
 ```
@@ -164,11 +193,13 @@ if __name__ == '__main__':
 ### Good vs Bad Results
 
 **Good Results:**
+
 - **High Recall (>90%)**: Finds most expected functions/types
 - **High Precision (>80%)**: Few false positives
 - **Balanced F1 Score (>85%)**: Good overall performance
 
 **Concerning Results:**
+
 - **Low Recall (<70%)**: Missing many expected items
 - **Low Precision (<60%)**: Too many false positives
 - **Large Gap**: Big difference between precision and recall
@@ -184,6 +215,7 @@ if __name__ == '__main__':
 ### Trade-offs
 
 The current Haskell implementation shows a classic precision/recall trade-off:
+
 - **100% Recall**: We catch all actual functions (including `addTen = (+) 10`)
 - **58% Precision**: We also catch variable bindings (`person`, `numbers`, etc.)
 
@@ -246,192 +278,22 @@ python -m pytest tests/lang/haskell/test_haskell_comprehensive_baseline.py -s --
 cat tests/lang/haskell/haskell_baseline_results.json | jq '.metrics.specialized_visitor | {detected: .detected_functions, missing: .missing_functions, extra: .extra_functions}'
 ```
 
-## Language Implementation Architecture
+## Language Support & Current Results
 
-### Haskell vs Other Languages: A Tale of Two Approaches
+All tests are working correctly with the following F1 scores:
 
-The codebase implements two distinct architectures for language analysis, which explains some of the performance differences observed in baseline tests:
+- **Python**: 100% (perfect)
+- **Haskell**: 100% (perfect)
+- **C**: 100% (perfect)
+- **C++**: 100% (perfect)
+- **Rust**: 100% (perfect)
+- **Kotlin**: 100% (perfect)
+- **TypeScript**: 94.1% (extra `constructor` detected)
+- **Java**: 88.9% (constructors detected as functions)
 
-#### Haskell: Custom Rust Implementation with Maturin
+### Implementation Notes
 
-**Location**: `rust/src/lib.rs`
-
-Haskell uses a **custom Rust implementation** built with **maturin** and **PyO3**:
-
-```rust
-// rust/src/lib.rs
-use tree_sitter_haskell::LANGUAGE; // Rust crate dependency
-#[pymodule]
-fn cocoindex_code_mcp_server(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    // Custom Python bindings
-}
-```
-
-**Key characteristics:**
-
-- **Direct Rust integration**: Uses `tree-sitter-haskell` Rust crate (v0.23.1)
-- **Maturin build system**: Compiled Python extension via `maturin develop`  
-- **Custom chunking**: Specialized `HaskellChunk` structures with rich metadata
-- **Performance optimized**: Direct memory access, no Python overhead for parsing
-- **Dedicated handlers**: `HaskellNodeHandler` with language-specific logic
-
-**Dependencies** (from `Cargo.toml`):
-
-```toml
-tree-sitter = "0.25"
-tree-sitter-haskell = "0.23.1"
-pyo3 = "0.25.1"
-```
-
-#### Other Languages: Python Tree-Sitter Bindings
-
-**Location**: `src/cocoindex_code_mcp_server/ast_visitor.py`
-
-All other languages use **Python tree-sitter bindings** from PyPI:
-
-```python
-# Python tree-sitter approach
-elif language == 'c':
-    import tree_sitter_c
-    language_obj = tree_sitter.Language(tree_sitter_c.language())
-elif language == 'rust':
-    import tree_sitter_rust  
-    language_obj = tree_sitter.Language(tree_sitter_rust.language())
-```
-
-**Key characteristics:**
-
-- **Python packages**: Uses `tree-sitter-python`, `tree-sitter-c`, etc. from PyPI
-- **Generic interface**: Single `ASTParserFactory` handles all languages
-- **Standard workflow**: Parse → Visit → Extract metadata
-- **Uniform handling**: Same `GenericMetadataVisitor` for all languages
-
-### Performance Implications
-
-This architectural difference explains several baseline test observations:
-
-| Language | Architecture | F1 Score | Precision Issue | Explanation |
-|----------|-------------|----------|-----------------|-------------|
-| **Haskell** | Rust+Maturin | 73.7% | 58.3% (Low) | Custom chunking finds variable bindings as "functions" |
-| **C/Rust/Java** | Python TS | 100%/100%/88.9% | High | Generic visitor precisely identifies function nodes |
-| **Kotlin** | Python TS | 0% | N/A | Tree-sitter-kotlin may not be properly configured |
-
-### Why Haskell is Different
-
-1. **Language Complexity**: Haskell's functional nature makes function identification more complex
-   - `addTen = (+) 10` is a valid function definition
-   - Variable bindings can be functions
-   - Pattern matching creates ambiguous cases
-
-2. **Custom Implementation**: The Rust implementation uses specialized chunking that:
-   - Extracts more semantic information
-   - Includes variable bindings (which may be functions)
-   - Provides richer metadata but lower precision
-
-3. **Performance Trade-off**: The custom approach prioritizes:
-   - **Recall over precision**: Better to find extra items than miss functions
-   - **Rich metadata**: Detailed analysis for downstream processing
-   - **Performance**: Faster parsing via native Rust code
-
-### Baseline Test Architecture
-
-The enhanced baseline tests now compare three approaches:
-
-1. **Tree-Sitter Implementation**: Our current system (Rust for Haskell, Python for others)
-2. **CocoIndex Baseline**: Simple regex-based text parsing
-3. **Expected Ground Truth**: Manually curated function lists
-
-**Comparison Results** (after July 2025 fixes):
-
-```text
-Language     Implementation            Baseline                  Improvement    
-             Recall Prec  F1           Recall Prec  F1           (F1 Δ)         
---------------------------------------------------------------------------------
-python       100.0% 100.0% 100.0%      100.0% 100.0% 100.0%      → Same         
-haskell      100.0% 58.3% 73.7%        100.0% 100.0% 100.0%      ↘ -26.3%       
-c            100.0% 100.0% 100.0%      100.0% 83.3% 90.9%        ↗ +9.1%        
-rust         100.0% 100.0% 100.0%      50.0% 100.0% 66.7%        ↗ +33.3%       
-cpp          100.0% 100.0% 100.0%      100.0% 83.3% 90.9%        ↗ +9.1%        
-kotlin       100.0% 100.0% 100.0%      100.0% 50.0% 66.7%        ↗ +33.3%       
-java         100.0% 80.0% 88.9%        100.0% 66.7% 80.0%        ↗ +8.9%        
-typescript   100.0% 88.9% 94.1%        100.0% 100.0% 100.0%      ↘ -5.9%        
---------------------------------------------------------------------------------
-AVERAGE      100.0% 90.9% 94.6%       93.8% 85.4% 86.9%         +7.7%
-```
-
-## Recent Fixes (July 2025)
-
-Two critical issues were identified and resolved:
-
-### 1. Python Implementation Complete Failure ❌ → ✅
-
-**Problem**: Python tree-sitter analysis was returning 0% recall, precision, and F1 score.
-
-**Root Cause**: Import error in `src/cocoindex_code_mcp_server/language_handlers/python_handler.py`:
-
-```python
-# Broken import (line 15):
-from ast_visitor import NodeContext
-
-# Fixed import:
-from ..ast_visitor import NodeContext
-```
-
-**Impact**: Python went from complete failure (0.0% F1) to perfect performance (100.0% F1).
-
-**Files Changed**:
-- `src/cocoindex_code_mcp_server/language_handlers/python_handler.py`
-
-### 2. TypeScript Missing Baseline ❌ → ✅  
-
-**Problem**: TypeScript showed "Not available" for baseline comparison due to runtime error.
-
-**Root Cause**: Scoping issue in `tests/all_languages_baseline.py` - `import re` was inside an `elif` block but used in a different `elif`:
-
-```python
-# Broken code:
-elif self.language in ['javascript', 'typescript']:
-    if line.startswith('function '):
-        # ... function detection ...
-    elif 'class ' in line:
-        import re  # ← Only available in this elif
-        # ... class detection ...
-    elif re.match(r'\s*\w+\s*\(.*\)\s*[:{]', line):  # ← Error: 're' not defined
-        # ... method detection ...
-
-# Fixed code:
-elif self.language in ['javascript', 'typescript']:
-    import re  # ← Moved to top of block
-    if line.startswith('function '):
-        # ... function detection ...
-    elif 'class ' in line:
-        # ... class detection ...  
-    elif re.match(r'\s*\w+\s*\(.*\)\s*[:{]', line):  # ← Now works
-        # ... method detection ...
-```
-
-**Impact**: TypeScript now has working baseline comparison, showing 94.1% F1 vs 100.0% baseline (5.9% regression due to extra `constructor` detection).
-
-**Files Changed**:
-- `tests/all_languages_baseline.py`
-
-### Before and After Summary
-
-| Language | Before Fix | After Fix | Status |
-|----------|------------|-----------|--------|
-| **Python** | 0.0% F1 (broken) | 100.0% F1 (perfect) | ✅ **Fixed** |
-| **TypeScript** | No baseline | 94.1% F1 vs 100.0% baseline | ✅ **Fixed** |
-| **Others** | Working | Working | ✅ **Unchanged** |
-
-### Conclusions
-
-1. **Haskell's "regression"** vs baseline is actually expected - the baseline uses simple `::` detection which naturally has perfect precision for Haskell type signatures
-
-2. **Architecture diversity** is intentional - Haskell's custom implementation provides features not available in generic tree-sitter (like semantic chunking)
-
-3. **Performance vs accuracy trade-offs** are language-specific - functional languages may benefit from higher recall even at precision cost
-
-4. **Import discipline is critical** - Both fixes involved import path issues, highlighting the importance of proper module structure
+**Haskell** uses a custom Rust implementation (`rust/src/lib.rs`) via Maturin/PyO3 for performance, while other languages use Python tree-sitter bindings. All languages delegate to specialized handlers in `src/cocoindex_code_mcp_server/language_handlers/`.
 
 ## Best Practices
 

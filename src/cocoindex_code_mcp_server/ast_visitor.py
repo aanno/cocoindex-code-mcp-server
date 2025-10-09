@@ -640,14 +640,14 @@ class MultiLevelAnalyzer:
         # Special handling for languages using dedicated visitors
         if language == 'haskell':
             try:
-                from .language_handlers.haskell_visitor import analyze_haskell_code
-                metadata = analyze_haskell_code(code, "")
-                LOGGER.debug("Used specialized Haskell visitor")
+                from .language_handlers.haskell_handler import analyze_haskell_code
+                metadata = analyze_haskell_code(code, filename)
+                LOGGER.debug("Used specialized Haskell handler")
                 return metadata
-            except ImportError:
-                LOGGER.debug("Haskell visitor not available, falling back to generic")
+            except ImportError as ie:
+                LOGGER.debug(f"Haskell handler not available, falling back to generic: {ie}")
             except Exception as e:
-                LOGGER.warning(f"Haskell visitor failed: {e}")
+                LOGGER.warning(f"Haskell handler failed: {e}")
 
         elif language == 'c':
             try:
