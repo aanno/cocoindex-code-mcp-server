@@ -160,7 +160,7 @@ async def run_cocoindex_keyword_search_tests(
                             db_comparison = await compare_test_with_database(
                                 test_name, query, expected_item, results
                             )
-                            db_report = f"\n🔍 Database Comparison Analysis:\n"
+                            db_report = "\n🔍 Database Comparison Analysis:\n"
                             for discrepancy in db_comparison.discrepancies:
                                 db_report += f"  ❌ {discrepancy}\n"
                             
