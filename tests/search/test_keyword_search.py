@@ -109,9 +109,13 @@ async def run_cocoindex_keyword_search_tests(
         description = test_case["description"]
         query = test_case["query"]
         expected_results = test_case["expected_results"]
+        fail_expected = test_case.get("fail_expected", False)
+        fail_reason = test_case.get("fail_reason", "")
 
         logging.info(f"Running keyword search test: {test_name}")
         logging.info(f"Description: {description}")
+        if fail_expected:
+            logging.info(f"⚠️  Expected to fail: {fail_reason}")
 
         try:
             # Execute keyword-only search using infrastructure backend
@@ -126,11 +130,16 @@ async def run_cocoindex_keyword_search_tests(
             # Check minimum results requirement
             min_results = expected_results.get("min_results", 1)
             if total_results < min_results:
-                failed_tests.append({
-                    "test": test_name,
-                    "error": f"Expected at least {min_results} results, got {total_results}",
-                    "query": query
-                })
+                error_msg = f"Expected at least {min_results} results, got {total_results}"
+                if fail_expected:
+                    logging.info(f"✅ Test failed as expected: {test_name} - {fail_reason}")
+                    logging.info(f"   Failure: {error_msg}")
+                else:
+                    failed_tests.append({
+                        "test": test_name,
+                        "error": error_msg,
+                        "query": query
+                    })
                 continue
 
             # Check expected results using common helper
@@ -168,28 +177,37 @@ async def run_cocoindex_keyword_search_tests(
                         except Exception as db_error:
                             logging.warning(f"Database comparison failed: {db_error}")
                             error_with_db_analysis = f"No matching result found for expected item: {expected_item}"
-                        
-                        failed_tests.append({
-                            "test": test_name,
-                            "error": error_with_db_analysis,
-                            "query": query,
-                            "actual_results": [{
-                                "filename": r.get("filename"),
-                                "metadata_summary": {
-                                    "classes": r.get("classes", []),
-                                    "functions": r.get("functions", []),
-                                    "imports": r.get("imports", []),
+
+                        if fail_expected:
+                            logging.info(f"✅ Test failed as expected: {test_name} - {fail_reason}")
+                            logging.info(f"   Failure: {error_with_db_analysis}")
+                        else:
+                            failed_tests.append({
+                                "test": test_name,
+                                "error": error_with_db_analysis,
+                                "query": query,
+                                "actual_results": [{
+                                    "filename": r.get("filename"),
+                                    "metadata_summary": {
+                                        "classes": r.get("classes", []),
+                                        "functions": r.get("functions", []),
+                                        "imports": r.get("imports", []),
                                     "analysis_method": r.get("metadata_json", {}).get("analysis_method", "unknown")
                                 }
                             } for r in results[:3]]  # Show first 3 results for debugging
                         })
 
         except Exception as e:
-            failed_tests.append({
-                "test": test_name,
-                "error": f"Test execution failed: {str(e)}",
-                "query": query
-            })
+            error_msg = f"Test execution failed: {str(e)}"
+            if fail_expected:
+                logging.info(f"✅ Test failed as expected: {test_name} - {fail_reason}")
+                logging.info(f"   Failure: {error_msg}")
+            else:
+                failed_tests.append({
+                    "test": test_name,
+                    "error": error_msg,
+                    "query": query
+                })
 
     return failed_tests
 
