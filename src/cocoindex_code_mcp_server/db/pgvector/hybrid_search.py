@@ -143,6 +143,8 @@ class HybridSearchEngine:
                 )
 
             # Resolve embedding model to use for filtering
+            # We know language is not None because we checked above
+            assert language is not None, "language must be set when embedding_model is None"
             model_to_use = embedding_model or language_to_embedding_model(language)
             embedding_func_to_use = self._get_embedding_function(model_to_use)
 
@@ -166,6 +168,8 @@ class HybridSearchEngine:
                 )
 
             # Resolve embedding model to use for filtering
+            # We know language is not None because we checked above
+            assert language is not None, "language must be set when embedding_model is None"
             model_to_use = embedding_model or language_to_embedding_model(language)
             embedding_func_to_use = self._get_embedding_function(model_to_use)
 

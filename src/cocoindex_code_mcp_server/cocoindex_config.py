@@ -381,8 +381,8 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
 
                     # Extract aggregated metadata from chunks
                     functions = set()
-                    classes = []
-                    data_types = []
+                    classes: List[str] = []
+                    data_types: List[str] = []
                     modules = set()
 
                     for chunk in chunks:
@@ -1338,7 +1338,9 @@ def get_embedding_model_name(model_group: str) -> str:
         The actual model identifier (e.g., 'microsoft/graphcodebert-base')
     """
     if model_group in LANGUAGE_MODEL_GROUPS:
-        return LANGUAGE_MODEL_GROUPS[model_group]['model']
+        model = LANGUAGE_MODEL_GROUPS[model_group]['model']
+        assert isinstance(model, str), f"Model must be str, got {type(model)}"
+        return model
     # Fallback to default model if group not found
     return DEFAULT_TRANSFORMER_MODEL
 
@@ -1372,10 +1374,14 @@ def language_to_embedding_model(language: str) -> str:
         if group_name == 'fallback':
             continue  # Handle fallback last
         if lang_lower in group_info['languages']:
-            return group_info['model']
+            model = group_info['model']
+            assert isinstance(model, str), f"Model must be str, got {type(model)}"
+            return model
 
     # Default to fallback model for unrecognized languages
-    return LANGUAGE_MODEL_GROUPS['fallback']['model']
+    fallback_model = LANGUAGE_MODEL_GROUPS['fallback']['model']
+    assert isinstance(fallback_model, str), f"Fallback model must be str, got {type(fallback_model)}"
+    return fallback_model
 
 
 @cocoindex.op.function()

@@ -318,10 +318,12 @@ def main(
                         WHERE table_name = %s
                     );
                 """, (embeddings_table,))
-                if cur.fetchone()[0]:
+                exists_result = cur.fetchone()
+                if exists_result and exists_result[0]:
                     # Get count before truncating (for logging)
                     cur.execute(sql.SQL("SELECT COUNT(*) FROM {}").format(sql.Identifier(embeddings_table)))
-                    count = cur.fetchone()[0]
+                    count_result = cur.fetchone()
+                    count = count_result[0] if count_result else 0
                     # TRUNCATE is faster than DELETE and resets auto-increment
                     cur.execute(sql.SQL("TRUNCATE TABLE {} RESTART IDENTITY CASCADE").format(sql.Identifier(embeddings_table)))
                     logger.info(f"  ✅ Truncated {embeddings_table} ({count} records removed)")
@@ -335,10 +337,12 @@ def main(
                         WHERE table_name = %s
                     );
                 """, (tracking_table,))
-                if cur.fetchone()[0]:
+                exists_result = cur.fetchone()
+                if exists_result and exists_result[0]:
                     # Get count before truncating (for logging)
                     cur.execute(sql.SQL("SELECT COUNT(*) FROM {}").format(sql.Identifier(tracking_table)))
-                    count = cur.fetchone()[0]
+                    count_result = cur.fetchone()
+                    count = count_result[0] if count_result else 0
                     # TRUNCATE is faster than DELETE and resets auto-increment
                     cur.execute(sql.SQL("TRUNCATE TABLE {} RESTART IDENTITY CASCADE").format(sql.Identifier(tracking_table)))
                     logger.info(f"  ✅ Truncated {tracking_table} ({count} records removed)")
