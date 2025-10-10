@@ -7,29 +7,60 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container: quay.io/pypa/manylinux2014_x86_64
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+      # Cache Rust toolchain + Cargo registry/cache/artifacts
+      # - name: Cache Rust toolchain and cargo
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: |
+      #       ~/.rustup/toolchains
+      #       ~/.rustup/update-hashes
+      #       ~/.rustup/settings.toml
+      #       ~/.cargo/registry
+      #       ~/.cargo/git
+      #       ~/.cargo/bin
+      #     key: ${{ runner.os }}-rust-${{ hashFiles('rust-toolchain.toml', 'Cargo.lock') }}
       # Node v2x is needed for uv to install
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v3
-        with:
-          node-version: '24'
+      # BUT it does not work on quay.io/pypa/manylinux2014_x86_64
+      # - name: Setup Node.js 24
+      #   uses: actions/setup-node@v3
+      #   with:
+      #     node-version: '24'
       # astral-sh/setup-uv@v6 leads to errors
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          version: "0.9.1"
-          ignore-empty-workdir: true
-          activate-environment: false
+      # - name: Install uv
+      #   uses: astral-sh/setup-uv@v5
+      #   with:
+      #     version: "0.9.1"
+      #     ignore-empty-workdir: true
+      #     activate-environment: false
       # - name: Install required packages
       #   run: |
       #     sudo apt-get update
       #     sudo apt-get install -y uv
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Download uv binary
+        run: |
+          curl -L -o uv.tar.gz https://github.com/astral-sh/uv/releases/download/0.9.1/uv-x86_64-unknown-linux-gnu.tar.gz
+          tar -xzf uv.tar.gz
+          chmod +x uv-x86_64-unknown-linux-gnu/uv
+          mv uv-x86_64-unknown-linux-gnu/uv /usr/bin
+          rm -r uv-x86_64-unknown-linux-gnu
+      - name: Verify uv installation
+        run: uv --version
+      # Not needed for quay.io/pypa/manylinux2014_x86_64
+      # - uses: actions/setup-python@v5
+      #   with:
+      #     python-version: "3.13"
+      # Does not work for quay.io/pypa/manylinux2014_x86_64
+      # - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Install Rust toolchain
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source $HOME/.cargo/env
+          rustc --version
+          cargo --version
       - name: Install maturin
         run: |
           uv pip install --system maturin psycopg "psycopg[pool]" pgvector \
