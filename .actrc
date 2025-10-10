@@ -1,0 +1,8 @@
+# env variables are NOT SUPPORTED here
+# PIP_CACHE_DIR=/stratis/home/tpasch/pip
+# PNPM_CACHE_DIR=/stratis/home/tpasch/pnpm
+
+# -P ubuntu-latest=nektos/act-environments-ubuntu:20.04
+# -v /home/user/.cache/pip:/root/.cache/pip
+
+-v /stratis/home/tpasch/pip:/root/.cache/pip

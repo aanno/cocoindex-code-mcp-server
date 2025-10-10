@@ -1,0 +1,23 @@
+name: Build Manylinux Wheel
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-wheels:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: PyO3/maturin-action@v1
+        with:
+          # Build all compatible wheels (manylinux)
+          command: build
+          args: --release --interpreter 3.13 --manylinux 2014
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels
+          path: target/wheels/*.whl

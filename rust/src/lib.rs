@@ -302,6 +302,7 @@ impl HaskellChunk {
     }
 }
 
+#[allow(dead_code)]
 fn extract_semantic_chunks(tree: &Tree, source: &str) -> Vec<HaskellChunk> {
     let mut chunks = Vec::new();
     let root_node = tree.root_node();
@@ -1050,6 +1051,7 @@ fn extract_chunks_recursive_with_errors(
     }
 }
 
+#[allow(dead_code)]
 fn extract_chunks_recursive(
     cursor: &mut TreeCursor,
     source: &str,
