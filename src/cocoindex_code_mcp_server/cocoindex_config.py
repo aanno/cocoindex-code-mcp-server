@@ -413,7 +413,9 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                                 classes.append(chunk_meta['class_name'])
 
                     metadata = {
-                        "analysis_method": "rust_haskell_ast",
+                        "success": True,
+                        "language": "Haskell",
+                        "analysis_method": "haskell_chunk_visitor",
                         "functions": list(functions),
                         "classes": classes,
                         "data_types": data_types,

@@ -128,7 +128,7 @@ factorial n = product [1..n]
         # Check that metadata indicates regex fallback method
         for chunk in chunks:
             metadata = chunk["metadata"]
-            assert metadata["chunk_method"] == "enhanced_regex_fallback"
+            assert metadata["chunk_method"] == "rust_haskell_regex_fallback_python"
             assert metadata["language"] == "Haskell"
             assert metadata["file_path"] == "test.hs"
 
@@ -358,12 +358,11 @@ factorial n = product [1..n]
             assert isinstance(chunk["text"], str)
 
             assert "start" in chunk
-            assert "line" in chunk["start"]
-            assert "column" in chunk["start"]
+            # Start and end are now integers (line numbers) instead of dicts
+            assert isinstance(chunk["start"], int)
 
             assert "end" in chunk
-            assert "line" in chunk["end"]
-            assert "column" in chunk["end"]
+            assert isinstance(chunk["end"], int)
 
             assert "location" in chunk
             assert isinstance(chunk["location"], str)

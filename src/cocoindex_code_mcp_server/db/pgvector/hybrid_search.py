@@ -202,6 +202,9 @@ class HybridSearchEngine:
         # Add metadata fields if available
         if result.metadata:
             result_dict.update(result.metadata)
+            # Add complexity as alias for complexity_score for backward compatibility
+            if "complexity_score" in result.metadata and "complexity" not in result_dict:
+                result_dict["complexity"] = result.metadata["complexity_score"]
 
         return result_dict
 
