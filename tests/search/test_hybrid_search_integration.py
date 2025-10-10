@@ -6,7 +6,6 @@ Integration tests for the hybrid search workflow.
 
 import tempfile
 import pytest
-from unittest.mock import Mock
 
 # Package should be installed via maturin develop or pip install -e .
 
@@ -159,17 +158,17 @@ class TestWorkflowIntegration:
     """Test the complete workflow integration."""
 
     @pytest.fixture
-    def mock_database_setup(self):
+    def mock_database_setup(self, mocker):
         """Set up mock database components."""
-        mock_pool = Mock()
-        mock_conn = Mock()
-        mock_cursor = Mock()
+        mock_pool = mocker.Mock()
+        mock_conn = mocker.Mock()
+        mock_cursor = mocker.Mock()
 
         # Set up mock chain
-        mock_pool.connection.return_value.__enter__ = Mock(return_value=mock_conn)
-        mock_pool.connection.return_value.__exit__ = Mock(return_value=None)
-        mock_conn.cursor.return_value.__enter__ = Mock(return_value=mock_cursor)
-        mock_conn.cursor.return_value.__exit__ = Mock(return_value=None)
+        mock_pool.connection.return_value.__enter__ = mocker.Mock(return_value=mock_conn)
+        mock_pool.connection.return_value.__exit__ = mocker.Mock(return_value=None)
+        mock_conn.cursor.return_value.__enter__ = mocker.Mock(return_value=mock_cursor)
+        mock_conn.cursor.return_value.__exit__ = mocker.Mock(return_value=None)
 
         return mock_pool, mock_conn, mock_cursor
 
@@ -376,7 +375,7 @@ class TestConfigurationIntegration:
 class TestErrorHandling:
     """Test error handling in the integration workflow."""
 
-    def test_search_with_database_error(self):
+    def test_search_with_database_error(self, mocker):
         """Test search behavior when database errors occur."""
         try:
             from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
@@ -384,7 +383,7 @@ class TestErrorHandling:
             )
 
             # Mock database to raise an exception
-            mock_pool = Mock()
+            mock_pool = mocker.Mock()
             mock_pool.connection.side_effect = Exception("Database connection failed")
 
             from cocoindex_code_mcp_server.keyword_search_parser_lark import (
@@ -405,7 +404,7 @@ class TestErrorHandling:
             pytest.skip("CocoIndex not available in test environment")
 
     @pytest.mark.skip(reason='Integration test needs context manager mocking')
-    def test_search_with_invalid_keyword_syntax(self):
+    def test_search_with_invalid_keyword_syntax(self, mocker):
         """Test search with invalid keyword syntax."""
         try:
             from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
@@ -417,7 +416,7 @@ class TestErrorHandling:
 
             # Use real parser to test actual parsing behavior
             parser = KeywordSearchParser()
-            mock_pool = Mock()
+            mock_pool = mocker.Mock()
 
             engine = HybridSearchEngine(
                 table_name="test_embeddings",
@@ -435,7 +434,7 @@ class TestErrorHandling:
         except ImportError:
             pytest.skip("CocoIndex not available in test environment")
 
-    def test_embedding_function_error(self):
+    def test_embedding_function_error(self, mocker):
         """Test behavior when embedding function fails."""
         try:
             from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
@@ -446,7 +445,7 @@ class TestErrorHandling:
             def failing_embedding_func(query):
                 raise Exception("Embedding service unavailable")
 
-            mock_pool = Mock()
+            mock_pool = mocker.Mock()
 
             from cocoindex_code_mcp_server.keyword_search_parser_lark import (
                 KeywordSearchParser,

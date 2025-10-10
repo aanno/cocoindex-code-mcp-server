@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import pytest
-from unittest.mock import patch
 
 
 class TestLiveUpdates:
@@ -40,42 +39,43 @@ class TestLiveUpdates:
         assert args.paths == ['/path/to/code']
 
     @pytest.mark.skip(reason="Config update logic changed")
-    def test_global_config_updates(self):
+    def test_global_config_updates(self, mocker):
         """Test that global flow configuration is updated correctly."""
         from cocoindex_code_mcp_server.cocoindex_config import _global_flow_config
         from cocoindex_code_mcp_server.main_interactive_query import main
 
         # Mock the flow to prevent actual execution
-        with patch('cocoindex_config.code_embedding_flow') as mock_flow:
-            with patch('query_interactive.ConnectionPool'):
-                with patch('builtins.input', side_effect=['']):  # Exit immediately
-                    with patch('sys.argv', ['main_interactive_query.py', '--poll', '45', '/test/path']):
-                        # Test configuration update
-                        main()
+        mock_flow = mocker.patch('cocoindex_config.code_embedding_flow')
+        mocker.patch('query_interactive.ConnectionPool')
+        mocker.patch('builtins.input', side_effect=[''])  # Exit immediately
+        mocker.patch('sys.argv', ['main_interactive_query.py', '--poll', '45', '/test/path'])
+        # Test configuration update
+        main()
 
-                    # Check that global config was updated
-                    assert _global_flow_config['paths'] == ['/test/path']
-                    assert _global_flow_config['enable_polling'] == True  # Should be True since poll_interval > 0
-                    assert _global_flow_config['poll_interval'] == 45
+        # Check that global config was updated
+        assert _global_flow_config['paths'] == ['/test/path']
+        assert _global_flow_config['enable_polling'] == True  # Should be True since poll_interval > 0
+        assert _global_flow_config['poll_interval'] == 45
 
     @pytest.mark.skip(reason="Polling logic implementation changed")
-    def test_polling_enable_logic(self):
+    def test_polling_enable_logic(self, mocker):
         """Test the logic for enabling polling based on interval."""
         from cocoindex_code_mcp_server.cocoindex_config import _global_flow_config
         from cocoindex_code_mcp_server.main_interactive_query import main
 
-        with patch('cocoindex_config.code_embedding_flow') as mock_flow:
-            with patch('query_interactive.ConnectionPool'):
-                with patch('builtins.input', side_effect=['', '', '', '']):  # Multiple empty inputs
-                    # Test with poll_interval = 0 (should disable polling)
-                    with patch('sys.argv', ['main_interactive_query.py', '--poll', '0', '/test']):
-                        main()
-                    assert _global_flow_config['enable_polling'] == False
+        mock_flow = mocker.patch('cocoindex_config.code_embedding_flow')
+        mocker.patch('query_interactive.ConnectionPool')
+        mocker.patch('builtins.input', side_effect=['', '', '', ''])  # Multiple empty inputs
 
-                    # Test with poll_interval > 0 (should enable polling)
-                    with patch('sys.argv', ['main_interactive_query.py', '--poll', '30', '/test']):
-                        main()
-                    assert _global_flow_config['enable_polling'] == True
+        # Test with poll_interval = 0 (should disable polling)
+        mocker.patch('sys.argv', ['main_interactive_query.py', '--poll', '0', '/test'])
+        main()
+        assert _global_flow_config['enable_polling'] == False
+
+        # Test with poll_interval > 0 (should enable polling)
+        mocker.patch('sys.argv', ['main_interactive_query.py', '--poll', '30', '/test'])
+        main()
+        assert _global_flow_config['enable_polling'] == True
 
     def test_live_update_flow_configuration(self):
         """Test that live update mode configures the flow correctly."""

@@ -7,7 +7,6 @@ Tests the logic without importing CocoIndex to avoid circular imports.
 
 import sys
 import pytest
-from unittest.mock import Mock
 
 from cocoindex_code_mcp_server.smart_code_embedding import (
     LanguageModelSelector,
@@ -27,7 +26,12 @@ class MockCocoIndex:
     class functions:
         @staticmethod
         def SentenceTransformerEmbed(model, args=None):
-            return Mock(model=model, args=args or {})
+            # Create a simple mock-like object
+            class MockEmbed:
+                def __init__(self, model, args):
+                    self.model = model
+                    self.args = args
+            return MockEmbed(model=model, args=args or {})
 
     class utils:
         @staticmethod

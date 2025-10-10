@@ -6,7 +6,6 @@ Shared pytest fixtures and configuration for hybrid search tests.
 
 import os
 import pytest
-from unittest.mock import Mock
 
 # Package should be installed via maturin develop or pip install -e .
 # No need to manually add src to path
@@ -27,17 +26,17 @@ def setup_test_environment():
 
 
 @pytest.fixture
-def mock_database_pool():
+def mock_database_pool(mocker):
     """Create a mock database connection pool with proper context manager support."""
-    mock_pool = Mock()
-    mock_conn = Mock()
-    mock_cursor = Mock()
+    mock_pool = mocker.Mock()
+    mock_conn = mocker.Mock()
+    mock_cursor = mocker.Mock()
 
     # Set up context manager support
-    mock_pool.connection.return_value.__enter__ = Mock(return_value=mock_conn)
-    mock_pool.connection.return_value.__exit__ = Mock(return_value=None)
-    mock_conn.cursor.return_value.__enter__ = Mock(return_value=mock_cursor)
-    mock_conn.cursor.return_value.__exit__ = Mock(return_value=None)
+    mock_pool.connection.return_value.__enter__ = mocker.Mock(return_value=mock_conn)
+    mock_pool.connection.return_value.__exit__ = mocker.Mock(return_value=None)
+    mock_conn.cursor.return_value.__enter__ = mocker.Mock(return_value=mock_cursor)
+    mock_conn.cursor.return_value.__exit__ = mocker.Mock(return_value=None)
 
     return mock_pool, mock_conn, mock_cursor
 

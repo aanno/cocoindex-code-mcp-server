@@ -14,15 +14,31 @@ import pytest
 @pytest.fixture(scope="session", autouse=True)
 def setup_cocoindex_mock():
     """Set up cocoindex mock before any imports."""
-    import unittest.mock
-    
-    mock_cocoindex = unittest.mock.Mock()
-    mock_cocoindex.op = unittest.mock.Mock()
-    mock_cocoindex.op.function = unittest.mock.Mock(return_value=lambda f: f)
-    sys.modules['cocoindex'] = mock_cocoindex
-    
+    # Create a simple mock class that mimics unittest.mock.Mock behavior
+    class SimpleMock:
+        def __init__(self):
+            self._attrs = {}
+        def __call__(self, *args, **kwargs):
+            return lambda f: f
+        def __getattr__(self, name):
+            if name not in self._attrs:
+                self._attrs[name] = SimpleMock()
+            return self._attrs[name]
+        def __setattr__(self, name, value):
+            if name == '_attrs':
+                object.__setattr__(self, name, value)
+            else:
+                if not hasattr(self, '_attrs'):
+                    object.__setattr__(self, '_attrs', {})
+                self._attrs[name] = value  # type: ignore[attr-defined]
+
+    mock_cocoindex = SimpleMock()
+    mock_cocoindex.op = SimpleMock()
+    mock_cocoindex.op.function = SimpleMock()
+    sys.modules['cocoindex'] = mock_cocoindex  # type: ignore[assignment]
+
     yield
-    
+
     # Cleanup
     if 'cocoindex' in sys.modules:
         del sys.modules['cocoindex']

@@ -9,7 +9,6 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import pytest
 from numpy import ndarray
-from unittest.mock import patch
 
 from cocoindex_code_mcp_server.backends import (
     QueryFilters,
@@ -134,16 +133,16 @@ def hybrid_engine_with_backend(mock_backend, mock_parser, mock_embedding_func):
 
 
 @pytest.fixture
-def hybrid_engine_legacy(mock_pool, mock_parser, mock_embedding_func):
+def hybrid_engine_legacy(mock_pool, mock_parser, mock_embedding_func, mocker):
     """Create a HybridSearchEngine with legacy pool constructor."""
-    with patch('cocoindex_code_mcp_server.backends.BackendFactory.create_backend') as mock_factory:
-        mock_factory.return_value = MockVectorStoreBackend()
-        return HybridSearchEngine(
-            table_name="test_table",
-            parser=mock_parser,
-            pool=mock_pool,
-            embedding_func=mock_embedding_func
-        )
+    mock_factory = mocker.patch('cocoindex_code_mcp_server.backends.BackendFactory.create_backend')
+    mock_factory.return_value = MockVectorStoreBackend()
+    return HybridSearchEngine(
+        table_name="test_table",
+        parser=mock_parser,
+        pool=mock_pool,
+        embedding_func=mock_embedding_func
+    )
 
 
 @pytest.mark.db_integration
