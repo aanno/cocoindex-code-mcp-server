@@ -15,7 +15,7 @@ import logging
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 from dotenv import load_dotenv
-import asyncpg
+import asyncpg  # type: ignore[import-untyped]
 
 
 @dataclass
@@ -67,7 +67,8 @@ class DatabaseComparator:
         """Execute SQL query and return results as list of dictionaries."""
         if not self.connection:
             await self.connect()
-        
+
+        assert self.connection is not None, "Connection must be established"
         rows = await self.connection.fetch(sql, *args)
         return [dict(row) for row in rows]
     
@@ -239,13 +240,17 @@ class DatabaseComparator:
                         f"Expected language={expected_value}, but DB languages are: {set(db_languages)}"
                     )
             elif field == 'functions' and expected_value == '!empty':
-                empty_function_records = [r for r in db_records if not r.get('functions') or r.get('functions').strip() == '']
+                empty_function_records = [r for r in db_records
+                                         if not r.get('functions') or
+                                         (isinstance(r.get('functions'), str) and r.get('functions').strip() == '')]  # type: ignore[union-attr]
                 if empty_function_records:
                     discrepancies.append(
                         f"Expected non-empty functions, but {len(empty_function_records)} records have empty functions"
                     )
             elif field == 'classes' and expected_value == '!empty':
-                empty_class_records = [r for r in db_records if not r.get('classes') or r.get('classes').strip() == '']
+                empty_class_records = [r for r in db_records
+                                      if not r.get('classes') or
+                                      (isinstance(r.get('classes'), str) and r.get('classes').strip() == '')]  # type: ignore[union-attr]
                 if empty_class_records:
                     discrepancies.append(
                         f"Expected non-empty classes, but {len(empty_class_records)} records have empty classes"
@@ -318,7 +323,7 @@ if __name__ == "__main__":
                 "analysis_method": "!unknown"
             }
         }
-        search_results = []  # Would come from actual search
+        search_results: List[Dict[str, Any]] = []  # Would come from actual search
         
         result = await compare_test_with_database(test_name, query, expected_item, search_results)
         print(DatabaseComparator().format_comparison_report(result))

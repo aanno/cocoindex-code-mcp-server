@@ -7,6 +7,7 @@ Tests the logic without importing CocoIndex to avoid circular imports.
 
 import sys
 import pytest
+from unittest.mock import Mock
 
 from cocoindex_code_mcp_server.smart_code_embedding import (
     LanguageModelSelector,

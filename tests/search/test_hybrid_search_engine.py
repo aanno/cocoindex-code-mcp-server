@@ -4,11 +4,12 @@
 Tests for the hybrid search engine with backend abstraction.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pytest
 from numpy import ndarray
+from unittest.mock import patch
 
 from cocoindex_code_mcp_server.backends import (
     QueryFilters,
@@ -34,8 +35,8 @@ class MockVectorStoreBackend(VectorStoreBackend):
         self.keyword_search_calls = []
         self.hybrid_search_calls = []
 
-    def vector_search(self, query_vector: ndarray, top_k: int = 10, embedding_model: str = None) -> List[SearchResult]:
-        self.vector_search_calls.append((query_vector, top_k))
+    def vector_search(self, query_vector: ndarray, top_k: int = 10, embedding_model: Optional[str] = None) -> List[SearchResult]:
+        self.vector_search_calls.append((query_vector, top_k, embedding_model))
         return [
             SearchResult(
                 filename="test.py",
@@ -67,8 +68,8 @@ class MockVectorStoreBackend(VectorStoreBackend):
         ]
 
     def hybrid_search(self, query_vector: ndarray, filters: QueryFilters, top_k: int = 10,
-                      vector_weight: float = 0.7, keyword_weight: float = 0.3, embedding_model: str = None) -> List[SearchResult]:
-        self.hybrid_search_calls.append((query_vector, filters, top_k, vector_weight, keyword_weight))
+                      vector_weight: float = 0.7, keyword_weight: float = 0.3, embedding_model: Optional[str] = None) -> List[SearchResult]:
+        self.hybrid_search_calls.append((query_vector, filters, top_k, vector_weight, keyword_weight, embedding_model))
         return [
             SearchResult(
                 filename="test.py",

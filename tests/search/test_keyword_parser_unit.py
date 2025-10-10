@@ -74,10 +74,13 @@ def test_keyword_search_parser_simple_query():
     result = parser.parse(query)
 
     # Should have a single condition in a SearchGroup
+    from cocoindex_code_mcp_server.keyword_search_parser_lark import SearchCondition
     assert hasattr(result, "conditions"), "Result should have conditions"
     assert len(result.conditions) == 1, "Should have exactly 1 condition"
-    assert result.conditions[0].field == "language", "Field should be language"
-    assert result.conditions[0].value == "python", "Value should be python"
+    first_cond = result.conditions[0]
+    assert isinstance(first_cond, SearchCondition), "First condition should be SearchCondition"
+    assert first_cond.field == "language", "Field should be language"
+    assert first_cond.value == "python", "Value should be python"
 
     # Test SQL generation
     where_clause, params = build_sql_where_clause(result)
@@ -132,10 +135,13 @@ def test_keyword_search_parser_field_value_pairs(query, expected_field, expected
     result = parser.parse(query)
 
     # Parser now returns SearchGroup with conditions list
+    from cocoindex_code_mcp_server.keyword_search_parser_lark import SearchCondition
     assert hasattr(result, "conditions"), "Result should have conditions"
     assert len(result.conditions) == 1, "Should have exactly 1 condition"
-    assert result.conditions[0].field == expected_field, f"Field should be {expected_field}"
-    assert result.conditions[0].value == expected_value, f"Value should be {expected_value}"
+    first_cond = result.conditions[0]
+    assert isinstance(first_cond, SearchCondition), "First condition should be SearchCondition"
+    assert first_cond.field == expected_field, f"Field should be {expected_field}"
+    assert first_cond.value == expected_value, f"Value should be {expected_value}"
 
 
 def test_keyword_search_parser_invalid_query():
@@ -145,9 +151,12 @@ def test_keyword_search_parser_invalid_query():
     parser = KeywordSearchParser()
 
     # Plain text without colon is now treated as text search
+    from cocoindex_code_mcp_server.keyword_search_parser_lark import SearchCondition
     result = parser.parse("invalid query without colon")
     assert hasattr(result, "conditions"), "Result should have conditions"
     assert len(result.conditions) == 1, "Should have exactly 1 condition"
+    first_cond = result.conditions[0]
+    assert isinstance(first_cond, SearchCondition), "First condition should be SearchCondition"
     # Parser treats plain text as a text field search
-    assert result.conditions[0].field == "_text", "Field should be _text for plain text queries"
-    assert result.conditions[0].value == "invalid query without colon", "Value should be the query text"
+    assert first_cond.field == "_text", "Field should be _text for plain text queries"
+    assert first_cond.value == "invalid query without colon", "Value should be the query text"

@@ -6,6 +6,7 @@ Shared pytest fixtures and configuration for hybrid search tests.
 
 import os
 import pytest
+from unittest.mock import Mock
 
 # Package should be installed via maturin develop or pip install -e .
 # No need to manually add src to path

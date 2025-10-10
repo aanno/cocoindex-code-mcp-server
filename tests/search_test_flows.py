@@ -53,9 +53,9 @@ def search_test_flow_def(params: SearchTestFlowParameters):
         # Configure source with the specified path
         source_config = SOURCE_CONFIG.copy()
         source_config['path'] = params.source_path
-        
+
         data_scope["files"] = flow_builder.add_source(
-            cocoindex.sources.LocalFile(**source_config)
+            cocoindex.sources.LocalFile(**source_config)  # type: ignore[arg-type]
         )
         
         code_embeddings = data_scope.add_collector()
@@ -84,7 +84,7 @@ def search_test_flow_def(params: SearchTestFlowParameters):
             with raw_chunks.row() as chunk:
                 # Use smart embeddings (language-specific models) like main flow
                 if SMART_EMBEDDING_AVAILABLE:
-                    model_group = chunk["model_group"]
+                    model_group: str = chunk["model_group"]  # type: ignore[assignment]
                     if model_group == "graphcodebert":
                         chunk["embedding"] = chunk["text"].call(graphcodebert_embedding)
                     elif model_group == "unixcoder":

@@ -407,10 +407,12 @@ def clear_test_tables(test_type: Optional[str] = None) -> None:
                     WHERE table_name = %s
                 );
             """, (table,))
-            if cur.fetchone()[0]:
+            exists_result = cur.fetchone()
+            if exists_result and exists_result[0]:
                 # Get count before truncating (for logging)
                 cur.execute(sql.SQL("SELECT COUNT(*) FROM {}").format(sql.Identifier(table)))
-                count = cur.fetchone()[0]
+                count_result = cur.fetchone()
+                count = count_result[0] if count_result else 0
                 # TRUNCATE is faster than DELETE and resets auto-increment
                 cur.execute(sql.SQL("TRUNCATE TABLE {} RESTART IDENTITY CASCADE").format(sql.Identifier(table)))
                 logging.info(f"✅ Truncated {table} ({count} records removed)")
@@ -425,10 +427,12 @@ def clear_test_tables(test_type: Optional[str] = None) -> None:
                     WHERE table_name = %s
                 );
             """, (table,))
-            if cur.fetchone()[0]:
+            exists_result = cur.fetchone()
+            if exists_result and exists_result[0]:
                 # Get count before truncating (for logging)
                 cur.execute(sql.SQL("SELECT COUNT(*) FROM {}").format(sql.Identifier(table)))
-                count = cur.fetchone()[0]
+                count_result = cur.fetchone()
+                count = count_result[0] if count_result else 0
                 # TRUNCATE is faster than DELETE and resets auto-increment
                 cur.execute(sql.SQL("TRUNCATE TABLE {} RESTART IDENTITY CASCADE").format(sql.Identifier(table)))
                 logging.info(f"✅ Truncated {table} ({count} records removed)")
@@ -554,7 +558,7 @@ class CocoIndexTestInfrastructure:
             else:
                 # Use the main flow
                 from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow
-                self.flow_def = code_embedding_flow
+                self.flow_def = code_embedding_flow  # type: ignore[assignment]
                 # Use default table name
                 from .cocoindex_util import get_default_db_name
                 self.table_name = get_default_db_name()
@@ -584,11 +588,12 @@ class CocoIndexTestInfrastructure:
             # Run initial flow update to process files
             self.logger.info("🔄 Running initial flow update...")
             self.logger.info(f"🔧 Setting up flow...")
-            self.flow_def.setup()
+            assert self.flow_def is not None, "Flow must be defined"
+            self.flow_def.setup()  # type: ignore[union-attr]
             self.logger.info("✅ Flow setup completed")
-            
+
             self.logger.info("🔄 Running flow update...")
-            stats = self.flow_def.update()
+            stats = self.flow_def.update()  # type: ignore[union-attr]
             self.logger.info(f"📊 Flow update stats: {stats}")
             self.logger.info("✅ Flow update completed")
             self.logger.info("📚 CocoIndex indexing completed and ready for searches")
@@ -745,9 +750,9 @@ class CocoIndexTestInfrastructure:
             from cocoindex_code_mcp_server.main_mcp_server import safe_embedding_function
             query_vector = safe_embedding_function(vector_query)
 
-            # Call backend method directly 
+            # Call backend method directly
             search_results = self.backend.vector_search(
-                query_vector=query_vector,
+                query_vector=query_vector,  # type: ignore[arg-type]
                 top_k=top_k
             )
 

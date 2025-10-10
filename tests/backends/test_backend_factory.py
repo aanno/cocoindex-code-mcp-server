@@ -18,13 +18,13 @@ class MockBackend(VectorStoreBackend):
     def __init__(self, config_param: str = "default"):
         self.config_param = config_param
 
-    def vector_search(self, query_vector, top_k=10):
+    def vector_search(self, query_vector, top_k=10, embedding_model=None):
         return []
 
     def keyword_search(self, filters, top_k=10):
         return []
 
-    def hybrid_search(self, query_vector, filters, top_k=10, vector_weight=0.7, keyword_weight=0.3):
+    def hybrid_search(self, query_vector, filters, top_k=10, vector_weight=0.7, keyword_weight=0.3, embedding_model=None):
         return []
 
     def configure(self, **options):
@@ -171,13 +171,13 @@ class TestBackendFactory:
                 super().__init__(host, port, ConfigurableBackend, kwargs)
                 self.database = database
 
-            def vector_search(self, query_vector, top_k=10):
+            def vector_search(self, query_vector, top_k=10, embedding_model=None):  # type: ignore[override]
                 return []
 
             def keyword_search(self, filters, top_k=10):
                 return []
 
-            def hybrid_search(self, query_vector, filters, top_k=10, vector_weight=0.7, keyword_weight=0.3):
+            def hybrid_search(self, query_vector, filters, top_k=10, vector_weight=0.7, keyword_weight=0.3, embedding_model=None):  # type: ignore[override]
                 return []
 
             def configure(self, **options):
@@ -221,9 +221,9 @@ class TestBackendFactory:
                 super().__init__("localhost", 5432, FirstBackend, kwargs)
                 self.backend_type_label = "first"
 
-            def vector_search(self, query_vector, top_k=10): return []
+            def vector_search(self, query_vector, top_k=10, embedding_model=None): return []  # type: ignore[override]
             def keyword_search(self, filters, top_k=10): return []
-            def hybrid_search(self, query_vector, filters, top_k=10, vector_weight=0.7, keyword_weight=0.3): return []
+            def hybrid_search(self, query_vector, filters, top_k=10, vector_weight=0.7, keyword_weight=0.3, embedding_model=None): return []  # type: ignore[override]
             def configure(self, **options): pass
             def get_table_info(self): return {}
             def close(self): pass
@@ -233,9 +233,9 @@ class TestBackendFactory:
                 super().__init__("localhost", 5432, SecondBackend, kwargs)
                 self.backend_type_label = "second"
 
-            def vector_search(self, query_vector, top_k=10): return []
+            def vector_search(self, query_vector, top_k=10, embedding_model=None): return []  # type: ignore[override]
             def keyword_search(self, filters, top_k=10): return []
-            def hybrid_search(self, query_vector, filters, top_k=10, vector_weight=0.7, keyword_weight=0.3): return []
+            def hybrid_search(self, query_vector, filters, top_k=10, vector_weight=0.7, keyword_weight=0.3, embedding_model=None): return []  # type: ignore[override]
             def configure(self, **options): pass
             def get_table_info(self): return {}
             def close(self): pass
