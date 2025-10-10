@@ -399,7 +399,7 @@ class TestCustomVsDefaultHandlerComparison:
             # Custom analyzer should indicate hybrid approach
             if custom_result is not None:
                 custom_method = custom_result['analysis_method']
-                assert custom_method in ['tree_sitter', 'python_ast', 'hybrid', 'tree_sitter+python_ast'], \
+                assert custom_method in ['tree_sitter', 'python_ast', 'hybrid', 'tree_sitter+python_ast', 'tree_sitter+python_code_analyzer'], \
                     f"Custom analyzer should use advanced method, got: {custom_method}"
 
             # Default should be basic

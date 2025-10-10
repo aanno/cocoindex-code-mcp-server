@@ -37,7 +37,7 @@ class TestRAGIntegration:
         ('rust', 'unixcoder', 'microsoft/unixcoder-base'),
         ('javascript', 'graphcodebert', 'microsoft/graphcodebert-base'),
         ('typescript', 'unixcoder', 'microsoft/unixcoder-base'),
-        ('haskell', 'fallback', 'sentence-transformers/all-MiniLM-L6-v2'),
+        ('haskell', 'fallback', 'sentence-transformers/all-mpnet-base-v2'),
     ])
     def test_language_to_model_pipeline(self, language, expected_group, expected_model, fixture_files):
         """Test complete pipeline from language detection to model selection."""

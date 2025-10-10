@@ -240,7 +240,6 @@ def complex_function(x, y, z):
 
         if simple_metadata is not None and complex_metadata is not None:
             assert simple_metadata["complexity_score"] < complex_metadata["complexity_score"]
-            pytest.fail("no metadata in chunk")
             # Should be reasonably high (adjusted for enhanced analyzer)
             assert complex_metadata["complexity_score"] > 5
         else:

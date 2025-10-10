@@ -153,7 +153,7 @@ class TestEmbeddingFunctionIntegration:
         # This test verifies that the expected models are configured
         assert LANGUAGE_MODEL_GROUPS['graphcodebert']['model'] == 'microsoft/graphcodebert-base'
         assert LANGUAGE_MODEL_GROUPS['unixcoder']['model'] == 'microsoft/unixcoder-base'
-        assert LANGUAGE_MODEL_GROUPS['fallback']['model'] == 'sentence-transformers/all-MiniLM-L6-v2'
+        assert LANGUAGE_MODEL_GROUPS['fallback']['model'] == 'sentence-transformers/all-mpnet-base-v2'
 
 
 if __name__ == '__main__':

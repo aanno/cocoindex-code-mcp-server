@@ -54,7 +54,7 @@ class TestLanguageModelMapping:
     def test_fallback_configuration(self):
         """Test fallback model configuration."""
         fallback_info = LANGUAGE_MODEL_GROUPS['fallback']
-        assert fallback_info['model'] == 'sentence-transformers/all-MiniLM-L6-v2'
+        assert fallback_info['model'] == 'sentence-transformers/all-mpnet-base-v2'
         assert fallback_info['languages'] == set()  # Empty set for fallback
 
     @pytest.mark.parametrize("language,expected_group", [
@@ -108,7 +108,7 @@ class TestLanguageModelMapping:
         model_mappings = {
             'graphcodebert': 'microsoft/graphcodebert-base',
             'unixcoder': 'microsoft/unixcoder-base',
-            'fallback': 'sentence-transformers/all-MiniLM-L6-v2'
+            'fallback': 'sentence-transformers/all-mpnet-base-v2'
         }
 
         for group, expected_model in model_mappings.items():
