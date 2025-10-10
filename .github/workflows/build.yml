@@ -10,19 +10,31 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+      # Node v2x is needed for uv to install
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v3
+        with:
+          node-version: '24'
+      # astral-sh/setup-uv@v6 leads to errors
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.9.1"
+          ignore-empty-workdir: true
+          activate-environment: false
       # - name: Install required packages
       #   run: |
       #     sudo apt-get update
-      #     sudo apt-get install -y package1 package2 package3
+      #     sudo apt-get install -y uv
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
       - uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Install maturin
         run: |
-          pip install maturin psycopg "psycopg[pool]" pgvector \
+          uv pip install --system maturin psycopg "psycopg[pool]" pgvector \
             "sentence-transformers" "huggingface_hub[cli]"
-          pip install -e .
-          pip install -e ".[test]" ".[mcp-server]" ".[build]"
+          uv pip install --system  -e .
+          uv pip install --system  -e ".[test]" ".[mcp-server]" ".[build]"
       - name: Build module
-        run: maturin build --release
+        run: maturin build --release --compatibility manylinux2014
