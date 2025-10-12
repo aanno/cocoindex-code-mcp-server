@@ -13,18 +13,23 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+      # Node is needed for actions/cache@v3
+      - name: Install Node.js
+        run: |
+          dnf module install --setopt=install_weak_deps=False -y nodejs:20
       # Cache Rust toolchain + Cargo registry/cache/artifacts
-      # - name: Cache Rust toolchain and cargo
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: |
-      #       ~/.rustup/toolchains
-      #       ~/.rustup/update-hashes
-      #       ~/.rustup/settings.toml
-      #       ~/.cargo/registry
-      #       ~/.cargo/git
-      #       ~/.cargo/bin
-      #     key: ${{ runner.os }}-rust-${{ hashFiles('rust-toolchain.toml', 'Cargo.lock') }}
+      - name: Cache Rust toolchain and cargo
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.rustup/toolchains
+            ~/.rustup/update-hashes
+            ~/.rustup/settings.toml
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+          # hangs on | Cache saved with key: Linux-rust-
+          key: ${{ runner.os }}-rust-${{ hashFiles('rust-toolchain.toml', 'Cargo.lock') }}
       # Node v2x is needed for uv to install
       # BUT it does not work on quay.io/pypa/manylinux2014_x86_64
       # - name: Setup Node.js 24
