@@ -10,6 +10,7 @@
         "--device", "nvidia.com/gpu=all"
     ],
     "mounts": [
+        "source=/run/user/1000/podman/podman.sock,target=/home/vscode/podman.sock,type=bind,z,consistency=cached",
         "source=${localEnv:LINUX_CONFIG}/build-with-docker/var/lib/apt,target=/var/lib/apt,type=bind,z,consistency=cached",
         "source=${localEnv:LINUX_CONFIG}/build-with-docker/var/cache/apt,target=/var/cache/apt,type=bind,z,consistency=cached",
         "source=${localEnv:LINUX_CONFIG}/build-with-docker/var/lib/dnf,target=/var/lib/dnf,type=bind,z,consistency=cached",

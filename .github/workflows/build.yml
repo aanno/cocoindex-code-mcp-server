@@ -7,7 +7,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: quay.io/pypa/manylinux2014_x86_64
+    # This is python 3.10 and does not work with cocoindex
+    # container: quay.io/pypa/manylinux2014_x86_64
+    container: quay.io/pypa/manylinux_2_28_x86_64
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -63,9 +65,13 @@ jobs:
           cargo --version
       - name: Install maturin
         run: |
+          export PATH=/opt/python/cp311-cp311/bin:$PATH
           uv pip install --system maturin psycopg "psycopg[pool]" pgvector \
             "sentence-transformers" "huggingface_hub[cli]"
           uv pip install --system  -e .
           uv pip install --system  -e ".[test]" ".[mcp-server]" ".[build]"
       - name: Build module
-        run: maturin build --release --compatibility manylinux2014
+        run: |
+          export PATH=/opt/python/cp311-cp311/bin:$PATH
+          source $HOME/.cargo/env
+          maturin build --release --compatibility manylinux_2_28
