@@ -29,7 +29,7 @@ jobs:
             ~/.cargo/git
             ~/.cargo/bin
           # hangs on | Cache saved with key: Linux-rust-
-          key: ${{ runner.os }}-rust-${{ hashFiles('rust-toolchain.toml', 'Cargo.lock') }}
+          key: ${{ runner.os }}-rust-${{ hashFiles('rust/Cargo.lock') }}
       # Node v2x is needed for uv to install
       # BUT it does not work on quay.io/pypa/manylinux2014_x86_64
       # - name: Setup Node.js 24
@@ -68,9 +68,13 @@ jobs:
           source $HOME/.cargo/env
           rustc --version
           cargo --version
+      # pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+      # https://download.pytorch.org/whl/torch/
+      # torch-2.9.0+cpu-cp311-cp311-manylinux_2_28_x86_64.whl
       - name: Install maturin
         run: |
           export PATH=/opt/python/cp311-cp311/bin:$PATH
+          uv pip install --system torch==2.3.1+cpu -f https://download.pytorch.org/whl/cpu/torch_stable.html
           uv pip install --system maturin psycopg "psycopg[pool]" pgvector \
             "sentence-transformers" "huggingface_hub[cli]"
           uv pip install --system  -e .

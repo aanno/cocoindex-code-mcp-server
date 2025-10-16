@@ -37,7 +37,7 @@ dependencies = [
 test = [
     # testing
     "pytest>=8.4.1",
-    "pytest-cov>=6.2.1",
+    "pytest-cov>=7.0.0",
     "pytest-asyncio>=1.1.0",
     "pytest-mock>=3.10.0",
     "pytest-timeout>=2.1.0",
@@ -61,7 +61,6 @@ build = [
     "autopep8>=2.0.0",
     "flake8>=7.3.0",
     "autopep8>=2.0.0",
-    "isort>=6.0.1",
     # dependency management
     "pipdeptree>=2.8.0",
     "deptry>=0.14.0",
