@@ -18,6 +18,14 @@ jobs:
       - name: Install Node.js
         run: |
           dnf module install --setopt=install_weak_deps=False -y nodejs:20
+          dnf clean all
+      # This must be placed before install node - but if it does not work (cause node is missing)
+      # - name: Cache DNF packages
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: /var/cache/dnf
+      #     key: ${{ runner.os }}-dnf-${{ hashFiles('**/dnf-install.lock') }}
+      #     restore-keys: ${{ runner.os }}-dnf-
       # Cache Rust toolchain + Cargo registry/cache/artifacts
       - name: Cache Rust toolchain and cargo
         uses: actions/cache@v3
@@ -31,23 +39,12 @@ jobs:
             ~/.cargo/bin
           # hangs on | Cache saved with key: Linux-rust-
           key: ${{ runner.os }}-rust-${{ hashFiles('rust/Cargo.lock') }}
-      # Node v2x is needed for uv to install
-      # BUT it does not work on quay.io/pypa/manylinux2014_x86_64
-      # - name: Setup Node.js 24
-      #   uses: actions/setup-node@v3
-      #   with:
-      #     node-version: '24'
-      # astral-sh/setup-uv@v6 leads to errors
-      # - name: Install uv
-      #   uses: astral-sh/setup-uv@v5
-      #   with:
-      #     version: "0.9.1"
-      #     ignore-empty-workdir: true
-      #     activate-environment: false
-      # - name: Install required packages
-      #   run: |
-      #     sudo apt-get update
-      #     sudo apt-get install -y uv
+      - name: Cache uv binary
+        uses: actions/cache@v3
+        with:
+          path: /usr/bin/uv
+          key: ${{ runner.os }}-uv-0.9.1
+          restore-keys: ${{ runner.os }}-uv-
       - name: Download uv binary
         run: |
           curl -L -o uv.tar.gz https://github.com/astral-sh/uv/releases/download/0.9.1/uv-x86_64-unknown-linux-gnu.tar.gz
@@ -57,12 +54,14 @@ jobs:
           rm -r uv-x86_64-unknown-linux-gnu
       - name: Verify uv installation
         run: uv --version
-      # Not needed for quay.io/pypa/manylinux2014_x86_64
-      # - uses: actions/setup-python@v5
-      #   with:
-      #     python-version: "3.13"
-      # Does not work for quay.io/pypa/manylinux2014_x86_64
-      # - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Cache uv pip packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            /opt/python/cp311-cp311/lib/python3.11/site-packages
+            /opt/python/cp311-cp311/bin
+          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml', 'rust/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-pip-
       - name: Install Rust toolchain
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
@@ -80,10 +79,10 @@ jobs:
             "sentence-transformers" "huggingface_hub[cli]"
           uv pip install --system  -e .
           uv pip install --system  -e ".[test]" ".[mcp-server]" ".[build]"
+      # do NOT set compatibility to avoid a nested container with act
+      # maturin build --release --compatibility manylinux_2_28
       - name: Build module
         run: |
           export PATH=/opt/python/cp311-cp311/bin:$PATH
           source $HOME/.cargo/env
-          # do NOT set compatibility to avoid a nested container with act
-          # maturin build --release --compatibility manylinux_2_28
           maturin build --release
