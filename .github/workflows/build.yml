@@ -1,4 +1,5 @@
 name: Build
+# act -j build --container-architecture linux/amd64 --env-file <(echo "ACT_VOLUME_MOUNTS=/home/tpasch/dev/scm/github/rag/cocoindex-code-mcp-server:/github/workspace")
 
 on:
   push:
@@ -83,4 +84,6 @@ jobs:
         run: |
           export PATH=/opt/python/cp311-cp311/bin:$PATH
           source $HOME/.cargo/env
-          maturin build --release --compatibility manylinux_2_28
+          # do NOT set compatibility to avoid a nested container with act
+          # maturin build --release --compatibility manylinux_2_28
+          maturin build --release

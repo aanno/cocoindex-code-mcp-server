@@ -69,6 +69,14 @@ build = [
     "ruff>=0.4.0",
     # "asyncpg>=0.29.0",
 ]
+act = [
+    "maturin[patchelf]>=1.0,<2.0",
+    "auditwheel>=6.2.0",
+    "abi3audit>=0.0.22",
+    "cibuildwheel>=3.2.1",
+    "delvewheel>=1.11.2",
+    "delocate>=0.8.1",
+]
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
