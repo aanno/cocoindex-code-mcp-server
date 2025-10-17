@@ -7,6 +7,9 @@ name = "cocoindex_code_mcp_server"
 version = "0.1.0"
 description = "RAG based on cocoindex as MCP server (streamingHttp), with Haskell support"
 requires-python = ">=3.11"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "aanno", email = "aanno@users.noreply.github.com" }]
 package = { include = ["src/cocoindex_code_mcp_server/**/*.py"] }
 dependencies = [
     "cocoindex[embeddings]>=0.1.63", 
@@ -69,7 +72,9 @@ build = [
     "ruff>=0.4.0",
     # "asyncpg>=0.29.0",
 ]
+# github actions for building wheels or local act including pypi publishing
 act = [
+    "twine>=6.2.0",
     "maturin[patchelf]>=1.0,<2.0",
     "auditwheel>=6.2.0",
     "abi3audit>=0.0.22",

@@ -86,3 +86,7 @@ jobs:
           export PATH=/opt/python/cp311-cp311/bin:$PATH
           source $HOME/.cargo/env
           maturin build --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: ./rust/target/wheels
