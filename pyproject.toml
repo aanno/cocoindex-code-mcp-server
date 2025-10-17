@@ -17,8 +17,7 @@ classifiers = [
     "Operating System :: OS Independent",
     "Development Status :: 4 - Beta",
     "Topic :: Software Development",
-    "Topic :: Software Development :: Python Modules",
-    "Topic :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Text Processing :: Linguistic",
     "Topic :: Text Processing :: Indexing",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
@@ -57,6 +56,9 @@ dependencies = [
     "tree-sitter-kotlin>=1.0.0",
     "tree-sitter-javascript>=0.23.1,<0.24.0",  # 0.25.0 uses language v15, incompatible with tree-sitter v14
 ]
+
+[project.scripts]
+mcp-server = "cocoindex_code_mcp_server.main_mcp_server:main"
 
 [project.urls]
 Homepage = "https://github.com/aanno/cocoindex-code-mcp-server"

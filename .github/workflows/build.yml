@@ -18,6 +18,7 @@ jobs:
       - name: Install Node.js
         run: |
           dnf module install --setopt=install_weak_deps=False -y nodejs:20
+          dnf install --setopt=install_weak_deps=False -y zstd
           dnf clean all
       # This must be placed before install node - but if it does not work (cause node is missing)
       # - name: Cache DNF packages
