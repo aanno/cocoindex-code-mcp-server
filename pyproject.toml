@@ -8,10 +8,21 @@ version = "0.1.0"
 description = "RAG based on cocoindex as MCP server (streamingHttp), with Haskell support"
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: One of :: 3.11, 3.12, 3.13, 3.14",
     "Programming Language :: Rust",
     "Operating System :: OS Independent",
     "Development Status :: 4 - Beta",
     "Topic :: Software Development",
+    "Topic :: Software Development :: Python Modules",
+    "Topic :: Artificial Intelligence",
+    "Topic :: Text Processing :: Linguistic",
+    "Topic :: Text Processing :: Indexing",
+    "Scientific/Engineering :: Aritficial Intelligence",
+    "License :: OSI Approved :: AGPL-3.0 License",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
 ]
 requires-python = ">=3.11"
 readme = "README.md"
