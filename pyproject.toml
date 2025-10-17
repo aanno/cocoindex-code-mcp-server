@@ -6,6 +6,13 @@ build-backend = "maturin"
 name = "cocoindex_code_mcp_server"
 version = "0.1.0"
 description = "RAG based on cocoindex as MCP server (streamingHttp), with Haskell support"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Rust",
+    "Operating System :: OS Independent",
+    "Development Status :: 4 - Beta",
+    "Topic :: Software Development",
+]
 requires-python = ">=3.11"
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -35,6 +42,10 @@ dependencies = [
     "tree-sitter-kotlin>=1.0.0",
     "tree-sitter-javascript>=0.23.1,<0.24.0",  # 0.25.0 uses language v15, incompatible with tree-sitter v14
 ]
+
+[project.urls]
+Homepage = "https://github.com/aanno/cocoindex-code-mcp-server"
+Issues = "https://github.com/aanno/cocoindex-code-mcp-server/issues"
 
 [project.optional-dependencies]
 test = [
