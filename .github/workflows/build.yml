@@ -43,11 +43,11 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /usr/bin/uv
-          key: ${{ runner.os }}-uv-0.9.1
+          key: ${{ runner.os }}-uv-0.9.3
           restore-keys: ${{ runner.os }}-uv-
       - name: Download uv binary
         run: |
-          curl -L -o uv.tar.gz https://github.com/astral-sh/uv/releases/download/0.9.1/uv-x86_64-unknown-linux-gnu.tar.gz
+          curl -L -o uv.tar.gz https://github.com/astral-sh/uv/releases/download/0.9.3/uv-x86_64-unknown-linux-gnu.tar.gz
           tar -xzf uv.tar.gz
           chmod +x uv-x86_64-unknown-linux-gnu/uv
           mv uv-x86_64-unknown-linux-gnu/uv /usr/bin

@@ -2,6 +2,17 @@
 
 ## Maturin
 
+### Maturin bindings
+
+* [maturin bindings](https://www.maturin.rs/bindings.html)
+  + [pyo3](https://www.maturin.rs/bindings.html#pyo3)
+  + [cffi](https://www.maturin.rs/bindings.html#cffi)
+  + [cpython](https://www.maturin.rs/bindings.html#cpython)
+  + [rust-cpython](https://www.maturin.rs/bindings.html#rust-cpython)
+  + [pyo3-ffi](https://www.maturin.rs/bindings.html#pyo3-ffi)
+* [uniffi-rs](https://mozilla.github.io/uniffi-rs/latest/)
+  unified bindings for XPCOM, Python, Ruby, Node.js, Swift, Kotlin/Java and C++
+
 ### Pyo3
 
 * Py_LIMITED_API/abi3
@@ -31,11 +42,25 @@
     + Cannot use `PyO3` features that require the Python interpreter to be in a specific architecture (e.g. `Python::architecture`)
 * PyO3 has feature flags abi3-py37, abi3-py38, abi3-py39 etc. to set the minimum required Python version
 
+#### Pyo3 features
+
+* [Pyo3 features](https://pyo3.rs/v0.26.0/features)
+* [anyhow](https://docs.rs/anyhow/latest/anyhow/)
+  error type for easy idiomatic error handling
+* [pythonize](https://github.com/davidhewitt/pythonize)
+  Convert Rust types to Python types and vice versa (Serde-based)
+  + [Serde](https://github.com/serde-rs/serde)
+    framework for serializing and deserializing Rust data structures efficiently and generically
+* [pyo3_async_runtimes](https://docs.rs/pyo3-async-runtimes/latest/pyo3_async_runtimes/)
+  interop between Python and Rust’s async/await models
+  * [pyo3_async_runtimes on github](https://github.com/PyO3/pyo3-async-runtimes)
+
 ## cibuildwheel
 
 * [cibuildwheel](https://github.com/pypa/cibuildwheel)
   builds and tests your wheels across all of your platforms
   + [cibuildwheel options](https://cibuildwheel.pypa.io/en/stable/options/#repair-wheel-command)
+  + [cibuildwhee examples](https://github.com/pypa/cibuildwheel/tree/main/examples)
 * [cibuildwheel tips and tricks](https://cibuildwheel.pypa.io/en/stable/faq/)
 * [auditwheel](https://github.com/pypa/auditwheel)
   repairs wheels with external shared library dependencies to make them compliant with the manylinux standard
@@ -46,9 +71,17 @@
 * [abi3audit](https://github.com/pypa/abi3audit)
   check that a Python extension module is compatible with the stable ABI (abi3)
 
+## act + GitHub Actions
+
+### act - Run GitHub Actions locally
+
+* [act user guide](https://nektosact.com/)
+* [act on github](https://github.com/nektos/act)
+
 ## References
 
 * [Maturin distribution](https://maturin.rs/distributing.html#abi3)
+  + includes section 'Cross-compile to Windows'
 * [Pyo3 building and distribution](https://pyo3.rs/v0.26.0/building-and-distribution#cross-compiling)
 * [Python Packaging User Guide](https://packaging.python.org/en/latest/)
   PiPy instructions for building and distributing packages
