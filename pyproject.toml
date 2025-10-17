@@ -116,7 +116,7 @@ features = ["pyo3/extension-module"]
 module-name = "cocoindex_code_mcp_server"
 manifest-path = "rust/Cargo.toml"
 bindings = "pyo3"
-compatibility = "linux"  # or linux, macos, etc.
+compatibility = "manylinux_2_28"  # or linux, macos, etc.
 python-source = "src"
 include = ["src/cocoindex_code_mcp_server/**/*.py"]
 
