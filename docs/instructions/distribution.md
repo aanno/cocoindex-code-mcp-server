@@ -50,3 +50,5 @@
 
 * [Maturin distribution](https://maturin.rs/distributing.html#abi3)
 * [Pyo3 building and distribution](https://pyo3.rs/v0.26.0/building-and-distribution#cross-compiling)
+* [Python Packaging User Guide](https://packaging.python.org/en/latest/)
+  PiPy instructions for building and distributing packages
