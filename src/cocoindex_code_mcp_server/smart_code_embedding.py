@@ -70,7 +70,7 @@ class LanguageModelSelector:
         ".lhs": "haskell",
     }
 
-    def __init__(self, fallback_model: str = "sentence-transformers/all-MiniLM-L6-v2") -> None:
+    def __init__(self, fallback_model: str = "sentence-transformers/all-mpnet-base-v2") -> None:
         """
         Initialize the language model selector.
 
@@ -174,7 +174,7 @@ def create_smart_code_embedding(
     language: str | None = None,
     file_extension: str | None = None,
     force_model: str | None = None,
-    fallback_model: str = "sentence-transformers/all-MiniLM-L6-v2",
+    fallback_model: str = "sentence-transformers/all-mpnet-base-v2",
     model_args: Dict[str, Any] | None = None
 ) -> cocoindex.functions.SentenceTransformerEmbed:
     """
@@ -234,7 +234,7 @@ def create_smart_code_embedding(
 def create_smart_embedding_from_file_context(
     file_record: Dict[str, Any],
     extension_field: str = "extension",
-    fallback_model: str = "sentence-transformers/all-MiniLM-L6-v2",
+    fallback_model: str = "sentence-transformers/all-mpnet-base-v2",
     model_args: Dict[str, Any] | None = None
 ) -> cocoindex.functions.SentenceTransformerEmbed:
     """

@@ -37,8 +37,8 @@ The implementation has been tested and verified:
 - ✅ Data correctly populated with model identifiers
 - ✅ Smart embeddings working with multiple models (all 768D):
   - `sentence-transformers/all-mpnet-base-v2` (default/fallback) - 768D
-  - `microsoft/graphcodebert-base` (Python, Java, JavaScript, etc.) - 768D
-  - `microsoft/unixcoder-base` (Rust, TypeScript, C#, etc.) - 768D
+  - `microsoft/graphcodebert-base` (Python, Java, JavaScript, PHP, Ruby, Go, C, C++) - 768D
+  - `microsoft/unixcoder-base` (Rust, TypeScript, C#, Kotlin, Scala, Swift, Dart) - 768D
 
 ### Critical Constraint
 

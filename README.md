@@ -1,276 +1,331 @@
-# RAG experiments
+# CocoIndex Code MCP Server
 
-The target of this project is to have an RAG for code development as MCP server.
-There is a MCP server example at `/workspaces/rust/code-index-mcp`.
+A Model Context Protocol (MCP) server that provides hybrid search capabilities combining vector similarity and keyword metadata search for code retrieval. Built on the [CocoIndex](https://cocoindex.io) data transformation framework with specialized support for multiple programming languages.
 
-## State
+## Table of Contents
 
-### CocoIndex Framework
+- [Quickstart](#quickstart)
+- [Command Line Arguments](#command-line-arguments)
+- [Features](#features)
+- [Supported Languages](#supported-languages)
+- [Smart Embedding](#smart-embedding)
+- [Development](#development)
+- [Contributing](#contributing)
 
-- Hybrid Rust/Python architecture with powerful data transformation capabilities
-- Incremental processing with PostgreSQL + pgvector backend
-- Code chunking and embedding pipeline already implemented
-- **NEW**: [Hybrid search](docs/claude/Hybrid-Search.md) with vector similarity and exact matches
-  + [Enhanced metadata](docs/cocoindex/metadata.md) for python
-- **NEW**: Haskell support
-  + Haskell tree-sitter support via custom maturin extension
-  + Haskell-specific code chunking inspired by ASTChunk
-    * see [Haskell-ASTChunking](docs/claude/Haskell-ASTChunking.md)
-- **NEW**: Multiple path support for indexing and searching across multiple directories
-- **NEW**: Enhanced code chunking by integration with ASTChunk
-  + see [ASTChunk_integration](docs/claude/ASTChunk_integration.md)
-  + see [ASTChunk](docs/claude/ASTChunk.md)
-- **NEW**: automatic language-aware code embeddings selection
-  + see [Embedding-Selection](docs/claude/Embedding-Selection.md)
-  + see [Language-Aware-Embeddings](docs/cocoindex/language-aware-embeddings.md)
+## Quickstart
 
-### tree-sitter
+### 1. Clone the Repository
 
-- CocoIndex uses tree-sitter, but only the grammars built in
-- [List of grammars](https://github.com/tree-sitter/tree-sitter/wiki/List-of-parsers)  
-- If you want support for other languages, additional parsers should be included
-- **NEW**: Enhanced tree-sitter implementation with specialized AST visitors for major languages
-- **IMPROVED**: Eliminated tree-sitter warnings in MCP server logs through proper parser implementation
-- **ENHANCED**: Comprehensive language support with inheritance patterns (C++ → C, TypeScript → JavaScript)
-- This has been implemented for: **Haskell** (custom extension), **C**, **C++**, **Rust**, **Java**, **JavaScript**, **TypeScript**, **Kotlin** (specialized visitors) + **Python**, **C#** (configured parsers)
+```bash
+git clone --recursive https://github.com/aanno/cocoindex-code-mcp-server.git
+cd cocoindex-code-mcp-server
+```
 
-### Existing MCP Server
+### 2. Install Dependencies
 
-- Basic file indexing and search functionality
-- Advanced search with ripgrep/ugrep integration
-- Language-specific analysis (Python, Java, JavaScript, etc.)
-- No semantic search or RAG capabilities
+Install from PyPI or build from source using maturin:
 
-### Haskell Support Implementation
+```bash
+# Install from PyPI
+pip install cocoindex[embeddings]
 
-This project now includes full Haskell support for CocoIndex through:
+# Or build from source
+maturin develop
+```
 
-1. **Custom Maturin Extension**: A Rust-based Python extension (`haskell-tree-sitter`) that provides:
-   - Native tree-sitter-haskell parsing capabilities
-   - Python bindings for Haskell AST manipulation
-   - Custom separator patterns for optimal code chunking
+### 3. Start the PostgreSQL Database
 
-2. **Integration with CocoIndex**: Enhanced `src/main_interactive_query.py` with:
-   - Haskell language detection (`.hs`, `.lhs` files)
-   - Custom chunking parameters optimized for Haskell code
-   - Tree-sitter-aware code splitting using our custom extension
+In one terminal on your local machine, start the pgvector database:
 
-## Plan
+```bash
+cd cocoindex-code-mcp-server
+./scripts/cocoindex-postgresql.sh
+```
 
-1. Enhanced Code Embedding Pipeline
-   - Leverage CocoIndex's code_embedding_flow with improvements:
-   - Better chunking strategies (function/class boundaries)
-   - Multiple embedding models (code-specific models like CodeBERT)
-   - Metadata enrichment (function signatures, dependencies, etc.)
-2. Semantic Search Integration
-   - Add vector similarity search to existing MCP server
-   - Hybrid search combining exact matches + semantic similarity
-   - Context-aware retrieval based on code relationships
-3. RAG-Enhanced Code Analysis
-   - Contextual code explanations using retrieved similar code
-   - Pattern recognition and best practices suggestions
-   - Cross-reference detection and dependency analysis
+### 4. Start the MCP Server
 
-## cocoindex
+In another terminal, start the cocoindex_code_mcp_server:
 
-* [build from sources](https://cocoindex.io/docs/about/contributing)
-* [installation with pip](https://cocoindex.io/docs/getting_started/installation)
-* [quickstart](https://cocoindex.io/docs/getting_started/quickstart)
-* [cli](https://cocoindex.io/docs/core/cli)
-* https://github.com/cocoindex-io/cocoindex
+```bash
+cd cocoindex-code-mcp-server
+python -m cocoindex_code_mcp_server.main_mcp_server --rescan --port 3033 <path_to_code_directory>
+```
 
-## code_embedding
+The server will index the code in the specified directory and start serving requests. This will take some time. It is ready when you see something like:
 
-* cocoindex/examples/code_embedding
-* [blog post](https://cocoindex.io/blogs/index-code-base-for-rag/)
+```text
+CodeEmbedding.files (batch update): 1505 source rows NO CHANGE
+```
 
-## Building the Project
+### 5. Use the MCP Server
+
+You can now use the RAG server running at `http://localhost:3033` as a streaming HTTP MCP server. For example, with Claude Code, use the following snippet within `"mcpServers"` in your `.mcp.json` file:
+
+```json
+{
+  "cocoindex-rag": {
+    "command": "pnpm",
+    "args": [
+      "dlx",
+      "mcp-remote@next",
+      "http://localhost:3033/mcp"
+    ]
+  }
+}
+```
+
+## Command Line Arguments
+
+| Argument | Type | Default | Description |
+|----------|------|---------|-------------|
+| `paths` | positional | - | Path(s) to code directory/directories to index (can specify multiple) |
+| `--paths` | option | - | Alternative way to specify paths (can use multiple times) |
+| `--no-live` | flag | false | Disable live update mode |
+| `--poll` | int | 60 | Polling interval in seconds for live updates |
+| `--default-embedding` | flag | false | Use default CocoIndex embedding instead of smart embedding |
+| `--default-chunking` | flag | false | Use default CocoIndex chunking instead of tree-sitter/AST chunking |
+| `--default-language-handler` | flag | false | Use default CocoIndex language handling |
+| `--chunk-factor-percent` | int | 100 | Chunk size scaling factor as percentage (100=default, <100=smaller, >100=larger) |
+| `--port` | int | 3000 | Port to listen on for HTTP |
+| `--log-level` | string | INFO | Logging level (DEBUG, INFO, WARNING, ERROR) |
+| `--json-response` | flag | false | Enable JSON responses instead of SSE streams |
+| `--rescan` | flag | false | Clear database and tracking tables before starting to force re-indexing |
+
+### Examples
+
+```bash
+# Index a single directory with live updates
+python -m cocoindex_code_mcp_server.main_mcp_server /path/to/code
+
+# Index multiple directories
+python -m cocoindex_code_mcp_server.main_mcp_server /path/to/code1 /path/to/code2
+
+# Force re-indexing with custom port
+python -m cocoindex_code_mcp_server.main_mcp_server --rescan --port 3033 /path/to/code
+
+# Disable live updates (one-time indexing)
+python -m cocoindex_code_mcp_server.main_mcp_server --no-live /path/to/code
+
+# Custom chunk size (50% smaller chunks)
+python -m cocoindex_code_mcp_server.main_mcp_server --chunk-factor-percent 50 /path/to/code
+```
+
+## Features
+
+- **CocoIndex Backend**: Uses [CocoIndex](https://cocoindex.io) as the embedding and vector database backend with PostgreSQL + pgvector
+- **Multiple Language Support**: Specialized support for 20+ programming languages with language-specific parsers and embeddings
+- **Streaming HTTP MCP Server**: Real-time code retrieval via Model Context Protocol over HTTP
+- **Code Change Detection**: Incremental indexing with automatic detection of file changes
+- **Tree-sitter Chunking**: Advanced code parsing and chunking using tree-sitter AST for better code understanding
+- **Smart Embedding**: Multiple embedding models automatically selected based on programming language (see [Smart Embedding](#smart-embedding))
+- **Hybrid Search**: Combines vector similarity search with keyword/metadata filtering for precise results
+  - **Vector Search**: Semantic similarity using language-specific code embeddings
+  - **Keyword Search**: Exact matching on metadata fields (functions, classes, imports, etc.)
+  - **Hybrid Search**: Weighted combination of both approaches with configurable weights
+
+## Supported Languages
+
+The server supports multiple programming languages with varying levels of integration:
+
+| Language | Extensions | Embedding Model | AST Chunking | Tree-sitter | Remarks |
+|----------|------------|-----------------|--------------|-------------|---------|
+| **Python** | `.py` | GraphCodeBERT | ✅ | ✅ | Full support with metadata extraction |
+| **Rust** | `.rs` | UniXcoder | ✅ | ✅ | Full support with specialized visitor |
+| **JavaScript** | `.js`, `.mjs`, `.cjs` | GraphCodeBERT | ✅ | ✅ | Full support |
+| **TypeScript** | `.ts` | UniXcoder | ✅ | ✅ | Full support with specialized visitor |
+| **TSX** | `.tsx` | UniXcoder | ✅ | ✅ | React TypeScript support |
+| **Java** | `.java` | GraphCodeBERT | ✅ | ✅ | Full support with specialized visitor |
+| **Kotlin** | `.kt`, `.kts` | UniXcoder | ✅ | ✅ | Full support |
+| **C** | `.c` | GraphCodeBERT | ✅ | ✅ | Full support with specialized visitor |
+| **C++** | `.cpp`, `.cc`, `.cxx`, `.h`, `.hpp` | GraphCodeBERT | ✅ | ✅ | Extends C visitor |
+| **C#** | `.cs` | UniXcoder | ❌ | ✅ | Tree-sitter parsing only |
+| **Go** | `.go` | GraphCodeBERT | ❌ | ✅ | Tree-sitter parsing only |
+| **PHP** | `.php` | GraphCodeBERT | ❌ | ✅ | Tree-sitter parsing only |
+| **Ruby** | `.rb` | GraphCodeBERT | ❌ | ✅ | Tree-sitter parsing only |
+| **Swift** | `.swift` | UniXcoder | ❌ | ✅ | Tree-sitter parsing only |
+| **Scala** | `.scala` | UniXcoder | ❌ | ✅ | Tree-sitter parsing only |
+| **Dart** | `.dart` | UniXcoder | ❌ | ❌ | Fallback embedding |
+| **Haskell** | `.hs`, `.lhs` | all-mpnet-base-v2 | ✅ | ✅ | Custom maturin extension with specialized visitor |
+| **CSS** | `.css`, `.scss` | all-mpnet-base-v2 | ❌ | ✅ | Tree-sitter parsing only |
+| **HTML** | `.html`, `.htm` | all-mpnet-base-v2 | ❌ | ✅ | Tree-sitter parsing only |
+| **JSON** | `.json` | all-mpnet-base-v2 | ❌ | ✅ | Tree-sitter parsing only |
+| **Markdown** | `.md`, `.mdx` | all-mpnet-base-v2 | ❌ | ✅ | Tree-sitter parsing only |
+| **YAML** | `.yaml`, `.yml` | all-mpnet-base-v2 | ❌ | ✅ | Tree-sitter parsing only |
+| **TOML** | `.toml` | all-mpnet-base-v2 | ❌ | ✅ | Tree-sitter parsing only |
+| **SQL** | `.sql` | all-mpnet-base-v2 | ❌ | ✅ | Tree-sitter parsing only |
+| **R** | `.r`, `.R` | all-mpnet-base-v2 | ❌ | ✅ | Tree-sitter parsing only |
+| **Fortran** | `.f`, `.f90`, `.f95`, `.f03` | all-mpnet-base-v2 | ❌ | ✅ | Tree-sitter parsing only |
+| **Pascal** | `.pas`, `.dpr` | all-mpnet-base-v2 | ❌ | ✅ | Tree-sitter parsing only |
+| **XML** | `.xml` | all-mpnet-base-v2 | ❌ | ✅ | Tree-sitter parsing only |
+
+### Legend
+
+- **Embedding Model**: The embedding model automatically selected for the language
+- **AST Chunking**: Advanced chunking using [ASTChunk](https://github.com/codelion/astchunk) or custom implementations
+- **Tree-sitter**: Language has tree-sitter parser configured for AST analysis
+- **Remarks**: Additional notes about support level
+
+## Smart Embedding
+
+The server uses **language-aware code embeddings** that automatically select the optimal embedding model based on the programming language. This approach provides better semantic understanding of code compared to generic text embeddings.
+
+### How It Works
+
+The smart embedding system uses different specialized models optimized for different programming languages:
+
+1. **GraphCodeBERT** (`microsoft/graphcodebert-base`)
+   - **Optimized for:** Python, Java, JavaScript, PHP, Ruby, Go, C, C++
+   - Pre-trained on code from these languages with graph-based code understanding
+   - Best for languages with explicit structure and common patterns
+
+2. **UniXcoder** (`microsoft/unixcoder-base`)
+   - **Optimized for:** Rust, TypeScript, C#, Kotlin, Scala, Swift, Dart
+   - Unified cross-lingual model for multiple languages
+   - Best for modern statically-typed languages
+
+3. **Fallback Model** (`sentence-transformers/all-mpnet-base-v2`)
+   - Used for: Languages not specifically supported by code models
+   - General-purpose text embedding for broader language support
+   - 768-dimensional embeddings matching code-specific models
+
+### Automatic Selection
+
+The embedding model is automatically selected based on file extension:
+
+```python
+# Example: Python file automatically uses GraphCodeBERT
+file: main.py → language: python → model: microsoft/graphcodebert-base
+
+# Example: Rust file automatically uses UniXcoder
+file: lib.rs → language: rust → model: microsoft/unixcoder-base
+
+# Example: Haskell file uses fallback model
+file: Main.hs → language: haskell → model: sentence-transformers/all-mpnet-base-v2
+```
+
+### Benefits
+
+- **Better Code Understanding**: Code-specific models understand programming constructs better than generic text models
+- **Language-Specific Optimization**: Each language gets embeddings from models trained on that language
+- **Consistent Search Quality**: Similar code snippets in the same language produce similar embeddings
+- **Zero Configuration**: Automatic model selection requires no manual configuration
+
+### Implementation Details
+
+The smart embedding system is implemented as an external wrapper around CocoIndex's `SentenceTransformerEmbed` function, located in `src/cocoindex_code_mcp_server/smart_code_embedding.py`. This approach:
+
+- Does not modify CocoIndex source code
+- Uses CocoIndex as a pure dependency
+- Provides drop-in compatibility with existing workflows
+- Can be easily updated independently
+
+For more technical details, see:
+
+- [`docs/claude/Embedding-Selection.md`](docs/claude/Embedding-Selection.md)
+- [`docs/cocoindex/smart-embedding.md`](docs/cocoindex/smart-embedding.md)
+
+## Development
 
 ### Prerequisites
 
 - Rust (latest stable version)
 - Python 3.11+
 - Maturin (`pip install maturin`)
+- PostgreSQL with pgvector extension
 - Tree-sitter language parsers (automatically installed via pyproject.toml)
-  - `tree-sitter>=0.23.0,<0.24.0` (downgraded for compatibility)
-  - `tree-sitter-python>=0.23.6`
-  - `tree-sitter-c>=0.23.0`
-  - `tree-sitter-cpp>=0.23.0`
-  - `tree-sitter-rust>=0.23.0`
-  - `tree-sitter-java>=0.23.5`
-  - `tree-sitter-javascript>=0.23.0`
-  - `tree-sitter-typescript>=0.23.2`
-  - `tree-sitter-kotlin>=0.23.0`
-  - `tree-sitter-c-sharp>=0.23.1`
 
-### Build Steps
+### Building from Source
 
 ```bash
-# 1. Build and install the haskell-tree-sitter extension
+# 1. Build and install the Haskell tree-sitter extension
 maturin develop
 
-# 2. Install test dependencies (optional)
+# 2. Install development dependencies
 pip install -e ".[test]"
 
 # 3. Run tests to verify installation
-python run_tests.py
-
-# Alternative test runners:
-python run_tests.py --runner unittest
-python run_tests.py --runner pytest      # requires: pip install pytest
-python run_tests.py --runner coverage    # requires: pip install pytest-cov
+pytest tests/
 ```
 
-### Development Build
+### Code Quality
 
-For development with automatic rebuilding:
+The project uses mypy for type checking. Use the provided scripts:
 
 ```bash
-# Build in development mode with automatic rebuilding
-maturin develop --reload
+# Type check main source code
+./scripts/mypy-check.sh
 
-# Run specific test suites
-python -m unittest tests.test_haskell_parsing -v
-python -m unittest tests.test_cocoindex_integration -v
+# Type check tests
+./scripts/mypy-check-tests.sh
 ```
 
-### Test Infrastructure
+### Project Structure
 
-The project includes comprehensive test coverage:
+- **`src/cocoindex_code_mcp_server/`**: Main MCP server implementation
+  - `main_mcp_server.py`: MCP server entry point
+  - `cocoindex_config.py`: CocoIndex flow configuration
+  - `smart_code_embedding.py`: Language-aware embedding selection
+  - `mappers.py`: Language and field mappings
+  - `tree_sitter_parser.py`: Tree-sitter parsing utilities
+  - `db/`: Database abstraction layer
+    - `pgvector/`: PostgreSQL + pgvector backend
+  - `lang/`: Language-specific handlers
+    - `python/`: Python code analyzer
+    - `haskell/`: Haskell support (via Rust extension)
+- **`tests/`**: Pytest test suite
+- **`docs/`**: Documentation
+  - `claude/`: Development notes and architecture docs
+  - `cocoindex/`: CocoIndex-specific documentation
+  - `instructions/`: Task instructions and guides
+- **`rust/`**: Rust components
+  - `src/lib.rs`: Haskell tree-sitter Rust extension
+- **`astchunk/`**: ASTChunk submodule for advanced code chunking
 
-- **`tests/test_haskell_parsing.py`**: Tests the core tree-sitter Haskell parsing functionality
-- **`tests/test_cocoindex_integration.py`**: Tests integration with CocoIndex pipeline  
-- **`tests/test_cli_args.py`**: Tests command-line argument parsing and path handling
-- **`tests/test_multiple_paths.py`**: Tests multiple path processing and source management
-- **`tests/fixtures/`**: Sample Haskell files for testing
-- **`run_tests.py`**: Unified test runner with multiple backend support
-
-Test categories:
-- Unit tests for tree-sitter parsing
-- Integration tests for CocoIndex compatibility
-- Command-line interface tests
-- Multiple path processing tests
-- Configuration validation tests
-- Edge case and error handling tests
-
-## Language Support
-
-This project enhances CocoIndex with additional language support. Here's the current status:
-
-### 🚀 Recent Improvements
-
-**NEW**: Specialized AST visitors have been implemented for major programming languages, providing enhanced metadata extraction and 100% function recall rates:
-
-- **C**: Comprehensive visitor extracting functions, structs, enums, typedefs
-- **C++**: Inherits from C visitor, adds classes, namespaces, templates  
-- **Rust**: Extracts functions, structs, enums, traits, impls, modules
-- **Java**: Extracts methods, constructors, classes, interfaces, packages
-- **JavaScript**: Extracts functions, classes, variables, imports, exports
-- **TypeScript**: Inherits from JavaScript, adds interfaces, types, enums, namespaces
-- **Kotlin**: Extracts functions, classes, interfaces, objects, data classes
-- **Haskell**: Enhanced visitor with improved function detection (57% → 100% recall)
-
-These implementations follow inheritance patterns where applicable (C++ extends C, TypeScript extends JavaScript) and include comprehensive baseline testing infrastructure.
-
-### Supported via CocoIndex Tree-sitter (Built-in)
-
-These languages are natively supported by CocoIndex without additional configuration:
-
-| Language | Extensions | Support Level | AST Node Handler | Tree-sitter Implementation |
-|----------|------------|---------------|------------------|----------------------------|
-| **C** | `.c` | Full tree-sitter | **✅ Specialized Visitor** | **✅ Fully Configured** |
-| **C++** | `.cpp`, `.cc`, `.cxx`, `.h`, `.hpp` | Full tree-sitter | **✅ Specialized Visitor** | **✅ Fully Configured** |
-| **C#** | `.cs` | Full tree-sitter | Not implemented | **✅ Fully Configured** |
-| **CSS** | `.css`, `.scss` | Full tree-sitter | Not implemented | Available but not configured |
-| **Fortran** | `.f`, `.f90`, `.f95`, `.f03` | Full tree-sitter | Not implemented | Available but not configured |
-| **Go** | `.go` | Full tree-sitter | Not implemented | Available but not configured |
-| **HTML** | `.html`, `.htm` | Full tree-sitter | Not implemented | Available but not configured |
-| **Java** | `.java` | Full tree-sitter | **✅ Specialized Visitor** | **✅ Fully Configured** |
-| **JavaScript** | `.js`, `.mjs`, `.cjs` | Full tree-sitter | **✅ Specialized Visitor** | **✅ Fully Configured** |
-| **JSON** | `.json` | Full tree-sitter | Not implemented | Available but not configured |
-| **Kotlin** | `.kt`, `.kts` | Full tree-sitter | **✅ Specialized Visitor** | **✅ Fully Configured** |
-| **Markdown** | `.md`, `.mdx` | Full tree-sitter | Not implemented | Available but not configured |
-| **Pascal** | `.pas`, `.dpr` | Full tree-sitter | Not implemented | Available but not configured |
-| **PHP** | `.php` | Full tree-sitter | Not implemented | Available but not configured |
-| **Python** | `.py`, `.pyi` | Full tree-sitter | **✅ Available** | **✅ Fully Configured** |
-| **R** | `.r`, `.R` | Full tree-sitter | Not implemented | Available but not configured |
-| **Ruby** | `.rb` | Full tree-sitter | Not implemented | Available but not configured |
-| **Rust** | `.rs` | Full tree-sitter | **✅ Specialized Visitor** | **✅ Fully Configured** |
-| **Scala** | `.scala` | Full tree-sitter | Not implemented | Available but not configured |
-| **SQL** | `.sql` | Full tree-sitter | Not implemented | Available but not configured |
-| **Swift** | `.swift` | Full tree-sitter | Not implemented | Available but not configured |
-| **TOML** | `.toml` | Full tree-sitter | Not implemented | Available but not configured |
-| **TypeScript** | `.ts` | Full tree-sitter | **✅ Specialized Visitor** | **✅ Fully Configured** |
-| **TSX** | `.tsx` | Full tree-sitter | **✅ Specialized Visitor** | **✅ Fully Configured** |
-| **XML** | `.xml` | Full tree-sitter | Not implemented | Available but not configured |
-| **YAML** | `.yaml`, `.yml` | Full tree-sitter | Not implemented | Available but not configured |
-
-### Enhanced Tree-sitter Support (This Project)
-
-Languages with additional tree-sitter support added by this project:
-
-| Language | Extensions | Support Level | Implementation | AST Node Handler |
-|----------|------------|---------------|----------------|------------------|
-| **Haskell** | `.hs`, `.lhs` | Full tree-sitter | Custom maturin extension | **✅ Specialized Visitor** |
-
-### Ad-hoc Pattern-based Support (Custom Languages)
-
-Languages supported through regex-based chunking patterns:
-
-| Language | Extensions | Support Level | Implementation | AST Node Handler |
-|----------|------------|---------------|----------------|------------------|
-| **Shell** | `.sh`, `.bash` | Pattern-based | Custom regex separators | N/A |
-| **Makefile** | `Makefile`, `.makefile` | Pattern-based | Custom regex separators | N/A |
-| **CMake** | `.cmake`, `CMakeLists.txt` | Pattern-based | Custom regex separators | N/A |
-| **Dockerfile** | `Dockerfile`, `.dockerfile` | Pattern-based | Custom regex separators | N/A |
-| **Gradle** | `.gradle` | Pattern-based | Custom regex separators | N/A |
-| **Maven** | `pom.xml` | Pattern-based | Custom regex separators | N/A |
-| **Config** | `.ini`, `.cfg`, `.conf` | Pattern-based | Custom regex separators | N/A |
-
-### Adding New Language Support
-
-1. **For languages with existing tree-sitter grammars**: Create a maturin extension similar to the Haskell implementation
-2. **For languages without tree-sitter support**: Add custom language specifications with appropriate regex patterns
-3. **Extend existing support**: Modify separator patterns in the custom language configurations
-
-## Usage
-
-### Running the Code Embedding Pipeline
+### Running Tests
 
 ```bash
-# Set up environment variables
-export COCOINDEX_DATABASE_URL="postgresql://user:pass@localhost/dbname"
+# Run all tests
+pytest tests/
 
-# Run with default path (cocoindex directory)
-python src/main_interactive_query.py
+# Run specific test file
+pytest tests/test_hybrid_search_integration.py
 
-# Index a specific directory
-python src/main_interactive_query.py /path/to/your/code
-
-# Index multiple directories (fully supported!)
-python src/main_interactive_query.py /path/to/code1 /path/to/code2
-
-# Alternative syntax with explicit --paths argument
-python src/main_interactive_query.py --paths /path/to/your/code
-
-# Show help and usage examples
-python src/main_interactive_query.py --help
+# Run with coverage
+pytest tests/ --cov=src/cocoindex_code_mcp_server --cov-report=html
 ```
 
-## ✅ Multiple Path Support
+## Contributing
 
-CocoIndex natively supports multiple sources per flow! When multiple paths are specified, each directory is added as a separate source and processed in parallel. Search results will indicate which source each file came from.
+Contributions are welcome! Please open issues and pull requests on the [GitHub repository](https://github.com/aanno/cocoindex-code-mcp-server).
 
-The pipeline will automatically detect and properly chunk supported languages using either tree-sitter parsing or pattern-based chunking, enabling better semantic search and RAG capabilities.
+### Development Workflow
 
-### Technical Architecture
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes with tests
+4. Run type checking: `./scripts/mypy-check.sh`
+5. Run tests: `pytest tests/`
+6. Submit a pull request
 
-The implementation leverages CocoIndex's native multi-source capabilities:
-- Flow Builder: Adds multiple sources to the same flow
-- Data Scope: Each source gets its own namespace
-- Collector: Unified collection from all sources
-- Export: Single database table with source identification
-- Search: Enhanced to show source information
+### Areas for Contribution
 
-This solution is much more robust than the initial single-source approach and takes full advantage of CocoIndex's 
-designed capabilities forhandling multiple data sources efficiently.
+- Additional language support (parsers, embeddings, chunking)
+- Enhanced metadata extraction for existing languages
+- Performance optimizations
+- Documentation improvements
+- Bug fixes and issue resolution
+
+## License
+
+AGPL-3.0
+
+## Links
+
+- **CocoIndex Framework**: <https://cocoindex.io>
+- **GitHub Repository**: <https://github.com/aanno/cocoindex-code-mcp-server>
+- **Model Context Protocol**: <https://modelcontextprotocol.io>
+- **ASTChunk**: <https://github.com/codelion/astchunk>
+
+## Acknowledgments
+
+Built on top of the excellent [CocoIndex](https://cocoindex.io) framework for incremental data transformation and the [Model Context Protocol](https://modelcontextprotocol.io) for AI tool integration.

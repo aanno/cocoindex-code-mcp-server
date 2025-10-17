@@ -160,7 +160,7 @@ class PostgresBackend(VectorStoreBackend):
         Args:
             query_vector: The query embedding vector
             top_k: Number of results to return
-            embedding_model: Filter to only search embeddings from this model (e.g., 'sentence-transformers/all-MiniLM-L6-v2')
+            embedding_model: Filter to only search embeddings from this model (e.g., 'sentence-transformers/all-mpnet-base-v2')
         """
         with self.pool.connection() as conn:
             register_vector(conn)
