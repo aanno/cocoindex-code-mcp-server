@@ -21,11 +21,13 @@ permissions:
 jobs:
   linux:
     runs-on: ${{ matrix.platform.runner }}
+    container: ${{ matrix.platform.container }}
     strategy:
       matrix:
         platform:
           - runner: ubuntu-22.04
             target: x86_64
+            container: quay.io/pypa/manylinux_2_28_x86_64
           # - runner: ubuntu-22.04
           #   target: x86
           # - runner: ubuntu-22.04
@@ -38,6 +40,9 @@ jobs:
           #   target: ppc64le
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20.x'
       - uses: actions/setup-python@v5
         with:
           # python-version: 3.x
@@ -54,6 +59,7 @@ jobs:
           args: --release --out dist --manifest-path rust/Cargo.toml
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
           container: off
+          # container: quay.io/pypa/manylinux_2_28_x86_64
           # manylinux: auto
           manylinux: manylinux_2_28
         # env:
