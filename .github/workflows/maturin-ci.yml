@@ -38,24 +38,46 @@ jobs:
           #   target: ppc64le
     steps:
       - uses: actions/checkout@v4
+      - name: Cache Rust toolchain and cargo
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.rustup/toolchains
+            ~/.rustup/update-hashes
+            ~/.rustup/settings.toml
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+          # hangs on | Cache saved with key: Linux-rust-
+          key: ${{ runner.os }}-rust-${{ hashFiles('rust/Cargo.lock') }}
       - uses: actions/setup-python@v5
         with:
           # python-version: 3.x
           python-version: 3.11
+      - name: Install Rust toolchain
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source $HOME/.cargo/env
+          rustc --version
+          cargo --version
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist --manifest-path rust/Cargo.toml
           sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
-          manylinux: auto
-      - name: Build free-threaded wheels
-        uses: PyO3/maturin-action@v1
-        with:
-          target: ${{ matrix.platform.target }}
-          args: --release --out dist --manifest-path rust/Cargo.toml -i python3.13t
-          sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
-          manylinux: auto
+          container: off
+          # manylinux: auto
+          manylinux: manylinux_2_28
+        env:
+          PATH: $HOME/.cargo/bin:$PATH
+      # - name: Build free-threaded wheels
+      #   uses: PyO3/maturin-action@v1
+      #   with:
+      #     target: ${{ matrix.platform.target }}
+      #     args: --release --out dist --manifest-path rust/Cargo.toml -i python3.13t
+      #     sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
+      #     manylinux: auto
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
