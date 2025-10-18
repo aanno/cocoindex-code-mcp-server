@@ -1,5 +1,4 @@
 name: manylinux
-# act -j build --container-architecture linux/amd64 --env-file <(echo "ACT_VOLUME_MOUNTS=/home/tpasch/dev/scm/github/rag/cocoindex-code-mcp-server:/github/workspace")
 
 on:
   push:
