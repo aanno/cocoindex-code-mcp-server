@@ -7,7 +7,7 @@ act \
   --container-architecture linux/amd64 \
   --defaultbranch main \
   -P ubuntu-latest=ghcr.io/catthehacker/ubuntu:act-latest \
-  --artifact-server-path ./artifacts -j build
+  --artifact-server-path ./artifacts -j manylinux-ci
 
 # -b - bind
 # --rebuild - how to turn this off?
