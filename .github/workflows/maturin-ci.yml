@@ -9,11 +9,11 @@ name: maturin
 
 on:
   push:
-    branches:
-      - main
-      # - master
-    tags:
-      - '*'
+    # branches:
+    #   - main
+    #   - master
+    # tags:
+    #   - '*'
   pull_request:
   workflow_dispatch:
 
@@ -24,7 +24,7 @@ jobs:
   linux:
     runs-on: ${{ matrix.platform.runner }}
     # this seems not to be used by PyO3/maturin-action@v1
-    # container: ${{ matrix.platform.container }}
+    container: ${{ matrix.platform.container }}
     strategy:
       matrix:
         platform:
@@ -38,10 +38,10 @@ jobs:
           - runner: ubuntu-20.04
             target: aarch64
             container: quay.io/pypa/manylinux_2_28_aarch64
-          - runner: ubuntu-20.04
-            target: armv7
-            # no matching container
-            container: quay.io/pypa/manylinux_2_28_armv7
+          # - runner: ubuntu-20.04
+          #   target: armv7
+          #   # no matching container
+          #   container: quay.io/pypa/manylinux_2_28_armv7
           # - runner: ubuntu-22.04
           #   target: s390x
           # - runner: ubuntu-22.04
