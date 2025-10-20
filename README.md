@@ -1,6 +1,10 @@
 # CocoIndex Code MCP Server
 
-A Model Context Protocol (MCP) server that provides hybrid search capabilities combining vector similarity and keyword metadata search for code retrieval. Built on the [CocoIndex](https://cocoindex.io) data transformation framework with specialized support for multiple programming languages.
+A Model Context Protocol (MCP) server that provides a RAG (Retrieval Augmented Generation) tool with hybrid search capabilities combining vector similarity and keyword metadata search for code retrieval. Built on the [CocoIndex](https://cocoindex.io) data transformation framework with specialized support for multiple programming languages.
+
+This RAG MCP server enables AI tools (LLMs) to retrieve relevant code snippets from large codebases efficiently and in real-time, leveraging CocoIndex's incremental indexing, tree-sitter based chunking, and smart language-specific embeddings. It enhances the performance of code generation, code completion, and code understanding by virtually enlarging the context window available to the AI models.
+
+Currently uses PostgreSQL + pgvector as the vector database backend, but can be adapted to other backends supported by CocoIndex.
 
 ## Table of Contents
 
@@ -46,6 +50,8 @@ In one terminal on your local machine, start the pgvector database:
 ```bash
 cd cocoindex-code-mcp-server
 ./scripts/cocoindex-postgresql.sh
+# Maybe you need to install pgvector extension once
+./scripts/install-pgvector.py
 ```
 
 ### 4. Start the MCP Server
