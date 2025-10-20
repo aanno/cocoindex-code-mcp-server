@@ -59,7 +59,8 @@ dependencies = [
 ]
 
 [project.scripts]
-mcp-server = "cocoindex_code_mcp_server.main_mcp_server:main"
+rag-mcp-server = "cocoindex_code_mcp_server.main_mcp_server:main"
+cocoindex-code-mcp-server = "cocoindex_code_mcp_server.main_mcp_server:main"
 
 [project.urls]
 Homepage = "https://github.com/aanno/cocoindex-code-mcp-server"
