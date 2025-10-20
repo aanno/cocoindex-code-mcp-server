@@ -100,8 +100,8 @@ CONST_INDIVIDUAL_COLUMNS = CONST_FIELD_MAPPINGS.keys() - CONST_JSONB_FIELDS
 # SINGLE SOURCE OF TRUTH: Language mappings from file extensions to normalized language names
 CONST_LANGUAGE_MAPPINGS = {
     # Core programming languages
-    ".c": "C",
-    ".cpp": "C++", ".cc": "C++", ".cxx": "C++", ".h": "C++", ".hpp": "C++",
+    ".c": "C", ".h": "C",
+    ".cpp": "C++", ".cc": "C++", ".cxx": "C++", ".hpp": "C++",
     ".cs": "C#",
     ".css": "CSS", ".scss": "CSS",
     ".f": "Fortran", ".f90": "Fortran", ".f95": "Fortran", ".f03": "Fortran",

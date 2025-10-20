@@ -21,16 +21,22 @@ git clone --recursive https://github.com/aanno/cocoindex-code-mcp-server.git
 cd cocoindex-code-mcp-server
 ```
 
-### 2. Install Dependencies
+### 2. Install
 
 Install from PyPI or build from source using maturin:
 
 ```bash
-# Install from PyPI
-pip install cocoindex[embeddings]
+# Install dependencies from PyPI
+pip install -e .
 
-# Or build from source
+# And build from source
 maturin develop
+```
+
+Or simple install from PyPI:
+
+```bash
+pip install cocoindex-code-mcp-server
 ```
 
 ### 3. Start the PostgreSQL Database
@@ -129,41 +135,27 @@ The server supports multiple programming languages with varying levels of integr
 
 | Language | Extensions | Embedding Model | AST Chunking | Tree-sitter | Remarks |
 |----------|------------|-----------------|--------------|-------------|---------|
-| **Python** | `.py` | GraphCodeBERT | ✅ | ✅ | Full support with metadata extraction |
-| **Rust** | `.rs` | UniXcoder | ✅ | ✅ | Full support with specialized visitor |
-| **JavaScript** | `.js`, `.mjs`, `.cjs` | GraphCodeBERT | ✅ | ✅ | Full support |
-| **TypeScript** | `.ts` | UniXcoder | ✅ | ✅ | Full support with specialized visitor |
-| **TSX** | `.tsx` | UniXcoder | ✅ | ✅ | React TypeScript support |
-| **Java** | `.java` | GraphCodeBERT | ✅ | ✅ | Full support with specialized visitor |
-| **Kotlin** | `.kt`, `.kts` | UniXcoder | ✅ | ✅ | Full support |
-| **C** | `.c` | GraphCodeBERT | ✅ | ✅ | Full support with specialized visitor |
-| **C++** | `.cpp`, `.cc`, `.cxx`, `.h`, `.hpp` | GraphCodeBERT | ✅ | ✅ | Extends C visitor |
-| **C#** | `.cs` | UniXcoder | ❌ | ✅ | Tree-sitter parsing only |
-| **Go** | `.go` | GraphCodeBERT | ❌ | ✅ | Tree-sitter parsing only |
-| **PHP** | `.php` | GraphCodeBERT | ❌ | ✅ | Tree-sitter parsing only |
-| **Ruby** | `.rb` | GraphCodeBERT | ❌ | ✅ | Tree-sitter parsing only |
-| **Swift** | `.swift` | UniXcoder | ❌ | ✅ | Tree-sitter parsing only |
-| **Scala** | `.scala` | UniXcoder | ❌ | ✅ | Tree-sitter parsing only |
-| **Dart** | `.dart` | UniXcoder | ❌ | ❌ | Fallback embedding |
-| **Haskell** | `.hs`, `.lhs` | all-mpnet-base-v2 | ✅ | ✅ | Custom maturin extension with specialized visitor |
-| **CSS** | `.css`, `.scss` | all-mpnet-base-v2 | ❌ | ✅ | Tree-sitter parsing only |
-| **HTML** | `.html`, `.htm` | all-mpnet-base-v2 | ❌ | ✅ | Tree-sitter parsing only |
-| **JSON** | `.json` | all-mpnet-base-v2 | ❌ | ✅ | Tree-sitter parsing only |
-| **Markdown** | `.md`, `.mdx` | all-mpnet-base-v2 | ❌ | ✅ | Tree-sitter parsing only |
-| **YAML** | `.yaml`, `.yml` | all-mpnet-base-v2 | ❌ | ✅ | Tree-sitter parsing only |
-| **TOML** | `.toml` | all-mpnet-base-v2 | ❌ | ✅ | Tree-sitter parsing only |
-| **SQL** | `.sql` | all-mpnet-base-v2 | ❌ | ✅ | Tree-sitter parsing only |
-| **R** | `.r`, `.R` | all-mpnet-base-v2 | ❌ | ✅ | Tree-sitter parsing only |
-| **Fortran** | `.f`, `.f90`, `.f95`, `.f03` | all-mpnet-base-v2 | ❌ | ✅ | Tree-sitter parsing only |
-| **Pascal** | `.pas`, `.dpr` | all-mpnet-base-v2 | ❌ | ✅ | Tree-sitter parsing only |
-| **XML** | `.xml` | all-mpnet-base-v2 | ❌ | ✅ | Tree-sitter parsing only |
+| **Python** | `.py` | GraphCodeBERT | ✅ astchunk | ✅ python | Custom (not using visitor), <br/>metadata extraction: `language_handlers/python_handler.py`, <br/>analyser: `lang/python/tree_sitter_python_analyzer.py`, <br/>(fallback: `lang/python/python_code_analyzer.py`), <br/>TODO: unify this with visitor approach |
+| **Rust** | `.rs` | UniXcoder | ? | ✅ rust | Full metadata support with specialized visitor: `language_handlers/rust_visitor.py` |
+| **JavaScript** | `.js`, `.mjs`, `.cjs` | GraphCodeBERT | ?astchunk? | ✅ javascript | Full metadata support with specialized visitor: `language_handlers/javascript_visitor.py` |
+| **TypeScript** | `.ts` | UniXcoder | ✅ astchunk | ✅ typescript | Extends javascript visitor: `language_handlers/typescript_visitor.py` |
+| **TSX** | `.tsx` | UniXcoder | ✅ astchunk | ?typescript? | ?see typescript? |
+| **Java** | `.java` | GraphCodeBERT | ✅ astchunk | ✅ java | Full metadata support with specialized visitor: `language_handlers/java_visitor.py` |
+| **Kotlin** | `.kt`, `.kts` | UniXcoder | ? | ✅ kotlin | Full metadata support with specialized visitor: `language_handlers/kotlin_visitor.py` |
+| **C** | `.c`, `.h` | GraphCodeBERT | ? | ✅ c | Full metadata support with specialized visitor: `language_handlers/c_visitor.py` |
+| **C++** | `.cpp`, `.cc`, `.cxx`,`.hpp` | GraphCodeBERT | ? | ✅ cpp | Extends C visitor: `language_handlers/cpp_visitor.py` |
+| **C#** | `.cs` | UniXcoder | ✅ astchunk | ❌ | Tree-sitter parsing/chunking only |
+| **Haskell** | `.hs`, `.lhs` | all-mpnet-base-v2 | ✅ | ✅ | Custom maturin extension with specialized visitor, <br/>chunker: `lang/haskell/haskell_ast_chunker.py`, <br/>metadata extraction: `language_handlers/haskell_handler.py` |
+| **Other Languages** | see `mappers.py` | all-mpnet-base-v2 | ❌ | ❌ ?regex? | cocoindex defaults (baseline) |
 
 ### Legend
 
 - **Embedding Model**: The embedding model automatically selected for the language
-- **AST Chunking**: Advanced chunking using [ASTChunk](https://github.com/codelion/astchunk) or custom implementations
-- **Tree-sitter**: Language has tree-sitter parser configured for AST analysis
+- **AST Chunking**: Advanced chunking using [ASTChunk](https://github.com/codelion/astchunk) or custom implementations (based on ideas from ASTChunk and using tree-sitter for the language).
+- **Tree-sitter**: Language has tree-sitter parser configured for AST analysis. (python tree-sitter bindings, except for Haskell which uses a Maturin/Rust extension based on rust bindings cargos `tree-sitter` and `tree-sitter-haskell`.)
 - **Remarks**: Additional notes about support level
+- **Other Languages**: Files recognized but only basic text embedding and chunking applied (cocoindex defaults). <br/>
+  This includes: Go, PHP, Ruby, Swift, Scala, Dart, CSS, HTML, JSON, Markdown, YAML, TOML, SQL, R, Fortran, Pascal, XML
 
 ## Smart Embedding
 
@@ -241,10 +233,10 @@ For more technical details, see:
 maturin develop
 
 # 2. Install development dependencies
-pip install -e ".[test]"
+pip install -e . ".[test]" ".[mcp-server]" ".[build]"
 
 # 3. Run tests to verify installation
-pytest tests/
+pytest -c pytest.ini tests/
 ```
 
 ### Code Quality
@@ -285,13 +277,13 @@ The project uses mypy for type checking. Use the provided scripts:
 
 ```bash
 # Run all tests
-pytest tests/
+pytest -c pytest.ini tests/
 
 # Run specific test file
-pytest tests/test_hybrid_search_integration.py
+pytest -c pytest.ini tests/test_hybrid_search_integration.py
 
 # Run with coverage
-pytest tests/ --cov=src/cocoindex_code_mcp_server --cov-report=html
+pytest -c pytest.ini tests/ --cov=src/cocoindex_code_mcp_server --cov-report=html
 ```
 
 ## Contributing
