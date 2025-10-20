@@ -1,4 +1,7 @@
 /*
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ * SPDX-FileCopyrightText: 2025 aanno <aanno@users.noreply.github.com>
+ *
  * This file is part of cocoindex_code_mcp_server from
  * https://github.com/aanno/cocoindex-code-mcp-server
  *

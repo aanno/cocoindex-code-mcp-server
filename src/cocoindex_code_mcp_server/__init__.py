@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 #
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2025 aanno <aanno@users.noreply.github.com>
+#
 # This file is part of cocoindex_code_mcp_server from
 # https://github.com/aanno/cocoindex-code-mcp-server
-#
-# Copyright (C) 2025 aanno <aanno@users.noreply.github.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
