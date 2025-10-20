@@ -97,7 +97,7 @@ class UtilityClass:
 def nested_function():
     """Function in a nested directory."""
     return "nested"
-'''
+''',
     }
 
     # Write test files
@@ -121,11 +121,15 @@ class TestMCPServerModuleIntegration:
         try:
             # Initialize CocoIndex first
             import cocoindex
+
             cocoindex.init()
 
             # Import required modules after cocoindex init
             import cocoindex_code_mcp_server.smart_code_embedding
-            from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow, update_flow_config
+            from cocoindex_code_mcp_server.cocoindex_config import (
+                code_embedding_flow,
+                update_flow_config,
+            )
 
             # Spy on the smart embedding function
             create_spy = mocker.spy(cocoindex_code_mcp_server.smart_code_embedding, "create_smart_code_embedding")
@@ -133,7 +137,10 @@ class TestMCPServerModuleIntegration:
 
             # Try to spy on LanguageModelSelector if available
             try:
-                from cocoindex_code_mcp_server.smart_code_embedding import LanguageModelSelector
+                from cocoindex_code_mcp_server.smart_code_embedding import (
+                    LanguageModelSelector,
+                )
+
                 selector_spy = mocker.spy(LanguageModelSelector, "select_model")
             except Exception:
                 pass
@@ -143,8 +150,8 @@ class TestMCPServerModuleIntegration:
                 paths=[test_corpus],
                 enable_polling=False,
                 use_default_embedding=False,  # Use smart embedding extension
-                use_default_chunking=True,    # Use default chunking for simpler test
-                use_default_language_handler=True  # Use default handler for simpler test
+                use_default_chunking=True,  # Use default chunking for simpler test
+                use_default_language_handler=True,  # Use default handler for simpler test
             )
 
             # Run the CocoIndex flow
@@ -158,6 +165,7 @@ class TestMCPServerModuleIntegration:
             except Exception as e:
                 print(f"Flow execution had issues but continuing test: {e}")
                 import traceback
+
                 traceback.print_exc()
 
             # Verify smart embedding functions were called during flow execution
@@ -181,19 +189,25 @@ class TestMCPServerModuleIntegration:
         try:
             # Initialize CocoIndex first
             import cocoindex
+
             cocoindex.init()
 
             # Import required modules after cocoindex init
             import cocoindex_code_mcp_server.ast_chunking
             from cocoindex_code_mcp_server.ast_chunking import CocoIndexASTChunker
-            from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow, update_flow_config
+            from cocoindex_code_mcp_server.cocoindex_config import (
+                code_embedding_flow,
+                update_flow_config,
+            )
 
             # Spy on AST chunking functions
             chunk_code_spy = mocker.spy(CocoIndexASTChunker, "chunk_code")
 
             # Also spy on the module-level create functions if they exist
             try:
-                create_operation_spy = mocker.spy(cocoindex_code_mcp_server.ast_chunking, "create_ast_chunking_operation")
+                create_operation_spy = mocker.spy(
+                    cocoindex_code_mcp_server.ast_chunking, "create_ast_chunking_operation"
+                )
             except AttributeError:
                 create_operation_spy = None
 
@@ -201,9 +215,9 @@ class TestMCPServerModuleIntegration:
             update_flow_config(
                 paths=[test_corpus],
                 enable_polling=False,
-                use_default_embedding=True,   # Use default embedding for simpler test
-                use_default_chunking=False,   # Use AST chunking extension
-                use_default_language_handler=True  # Use default handler for simpler test
+                use_default_embedding=True,  # Use default embedding for simpler test
+                use_default_chunking=False,  # Use AST chunking extension
+                use_default_language_handler=True,  # Use default handler for simpler test
             )
 
             # Run the CocoIndex flow
@@ -217,6 +231,7 @@ class TestMCPServerModuleIntegration:
             except Exception as e:
                 print(f"Flow execution had issues but continuing test: {e}")
                 import traceback
+
                 traceback.print_exc()
 
             # Verify AST chunking functions were called
@@ -240,6 +255,7 @@ class TestMCPServerModuleIntegration:
         try:
             # Initialize CocoIndex first
             import cocoindex
+
             cocoindex.init()
 
             # Import required modules after cocoindex init
@@ -264,9 +280,9 @@ class TestMCPServerModuleIntegration:
             update_flow_config(
                 paths=[test_corpus],
                 enable_polling=False,
-                use_default_embedding=True,    # Use default embedding for simpler test
-                use_default_chunking=True,     # Use default chunking for simpler test
-                use_default_language_handler=False  # Use Python handler extension
+                use_default_embedding=True,  # Use default embedding for simpler test
+                use_default_chunking=True,  # Use default chunking for simpler test
+                use_default_language_handler=False,  # Use Python handler extension
             )
 
             # Run the CocoIndex flow
@@ -280,6 +296,7 @@ class TestMCPServerModuleIntegration:
             except Exception as e:
                 print(f"Flow execution had issues but continuing test: {e}")
                 import traceback
+
                 traceback.print_exc()
 
             # Verify Python handler functions were called
@@ -307,23 +324,29 @@ class TestMCPServerQueryIntegration:
         """Test that extensions are used during hybrid search queries."""
         try:
             # Import required modules
-            from cocoindex_code_mcp_server.cocoindex_config import code_embedding_flow, update_flow_config
             from psycopg_pool import ConnectionPool
 
             import cocoindex
+            from cocoindex_code_mcp_server.cocoindex_config import (
+                code_embedding_flow,
+                update_flow_config,
+            )
             from cocoindex_code_mcp_server.db.pgvector.hybrid_search import (
                 HybridSearchEngine,
             )
-            from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
+            from cocoindex_code_mcp_server.keyword_search_parser_lark import (
+                KeywordSearchParser,
+            )
 
             # Skip if database not available
             try:
                 import os
+
                 db_config = {
-                    'host': os.getenv('DB_HOST', 'localhost'),
-                    'dbname': os.getenv('DB_NAME', 'cocoindex'),
-                    'user': os.getenv('DB_USER', 'postgres'),
-                    'password': os.getenv('DB_PASSWORD', 'password')
+                    "host": os.getenv("DB_HOST", "localhost"),
+                    "dbname": os.getenv("DB_NAME", "cocoindex"),
+                    "user": os.getenv("DB_USER", "postgres"),
+                    "password": os.getenv("DB_PASSWORD", "password"),
                 }
                 connection_pool = ConnectionPool(
                     f"host={db_config['host']} dbname={db_config['dbname']} "
@@ -339,6 +362,7 @@ class TestMCPServerQueryIntegration:
             spies = {}
             try:
                 import cocoindex_code_mcp_server.smart_code_embedding
+
                 spies["create_smart_embedding"] = mocker.spy(
                     cocoindex_code_mcp_server.smart_code_embedding, "create_smart_code_embedding"
                 )
@@ -348,8 +372,11 @@ class TestMCPServerQueryIntegration:
             try:
                 import cocoindex_code_mcp_server.ast_chunking
                 from cocoindex_code_mcp_server.ast_chunking import CocoIndexASTChunker
+
                 spies["ast_chunk_code"] = mocker.spy(CocoIndexASTChunker, "chunk_code")
-                spies["create_ast_operation"] = mocker.spy(cocoindex_code_mcp_server.ast_chunking, "create_ast_chunking_operation")
+                spies["create_ast_operation"] = mocker.spy(
+                    cocoindex_code_mcp_server.ast_chunking, "create_ast_chunking_operation"
+                )
             except ImportError:
                 print("AST chunking not available for spying")
 
@@ -357,6 +384,7 @@ class TestMCPServerQueryIntegration:
                 from cocoindex_code_mcp_server.language_handlers.python_handler import (
                     PythonNodeHandler,
                 )
+
                 spies["python_extract_metadata"] = mocker.spy(PythonNodeHandler, "extract_metadata")
             except ImportError:
                 print("Python handler not available for spying")
@@ -365,9 +393,9 @@ class TestMCPServerQueryIntegration:
             update_flow_config(
                 paths=[test_corpus],
                 enable_polling=False,
-                use_default_embedding=False,    # Use smart embedding
-                use_default_chunking=False,     # Use AST chunking
-                use_default_language_handler=False  # Use Python handler
+                use_default_embedding=False,  # Use smart embedding
+                use_default_chunking=False,  # Use AST chunking
+                use_default_language_handler=False,  # Use Python handler
             )
 
             flow = code_embedding_flow
@@ -380,6 +408,7 @@ class TestMCPServerQueryIntegration:
 
                 # Give the index time to be written to database
                 import time
+
                 time.sleep(2)
 
                 # Now perform a hybrid search query
@@ -387,9 +416,7 @@ class TestMCPServerQueryIntegration:
 
                 # Search for something that should match our test corpus
                 results = search_engine.search(
-                    vector_query="process data function",
-                    keyword_query="language:python",
-                    top_k=5
+                    vector_query="process data function", keyword_query="language:python", top_k=5
                 )
 
                 print(f"Search results: {len(results)} items found")

@@ -16,6 +16,7 @@ import pytest
 def main_mcp_server():
     """Fixture to import and provide the MCP server module."""
     import cocoindex_code_mcp_server.main_mcp_server
+
     return cocoindex_code_mcp_server.main_mcp_server
 
 
@@ -27,9 +28,9 @@ class TestMCPServerBasics:
     def test_server_module_import(self, main_mcp_server):
         """Test that the MCP server module can be imported."""
         assert main_mcp_server is not None
-        assert hasattr(main_mcp_server, 'server')
-        assert hasattr(main_mcp_server, 'handle_list_resources')
-        assert hasattr(main_mcp_server, 'handle_list_tools')
+        assert hasattr(main_mcp_server, "server")
+        assert hasattr(main_mcp_server, "handle_list_resources")
+        assert hasattr(main_mcp_server, "handle_list_tools")
 
     def test_server_object_creation(self, main_mcp_server):
         """Test that the server object is created properly."""
@@ -77,7 +78,7 @@ class TestMCPServerBasics:
             "keyword_search",
             "analyze_code",
             "get_embeddings",
-            "get_keyword_syntax_help"
+            "get_keyword_syntax_help",
         ]
 
         for expected_tool in expected_tools:
@@ -180,13 +181,7 @@ class TestResourceHandling:
         assert isinstance(config_data, dict)
 
         # Check expected configuration keys
-        expected_keys = [
-            "table_name",
-            "embedding_model",
-            "parser_type",
-            "supported_operators",
-            "default_weights"
-        ]
+        expected_keys = ["table_name", "embedding_model", "parser_type", "supported_operators", "default_weights"]
 
         for key in expected_keys:
             assert key in config_data

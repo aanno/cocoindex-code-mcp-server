@@ -35,22 +35,13 @@ class MCPServerTestRunner:
         load_dotenv()
 
         # Start server process - updated path to point to src directory
-        server_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "src",
-                                   "cocoindex_code_mcp_server", "main_mcp_server.py")
-        cmd = [
-            sys.executable,
-            server_path,
-            "--port", str(self.port),
-            "/workspaces/rust"
-        ]
+        server_path = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)), "src", "cocoindex_code_mcp_server", "main_mcp_server.py"
+        )
+        cmd = [sys.executable, server_path, "--port", str(self.port), "/workspaces/rust"]
 
         print(f"Starting MCP server: {' '.join(cmd)}")
-        self.process = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
-        )
+        self.process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
         # Wait for server to be ready
         start_time = time.time()
@@ -87,20 +78,11 @@ class MCPServerTestRunner:
 
     def make_request(self, method: str, params: Optional[Dict[str, Any]] = None, request_id: int = 1) -> Dict[str, Any]:
         """Make a JSON-RPC request to the MCP server."""
-        payload = {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "method": method
-        }
+        payload = {"jsonrpc": "2.0", "id": request_id, "method": method}
         if params:
             payload["params"] = params
 
-        response = requests.post(
-            self.mcp_url,
-            json=payload,
-            headers={"Content-Type": "application/json"},
-            timeout=10
-        )
+        response = requests.post(self.mcp_url, json=payload, headers={"Content-Type": "application/json"}, timeout=10)
 
         response.raise_for_status()
         return response.json()
@@ -130,8 +112,8 @@ class TestMCPProtocol:
             {
                 "protocolVersion": "2024-11-05",
                 "capabilities": {},
-                "clientInfo": {"name": "test-client", "version": "1.0.0"}
-            }
+                "clientInfo": {"name": "test-client", "version": "1.0.0"},
+            },
         )
 
         assert response["jsonrpc"] == "2.0"
@@ -159,7 +141,7 @@ class TestMCPProtocol:
             "keyword_search",
             "analyze_code",
             "get_embeddings",
-            "get_keyword_syntax_help"
+            "get_keyword_syntax_help",
         }
 
         assert expected_tools.issubset(tool_names)
@@ -174,11 +156,7 @@ class TestMCPProtocol:
         resources = response["result"]["resources"]
         resource_uris = {resource["uri"] for resource in resources}
 
-        expected_uris = {
-            "cocoindex://search/stats",
-            "cocoindex://search/config",
-            "cocoindex://database/schema"
-        }
+        expected_uris = {"cocoindex://search/stats", "cocoindex://search/config", "cocoindex://database/schema"}
 
         assert expected_uris.issubset(resource_uris)
 
@@ -198,14 +176,7 @@ class TestMCPTools:
     def test_vector_search(self, main_mcp_server):
         """Test vector search tool."""
         response = main_mcp_server.make_request(
-            "tools/call",
-            {
-                "name": "vector_search",
-                "arguments": {
-                    "query": "python function",
-                    "top_k": 5
-                }
-            }
+            "tools/call", {"name": "vector_search", "arguments": {"query": "python function", "top_k": 5}}
         )
 
         assert response["jsonrpc"] == "2.0"
@@ -223,14 +194,7 @@ class TestMCPTools:
     def test_keyword_search(self, main_mcp_server):
         """Test keyword search tool."""
         response = main_mcp_server.make_request(
-            "tools/call",
-            {
-                "name": "keyword_search",
-                "arguments": {
-                    "query": "language:python",
-                    "top_k": 3
-                }
-            }
+            "tools/call", {"name": "keyword_search", "arguments": {"query": "language:python", "top_k": 3}}
         )
 
         assert response["jsonrpc"] == "2.0"
@@ -252,9 +216,9 @@ class TestMCPTools:
                     "keyword_query": "language:python",
                     "top_k": 5,
                     "vector_weight": 0.7,
-                    "keyword_weight": 0.3
-                }
-            }
+                    "keyword_weight": 0.3,
+                },
+            },
         )
 
         assert response["jsonrpc"] == "2.0"
@@ -276,14 +240,7 @@ def hello_world():
 '''
 
         response = main_mcp_server.make_request(
-            "tools/call",
-            {
-                "name": "analyze_code",
-                "arguments": {
-                    "code": sample_code,
-                    "file_path": "test.py"
-                }
-            }
+            "tools/call", {"name": "analyze_code", "arguments": {"code": sample_code, "file_path": "test.py"}}
         )
 
         assert response["jsonrpc"] == "2.0"
@@ -297,13 +254,7 @@ def hello_world():
     def test_get_embeddings(self, main_mcp_server):
         """Test embedding generation tool."""
         response = main_mcp_server.make_request(
-            "tools/call",
-            {
-                "name": "get_embeddings",
-                "arguments": {
-                    "text": "Hello world"
-                }
-            }
+            "tools/call", {"name": "get_embeddings", "arguments": {"text": "Hello world"}}
         )
 
         assert response["jsonrpc"] == "2.0"
@@ -323,10 +274,7 @@ class TestMCPResources:
 
     def test_read_search_stats(self, main_mcp_server):
         """Test reading search statistics resource."""
-        response = main_mcp_server.make_request(
-            "resources/read",
-            {"uri": "cocoindex://search/stats"}
-        )
+        response = main_mcp_server.make_request("resources/read", {"uri": "cocoindex://search/stats"})
 
         assert response["jsonrpc"] == "2.0"
         assert "result" in response
@@ -339,10 +287,7 @@ class TestMCPResources:
 
     def test_read_search_config(self, main_mcp_server):
         """Test reading search configuration resource."""
-        response = main_mcp_server.make_request(
-            "resources/read",
-            {"uri": "cocoindex://search/config"}
-        )
+        response = main_mcp_server.make_request("resources/read", {"uri": "cocoindex://search/config"})
 
         assert response["jsonrpc"] == "2.0"
         assert "result" in response
@@ -354,10 +299,7 @@ class TestMCPResources:
 
     def test_read_database_schema(self, main_mcp_server):
         """Test reading database schema resource."""
-        response = main_mcp_server.make_request(
-            "resources/read",
-            {"uri": "cocoindex://database/schema"}
-        )
+        response = main_mcp_server.make_request("resources/read", {"uri": "cocoindex://database/schema"})
 
         assert response["jsonrpc"] == "2.0"
         assert "result" in response
@@ -374,10 +316,7 @@ class TestErrorHandling:
     def test_invalid_json(self, main_mcp_server):
         """Test handling of invalid JSON."""
         response = requests.post(
-            main_mcp_server.mcp_url,
-            data="invalid json",
-            headers={"Content-Type": "application/json"},
-            timeout=10
+            main_mcp_server.mcp_url, data="invalid json", headers={"Content-Type": "application/json"}, timeout=10
         )
 
         assert response.status_code == 500
@@ -386,17 +325,10 @@ class TestErrorHandling:
 
     def test_missing_method(self, main_mcp_server):
         """Test handling of missing method field."""
-        payload = {
-            "jsonrpc": "2.0",
-            "id": 1,
-            "params": {}
-        }
+        payload = {"jsonrpc": "2.0", "id": 1, "params": {}}
 
         response = requests.post(
-            main_mcp_server.mcp_url,
-            json=payload,
-            headers={"Content-Type": "application/json"},
-            timeout=10
+            main_mcp_server.mcp_url, json=payload, headers={"Content-Type": "application/json"}, timeout=10
         )
 
         # Should handle gracefully
@@ -404,13 +336,7 @@ class TestErrorHandling:
 
     def test_invalid_tool_name(self, main_mcp_server):
         """Test calling non-existent tool."""
-        response = main_mcp_server.make_request(
-            "tools/call",
-            {
-                "name": "nonexistent_tool",
-                "arguments": {}
-            }
-        )
+        response = main_mcp_server.make_request("tools/call", {"name": "nonexistent_tool", "arguments": {}})
 
         assert response["jsonrpc"] == "2.0"
         assert "result" in response
@@ -452,10 +378,10 @@ def test_port_conflict():
                 "params": {
                     "protocolVersion": "2024-11-05",
                     "capabilities": {},
-                    "clientInfo": {"name": "test", "version": "1.0"}
-                }
+                    "clientInfo": {"name": "test", "version": "1.0"},
+                },
             },
-            timeout=5
+            timeout=5,
         )
         assert response.status_code == 200
 
@@ -477,11 +403,7 @@ if __name__ == "__main__":
         # Test initialize
         response = test_server.make_request(
             "initialize",
-            {
-                "protocolVersion": "2024-11-05",
-                "capabilities": {},
-                "clientInfo": {"name": "test", "version": "1.0"}
-            }
+            {"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "test", "version": "1.0"}},
         )
         print(f"Initialize: {response['result']['serverInfo']['name']}")
 
@@ -492,11 +414,7 @@ if __name__ == "__main__":
 
         # Test vector search
         response = test_server.make_request(
-            "tools/call",
-            {
-                "name": "vector_search",
-                "arguments": {"query": "test", "top_k": 1}
-            }
+            "tools/call", {"name": "vector_search", "arguments": {"query": "test", "top_k": 1}}
         )
         result = json.loads(response["result"]["content"][0]["text"])
         print(f"Vector search: {result['total_results']} results")

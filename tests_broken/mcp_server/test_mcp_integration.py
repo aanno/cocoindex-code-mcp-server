@@ -7,10 +7,10 @@ as a real MCP client and testing the full protocol interaction.
 
 import json
 
-from pydantic import AnyUrl
 import pytest
 from mcp.client.session import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
+from pydantic import AnyUrl
 
 
 @pytest.mark.mcp_integration
@@ -40,13 +40,13 @@ class TestMCPIntegration:
 
             # Check initialization result
             assert init_result is not None
-            assert hasattr(init_result, 'capabilities')
-            assert hasattr(init_result, 'serverInfo')
+            assert hasattr(init_result, "capabilities")
+            assert hasattr(init_result, "serverInfo")
 
             # Check server capabilities
             capabilities = init_result.capabilities
-            assert hasattr(capabilities, 'tools')
-            assert hasattr(capabilities, 'resources')
+            assert hasattr(capabilities, "tools")
+            assert hasattr(capabilities, "resources")
 
             # Check server info
             server_info = init_result.serverInfo
@@ -110,7 +110,7 @@ class TestMCPIntegration:
                 "keyword_search",
                 "analyze_code",
                 "get_embeddings",
-                "get_keyword_syntax_help"
+                "get_keyword_syntax_help",
             ]
 
             for expected_tool in expected_tools:
@@ -118,7 +118,7 @@ class TestMCPIntegration:
 
             # Check that tools have valid schemas
             for tool in tools:
-                assert hasattr(tool, 'inputSchema')
+                assert hasattr(tool, "inputSchema")
                 schema = tool.inputSchema
                 assert isinstance(schema, dict)
                 assert schema["type"] == "object"
@@ -144,20 +144,14 @@ class TestMCPIntegration:
 
             # Check content properties
             assert content.uri == "cocoindex://search/config"
-            assert hasattr(content, 'text')
+            assert hasattr(content, "text")
 
             # Content should be valid JSON
             config_data = json.loads(content.text)
             assert isinstance(config_data, dict)
 
             # Check expected configuration keys
-            expected_keys = [
-                "table_name",
-                "embedding_model",
-                "parser_type",
-                "supported_operators",
-                "default_weights"
-            ]
+            expected_keys = ["table_name", "embedding_model", "parser_type", "supported_operators", "default_weights"]
 
             for key in expected_keys:
                 assert key in config_data
@@ -171,18 +165,12 @@ class TestMCPIntegration:
             await session.initialize()
 
             # Call vector search tool
-            tool_result = await session.call_tool(
-                "vector_search",
-                {
-                    "query": "test search query",
-                    "top_k": 5
-                }
-            )
+            tool_result = await session.call_tool("vector_search", {"query": "test search query", "top_k": 5})
 
             assert tool_result is not None
 
             # The tool should return results
-            assert hasattr(tool_result, 'content')
+            assert hasattr(tool_result, "content")
 
             # Content should be a list with at least one item
             content = tool_result.content
@@ -191,9 +179,9 @@ class TestMCPIntegration:
 
             # First content item should be text
             first_content = content[0]
-            assert hasattr(first_content, 'type')
+            assert hasattr(first_content, "type")
             assert first_content.type == "text"
-            assert hasattr(first_content, 'text')
+            assert hasattr(first_content, "text")
 
     @pytest.mark.asyncio
     async def test_call_tool_get_embeddings(self):
@@ -204,17 +192,12 @@ class TestMCPIntegration:
             await session.initialize()
 
             # Call get embeddings tool
-            tool_result = await session.call_tool(
-                "get_embeddings",
-                {
-                    "text": "test text for embedding"
-                }
-            )
+            tool_result = await session.call_tool("get_embeddings", {"text": "test text for embedding"})
 
             assert tool_result is not None
 
             # The tool should return results
-            assert hasattr(tool_result, 'content')
+            assert hasattr(tool_result, "content")
 
             # Content should be a list with one item
             content = tool_result.content
@@ -223,9 +206,9 @@ class TestMCPIntegration:
 
             # Content should be text with embedding data
             first_content = content[0]
-            assert hasattr(first_content, 'type')
+            assert hasattr(first_content, "type")
             assert first_content.type == "text"
-            assert hasattr(first_content, 'text')
+            assert hasattr(first_content, "text")
 
             # Parse the JSON response to check embedding format
             embedding_data = json.loads(first_content.text)

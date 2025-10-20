@@ -28,6 +28,7 @@ class TestMCPIntegrationE2E:
     async def _test_with_client_session(self, test_func):
         """Helper to run test functions with a valid MCP client session."""
         import requests
+
         try:
             # Check if server is available first
             requests.get("http://localhost:3033/health", timeout=5)
@@ -64,10 +65,10 @@ class TestMCPIntegrationE2E:
                 "params": {
                     "protocolVersion": "2024-11-05",
                     "capabilities": {},
-                    "clientInfo": {"name": "test", "version": "1.0"}
-                }
+                    "clientInfo": {"name": "test", "version": "1.0"},
+                },
             },
-            timeout=5
+            timeout=5,
         )
         assert response.status_code == 200
         result = response.json()
@@ -85,6 +86,7 @@ class TestMCPIntegrationE2E:
     async def _create_client_session(self):
         """Helper to create and initialize a client session."""
         import requests
+
         try:
             # Check if server is available first
             requests.get("http://localhost:3033/health", timeout=5)
@@ -105,6 +107,7 @@ class TestMCPIntegrationE2E:
     async def test_server_availability(self):
         """Test that the server is available before running other tests."""
         import requests
+
         try:
             response = requests.get("http://localhost:3033/health", timeout=5)
             # Server should return 404 (no health endpoint) or respond
@@ -120,7 +123,7 @@ class TestMCPIntegrationE2E:
 
             # Check that we got tools
             assert tools_result is not None
-            assert hasattr(tools_result, 'tools')
+            assert hasattr(tools_result, "tools")
             tools = tools_result.tools
             assert len(tools) == 6
 
@@ -132,7 +135,7 @@ class TestMCPIntegrationE2E:
                 "keyword_search",
                 "analyze_code",
                 "get_embeddings",
-                "get_keyword_syntax_help"
+                "get_keyword_syntax_help",
             ]
 
             for expected_tool in expected_tools:
@@ -155,7 +158,7 @@ class TestMCPIntegrationE2E:
 
             # Check that we got resources
             assert resources_result is not None
-            assert hasattr(resources_result, 'resources')
+            assert hasattr(resources_result, "resources")
             resources = resources_result.resources
             assert len(resources) == 7
 
@@ -186,26 +189,20 @@ class TestMCPIntegrationE2E:
 
             # Check that we got content
             assert resource_result is not None
-            assert hasattr(resource_result, 'contents')
+            assert hasattr(resource_result, "contents")
             contents = resource_result.contents
             assert len(contents) == 1
 
             content = contents[0]
             assert content.uri == "cocoindex://search/config"
-            assert hasattr(content, 'text')
+            assert hasattr(content, "text")
 
             # Content should be valid JSON
             config_data = json.loads(content.text)
             assert isinstance(config_data, dict)
 
             # Check expected configuration keys
-            expected_keys = [
-                "table_name",
-                "embedding_model",
-                "parser_type",
-                "supported_operators",
-                "default_weights"
-            ]
+            expected_keys = ["table_name", "embedding_model", "parser_type", "supported_operators", "default_weights"]
 
             for key in expected_keys:
                 assert key in config_data
@@ -215,16 +212,11 @@ class TestMCPIntegrationE2E:
         """Test calling the get_embeddings tool through the MCP client library."""
         async with self._create_client_session() as session:
             # Call the get_embeddings tool
-            tool_result = await session.call_tool(
-                "get_embeddings",
-                {
-                    "text": "test text for embedding"
-                }
-            )
+            tool_result = await session.call_tool("get_embeddings", {"text": "test text for embedding"})
 
             # Check that we got a result
             assert tool_result is not None
-            assert hasattr(tool_result, 'content')
+            assert hasattr(tool_result, "content")
             content = tool_result.content
             assert isinstance(content, list)
             assert len(content) == 1
@@ -248,17 +240,11 @@ class TestMCPIntegrationE2E:
         """Test calling the vector_search tool through the MCP client library."""
         async with self._create_client_session() as session:
             # Call the vector_search tool
-            tool_result = await session.call_tool(
-                "vector_search",
-                {
-                    "query": "test search query",
-                    "top_k": 5
-                }
-            )
+            tool_result = await session.call_tool("vector_search", {"query": "test search query", "top_k": 5})
 
             # Check that we got a result
             assert tool_result is not None
-            assert hasattr(tool_result, 'content')
+            assert hasattr(tool_result, "content")
             content = tool_result.content
             assert isinstance(content, list)
             assert len(content) >= 1
@@ -281,13 +267,13 @@ class TestMCPIntegrationE2E:
                     "keyword_query": "function_name:parse",
                     "top_k": 5,
                     "vector_weight": 0.7,
-                    "keyword_weight": 0.3
-                }
+                    "keyword_weight": 0.3,
+                },
             )
 
             # Check that we got a result
             assert tool_result is not None
-            assert hasattr(tool_result, 'content')
+            assert hasattr(tool_result, "content")
             content = tool_result.content
             assert isinstance(content, list)
             assert len(content) >= 1
@@ -311,17 +297,12 @@ def hello_world():
         async with self._create_client_session() as session:
             # Call the analyze_code tool
             tool_result = await session.call_tool(
-                "analyze_code",
-                {
-                    "code": test_code,
-                    "file_path": "test.py",
-                    "language": "python"
-                }
+                "analyze_code", {"code": test_code, "file_path": "test.py", "language": "python"}
             )
 
             # Check that we got a result
             assert tool_result is not None
-            assert hasattr(tool_result, 'content')
+            assert hasattr(tool_result, "content")
             content = tool_result.content
             assert isinstance(content, list)
             assert len(content) >= 1
@@ -338,16 +319,12 @@ def hello_world():
         async with self._create_client_session() as session:
             # Call the keyword_search tool
             tool_result = await session.call_tool(
-                "keyword_search",
-                {
-                    "query": "function_name:parse OR content:search",
-                    "top_k": 5
-                }
+                "keyword_search", {"query": "function_name:parse OR content:search", "top_k": 5}
             )
 
             # Check that we got a result
             assert tool_result is not None
-            assert hasattr(tool_result, 'content')
+            assert hasattr(tool_result, "content")
             content = tool_result.content
             assert isinstance(content, list)
             assert len(content) >= 1
@@ -361,11 +338,12 @@ def hello_world():
     @pytest.mark.asyncio
     async def test_mcp_tool_advertising_hybrid_search(self):
         """Test that hybrid_search tool is properly advertised with correct schema."""
+
         async def _test(session):
             # Get list of tools
             tools_result = await session.list_tools()
             assert tools_result is not None
-            assert hasattr(tools_result, 'tools')
+            assert hasattr(tools_result, "tools")
             tools = tools_result.tools
             assert len(tools) == 6
 
@@ -378,10 +356,13 @@ def hello_world():
 
             # Verify hybrid_search tool exists and has correct properties
             assert hybrid_search_tool is not None, "hybrid_search tool not found in advertised tools"
-            assert hybrid_search_tool.description == "Perform hybrid search combining vector similarity and keyword metadata filtering"
+            assert (
+                hybrid_search_tool.description
+                == "Perform hybrid search combining vector similarity and keyword metadata filtering"
+            )
 
             # Verify input schema
-            assert hasattr(hybrid_search_tool, 'inputSchema')
+            assert hasattr(hybrid_search_tool, "inputSchema")
             input_schema = hybrid_search_tool.inputSchema
             assert input_schema is not None
             assert input_schema["type"] == "object"
@@ -408,11 +389,12 @@ def hello_world():
     @pytest.mark.asyncio
     async def test_mcp_all_tools_advertised(self):
         """Test that all expected tools are advertised."""
+
         async def _test(session):
             # Get list of tools
             tools_result = await session.list_tools()
             assert tools_result is not None
-            assert hasattr(tools_result, 'tools')
+            assert hasattr(tools_result, "tools")
             tools = tools_result.tools
             assert len(tools) == 6
 
@@ -423,19 +405,19 @@ def hello_world():
                 "keyword_search",
                 "analyze_code",
                 "get_embeddings",
-                "get_keyword_syntax_help"
+                "get_keyword_syntax_help",
             }
 
             advertised_tools = {tool.name for tool in tools}
             assert advertised_tools == expected_tools, f"Missing tools: {
-                expected_tools - advertised_tools}, Extra tools: {
-                advertised_tools - expected_tools}"
+                expected_tools - advertised_tools
+            }, Extra tools: {advertised_tools - expected_tools}"
 
             # Verify each tool has required properties
             for tool in tools:
-                assert hasattr(tool, 'name')
-                assert hasattr(tool, 'description')
-                assert hasattr(tool, 'inputSchema')
+                assert hasattr(tool, "name")
+                assert hasattr(tool, "description")
+                assert hasattr(tool, "inputSchema")
                 assert tool.name in expected_tools
                 assert isinstance(tool.description, str)
                 assert len(tool.description) > 0
@@ -449,10 +431,7 @@ def hello_world():
         async with self._create_client_session() as session:
             # Try to call a non-existent tool
             try:
-                await session.call_tool(
-                    "nonexistent_tool",
-                    {}
-                )
+                await session.call_tool("nonexistent_tool", {})
                 # If we get here without an exception, check if error is in content
                 assert False, "Expected an error for non-existent tool"
             except Exception:
