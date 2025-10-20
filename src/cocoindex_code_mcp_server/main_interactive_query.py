@@ -29,17 +29,10 @@ def main():
     display_configuration(args, paths)
 
     # Update flow configuration
-    update_flow_config(
-        paths=paths,
-        enable_polling=args.poll > 0,
-        poll_interval=args.poll
-    )
+    update_flow_config(paths=paths, enable_polling=args.poll > 0, poll_interval=args.poll)
 
     # Run the flow update
-    run_flow_update(
-        live_update=args.live,
-        poll_interval=args.poll
-    )
+    run_flow_update(live_update=args.live, poll_interval=args.poll)
 
     # If not in live mode, run interactive query mode
     if not args.live:

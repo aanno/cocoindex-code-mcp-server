@@ -25,53 +25,40 @@ Examples:
   python src/main_interactive_query.py --live                    # Live updates with event monitoring
   python src/main_interactive_query.py --live --poll 10         # Live updates with 10s polling
   python src/main_interactive_query.py --live --poll 60 /path/to/code  # Custom path with polling
-        """
+        """,
     )
 
-    parser.add_argument(
-        "paths",
-        nargs="*",
-        help="Code directory paths to index (default: cocoindex)"
-    )
+    parser.add_argument("paths", nargs="*", help="Code directory paths to index (default: cocoindex)")
 
-    parser.add_argument(
-        "--paths",
-        dest="explicit_paths",
-        nargs="+",
-        help="Alternative way to specify paths"
-    )
+    parser.add_argument("--paths", dest="explicit_paths", nargs="+", help="Alternative way to specify paths")
 
-    parser.add_argument(
-        "--live",
-        action="store_true",
-        help="Enable live update mode with continuous monitoring"
-    )
+    parser.add_argument("--live", action="store_true", help="Enable live update mode with continuous monitoring")
 
     parser.add_argument(
         "--poll",
         type=int,
         default=0,
         metavar="SECONDS",
-        help="Enable file polling with specified interval in seconds (default: event-based monitoring)"
+        help="Enable file polling with specified interval in seconds (default: event-based monitoring)",
     )
 
     # Default mode flags to disable custom extensions
     parser.add_argument(
         "--default-embedding",
         action="store_true",
-        help="Use CocoIndex default embedding instead of smart code embedding extension"
+        help="Use CocoIndex default embedding instead of smart code embedding extension",
     )
 
     parser.add_argument(
         "--default-chunking",
         action="store_true",
-        help="Use CocoIndex default SplitRecursively instead of AST chunking extension"
+        help="Use CocoIndex default SplitRecursively instead of AST chunking extension",
     )
 
     parser.add_argument(
         "--default-language-handler",
         action="store_true",
-        help="Skip Python-specific language handlers and use basic metadata extraction"
+        help="Skip Python-specific language handlers and use basic metadata extraction",
     )
 
     return parser.parse_args()

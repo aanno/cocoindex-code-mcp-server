@@ -22,6 +22,7 @@ from . import LOGGER
 @dataclass
 class HaskellChunkRow:
     """CocoIndex table row for Haskell AST chunk data."""
+
     content: str
     location: str
     start: int
@@ -71,7 +72,7 @@ class HaskellChunkRow:
             "location": self.location,
             "start": self.start,
             "end": self.end,
-            "chunking_method": self.chunking_method
+            "chunking_method": self.chunking_method,
         }
 
 
@@ -94,13 +95,15 @@ class ChunkRow:
 class HaskellChunkConfig:
     """Configuration for Haskell chunking with ASTChunk-inspired features."""
 
-    def __init__(self,
-                 max_chunk_size: int = 1800,
-                 chunk_overlap: int = 0,
-                 chunk_expansion: bool = False,
-                 metadata_template: str = "default",
-                 preserve_imports: bool = True,
-                 preserve_exports: bool = True) -> None:
+    def __init__(
+        self,
+        max_chunk_size: int = 1800,
+        chunk_overlap: int = 0,
+        chunk_expansion: bool = False,
+        metadata_template: str = "default",
+        preserve_imports: bool = True,
+        preserve_exports: bool = True,
+    ) -> None:
         self.max_chunk_size = max_chunk_size
         self.chunk_overlap = chunk_overlap
         self.chunk_expansion = chunk_expansion
@@ -122,27 +125,22 @@ def get_enhanced_haskell_separators() -> List[str]:
         # High priority: Module and import boundaries (should rarely be split)
         r"\nmodule\s+[A-Z][a-zA-Z0-9_.']*",
         r"\nimport\s+(qualified\s+)?[A-Z][a-zA-Z0-9_.']*",
-
         # Medium priority: Type and data definitions
         r"\ndata\s+[A-Z][a-zA-Z0-9_']*",
         r"\nnewtype\s+[A-Z][a-zA-Z0-9_']*",
         r"\ntype\s+[A-Z][a-zA-Z0-9_']*",
         r"\nclass\s+[A-Z][a-zA-Z0-9_']*",
         r"\ninstance\s+[A-Z][a-zA-Z0-9_']*",
-
         # Medium priority: Function definitions with type signatures
         r"\n[a-zA-Z][a-zA-Z0-9_']*\s*::",  # Type signatures
         r"\n[a-zA-Z][a-zA-Z0-9_']*.*\s*=",  # Function definitions
-
         # Lower priority: Block structures
         r"\nwhere\s*$",
         r"\nlet\s+",
         r"\nin\s+",
         r"\ndo\s*$",
-
         # Language pragmas (usually at file top, high priority)
         r"\n\{-#\s*[A-Z]+",
-
         # Comment blocks (can be good separation points)
         r"\n--\s*[=-]{3,}",  # Comment separators like "-- ==="
         r"\n\{-\s*[=-]{3,}",  # Block comment separators
@@ -202,7 +200,7 @@ class EnhancedHaskellChunker:
                 chunk_size=self.config.max_chunk_size,
                 min_chunk_size=min(self.config.max_chunk_size // 4, 400),  # Conservative min size
                 chunk_overlap=self.config.chunk_overlap,
-                max_chunk_size=self.config.max_chunk_size
+                max_chunk_size=self.config.max_chunk_size,
             )
 
             # Use the new parameterized AST chunking with recursive splitting
@@ -257,7 +255,7 @@ class EnhancedHaskellChunker:
     def _split_large_chunk(self, chunk: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Split a large chunk into smaller ones using enhanced separators."""
         content = chunk["content"]
-        lines = content.split('\n')
+        lines = content.split("\n")
         separators = get_enhanced_haskell_separators()
 
         # Find good split points
@@ -290,18 +288,20 @@ class EnhancedHaskellChunker:
             end_idx = split_points[i + 1]
 
             sub_lines = lines[start_idx:end_idx]
-            sub_content = '\n'.join(sub_lines)
+            sub_content = "\n".join(sub_lines)
 
             if sub_content.strip():
                 sub_chunk = chunk.copy()
-                sub_chunk.update({
-                    "content": sub_content,
-                    "start_line": chunk["start_line"] + start_idx,
-                    "end_line": chunk["start_line"] + end_idx - 1,
-                    "chunk_id": f"{chunk['chunk_id']}.{i}",
-                    "is_split": True,
-                    "split_reason": "size_optimization"
-                })
+                sub_chunk.update(
+                    {
+                        "content": sub_content,
+                        "start_line": chunk["start_line"] + start_idx,
+                        "end_line": chunk["start_line"] + end_idx - 1,
+                        "chunk_id": f"{chunk['chunk_id']}.{i}",
+                        "is_split": True,
+                        "split_reason": "size_optimization",
+                    }
+                )
                 sub_chunks.append(sub_chunk)
 
         return sub_chunks
@@ -324,14 +324,14 @@ class EnhancedHaskellChunker:
             for j, separator in enumerate(separators):
                 # Remove leading \n but handle special cases like \\n\\n+
                 pattern = separator
-                if pattern.startswith('\\n'):
+                if pattern.startswith("\\n"):
                     pattern = pattern[2:]  # Remove \n
                     # Handle double newlines and other special cases
-                    if pattern.startswith('\\n'):
-                        if pattern == '\\n+':
-                            pattern = '^$'  # Match empty lines
+                    if pattern.startswith("\\n"):
+                        if pattern == "\\n+":
+                            pattern = "^$"  # Match empty lines
                         else:
-                            pattern = pattern[2:] + '$'  # Make it end-of-line match for empty lines
+                            pattern = pattern[2:] + "$"  # Make it end-of-line match for empty lines
 
                 try:
                     if re.match(pattern, line):
@@ -357,7 +357,7 @@ class EnhancedHaskellChunker:
         if len(chunks) <= 1:
             return chunks
 
-        lines = content.split('\n')
+        lines = content.split("\n")
         overlap_lines = self.config.chunk_overlap
 
         enhanced_chunks = []
@@ -371,8 +371,8 @@ class EnhancedHaskellChunker:
                 prev_lines = lines[overlap_start:prev_end]
 
                 if prev_lines:
-                    overlap_content = '\n'.join(prev_lines)
-                    enhanced_chunk["content"] = overlap_content + '\n' + chunk["content"]
+                    overlap_content = "\n".join(prev_lines)
+                    enhanced_chunk["content"] = overlap_content + "\n" + chunk["content"]
                     enhanced_chunk["has_prev_overlap"] = True
 
             # Add lines from next chunk
@@ -382,8 +382,8 @@ class EnhancedHaskellChunker:
                 next_lines = lines[next_start:overlap_end]
 
                 if next_lines:
-                    overlap_content = '\n'.join(next_lines)
-                    enhanced_chunk["content"] = chunk["content"] + '\n' + overlap_content
+                    overlap_content = "\n".join(next_lines)
+                    enhanced_chunk["content"] = chunk["content"] + "\n" + overlap_content
                     enhanced_chunk["has_next_overlap"] = True
 
             enhanced_chunks.append(enhanced_chunk)
@@ -428,29 +428,27 @@ class EnhancedHaskellChunker:
                 "chunk_method": chunk.get("method", "haskell_ast"),
                 "language": "Haskell",
                 "file_path": file_path,
-
                 # Size metrics
                 "chunk_size": len(chunk["content"]),
                 "non_whitespace_size": len(chunk["content"].replace(" ", "").replace("\n", "").replace("\t", "")),
-                "line_count": len(chunk["content"].split('\n')),
-
+                "line_count": len(chunk["content"].split("\n")),
                 # Location info
                 "start_line": chunk.get("start_line", 0),
                 "end_line": chunk.get("end_line", 0),
                 "start_byte": chunk.get("start_byte", 0),
                 "end_byte": chunk.get("end_byte", 0),
-
                 # AST info
                 "node_type": chunk.get("node_type", "unknown"),
                 "is_split": chunk.get("is_split", False),
-
                 # Chunking method tracking - preserve Rust chunking method names
-                "chunking_method": chunk.get("original_metadata", {}).get("chunking_method", chunk.get("method", "haskell_ast_enhanced")),
-
+                "chunking_method": chunk.get("original_metadata", {}).get(
+                    "chunking_method", chunk.get("method", "haskell_ast_enhanced")
+                ),
                 # Tree-sitter error tracking
-                "tree_sitter_chunking_error": chunk.get("original_metadata", {}).get("tree_sitter_chunking_error", "false"),
+                "tree_sitter_chunking_error": chunk.get("original_metadata", {}).get(
+                    "tree_sitter_chunking_error", "false"
+                ),
                 "has_tree_sitter_error": chunk.get("original_metadata", {}).get("has_error", "false") == "true",
-
                 # Context info
                 "has_imports": "import " in chunk["content"],
                 "has_exports": "module " in chunk["content"] and "(" in chunk["content"],
@@ -462,37 +460,38 @@ class EnhancedHaskellChunker:
 
             # Template-specific metadata
             if self.config.metadata_template == "repoeval":
-                metadata.update({
-                    "functions": self._extract_function_names(chunk["content"]),
-                    "types": self._extract_type_names(chunk["content"]),
-                })
+                metadata.update(
+                    {
+                        "functions": self._extract_function_names(chunk["content"]),
+                        "types": self._extract_type_names(chunk["content"]),
+                    }
+                )
             elif self.config.metadata_template == "swebench":
-                metadata.update({
-                    "complexity_score": self._calculate_complexity(chunk["content"]),
-                    "dependencies": self._extract_dependencies(chunk["content"]),
-                })
+                metadata.update(
+                    {
+                        "complexity_score": self._calculate_complexity(chunk["content"]),
+                        "dependencies": self._extract_dependencies(chunk["content"]),
+                    }
+                )
 
-            enhanced_chunk = {
-                "content": chunk["content"],
-                "metadata": metadata
-            }
+            enhanced_chunk = {"content": chunk["content"], "metadata": metadata}
             enhanced_chunks.append(enhanced_chunk)
 
         return enhanced_chunks
 
     def _extract_function_names(self, content: str) -> List[str]:
         """Extract function names from Haskell code."""
-        function_pattern = r'^([a-zA-Z][a-zA-Z0-9_\']*)\s*::'
+        function_pattern = r"^([a-zA-Z][a-zA-Z0-9_\']*)\s*::"
         matches = re.findall(function_pattern, content, re.MULTILINE)
         return list(set(matches))
 
     def _extract_type_names(self, content: str) -> List[str]:
         """Extract type names from Haskell code."""
         type_patterns = [
-            r'^data\s+([A-Z][a-zA-Z0-9_\']*)',
-            r'^newtype\s+([A-Z][a-zA-Z0-9_\']*)',
-            r'^type\s+([A-Z][a-zA-Z0-9_\']*)',
-            r'^class\s+([A-Z][a-zA-Z0-9_\']*)',
+            r"^data\s+([A-Z][a-zA-Z0-9_\']*)",
+            r"^newtype\s+([A-Z][a-zA-Z0-9_\']*)",
+            r"^type\s+([A-Z][a-zA-Z0-9_\']*)",
+            r"^class\s+([A-Z][a-zA-Z0-9_\']*)",
         ]
 
         types = []
@@ -504,7 +503,7 @@ class EnhancedHaskellChunker:
 
     def _extract_dependencies(self, content: str) -> List[str]:
         """Extract import dependencies from Haskell code."""
-        import_pattern = r'^import\s+(?:qualified\s+)?([A-Z][a-zA-Z0-9_\.]*)'
+        import_pattern = r"^import\s+(?:qualified\s+)?([A-Z][a-zA-Z0-9_\.]*)"
         matches = re.findall(import_pattern, content, re.MULTILINE)
         return list(set(matches))
 
@@ -520,8 +519,8 @@ class EnhancedHaskellChunker:
         complexity += content.count("do")
         complexity += content.count(">>")  # Monadic operations
         complexity += content.count(">>=")
-        complexity += len(re.findall(r'\$', content))  # Function application
-        complexity += len(re.findall(r'::', content))  # Type signatures
+        complexity += len(re.findall(r"\$", content))  # Function application
+        complexity += len(re.findall(r"::", content))  # Type signatures
 
         return complexity
 
@@ -534,8 +533,9 @@ class EnhancedHaskellChunker:
 class CompatibleChunk:
     """Chunk wrapper that provides the interface expected by AST chunking code."""
 
-    def __init__(self, content: str, metadata: dict, start_line: int = 1,
-                 end_line: int = 1, node_type: str = "haskell_chunk") -> None:
+    def __init__(
+        self, content: str, metadata: dict, start_line: int = 1, end_line: int = 1, node_type: str = "haskell_chunk"
+    ) -> None:
         self._content = content
         self._metadata = metadata
         self._start_line = start_line
@@ -595,21 +595,25 @@ def extract_haskell_ast_chunks(content: str) -> List[Dict[str, Any]]:
         # Check if chunks have function metadata before claiming success
         chunks_with_functions = 0
         for legacy_chunk in legacy_chunks:
-            chunk_metadata = legacy_chunk.get('metadata', {})
-            if isinstance(chunk_metadata, dict) and 'function_name' in chunk_metadata:
+            chunk_metadata = legacy_chunk.get("metadata", {})
+            if isinstance(chunk_metadata, dict) and "function_name" in chunk_metadata:
                 chunks_with_functions += 1
 
         if chunks_with_functions > 0:
             LOGGER.info(
-                f"✅ Rust Haskell chunking produced {
-                    len(legacy_chunks)} chunks, {chunks_with_functions} with function metadata")
+                f"✅ Rust Haskell chunking produced {len(legacy_chunks)} chunks, {
+                    chunks_with_functions
+                } with function metadata"
+            )
         else:
             LOGGER.warning(
                 f"⚠️ Rust Haskell chunking produced {
-                    len(legacy_chunks)} chunks but NO function metadata - likely using regex fallback")
+                    len(legacy_chunks)
+                } chunks but NO function metadata - likely using regex fallback"
+            )
             if legacy_chunks:
                 first_chunk = legacy_chunks[0]
-                if 'metadata' in first_chunk and isinstance(first_chunk['metadata'], dict):
+                if "metadata" in first_chunk and isinstance(first_chunk["metadata"], dict):
                     LOGGER.debug(f"Sample chunk metadata keys: {list(first_chunk['metadata'].keys())}")
                 else:
                     LOGGER.debug("Sample chunk metadata keys: none")
@@ -635,13 +639,13 @@ def extract_haskell_ast_chunks(content: str) -> List[Dict[str, Any]]:
                 "end": chunk_data["metadata"]["end_line"],
                 "location": f"{chunk_data['metadata']['start_line']}:{chunk_data['metadata']['end_line']}",
                 "start_byte": chunk_data["metadata"].get("start_byte", 0),
-                "end_byte": chunk_data["metadata"].get("end_byte", len(chunk_data["content"].encode('utf-8'))),
+                "end_byte": chunk_data["metadata"].get("end_byte", len(chunk_data["content"].encode("utf-8"))),
                 "node_type": chunk_data["metadata"].get("node_type", "haskell_chunk"),
                 "metadata": {
                     "category": chunk_data["metadata"].get("node_type", "haskell_ast"),
                     "method": chunk_data["metadata"]["chunk_method"],
                     "chunking_method": "python_haskell_fallback",  # Mark as Python fallback
-                    **chunk_data["metadata"]
+                    **chunk_data["metadata"],
                 },
             }
             legacy_chunks.append(legacy_chunk)
@@ -649,14 +653,15 @@ def extract_haskell_ast_chunks(content: str) -> List[Dict[str, Any]]:
         return legacy_chunks
 
 
-def create_enhanced_regex_fallback_chunks(content: str, file_path: str,
-                                          config: HaskellChunkConfig) -> List[Dict[str, Any]]:
+def create_enhanced_regex_fallback_chunks(
+    content: str, file_path: str, config: HaskellChunkConfig
+) -> List[Dict[str, Any]]:
     """
     Enhanced fallback chunking using regex patterns when AST parsing fails.
     Incorporates ASTChunk-inspired improvements for better chunk quality.
     """
     separators = get_enhanced_haskell_separators()
-    lines = content.split('\n')
+    lines = content.split("\n")
     chunks: List[Dict[str, Any]] = []
 
     current_start = 0
@@ -671,14 +676,14 @@ def create_enhanced_regex_fallback_chunks(content: str, file_path: str,
         for priority, separator in enumerate(separators):
             # Remove leading \n but handle special cases like \\n\\n+
             pattern = separator
-            if pattern.startswith('\\n'):
+            if pattern.startswith("\\n"):
                 pattern = pattern[2:]  # Remove \n
                 # Handle double newlines and other special cases
-                if pattern.startswith('\\n'):
-                    if pattern == '\\n+':
-                        pattern = '^$'  # Match empty lines
+                if pattern.startswith("\\n"):
+                    if pattern == "\\n+":
+                        pattern = "^$"  # Match empty lines
                     else:
-                        pattern = pattern[2:] + '$'  # Make it end-of-line match for empty lines
+                        pattern = pattern[2:] + "$"  # Make it end-of-line match for empty lines
 
             try:
                 if re.match(pattern, line):
@@ -694,7 +699,7 @@ def create_enhanced_regex_fallback_chunks(content: str, file_path: str,
 
         if (is_separator or force_split) and current_start < i:
             chunk_lines = lines[current_start:i]
-            chunk_text = '\n'.join(chunk_lines)
+            chunk_text = "\n".join(chunk_lines)
 
             if chunk_text.strip():
                 metadata = {
@@ -710,11 +715,9 @@ def create_enhanced_regex_fallback_chunks(content: str, file_path: str,
                     "end_line": i,
                     "separator_priority": separator_priority,
                     "was_force_split": force_split and not is_separator,
-
                     # Tree-sitter error tracking (false for regex fallback)
                     "tree_sitter_chunking_error": "false",
                     "has_tree_sitter_error": False,
-
                     # Haskell-specific content analysis
                     "has_imports": "import " in chunk_text,
                     "has_exports": "module " in chunk_text and "(" in chunk_text,
@@ -724,10 +727,7 @@ def create_enhanced_regex_fallback_chunks(content: str, file_path: str,
                     "has_classes": "class " in chunk_text,
                 }
 
-                chunk_dict = {
-                    "content": chunk_text,
-                    "metadata": metadata
-                }
+                chunk_dict = {"content": chunk_text, "metadata": metadata}
                 chunks.append(chunk_dict)
 
             current_start = i
@@ -738,7 +738,7 @@ def create_enhanced_regex_fallback_chunks(content: str, file_path: str,
     # Handle the last chunk
     if current_start < len(lines):
         chunk_lines = lines[current_start:]
-        chunk_text = '\n'.join(chunk_lines)
+        chunk_text = "\n".join(chunk_lines)
 
         if chunk_text.strip():
             metadata = {
@@ -755,11 +755,9 @@ def create_enhanced_regex_fallback_chunks(content: str, file_path: str,
                 "separator_priority": 0,
                 "was_force_split": False,
                 "is_final_chunk": True,
-
                 # Tree-sitter error tracking (false for regex fallback)
                 "tree_sitter_chunking_error": "false",
                 "has_tree_sitter_error": False,
-
                 # Haskell-specific content analysis
                 "has_imports": "import " in chunk_text,
                 "has_exports": "module " in chunk_text and "(" in chunk_text,
@@ -769,10 +767,7 @@ def create_enhanced_regex_fallback_chunks(content: str, file_path: str,
                 "has_classes": "class " in chunk_text,
             }
 
-            chunk_dict = {
-                "content": chunk_text,
-                "metadata": metadata
-            }
+            chunk_dict = {"content": chunk_text, "metadata": metadata}
             chunks.append(chunk_dict)
 
     LOGGER.info(f"Enhanced regex fallback created {len(chunks)} Haskell chunks")
@@ -796,13 +791,9 @@ def create_regex_fallback_chunks_python(content: str) -> List[Dict[str, Any]]:
             "end": chunk["metadata"]["end_line"],
             "location": f"{chunk['metadata']['start_line']}:{chunk['metadata']['end_line']}",
             "start_byte": 0,
-            "end_byte": len(chunk["content"].encode('utf-8')),
+            "end_byte": len(chunk["content"].encode("utf-8")),
             "node_type": "regex_chunk",
-            "metadata": {
-                "category": "regex_fallback",
-                "method": "regex",
-                **chunk["metadata"]
-            },
+            "metadata": {"category": "regex_fallback", "method": "regex", **chunk["metadata"]},
         }
         legacy_chunks.append(legacy_chunk)
 
@@ -823,14 +814,13 @@ def get_haskell_language_spec(config: Optional[HaskellChunkConfig] = None) -> co
         config = HaskellChunkConfig()
 
     return cocoindex.functions.CustomLanguageSpec(
-        language_name="Haskell",
-        aliases=[".hs", ".lhs"],
-        separators_regex=get_enhanced_haskell_separators()
+        language_name="Haskell", aliases=[".hs", ".lhs"], separators_regex=get_enhanced_haskell_separators()
     )
 
 
 class HaskellChunkSpec(op.FunctionSpec):
     """Haskell chunking function spec for CocoIndex."""
+
     max_chunk_size: int = 1800
     chunk_overlap: int = 0
     chunk_expansion: bool = False
@@ -880,13 +870,15 @@ class HaskellChunkExecutor:
                 unique_location = f"{base_location}_dup{suffix}"
             seen_locations.add(unique_location)
 
-            result.append(HaskellChunkRow(
-                content=content,
-                location=unique_location,
-                start=start_line,
-                end=end_line,
-                chunking_method=chunking_method
-            ))
+            result.append(
+                HaskellChunkRow(
+                    content=content,
+                    location=unique_location,
+                    start=start_line,
+                    end=end_line,
+                    chunking_method=chunking_method,
+                )
+            )
 
         return result
 
@@ -911,7 +903,7 @@ class HaskellChunkExecutor:
                 chunk_expansion=self.spec.chunk_expansion,
                 metadata_template=self.spec.metadata_template,
                 preserve_imports=self.spec.preserve_imports,
-                preserve_exports=self.spec.preserve_exports
+                preserve_exports=self.spec.preserve_exports,
             )
 
             chunker = EnhancedHaskellChunker(config)

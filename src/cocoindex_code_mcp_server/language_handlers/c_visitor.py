@@ -30,21 +30,21 @@ class CASTVisitor(GenericMetadataVisitor):
     def visit_node(self, context: NodeContext) -> Optional[Dict[str, Any]]:
         """Visit a node and extract C-specific metadata."""
         node = context.node
-        node_type = node.type if hasattr(node, 'type') else str(type(node))
+        node_type = node.type if hasattr(node, "type") else str(type(node))
 
         # Track node statistics
         self.node_stats[node_type] = self.node_stats.get(node_type, 0) + 1
 
         # Update complexity score based on node type (inherited from GenericMetadataVisitor)
         self._update_complexity(node_type)
-# Extract C-specific constructs
-        if node_type == 'function_definition':
+        # Extract C-specific constructs
+        if node_type == "function_definition":
             self._extract_function(node)
-        elif node_type == 'struct_specifier':
+        elif node_type == "struct_specifier":
             self._extract_struct(node)
-        elif node_type == 'enum_specifier':
+        elif node_type == "enum_specifier":
             self._extract_enum(node)
-        elif node_type == 'type_definition':
+        elif node_type == "type_definition":
             self._extract_typedef(node)
 
         return None
@@ -53,13 +53,13 @@ class CASTVisitor(GenericMetadataVisitor):
         """Extract function name from function_definition node."""
         try:
             # C function structure: function_definition -> function_declarator -> identifier
-            declarator = self._find_child_by_type(node, 'function_declarator')
+            declarator = self._find_child_by_type(node, "function_declarator")
             if declarator:
-                identifier = self._find_child_by_type(declarator, 'identifier')
+                identifier = self._find_child_by_type(declarator, "identifier")
                 if identifier:
                     text = identifier.text
                     if text is not None:
-                        func_name = text.decode('utf-8')
+                        func_name = text.decode("utf-8")
                     self.functions.append(func_name)
                     LOGGER.debug(f"Found C function: {func_name}")
         except Exception as e:
@@ -70,10 +70,10 @@ class CASTVisitor(GenericMetadataVisitor):
         try:
             # Look for struct name (identifier after 'struct' keyword)
             for child in node.children:
-                if child.type == 'type_identifier':
+                if child.type == "type_identifier":
                     text = child.text
                     if text is not None:
-                        struct_name = text.decode('utf-8')
+                        struct_name = text.decode("utf-8")
                     self.structs.append(struct_name)
                     LOGGER.debug(f"Found C struct: {struct_name}")
                     break
@@ -85,8 +85,8 @@ class CASTVisitor(GenericMetadataVisitor):
         try:
             # Look for enum name
             for child in node.children:
-                if child.type == 'type_identifier':
-                    enum_name = child.text.decode('utf-8')
+                if child.type == "type_identifier":
+                    enum_name = child.text.decode("utf-8")
                     self.enums.append(enum_name)
                     LOGGER.debug(f"Found C enum: {enum_name}")
                     break
@@ -98,8 +98,8 @@ class CASTVisitor(GenericMetadataVisitor):
         try:
             # Look for the new type name in typedef
             for child in reversed(node.children):  # Name is usually at the end
-                if child.type == 'type_identifier':
-                    typedef_name = child.text.decode('utf-8')
+                if child.type == "type_identifier":
+                    typedef_name = child.text.decode("utf-8")
                     self.typedefs.append(typedef_name)
                     LOGGER.debug(f"Found C typedef: {typedef_name}")
                     break
@@ -116,14 +116,14 @@ class CASTVisitor(GenericMetadataVisitor):
     def get_summary(self) -> Dict[str, Any]:
         """Get analysis summary in the expected format."""
         return {
-            'functions': self.functions,
-            'classes': [],  # C doesn't have classes
-            'structs': self.structs,
-            'enums': self.enums,
-            'typedefs': self.typedefs,
-            'node_stats': dict(self.node_stats),
-            'complexity_score': self.complexity_score,
-            'analysis_method': 'c_ast_visitor'
+            "functions": self.functions,
+            "classes": [],  # C doesn't have classes
+            "structs": self.structs,
+            "enums": self.enums,
+            "typedefs": self.typedefs,
+            "node_stats": dict(self.node_stats),
+            "complexity_score": self.complexity_score,
+            "analysis_method": "c_ast_visitor",
         }
 
 
@@ -137,15 +137,15 @@ def analyze_c_code(code: str, filename: str = "") -> Dict[str, Any]:
 
         # Create parser and parse code
         factory = ASTParserFactory()
-        parser = factory.create_parser('c')
+        parser = factory.create_parser("c")
         if not parser:
             LOGGER.warning("C parser not available")
-            return {'success': False, 'error': 'C parser not available'}
+            return {"success": False, "error": "C parser not available"}
 
-        tree = factory.parse_code(code, 'c')
+        tree = factory.parse_code(code, "c")
         if not tree:
             LOGGER.warning("Failed to parse C code")
-            return {'success': False, 'error': 'Failed to parse C code'}
+            return {"success": False, "error": "Failed to parse C code"}
 
         # Use specialized C visitor
         visitor = CASTVisitor()
@@ -156,19 +156,22 @@ def analyze_c_code(code: str, filename: str = "") -> Dict[str, Any]:
         result = visitor.get_summary()
         # Use display language name for database storage
         from ..mappers import get_display_language_name
-        result.update({
-            'success': True,
-            'language': get_display_language_name('c'),
-            'filename': filename,
-            'line_count': code.count('\n') + 1,
-            'char_count': len(code),
-            'parse_errors': 0,
-            'tree_language': str(parser.language) if parser else None
-        })
+
+        result.update(
+            {
+                "success": True,
+                "language": get_display_language_name("c"),
+                "filename": filename,
+                "line_count": code.count("\n") + 1,
+                "char_count": len(code),
+                "parse_errors": 0,
+                "tree_language": str(parser.language) if parser else None,
+            }
+        )
 
         LOGGER.debug(f"C analysis completed: {len(result.get('functions', []))} functions found")
         return result
 
     except Exception as e:
         LOGGER.error(f"C code analysis failed: {e}")
-        return {'success': False, 'error': str(e)}
+        return {"success": False, "error": str(e)}

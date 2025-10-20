@@ -45,6 +45,7 @@ dependencies = [
     "prompt-toolkit>=3.0.0",
     "cachetools>=6.1.0",
     "click>=8.2.1",
+    "mcp>=1.12.0",
     "tree-sitter>=0.23.0,<0.24.0",
     "tree-sitter-python>=0.23.6,<0.24.0",
     "tree-sitter-c-sharp>=0.23.1,<0.24.0",
@@ -76,9 +77,6 @@ test = [
     "pytest-mypy>=1.0.1",
     "coverage>=7.9.2",
 ]
-mcp-server = [
-    "mcp>=1.12.0",
-]
 build = [
     "maturin>=1.0,<2.0",
     # typing
@@ -98,6 +96,7 @@ build = [
     # linting
     "pydocstyle>=6.3.0",
     "ruff>=0.4.0",
+    "pylint>=4.0.2",
     # "asyncpg>=0.29.0",
 ]
 # github actions for building wheels or local act including pypi publishing
@@ -125,6 +124,7 @@ include = ["src/cocoindex_code_mcp_server/**/*.py"]
 profile = "black"
 
 [tool.ruff]
+target-version = "py311"
 line-length = 120
 exclude = [".git", "__pycache__", ".venv", "build", "dist", "docs"]
 # extend-ignore = ["E203", "W503"]  # common ignores for some formatters like black
@@ -145,6 +145,17 @@ expand-star-imports = true
 
 [tool.autopep8]
 max_line_length = 120
+
+[tool.pylint.main]
+py-version = "3.11"
+
+[tool.pylint.'MESSAGES CONTROL']
+disable = [
+  "C0114",  # missing-module-docstring, etc., customize as needed
+]
+
+[tool.pylint.format]
+max-line-length = 120
 
 [tool.mypy]
 # global config here, if any

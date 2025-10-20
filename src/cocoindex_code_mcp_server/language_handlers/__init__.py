@@ -13,12 +13,14 @@ LOGGER = logging.getLogger(__name__)
 # Import language-specific handlers
 try:
     from .python_handler import PythonNodeHandler
+
     PYTHON_HANDLER_AVAILABLE = True
 except ImportError:
     PYTHON_HANDLER_AVAILABLE = False
 
 try:
     from .haskell_handler import HaskellNodeHandler
+
     HASKELL_HANDLER_AVAILABLE = True
 except ImportError:
     HASKELL_HANDLER_AVAILABLE = False
@@ -28,10 +30,10 @@ except ImportError:
 AVAILABLE_HANDLERS: Dict[str, Type[Any]] = {}
 
 if PYTHON_HANDLER_AVAILABLE:
-    AVAILABLE_HANDLERS['python'] = PythonNodeHandler
+    AVAILABLE_HANDLERS["python"] = PythonNodeHandler
 
 if HASKELL_HANDLER_AVAILABLE:
-    AVAILABLE_HANDLERS['haskell'] = HaskellNodeHandler
+    AVAILABLE_HANDLERS["haskell"] = HaskellNodeHandler
 
 
 def get_handler_for_language(language: str) -> Optional[Any]:
@@ -49,14 +51,10 @@ def list_supported_languages() -> list[str]:
     return list(AVAILABLE_HANDLERS.keys())
 
 
-__all__ = [
-    'get_handler_for_language',
-    'list_supported_languages',
-    'AVAILABLE_HANDLERS'
-]
+__all__ = ["get_handler_for_language", "list_supported_languages", "AVAILABLE_HANDLERS"]
 
 if PYTHON_HANDLER_AVAILABLE:
-    __all__.append('PythonNodeHandler')
+    __all__.append("PythonNodeHandler")
 
 if HASKELL_HANDLER_AVAILABLE:
-    __all__.append('HaskellNodeHandler')
+    __all__.append("HaskellNodeHandler")

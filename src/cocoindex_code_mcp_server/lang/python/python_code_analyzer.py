@@ -15,6 +15,7 @@ from . import LOGGER
 # Import the new tree-sitter based analyzer
 try:
     from .tree_sitter_python_analyzer import create_python_analyzer
+
     TREE_SITTER_ANALYZER_AVAILABLE = True
 except ImportError as e:
     LOGGER.warning(f"Tree-sitter Python analyzer not available: {e}")
@@ -115,24 +116,25 @@ class PythonCodeAnalyzer:
             # Remove from visited set when done (allow revisiting in different contexts)
             self.visited_nodes.discard(node_id)
 
-    def _extract_function_info(self, node: ast.FunctionDef | ast.AsyncFunctionDef,
-                               class_context: Optional[str] = None, is_async: bool = False) -> None:
+    def _extract_function_info(
+        self, node: ast.FunctionDef | ast.AsyncFunctionDef, class_context: Optional[str] = None, is_async: bool = False
+    ) -> None:
         """Extract information about function definitions."""
         func_info: Dict[str, Any] = {
             "name": node.name,
             "type": "async_function" if is_async else "method" if class_context else "function",
             "class": class_context,
             "line": node.lineno,
-            "end_line": getattr(node, 'end_lineno', node.lineno),
-            "column": getattr(node, 'col_offset', 0) + 1,  # Convert to 1-based
-            "end_column": getattr(node, 'end_col_offset', 0) + 1,
-            "lines_of_code": (node.lineno, getattr(node, 'end_lineno', node.lineno)),
+            "end_line": getattr(node, "end_lineno", node.lineno),
+            "column": getattr(node, "col_offset", 0) + 1,  # Convert to 1-based
+            "end_column": getattr(node, "end_col_offset", 0) + 1,
+            "lines_of_code": (node.lineno, getattr(node, "end_lineno", node.lineno)),
             "parameters": [],
             "return_type": None,
             "decorators": [],
             "docstring": ast.get_docstring(node),
-            "is_private": node.name.startswith('_'),
-            "is_dunder": node.name.startswith('__') and node.name.endswith('__'),
+            "is_private": node.name.startswith("_"),
+            "is_dunder": node.name.startswith("__") and node.name.endswith("__"),
         }
 
         # Extract parameters
@@ -140,7 +142,7 @@ class PythonCodeAnalyzer:
             param_info = {
                 "name": arg.arg,
                 "type_annotation": self._get_type_annotation(arg.annotation) if arg.annotation else None,
-                "default": None
+                "default": None,
             }
             func_info["parameters"].append(param_info)
 
@@ -172,15 +174,15 @@ class PythonCodeAnalyzer:
         class_info = {
             "name": node.name,
             "line": node.lineno,
-            "end_line": getattr(node, 'end_lineno', node.lineno),
-            "column": getattr(node, 'col_offset', 0) + 1,  # Convert to 1-based
-            "end_column": getattr(node, 'end_col_offset', 0) + 1,
-            "lines_of_code": (node.lineno, getattr(node, 'end_lineno', node.lineno)),
+            "end_line": getattr(node, "end_lineno", node.lineno),
+            "column": getattr(node, "col_offset", 0) + 1,  # Convert to 1-based
+            "end_column": getattr(node, "end_col_offset", 0) + 1,
+            "lines_of_code": (node.lineno, getattr(node, "end_lineno", node.lineno)),
             "bases": [self._get_type_annotation(base) for base in node.bases],
             "decorators": [self._get_decorator_name(dec, 0) for dec in node.decorator_list],
             "docstring": ast.get_docstring(node),
             "methods": [],
-            "is_private": node.name.startswith('_'),
+            "is_private": node.name.startswith("_"),
         }
 
         # Add class decorators to global decorators list (like function decorators)
@@ -195,12 +197,7 @@ class PythonCodeAnalyzer:
         """Extract import information."""
         if isinstance(node, ast.Import):
             for alias in node.names:
-                import_info = {
-                    "module": alias.name,
-                    "alias": alias.asname,
-                    "type": "import",
-                    "line": node.lineno
-                }
+                import_info = {"module": alias.name, "alias": alias.asname, "type": "import", "line": node.lineno}
                 self.imports.append(import_info)
 
         elif isinstance(node, ast.ImportFrom):
@@ -212,7 +209,7 @@ class PythonCodeAnalyzer:
                     "alias": alias.asname,
                     "type": "from_import",
                     "line": node.lineno,
-                    "level": node.level  # For relative imports
+                    "level": node.level,  # For relative imports
                 }
                 self.imports.append(import_info)
 
@@ -225,7 +222,7 @@ class PythonCodeAnalyzer:
                     "class": class_context,
                     "line": node.lineno,
                     "type": "class_variable" if class_context else "variable",
-                    "is_private": target.id.startswith('_'),
+                    "is_private": target.id.startswith("_"),
                 }
                 self.variables.append(var_info)
 
@@ -288,7 +285,9 @@ class PythonCodeAnalyzer:
                 # Limit dict size
                 items = list(zip(node.keys, node.values))[:5]
                 return {
-                    self._get_ast_value(k, depth + 1) if k else "None": self._get_ast_value(v, depth + 1) if v else "None"
+                    self._get_ast_value(k, depth + 1) if k else "None": self._get_ast_value(v, depth + 1)
+                    if v
+                    else "None"
                     for k, v in items
                 }
             else:
@@ -300,14 +299,14 @@ class PythonCodeAnalyzer:
         """Calculate code complexity and other metrics."""
         # Simple complexity metrics
         self.complexity_score = (
-            len(self.functions) * 2 +
-            len(self.classes) * 3 +
-            code.count('if ') +
-            code.count('for ') +
-            code.count('while ') +
-            code.count('try:') +
-            code.count('except') +
-            len([f for f in self.functions if f['decorators']])
+            len(self.functions) * 2
+            + len(self.classes) * 3
+            + code.count("if ")
+            + code.count("for ")
+            + code.count("while ")
+            + code.count("try:")
+            + code.count("except")
+            + len([f for f in self.functions if f["decorators"]])
         )
 
     def _build_metadata(self, code: str, filename: str) -> Dict[str, Any]:
@@ -316,25 +315,22 @@ class PythonCodeAnalyzer:
         import json
 
         # Extract unique module names from imports
-        imported_modules = list(set([
-            imp['module'] for imp in self.imports
-            if imp['module'] and imp['module'] != ''
-        ]))
+        imported_modules = list(set([imp["module"] for imp in self.imports if imp["module"] and imp["module"] != ""]))
 
         # Group functions by class
         class_methods: Dict[str, List[Dict[str, Any]]] = {}
         standalone_functions: List[Dict[str, Any]] = []
 
         for func in self.functions:
-            if func['class']:
-                if func['class'] not in class_methods:
-                    class_methods[func['class']] = []
-                class_methods[func['class']].append(func)
+            if func["class"]:
+                if func["class"] not in class_methods:
+                    class_methods[func["class"]] = []
+                class_methods[func["class"]].append(func)
             else:
                 standalone_functions.append(func)
 
         # Calculate content hash for unique identification
-        content_hash = hashlib.sha256(code.encode('utf-8')).hexdigest()[:16]
+        content_hash = hashlib.sha256(code.encode("utf-8")).hexdigest()[:16]
 
         # Build node relationships
         node_relationships = self._build_node_relationships()
@@ -346,56 +342,48 @@ class PythonCodeAnalyzer:
             "filename": filename,
             "file": filename,  # RAG-pychunk compatibility
             "node_type": "MODULE",  # RAG-pychunk compatibility
-            "line_count": len(code.split('\n')),
+            "line_count": len(code.split("\n")),
             "char_count": len(code),
-
             # Position information (RAG-pychunk: lines_of_code)
-            "lines_of_code": (1, len(code.split('\n'))),
+            "lines_of_code": (1, len(code.split("\n"))),
             "start_line": 1,
-            "end_line": len(code.split('\n')),
+            "end_line": len(code.split("\n")),
             "start_column": 1,
-            "end_column": len(code.split('\n')[-1]) if code.split('\n') else 1,
-
+            "end_column": len(code.split("\n")[-1]) if code.split("\n") else 1,
             # Unique identifier (RAG-pychunk: hash)
             "hash": content_hash,
             "content_hash": content_hash,
-
             # Node relationships (RAG-pychunk: node_relationships)
             "node_relationships": node_relationships,
-
             # Functions and methods
-            "functions": [f['name'] for f in standalone_functions],
+            "functions": [f["name"] for f in standalone_functions],
             "function_details": standalone_functions,
-            "method_count": len([f for f in self.functions if f['class']]),
-
+            "method_count": len([f for f in self.functions if f["class"]]),
             # Classes
-            "classes": [c['name'] for c in self.classes],
+            "classes": [c["name"] for c in self.classes],
             "class_details": self.classes,
             "class_methods": class_methods,
-
             # Imports
             "imports": imported_modules,
             "import_details": self.imports,
-
             # Variables
-            "variables": [v['name'] for v in self.variables if not v['class']],
-            "class_variables": [v['name'] for v in self.variables if v['class']],
-
+            "variables": [v["name"] for v in self.variables if not v["class"]],
+            "class_variables": [v["name"] for v in self.variables if v["class"]],
             # Decorators
             "decorators": list(set(self.decorators)),
-
             # Complexity
             "complexity_score": self.complexity_score,
-            "has_async": any(f['type'] == 'async_function' for f in self.functions),
+            "has_async": any(f["type"] == "async_function" for f in self.functions),
             "has_classes": len(self.classes) > 0,
             "has_decorators": len(self.decorators) > 0,
-
             # Code patterns
-            "has_docstrings": any(f.get('docstring') for f in self.functions + self.classes),
-            "has_type_hints": any(f.get('return_type') or any(p.get('type_annotation') for p in f.get('parameters', [])) for f in self.functions),
-            "private_methods": [f['name'] for f in self.functions if f['is_private']],
-            "dunder_methods": [f['name'] for f in self.functions if f['is_dunder']],
-
+            "has_docstrings": any(f.get("docstring") for f in self.functions + self.classes),
+            "has_type_hints": any(
+                f.get("return_type") or any(p.get("type_annotation") for p in f.get("parameters", []))
+                for f in self.functions
+            ),
+            "private_methods": [f["name"] for f in self.functions if f["is_private"]],
+            "dunder_methods": [f["name"] for f in self.functions if f["is_dunder"]],
             # Promoted metadata fields for database columns
             "analysis_method": "python_code_analyzer",
             # don't set chunking method in analyzer
@@ -403,7 +391,6 @@ class PythonCodeAnalyzer:
             # "tree_sitter_chunking_error": False,
             "tree_sitter_analyze_error": False,
             "decorators_used": list(set(self.decorators)),
-
             # Additional metadata (RAG-pychunk: additional_metadata)
             "additional_metadata": {
                 "analysis_method": "python_ast",
@@ -413,15 +400,17 @@ class PythonCodeAnalyzer:
                 "total_classes": len(self.classes),
                 "total_imports": len(self.imports),
                 "code_patterns": {
-                    "async_functions": len([f for f in self.functions if f['type'] == 'async_function']),
-                    "private_elements": len([f for f in self.functions if f['is_private']]) + len([c for c in self.classes if c['is_private']]),
-                    "documented_elements": len([f for f in self.functions if f.get('docstring')]) + len([c for c in self.classes if c.get('docstring')])
-                }
-            }
+                    "async_functions": len([f for f in self.functions if f["type"] == "async_function"]),
+                    "private_elements": len([f for f in self.functions if f["is_private"]])
+                    + len([c for c in self.classes if c["is_private"]]),
+                    "documented_elements": len([f for f in self.functions if f.get("docstring")])
+                    + len([c for c in self.classes if c.get("docstring")]),
+                },
+            },
         }
 
         # Add metadata_json field for compatibility
-        metadata['metadata_json'] = json.dumps(metadata, default=str)
+        metadata["metadata_json"] = json.dumps(metadata, default=str)
 
         return metadata
 
@@ -432,30 +421,30 @@ class PythonCodeAnalyzer:
             "children": [],
             "scope": "module",
             "contains": {
-                "functions": [f['name'] for f in self.functions if not f['class']],
-                "classes": [c['name'] for c in self.classes],
-                "imports": [imp['module'] for imp in self.imports if imp['module']],
-                "variables": [v['name'] for v in self.variables if not v['class']]
+                "functions": [f["name"] for f in self.functions if not f["class"]],
+                "classes": [c["name"] for c in self.classes],
+                "imports": [imp["module"] for imp in self.imports if imp["module"]],
+                "variables": [v["name"] for v in self.variables if not v["class"]],
             },
             "class_hierarchies": {},
-            "import_dependencies": []
+            "import_dependencies": [],
         }
 
         # Build class hierarchies
         for class_info in self.classes:
-            class_name = class_info['name']
+            class_name = class_info["name"]
             relationships["class_hierarchies"][class_name] = {
-                "bases": class_info.get('bases', []),
-                "methods": [f['name'] for f in self.functions if f.get('class') == class_name],
-                "variables": [v['name'] for v in self.variables if v.get('class') == class_name]
+                "bases": class_info.get("bases", []),
+                "methods": [f["name"] for f in self.functions if f.get("class") == class_name],
+                "variables": [v["name"] for v in self.variables if v.get("class") == class_name],
             }
 
         # Build import dependencies
         for imp in self.imports:
-            if imp['module']:
-                dep = {"module": imp['module'], "type": imp['type']}
-                if imp.get('name'):
-                    dep["imports"] = [imp['name']]
+            if imp["module"]:
+                dep = {"module": imp["module"], "type": imp["type"]}
+                if imp.get("name"):
+                    dep["imports"] = [imp["name"]]
                 relationships["import_dependencies"].append(dep)
 
         return relationships
@@ -463,14 +452,15 @@ class PythonCodeAnalyzer:
     def _get_timestamp(self) -> str:
         """Get current timestamp for metadata."""
         from datetime import datetime
+
         return datetime.now().isoformat()
 
     def _build_fallback_metadata(self, code: str, filename: str) -> Dict[str, Any]:
         """Build basic metadata when AST parsing fails."""
         # Use regex fallback for basic function detection
-        function_names = re.findall(r'def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(', code)
-        class_names = re.findall(r'class\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*[\(:]', code)
-        import_matches = re.findall(r'(?:from\s+(\S+)\s+)?import\s+([a-zA-Z_][a-zA-Z0-9_]*)', code)
+        function_names = re.findall(r"def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(", code)
+        class_names = re.findall(r"class\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*[\(:]", code)
+        import_matches = re.findall(r"(?:from\s+(\S+)\s+)?import\s+([a-zA-Z_][a-zA-Z0-9_]*)", code)
 
         # Extract imports more carefully
         imports = []
@@ -482,20 +472,24 @@ class PythonCodeAnalyzer:
 
         # Basic complexity estimation
         complexity = (
-            len(function_names) + len(class_names) +
-            code.count('if ') + code.count('for ') + code.count('while ') +
-            code.count('try:') + code.count('except')
+            len(function_names)
+            + len(class_names)
+            + code.count("if ")
+            + code.count("for ")
+            + code.count("while ")
+            + code.count("try:")
+            + code.count("except")
         )
 
         # Check for patterns
-        has_async = 'async def' in code
-        has_type_hints = '->' in code or ':' in code  # Basic heuristic
+        has_async = "async def" in code
+        has_type_hints = "->" in code or ":" in code  # Basic heuristic
         has_classes = len(class_names) > 0
 
         fallback_metadata = {
             "language": "Python",
             "filename": filename,
-            "line_count": len(code.split('\n')),
+            "line_count": len(code.split("\n")),
             "char_count": len(code),
             "functions": function_names,
             "classes": class_names,
@@ -510,7 +504,8 @@ class PythonCodeAnalyzer:
 
         # Add metadata_json field for compatibility
         import json
-        fallback_metadata['metadata_json'] = json.dumps(fallback_metadata, default=str)
+
+        fallback_metadata["metadata_json"] = json.dumps(fallback_metadata, default=str)
 
         return fallback_metadata
 
@@ -539,8 +534,8 @@ def analyze_python_code(code: str, filename: str = "") -> Union[Dict[str, Any], 
         LOGGER.debug(f"Use the enhanced tree-sitter based analyzer for {filename}: {metadata}")
 
         # Ensure metadata_json field for compatibility with existing code
-        if metadata and 'metadata_json' not in metadata:
-            metadata['metadata_json'] = json.dumps(metadata, default=str)
+        if metadata and "metadata_json" not in metadata:
+            metadata["metadata_json"] = json.dumps(metadata, default=str)
 
         return metadata
     else:

@@ -41,6 +41,7 @@ STACKTRACE = False
 # Import our custom extensions
 try:
     from .smart_code_embedding import LanguageModelSelector
+
     SMART_EMBEDDING_AVAILABLE = True
     LOGGER.info("Smart code embedding enabled and loaded successfully")
 except ImportError as e:
@@ -69,6 +70,7 @@ except ImportError as e:
 @dataclass
 class ChunkingParams:
     """Parameters for chunking code."""
+
     chunk_size: int
     min_chunk_size: int
     chunk_overlap: int
@@ -78,6 +80,7 @@ class ChunkingParams:
 @dataclass
 class CodeMetadata:
     """Metadata extracted from code chunks."""
+
     metadata_json: str
     functions: List[str]
     classes: List[str]
@@ -100,7 +103,6 @@ CHUNKING_PARAMS = {
     "JSON": ChunkingParams(chunk_size=1500, min_chunk_size=300, chunk_overlap=200, max_chunk_size=2200),
     "XML": ChunkingParams(chunk_size=1500, min_chunk_size=300, chunk_overlap=200, max_chunk_size=2200),
     "TOML": ChunkingParams(chunk_size=800, min_chunk_size=200, chunk_overlap=100, max_chunk_size=1200),
-
     # Smaller chunks for dense code
     "C": ChunkingParams(chunk_size=800, min_chunk_size=200, chunk_overlap=150, max_chunk_size=1200),
     "C++": ChunkingParams(chunk_size=800, min_chunk_size=200, chunk_overlap=150, max_chunk_size=1200),
@@ -109,7 +111,6 @@ CHUNKING_PARAMS = {
     "Java": ChunkingParams(chunk_size=1200, min_chunk_size=300, chunk_overlap=250, max_chunk_size=1800),
     "C#": ChunkingParams(chunk_size=1200, min_chunk_size=300, chunk_overlap=250, max_chunk_size=1800),
     "Scala": ChunkingParams(chunk_size=1000, min_chunk_size=250, chunk_overlap=200, max_chunk_size=1500),
-
     # Medium chunks for scripting languages
     "Python": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=250, max_chunk_size=1500),
     "JavaScript": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=250, max_chunk_size=1500),
@@ -117,21 +118,17 @@ CHUNKING_PARAMS = {
     "TSX": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=250, max_chunk_size=1500),
     "Ruby": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=250, max_chunk_size=1500),
     "PHP": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=250, max_chunk_size=1500),
-
     # Web and styling
     "HTML": ChunkingParams(chunk_size=1500, min_chunk_size=400, chunk_overlap=200, max_chunk_size=2200),
     "CSS": ChunkingParams(chunk_size=1000, min_chunk_size=250, chunk_overlap=150, max_chunk_size=1500),
-
     # Data and scientific
     "SQL": ChunkingParams(chunk_size=1200, min_chunk_size=300, chunk_overlap=200, max_chunk_size=1800),
     "R": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200, max_chunk_size=1500),
     "Fortran": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200, max_chunk_size=1500),
-
     # Others
     "Pascal": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200, max_chunk_size=1500),
     "Swift": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200, max_chunk_size=1500),
     "Haskell": ChunkingParams(chunk_size=1200, min_chunk_size=300, chunk_overlap=200, max_chunk_size=2500),
-
     # Default fallback
     "_DEFAULT": ChunkingParams(chunk_size=1000, min_chunk_size=300, chunk_overlap=200, max_chunk_size=2000),
 }
@@ -145,42 +142,31 @@ EFFECTIVE_CHUNKING_PARAMS = copy.deepcopy(CHUNKING_PARAMS)
 CUSTOM_LANGUAGES = [
     # Build systems
     cocoindex.functions.CustomLanguageSpec(
-        language_name="Makefile",
-        aliases=[".makefile"],
-        separators_regex=[r"\n\n+", r"\n\w+:", r"\n"]
+        language_name="Makefile", aliases=[".makefile"], separators_regex=[r"\n\n+", r"\n\w+:", r"\n"]
     ),
     cocoindex.functions.CustomLanguageSpec(
-        language_name="CMake",
-        aliases=[".cmake"],
-        separators_regex=[r"\n\n+", r"\n\w+\(", r"\n"]
+        language_name="CMake", aliases=[".cmake"], separators_regex=[r"\n\n+", r"\n\w+\(", r"\n"]
     ),
     cocoindex.functions.CustomLanguageSpec(
         language_name="Dockerfile",
         aliases=[".dockerfile"],
-        separators_regex=[r"\n\n+",
-                          r"\n(FROM|RUN|COPY|ADD|EXPOSE|ENV|CMD|ENTRYPOINT)", r"\n"]
+        separators_regex=[r"\n\n+", r"\n(FROM|RUN|COPY|ADD|EXPOSE|ENV|CMD|ENTRYPOINT)", r"\n"],
     ),
     cocoindex.functions.CustomLanguageSpec(
-        language_name="Gradle",
-        aliases=[".gradle"],
-        separators_regex=[r"\n\n+", r"\n\w+\s*\{", r"\n"]
+        language_name="Gradle", aliases=[".gradle"], separators_regex=[r"\n\n+", r"\n\w+\s*\{", r"\n"]
     ),
     cocoindex.functions.CustomLanguageSpec(
-        language_name="Maven",
-        aliases=[".maven"],
-        separators_regex=[r"</\w+>\s*<\w+>", r"\n\n+", r"\n"]
+        language_name="Maven", aliases=[".maven"], separators_regex=[r"</\w+>\s*<\w+>", r"\n\n+", r"\n"]
     ),
     # Shell scripts
     cocoindex.functions.CustomLanguageSpec(
         language_name="Shell",
         aliases=[".sh", ".bash"],
-        separators_regex=[r"\n\n+", r"\nfunction\s+\w+", r"\n\w+\(\)", r"\n"]
+        separators_regex=[r"\n\n+", r"\nfunction\s+\w+", r"\n\w+\(\)", r"\n"],
     ),
     # Configuration files
     cocoindex.functions.CustomLanguageSpec(
-        language_name="Config",
-        aliases=[".ini", ".cfg", ".conf"],
-        separators_regex=[r"\n\n+", r"\n\[.*\]", r"\n"]
+        language_name="Config", aliases=[".ini", ".cfg", ".conf"], separators_regex=[r"\n\n+", r"\n\[.*\]", r"\n"]
     ),
     # Haskell - using enhanced AST-aware separators
     get_haskell_language_spec(),
@@ -188,8 +174,7 @@ CUSTOM_LANGUAGES = [
     cocoindex.functions.CustomLanguageSpec(
         language_name="Kotlin",
         aliases=["kt", ".kt", "kts", ".kts"],
-        separators_regex=[r"\n\n+", r"\nfun\s+", r"\nclass\s+", r"\nobject\s+",
-                          r"\ninterface\s+", r"\n"]
+        separators_regex=[r"\n\n+", r"\nfun\s+", r"\nclass\s+", r"\nobject\s+", r"\ninterface\s+", r"\n"],
     ),
 ]
 
@@ -198,6 +183,7 @@ CUSTOM_LANGUAGES = [
 def extract_language(filename: str) -> str:
     """Extract the language from a filename for tree-sitter processing."""
     from .mappers import get_language_from_extension
+
     return get_language_from_extension(filename)
 
 
@@ -212,7 +198,7 @@ def get_chunking_params(language: str) -> ChunkingParams:
             chunk_size=params.chunk_size,
             min_chunk_size=params.min_chunk_size,
             chunk_overlap=params.chunk_overlap,
-            max_chunk_size=params.chunk_size * 2
+            max_chunk_size=params.chunk_size * 2,
         )
 
     return params
@@ -249,8 +235,11 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
     existing_metadata = {}
     if existing_metadata_json:
         try:
-            existing_metadata = json.loads(existing_metadata_json) if isinstance(
-                existing_metadata_json, str) else existing_metadata_json
+            existing_metadata = (
+                json.loads(existing_metadata_json)
+                if isinstance(existing_metadata_json, str)
+                else existing_metadata_json
+            )
         except (json.JSONDecodeError, TypeError):
             existing_metadata = {}
 
@@ -258,23 +247,23 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
     preserve_chunking_method = existing_metadata.get("chunking_method")
 
     # If no existing chunking method and AST chunking is enabled, use ast_tree_sitter
-    use_default_chunking = _global_flow_config.get('use_default_chunking', False)
+    use_default_chunking = _global_flow_config.get("use_default_chunking", False)
     if not preserve_chunking_method and not use_default_chunking:
         # AST chunking is enabled (use_default_chunking=False), so set appropriate method
         preserve_chunking_method = "ast_tree_sitter"
         LOGGER.debug(f"✅ Setting chunking method to ast_tree_sitter for AST chunking (file: {filename})")
 
     # DEBUG: Log chunking method preservation for debugging
-    if filename and ('math_utils' in filename or 'tmp' in filename or 'simple' in filename):
+    if filename and ("math_utils" in filename or "tmp" in filename or "simple" in filename):
         LOGGER.debug(f"🔍 DEBUG extract_code_metadata for {filename}")
         LOGGER.debug(f"   existing_metadata keys: {list(existing_metadata.keys())[:10]}")
         LOGGER.debug(f"   preserve_chunking_method: '{preserve_chunking_method}'")
 
     # Check if we should use default language handler
-    use_default_handler = _global_flow_config.get('use_default_language_handler', False)
+    use_default_handler = _global_flow_config.get("use_default_language_handler", False)
 
     # DEBUG: Log configuration for specific files
-    if filename and 'cpp_visitor.py' in filename:
+    if filename and "cpp_visitor.py" in filename:
         LOGGER.info(f"🔍 DEBUGGING extract_code_metadata for {filename}")
         LOGGER.info(f"   language: {language}")
         LOGGER.info(f"   use_default_handler: {use_default_handler}")
@@ -288,6 +277,7 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                 from .lang.python.tree_sitter_python_analyzer import (
                     TreeSitterPythonAnalyzer,
                 )
+
                 LOGGER.debug("Using TreeSitterPythonAnalyzer with integrated PythonNodeHandler")
                 analyzer = TreeSitterPythonAnalyzer(prefer_tree_sitter=True)
                 metadata = analyzer.analyze_code(text, filename)
@@ -305,10 +295,12 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
 
                 if lang_lower == "rust":
                     from .language_handlers.rust_visitor import analyze_rust_code
+
                     metadata = analyze_rust_code(text, filename)
                 elif lang_lower == "java":
                     # Always use Java AST visitor for proper analysis
                     from .language_handlers.java_visitor import analyze_java_code
+
                     metadata = analyze_java_code(text, filename)
 
                     # Preserve chunking method if it was already set by AST chunking
@@ -333,12 +325,13 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                             "dunder_methods": [],
                             "tree_sitter_chunking_error": False,
                             "tree_sitter_analyze_error": False,
-                            "success": True
+                            "success": True,
                         }
                     else:
                         from .language_handlers.javascript_visitor import (
                             analyze_javascript_code,
                         )
+
                         metadata = analyze_javascript_code(text, "javascript", filename)
                 elif lang_lower in ["typescript", "ts"]:
                     # Check if chunking_method is already set to astchunk_library (preserve it)
@@ -358,27 +351,32 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                             "dunder_methods": [],
                             "tree_sitter_chunking_error": False,
                             "tree_sitter_analyze_error": False,
-                            "success": True
+                            "success": True,
                         }
                     else:
                         from .language_handlers.typescript_visitor import (
                             analyze_typescript_code,
                         )
+
                         metadata = analyze_typescript_code(text, "typescript", filename)
                 elif lang_lower in ["cpp", "c++", "cxx"]:
                     from .language_handlers.cpp_visitor import analyze_cpp_code
+
                     metadata = analyze_cpp_code(text, "cpp", filename)
                 elif lang_lower == "c":
                     from .language_handlers.c_visitor import analyze_c_code
+
                     metadata = analyze_c_code(text, filename)
                 elif lang_lower in ["kotlin", "kt"]:
                     from .language_handlers.kotlin_visitor import analyze_kotlin_code
+
                     metadata = analyze_kotlin_code(text, filename)
                 elif lang_lower in ["haskell", "hs"]:
                     # Modern Haskell analysis using AST chunks
                     from .lang.haskell.haskell_ast_chunker import (
                         extract_haskell_ast_chunks,
                     )
+
                     chunks = extract_haskell_ast_chunks(text)
 
                     # Extract aggregated metadata from chunks
@@ -388,36 +386,39 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                     modules = set()
 
                     for chunk in chunks:
-                        if isinstance(chunk, dict) and 'metadata' in chunk:
-                            chunk_meta = chunk['metadata']
+                        if isinstance(chunk, dict) and "metadata" in chunk:
+                            chunk_meta = chunk["metadata"]
                             # Extract function names from metadata
-                            if 'function_name' in chunk_meta:
-                                functions.add(chunk_meta['function_name'])
+                            if "function_name" in chunk_meta:
+                                functions.add(chunk_meta["function_name"])
                             # Extract functions array if present
-                            if 'functions' in chunk_meta:
+                            if "functions" in chunk_meta:
                                 try:
-                                    funcs = json.loads(
-                                        chunk_meta['functions']) if isinstance(
-                                        chunk_meta['functions'],
-                                        str) else chunk_meta['functions']
+                                    funcs = (
+                                        json.loads(chunk_meta["functions"])
+                                        if isinstance(chunk_meta["functions"], str)
+                                        else chunk_meta["functions"]
+                                    )
                                     functions.update(funcs)
                                 except BaseException:
                                     pass
                             # Extract modules array if present
-                            if 'modules' in chunk_meta:
+                            if "modules" in chunk_meta:
                                 try:
-                                    mods = json.loads(
-                                        chunk_meta['modules']) if isinstance(
-                                        chunk_meta['modules'], str) else chunk_meta['modules']
+                                    mods = (
+                                        json.loads(chunk_meta["modules"])
+                                        if isinstance(chunk_meta["modules"], str)
+                                        else chunk_meta["modules"]
+                                    )
                                     modules.update(mods)
                                 except BaseException:
                                     pass
                             # Extract single module_name if present
-                            if 'module_name' in chunk_meta:
-                                modules.add(chunk_meta['module_name'])
+                            if "module_name" in chunk_meta:
+                                modules.add(chunk_meta["module_name"])
                             # Extract classes
-                            if 'class_name' in chunk_meta and chunk_meta['class_name'] not in classes:
-                                classes.append(chunk_meta['class_name'])
+                            if "class_name" in chunk_meta and chunk_meta["class_name"] not in classes:
+                                classes.append(chunk_meta["class_name"])
 
                     metadata = {
                         "success": True,
@@ -445,7 +446,7 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
             # Fallback to basic metadata if analysis failed or no analyzer available
             if metadata is None:
                 metadata = {}
-            if not metadata.get('success', True):  # Fixed: Apply fallback when analysis FAILED
+            if not metadata.get("success", True):  # Fixed: Apply fallback when analysis FAILED
                 fallback_defaults = {
                     "language": language,
                     "analysis_method": "no_success_analyze",
@@ -460,7 +461,7 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                     # Promoted metadata fields for database columns
                     "chunking_method": "no_success_chunking",
                     "tree_sitter_chunking_error": True,  # True because we failed to use tree-sitter
-                    "tree_sitter_analyze_error": True,   # True because we failed to analyze properly
+                    "tree_sitter_analyze_error": True,  # True because we failed to analyze properly
                 }
 
                 # NOTE: chunking_method preservation removed - it comes from AST chunkers only
@@ -496,9 +497,10 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
 
     except Exception as e:
         # Fallback to empty metadata if everything fails
-        if filename and 'cpp_visitor.py' in filename:
+        if filename and "cpp_visitor.py" in filename:
             LOGGER.error(f"❌ EXCEPTION in extract_code_metadata for {filename}: {e}")
             import traceback
+
             LOGGER.error(f"   Traceback: {traceback.format_exc()}")
         else:
             LOGGER.debug(f"Metadata extraction failed for {filename}, using empty metadata: {e}")
@@ -514,7 +516,7 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
             "analysis_method": "error_fallback",
             "chunking_method": preserve_chunking_method or "ast_tree_sitter_fallback",
             "tree_sitter_chunking_error": True,  # True because we had an error
-            "tree_sitter_analyze_error": True,   # True because we had an error
+            "tree_sitter_analyze_error": True,  # True because we had an error
         }
         return json.dumps(fallback_result)
 
@@ -522,6 +524,7 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
 # =============================================================================
 # Generalized Metadata Extraction Functions
 # =============================================================================
+
 
 @cocoindex.op.function()
 def extract_string_field(metadata_json: str, field_name: str = "field", default_value: str = "") -> str:
@@ -620,8 +623,12 @@ def extract_int_field(metadata_json: str, field_name: str = "field", default_val
         # Parse JSON string to dict
         metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         field_value = metadata_dict.get(field_name, default_value)
-        return int(field_value) if isinstance(field_value, (int, float, str)) and str(
-            field_value).replace('.', '').replace('-', '').isdigit() else default_value
+        return (
+            int(field_value)
+            if isinstance(field_value, (int, float, str))
+            and str(field_value).replace(".", "").replace("-", "").isdigit()
+            else default_value
+        )
     except Exception as e:
         LOGGER.debug(f"Failed to parse metadata JSON for {field_name}: {e}")
         return default_value
@@ -630,6 +637,7 @@ def extract_int_field(metadata_json: str, field_name: str = "field", default_val
 # =============================================================================
 # Specific Field Extraction Functions (using generalized extractors)
 # =============================================================================
+
 
 @cocoindex.op.function()
 def extract_functions_field(metadata_json: str) -> List[str]:
@@ -904,6 +912,7 @@ def extract_function_details_field(metadata_json: str) -> str:
         LOGGER.debug(f"Failed to parse metadata JSON for function_details: {e}")
         return "[]"
 
+
 # TODO: This is JSON - no multiple str
 
 
@@ -1030,6 +1039,7 @@ def extract_namespaces_field(metadata_json: str) -> List[str]:
 
 class ChunkDict(TypedDict):
     """Typed dictionary for chunk data."""
+
     content: str
     location: str
     start: int
@@ -1048,21 +1058,21 @@ def ensure_unique_chunk_locations(chunks) -> List[cocoindex.Json]:
         return []
 
     # Convert chunks to list if needed
-    chunk_list = list(chunks) if hasattr(chunks, '__iter__') else [chunks]
+    chunk_list = list(chunks) if hasattr(chunks, "__iter__") else [chunks]
 
     seen_locations = set()
     unique_chunks = []
 
     for i, chunk in enumerate(chunk_list):
         # Extract values from chunk (dict or dataclass) and convert to Chunk
-        if hasattr(chunk, 'location'):
+        if hasattr(chunk, "location"):
             # Already a Chunk dataclass (ASTChunkRow)
             base_loc = chunk.location
             text = chunk.content
             start = chunk.start
             end = chunk.end
             # ASTChunkRow has chunking_method directly, not in metadata
-            chunking_method = getattr(chunk, 'chunking_method', 'unknown_chunking')
+            chunking_method = getattr(chunk, "chunking_method", "unknown_chunking")
         elif isinstance(chunk, dict):
             # Dictionary format from SplitRecursively - convert to Chunk
             base_loc = chunk.get("location", f"chunk_{i}")
@@ -1072,9 +1082,8 @@ def ensure_unique_chunk_locations(chunks) -> List[cocoindex.Json]:
             metadata = chunk.get("metadata", {})
             chunking_method = chunk.get(
                 "chunking_method",
-                metadata.get(
-                    "chunking_method",
-                    "unknown_chunking") if metadata else "unknown_chunking")
+                metadata.get("chunking_method", "unknown_chunking") if metadata else "unknown_chunking",
+            )
         else:
             # Fallback for unexpected types
             base_loc = f"chunk_{i}"
@@ -1098,7 +1107,7 @@ def ensure_unique_chunk_locations(chunks) -> List[cocoindex.Json]:
             "location": unique_loc,
             "start": start,
             "end": end,
-            "chunking_method": chunking_method
+            "chunking_method": chunking_method,
         }
         unique_chunks.append(unique_chunk_dict)
 
@@ -1154,41 +1163,46 @@ def promote_metadata_fields(metadata_json: str) -> Dict[str, Any]:
         # Define type conversions for known fields
         field_conversions = {
             # String fields
-            'analysis_method': lambda x: str(x) if x is not None else "unknown",
-            'chunking_method': lambda x: str(x) if x is not None else "unknown",
-            'language': lambda x: str(x) if x is not None else "unknown",
-            'filename': lambda x: str(x) if x is not None else "",
-            'docstring': lambda x: str(x) if x is not None else "",
-
+            "analysis_method": lambda x: str(x) if x is not None else "unknown",
+            "chunking_method": lambda x: str(x) if x is not None else "unknown",
+            "language": lambda x: str(x) if x is not None else "unknown",
+            "filename": lambda x: str(x) if x is not None else "",
+            "docstring": lambda x: str(x) if x is not None else "",
             # Boolean fields (handle string "true"/"false" values)
-            'tree_sitter_chunking_error': lambda x: x.lower() == "true" if isinstance(x, str) else bool(x) if x is not None else False,
-            'tree_sitter_analyze_error': lambda x: x.lower() == "true" if isinstance(x, str) else bool(x) if x is not None else False,
-            'has_type_hints': lambda x: bool(x) if x is not None else False,
-            'has_async': lambda x: bool(x) if x is not None else False,
-            'has_classes': lambda x: bool(x) if x is not None else False,
-            'success': lambda x: bool(x) if x is not None else False,
-            'tree_sitter_analyze_error': lambda x: bool(x) if x is not None else False,
-            'tree_sitter_chunking_error': lambda x: bool(x) if x is not None else False,
-            'has_docstrings': lambda x: bool(x) if x is not None else False,
-
+            "tree_sitter_chunking_error": lambda x: x.lower() == "true"
+            if isinstance(x, str)
+            else bool(x)
+            if x is not None
+            else False,
+            "tree_sitter_analyze_error": lambda x: x.lower() == "true"
+            if isinstance(x, str)
+            else bool(x)
+            if x is not None
+            else False,
+            "has_type_hints": lambda x: bool(x) if x is not None else False,
+            "has_async": lambda x: bool(x) if x is not None else False,
+            "has_classes": lambda x: bool(x) if x is not None else False,
+            "success": lambda x: bool(x) if x is not None else False,
+            "tree_sitter_analyze_error": lambda x: bool(x) if x is not None else False,
+            "tree_sitter_chunking_error": lambda x: bool(x) if x is not None else False,
+            "has_docstrings": lambda x: bool(x) if x is not None else False,
             # Integer fields
-            'complexity_score': lambda x: int(x) if x is not None and str(x).isdigit() else 0,
-            'line_count': lambda x: int(x) if x is not None and str(x).isdigit() else 0,
-            'char_count': lambda x: int(x) if x is not None and str(x).isdigit() else 0,
-            'parse_errors': lambda x: int(x) if x is not None and str(x).isdigit() else 0,
-
+            "complexity_score": lambda x: int(x) if x is not None and str(x).isdigit() else 0,
+            "line_count": lambda x: int(x) if x is not None and str(x).isdigit() else 0,
+            "char_count": lambda x: int(x) if x is not None and str(x).isdigit() else 0,
+            "parse_errors": lambda x: int(x) if x is not None and str(x).isdigit() else 0,
             # List fields
-            'functions': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
-            'classes': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
-            'imports': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
-            'decorators_used': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
-            'errors': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
-            'dunder_methods': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
-            'private_methods': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
-            'variables': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
-            'de': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
-            'variables': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
-            'decorators': lambda x: list(x) if isinstance(x, (list, tuple)) else [],
+            "functions": lambda x: list(x) if isinstance(x, (list, tuple)) else [],
+            "classes": lambda x: list(x) if isinstance(x, (list, tuple)) else [],
+            "imports": lambda x: list(x) if isinstance(x, (list, tuple)) else [],
+            "decorators_used": lambda x: list(x) if isinstance(x, (list, tuple)) else [],
+            "errors": lambda x: list(x) if isinstance(x, (list, tuple)) else [],
+            "dunder_methods": lambda x: list(x) if isinstance(x, (list, tuple)) else [],
+            "private_methods": lambda x: list(x) if isinstance(x, (list, tuple)) else [],
+            "variables": lambda x: list(x) if isinstance(x, (list, tuple)) else [],
+            "de": lambda x: list(x) if isinstance(x, (list, tuple)) else [],
+            "variables": lambda x: list(x) if isinstance(x, (list, tuple)) else [],
+            "decorators": lambda x: list(x) if isinstance(x, (list, tuple)) else [],
         }
 
         # Apply conversions for known fields
@@ -1199,18 +1213,25 @@ def promote_metadata_fields(metadata_json: str) -> Dict[str, Any]:
                 except Exception as e:
                     LOGGER.debug(f"Failed to convert field {field}: {e}")
                     # Set safe defaults based on field type
-                    if field in ['analysis_method', 'chunking_method', 'language', 'filename']:
-                        promoted[field] = "unknown" if field != 'filename' else ""
-                    elif field in ['tree_sitter_chunking_error', 'tree_sitter_analyze_error', 'has_type_hints', 'has_async', 'has_classes', 'success']:
+                    if field in ["analysis_method", "chunking_method", "language", "filename"]:
+                        promoted[field] = "unknown" if field != "filename" else ""
+                    elif field in [
+                        "tree_sitter_chunking_error",
+                        "tree_sitter_analyze_error",
+                        "has_type_hints",
+                        "has_async",
+                        "has_classes",
+                        "success",
+                    ]:
                         promoted[field] = False
-                    elif field in ['complexity_score', 'line_count', 'char_count', 'parse_errors']:
+                    elif field in ["complexity_score", "line_count", "char_count", "parse_errors"]:
                         promoted[field] = 0
-                    elif field in ['functions', 'classes', 'imports', 'decorators_used', 'errors']:
+                    elif field in ["functions", "classes", "imports", "decorators_used", "errors"]:
                         promoted[field] = []
 
         # For any remaining fields not in our conversion map, pass them through with basic type safety
         for field, value in metadata_dict.items():
-            if field not in promoted and field not in ['metadata_json']:  # Avoid infinite recursion
+            if field not in promoted and field not in ["metadata_json"]:  # Avoid infinite recursion
                 if isinstance(value, (str, int, float, bool, list, dict)):
                     promoted[field] = value
                 else:
@@ -1233,10 +1254,9 @@ def code_to_embedding(
 
     return text.transform(
         # Embed text using SentenceTransformer model with meta tensor handling.
-        cocoindex.functions.SentenceTransformerEmbed(
-            model=DEFAULT_TRANSFORMER_MODEL
-        )
+        cocoindex.functions.SentenceTransformerEmbed(model=DEFAULT_TRANSFORMER_MODEL)
     )
+
 
 # Removed helper function that was causing DataScope context issues
 
@@ -1263,11 +1283,7 @@ def graphcodebert_embedding(
     text: cocoindex.DataSlice[str],
 ) -> cocoindex.DataSlice[NDArray[np.float32]]:
     """GraphCodeBERT embedding for Python, Java, JavaScript, PHP, Ruby, Go, C, C++."""
-    return text.transform(
-        cocoindex.functions.SentenceTransformerEmbed(
-            model="microsoft/graphcodebert-base"
-        )
-    )
+    return text.transform(cocoindex.functions.SentenceTransformerEmbed(model="microsoft/graphcodebert-base"))
 
 
 @cocoindex.transform_flow()
@@ -1275,11 +1291,7 @@ def unixcoder_embedding(
     text: cocoindex.DataSlice[str],
 ) -> cocoindex.DataSlice[NDArray[np.float32]]:
     """UniXcode embedding for Rust, TypeScript, C#, Kotlin, Scala, Swift, Dart."""
-    return text.transform(
-        cocoindex.functions.SentenceTransformerEmbed(
-            model="microsoft/unixcoder-base"
-        )
-    )
+    return text.transform(cocoindex.functions.SentenceTransformerEmbed(model="microsoft/unixcoder-base"))
 
 
 @cocoindex.transform_flow()
@@ -1287,30 +1299,26 @@ def fallback_embedding(
     text: cocoindex.DataSlice[str],
 ) -> cocoindex.DataSlice[NDArray[np.float32]]:
     """Fallback embedding for languages not supported by specialized models."""
-    return text.transform(
-        cocoindex.functions.SentenceTransformerEmbed(
-            model=DEFAULT_TRANSFORMER_MODEL
-        )
-    )
+    return text.transform(cocoindex.functions.SentenceTransformerEmbed(model=DEFAULT_TRANSFORMER_MODEL))
 
 
 # Language group to embedding model mapping for smart embedding
 LANGUAGE_MODEL_GROUPS = {
     # GraphCodeBERT - optimized for these specific languages
-    'graphcodebert': {
-        'model': 'microsoft/graphcodebert-base',
-        'languages': {'python', 'java', 'javascript', 'php', 'ruby', 'go', 'c', 'c++'}
+    "graphcodebert": {
+        "model": "microsoft/graphcodebert-base",
+        "languages": {"python", "java", "javascript", "php", "ruby", "go", "c", "c++"},
     },
     # UniXcode - optimized for these languages
-    'unixcoder': {
-        'model': 'microsoft/unixcoder-base',
-        'languages': {'rust', 'typescript', 'tsx', 'c#', 'kotlin', 'scala', 'swift', 'dart'}
+    "unixcoder": {
+        "model": "microsoft/unixcoder-base",
+        "languages": {"rust", "typescript", "tsx", "c#", "kotlin", "scala", "swift", "dart"},
     },
     # Fallback for all other languages
-    'fallback': {
-        'model': DEFAULT_TRANSFORMER_MODEL,
-        'languages': set()  # Will catch everything else
-    }
+    "fallback": {
+        "model": DEFAULT_TRANSFORMER_MODEL,
+        "languages": set(),  # Will catch everything else
+    },
 }
 
 
@@ -1320,13 +1328,13 @@ def get_embedding_model_group(language: str) -> str:
     lang_lower = language.lower()
 
     for group_name, group_info in LANGUAGE_MODEL_GROUPS.items():
-        if group_name == 'fallback':
+        if group_name == "fallback":
             continue  # Handle fallback last
-        if lang_lower in group_info['languages']:
+        if lang_lower in group_info["languages"]:
             return group_name
 
     # Default to fallback for unrecognized languages
-    return 'fallback'
+    return "fallback"
 
 
 @cocoindex.op.function()
@@ -1345,7 +1353,7 @@ def get_embedding_model_name(model_group: str) -> str:
         The actual model identifier (e.g., 'microsoft/graphcodebert-base')
     """
     if model_group in LANGUAGE_MODEL_GROUPS:
-        model = LANGUAGE_MODEL_GROUPS[model_group]['model']
+        model = LANGUAGE_MODEL_GROUPS[model_group]["model"]
         assert isinstance(model, str), f"Model must be str, got {type(model)}"
         return model
     # Fallback to default model if group not found
@@ -1378,15 +1386,15 @@ def language_to_embedding_model(language: str) -> str:
     lang_lower = language.lower()
 
     for group_name, group_info in LANGUAGE_MODEL_GROUPS.items():
-        if group_name == 'fallback':
+        if group_name == "fallback":
             continue  # Handle fallback last
-        if lang_lower in group_info['languages']:
-            model = group_info['model']
+        if lang_lower in group_info["languages"]:
+            model = group_info["model"]
             assert isinstance(model, str), f"Model must be str, got {type(model)}"
             return model
 
     # Default to fallback model for unrecognized languages
-    fallback_model = LANGUAGE_MODEL_GROUPS['fallback']['model']
+    fallback_model = LANGUAGE_MODEL_GROUPS["fallback"]["model"]
     assert isinstance(fallback_model, str), f"Fallback model must be str, got {type(fallback_model)}"
     return fallback_model
 
@@ -1459,38 +1467,36 @@ def get_haskell_specialized_chunking_method() -> str:
 
 # Global configuration for flow parameters
 _global_flow_config = {
-    'paths': ["."],  # Use current directory for testing
-    'enable_polling': False,
-    'poll_interval': 30,
-    'use_smart_embedding': True,  # Enable smart language-aware embedding
+    "paths": ["."],  # Use current directory for testing
+    "enable_polling": False,
+    "poll_interval": 30,
+    "use_smart_embedding": True,  # Enable smart language-aware embedding
 }
 
 
 @cocoindex.flow_def(name="CodeEmbedding")
-def code_embedding_flow(
-    flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope
-) -> None:
+def code_embedding_flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope) -> None:
     """
     Define an improved flow that embeds files with syntax-aware chunking.
     Reads configuration from global _global_flow_config.
     """
     # Get configuration from global settings
-    paths = _global_flow_config.get('paths', ["cocoindex"])
-    enable_polling = _global_flow_config.get('enable_polling', False)
-    poll_interval = _global_flow_config.get('poll_interval', 30)
+    paths = _global_flow_config.get("paths", ["cocoindex"])
+    enable_polling = _global_flow_config.get("enable_polling", False)
+    poll_interval = _global_flow_config.get("poll_interval", 30)
 
     # Add multiple sources - CocoIndex supports this natively!
     all_files_sources = []
 
     # Cast paths to list to satisfy mypy
-    paths_list = list(paths) if hasattr(paths, '__iter__') else ["cocoindex"]
+    paths_list = list(paths) if hasattr(paths, "__iter__") else ["cocoindex"]
     for i, path in enumerate(paths_list):
         source_name = f"files_{i}" if len(paths_list) > 1 else "files"
         LOGGER.info(f"Adding source: {path} as '{source_name}'")
 
         # Configure LocalFile source with optional polling
         source_config = SOURCE_CONFIG.copy()
-        source_config['path'] = path
+        source_config["path"] = path
 
         # Note: Polling configuration is handled by CocoIndex live updater, not LocalFile
         if enable_polling:
@@ -1511,7 +1517,7 @@ def code_embedding_flow(
             file["chunking_params"] = file["language"].transform(get_chunking_params)
 
             # Choose chunking method based on configuration
-            use_default_chunking = _global_flow_config.get('use_default_chunking', False)
+            use_default_chunking = _global_flow_config.get("use_default_chunking", False)
 
             if use_default_chunking or not AST_CHUNKING_AVAILABLE:
                 if not use_default_chunking and not AST_CHUNKING_AVAILABLE:
@@ -1529,7 +1535,8 @@ def code_embedding_flow(
                 file["chunks"] = raw_chunks.transform(ensure_unique_chunk_locations)
                 # Set chunking method for this file
                 file["chunking_method_used"] = file["content"].transform(
-                    get_cocoindex_split_recursively_chunking_method)
+                    get_cocoindex_split_recursively_chunking_method
+                )
             else:
                 LOGGER.info("Using language-specific or AST chunking")
 
@@ -1539,10 +1546,7 @@ def code_embedding_flow(
 
                 if ASTChunkOperation is not None:
                     LOGGER.info("Using AST chunking with language-specific routing")
-                    raw_chunks = file["content"].transform(
-                        ASTChunkOperation,
-                        language=file["language"]
-                    )
+                    raw_chunks = file["content"].transform(ASTChunkOperation, language=file["language"])
                     # Don't set file-level chunking method - let extract_code_metadata handle it
                     # based on the use_default_chunking setting
                 else:
@@ -1555,9 +1559,10 @@ def code_embedding_flow(
                 file["chunks"] = raw_chunks
 
             # Choose embedding method based on configuration
-            use_smart_embedding = _global_flow_config.get('use_smart_embedding', False)
+            use_smart_embedding = _global_flow_config.get("use_smart_embedding", False)
             LOGGER.debug(
-                f"Embedding config: use_smart_embedding={use_smart_embedding}, SMART_EMBEDDING_AVAILABLE={SMART_EMBEDDING_AVAILABLE}")
+                f"Embedding config: use_smart_embedding={use_smart_embedding}, SMART_EMBEDDING_AVAILABLE={SMART_EMBEDDING_AVAILABLE}"
+            )
 
             # Add model group information for smart embedding
             if use_smart_embedding and SMART_EMBEDDING_AVAILABLE:
@@ -1586,7 +1591,7 @@ def code_embedding_flow(
                     chunk["embedding_model"] = chunk["content"].transform(get_default_embedding_model_name)
 
                 # Extract metadata using appropriate method based on configuration
-                use_default_language_handler = _global_flow_config.get('use_default_language_handler', False)
+                use_default_language_handler = _global_flow_config.get("use_default_language_handler", False)
 
                 if use_default_language_handler:
                     LOGGER.info("Using default language handler (--default-language-handler flag set)")
@@ -1604,7 +1609,7 @@ def code_embedding_flow(
                         extract_code_metadata,
                         language=file["language"],
                         filename=file["filename"],
-                        existing_metadata_json=existing_metadata_json
+                        existing_metadata_json=existing_metadata_json,
                     )
 
                 # Promote all metadata fields from JSON to top-level fields using individual extractors
@@ -1625,9 +1630,11 @@ def code_embedding_flow(
                 # Note: chunking_method is already set directly in ASTChunkRow dataclass
 
                 chunk["tree_sitter_chunking_error"] = chunk["extracted_metadata"].transform(
-                    extract_tree_sitter_chunking_error_field)
+                    extract_tree_sitter_chunking_error_field
+                )
                 chunk["tree_sitter_analyze_error"] = chunk["extracted_metadata"].transform(
-                    extract_tree_sitter_analyze_error_field)
+                    extract_tree_sitter_analyze_error_field
+                )
                 chunk["decorators_used"] = chunk["extracted_metadata"].transform(extract_decorators_used_field)
                 chunk["dunder_methods"] = chunk["extracted_metadata"].transform(extract_dunder_methods_field)
                 chunk["success"] = chunk["extracted_metadata"].transform(extract_success_field)
@@ -1636,16 +1643,19 @@ def code_embedding_flow(
 
                 # Language-specific fields (will be empty for non-matching languages)
                 chunk["nodes_with_errors"] = chunk["extracted_metadata"].transform(
-                    extract_nodes_with_errors_field)  # Haskell
+                    extract_nodes_with_errors_field
+                )  # Haskell
                 chunk["data_types"] = chunk["extracted_metadata"].transform(extract_data_types_field)  # Haskell
                 chunk["instances"] = chunk["extracted_metadata"].transform(extract_instances_field)  # Haskell
                 chunk["type_classes"] = chunk["extracted_metadata"].transform(extract_type_classes_field)  # Haskell
                 chunk["modules"] = chunk["extracted_metadata"].transform(extract_modules_field)  # Haskell, Rust
                 chunk["has_module"] = chunk["extracted_metadata"].transform(extract_has_module_field)  # Haskell
                 chunk["function_details"] = chunk["extracted_metadata"].transform(
-                    extract_function_details_field)  # Haskell
+                    extract_function_details_field
+                )  # Haskell
                 chunk["data_type_details"] = chunk["extracted_metadata"].transform(
-                    extract_data_type_details_field)  # Haskell
+                    extract_data_type_details_field
+                )  # Haskell
                 chunk["structs"] = chunk["extracted_metadata"].transform(extract_structs_field)  # Rust
                 chunk["traits"] = chunk["extracted_metadata"].transform(extract_traits_field)  # Rust
                 chunk["impls"] = chunk["extracted_metadata"].transform(extract_impls_field)  # Rust
@@ -1653,7 +1663,8 @@ def code_embedding_flow(
                 chunk["types"] = chunk["extracted_metadata"].transform(extract_types_field)  # TypeScript
                 chunk["enums"] = chunk["extracted_metadata"].transform(extract_enums_field)  # TypeScript
                 chunk["namespaces"] = chunk["extracted_metadata"].transform(
-                    extract_namespaces_field)  # TypeScript/JavaScript/C++
+                    extract_namespaces_field
+                )  # TypeScript/JavaScript/C++
 
                 # python
                 chunk["private_methods"] = chunk["extracted_metadata"].transform(extract_private_methods_field)
@@ -1700,7 +1711,7 @@ def code_embedding_flow(
                     # Language-specific fields
                     has_module=chunk["has_module"],
                     # These are now JSON strings returned directly from extraction functions
-                    class_details=chunk['class_details'],
+                    class_details=chunk["class_details"],
                     function_details=chunk["function_details"],
                     data_type_details=chunk["data_type_details"],
                     docstring=chunk["docstring"],
@@ -1759,8 +1770,9 @@ def scale_chunking_params(chunk_factor_percent: int) -> None:
             chunk_size=params.chunk_size * chunk_factor_percent // 100,
             min_chunk_size=params.min_chunk_size * chunk_factor_percent // 100,
             chunk_overlap=params.chunk_overlap * chunk_factor_percent // 100,
-            max_chunk_size=max(params.max_chunk_size * chunk_factor_percent // 100,
-                               params.chunk_size * 2) if params.max_chunk_size > 0 else params.chunk_size * 2
+            max_chunk_size=max(params.max_chunk_size * chunk_factor_percent // 100, params.chunk_size * 2)
+            if params.max_chunk_size > 0
+            else params.chunk_size * 2,
         )
 
     # Update the global EFFECTIVE_CHUNKING_PARAMS
@@ -1769,23 +1781,31 @@ def scale_chunking_params(chunk_factor_percent: int) -> None:
     LOGGER.info(f"Scaled chunking parameters by {chunk_factor_percent}%")
 
 
-def update_flow_config(paths: Union[List[str], None] = None, enable_polling: bool = False, poll_interval: int = 30,
-                       use_default_embedding: bool = False, use_default_chunking: bool = False,
-                       use_default_language_handler: bool = False, chunk_factor_percent: int = 100) -> None:
+def update_flow_config(
+    paths: Union[List[str], None] = None,
+    enable_polling: bool = False,
+    poll_interval: int = 30,
+    use_default_embedding: bool = False,
+    use_default_chunking: bool = False,
+    use_default_language_handler: bool = False,
+    chunk_factor_percent: int = 100,
+) -> None:
     """Update the global flow configuration."""
     global _global_flow_config
 
     # Scale chunking parameters if needed
     scale_chunking_params(chunk_factor_percent)
 
-    _global_flow_config.update({
-        'paths': paths or ["cocoindex"],
-        'enable_polling': enable_polling,
-        'poll_interval': poll_interval,
-        'use_default_embedding': use_default_embedding,
-        'use_default_chunking': use_default_chunking,
-        'use_default_language_handler': use_default_language_handler
-    })
+    _global_flow_config.update(
+        {
+            "paths": paths or ["cocoindex"],
+            "enable_polling": enable_polling,
+            "poll_interval": poll_interval,
+            "use_default_embedding": use_default_embedding,
+            "use_default_chunking": use_default_chunking,
+            "use_default_language_handler": use_default_language_handler,
+        }
+    )
 
 
 def run_flow_update(live_update: bool = False, poll_interval: int = 30) -> None:
@@ -1809,10 +1829,7 @@ def run_flow_update(live_update: bool = False, poll_interval: int = 30) -> None:
 
         # Start live updater
         LOGGER.info("👁️  Starting live file monitoring...")
-        live_options = cocoindex.FlowLiveUpdaterOptions(
-            live_mode=True,
-            print_stats=True
-        )
+        live_options = cocoindex.FlowLiveUpdaterOptions(live_mode=True, print_stats=True)
 
         with cocoindex.FlowLiveUpdater(flow, live_options) as updater:
             LOGGER.info("✅ Live update mode active. Press Ctrl+C to stop.")
@@ -1835,7 +1852,7 @@ def update_specific_flow_config(
     use_default_embedding: bool = False,
     use_default_chunking: bool = False,
     use_default_language_handler: bool = False,
-    chunk_factor_percent: int = 100
+    chunk_factor_percent: int = 100,
 ) -> None:
     """Update the global flow configuration for a specific flow definition."""
     global _global_flow_config
@@ -1843,27 +1860,25 @@ def update_specific_flow_config(
     # Scale chunking parameters if needed
     scale_chunking_params(chunk_factor_percent)
 
-    _global_flow_config.update({
-        'paths': paths or ["tmp"],
-        'enable_polling': enable_polling,
-        'poll_interval': poll_interval,
-        'use_default_embedding': use_default_embedding,
-        'use_default_chunking': use_default_chunking,
-        'use_default_language_handler': use_default_language_handler
-    })
+    _global_flow_config.update(
+        {
+            "paths": paths or ["tmp"],
+            "enable_polling": enable_polling,
+            "poll_interval": poll_interval,
+            "use_default_embedding": use_default_embedding,
+            "use_default_chunking": use_default_chunking,
+            "use_default_language_handler": use_default_language_handler,
+        }
+    )
 
-    flow_name = getattr(flow_def, '__name__', str(flow_def))
+    flow_name = getattr(flow_def, "__name__", str(flow_def))
     LOGGER.info(f"✅ Updated flow config for {flow_name}: paths={paths}, chunking={chunk_factor_percent}%")
 
 
-def run_specific_flow_update(
-    flow_def,
-    live_update: bool = False,
-    poll_interval: int = 30
-) -> None:
+def run_specific_flow_update(flow_def, live_update: bool = False, poll_interval: int = 30) -> None:
     """Run a specific flow update (one-time or live)."""
     if live_update:
-        flow_name = getattr(flow_def, '__name__', str(flow_def))
+        flow_name = getattr(flow_def, "__name__", str(flow_def))
         LOGGER.info(f"🔄 Starting live update mode for {flow_name}...")
         if poll_interval > 0:
             LOGGER.info(f"📊 File polling enabled: {poll_interval} seconds")
@@ -1880,10 +1895,7 @@ def run_specific_flow_update(
 
         # Start live updater
         LOGGER.info("👁️  Starting live file monitoring...")
-        live_options = cocoindex.FlowLiveUpdaterOptions(
-            live_mode=True,
-            print_stats=True
-        )
+        live_options = cocoindex.FlowLiveUpdaterOptions(live_mode=True, print_stats=True)
 
         with cocoindex.FlowLiveUpdater(flow_def, live_options) as updater:
             LOGGER.info("✅ Live update mode active. Press Ctrl+C to stop.")
@@ -1894,7 +1906,7 @@ def run_specific_flow_update(
 
     else:
         # Regular one-time update mode
-        flow_name = getattr(flow_def, '__name__', str(flow_def))
+        flow_name = getattr(flow_def, "__name__", str(flow_def))
         LOGGER.info(f"🔄 Running one-time update for {flow_name}...")
         stats = flow_def.update()
         LOGGER.info("Updated index: %s", stats)

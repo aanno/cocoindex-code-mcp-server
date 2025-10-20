@@ -53,7 +53,7 @@ def _get_table_columns(pool: ConnectionPool, table_name: str) -> Set[str]:
                 FROM information_schema.columns
                 WHERE table_name = %s
                 """,
-                (table_name,)
+                (table_name,),
             )
             available_columns = {row[0] for row in cur.fetchall()}
 
@@ -66,7 +66,7 @@ def _get_table_columns(pool: ConnectionPool, table_name: str) -> Set[str]:
                     FROM information_schema.columns
                     WHERE table_name = %s
                     """,
-                    (lowercase_table_name,)
+                    (lowercase_table_name,),
                 )
                 available_columns = {row[0] for row in cur.fetchall()}
 
@@ -110,8 +110,9 @@ class PostgresBackend(VectorStoreBackend):
 
         return available_columns
 
-    def _build_select_clause(self, include_distance: bool = False,
-                             distance_alias: str = "distance") -> Tuple[str, List[str]]:
+    def _build_select_clause(
+        self, include_distance: bool = False, distance_alias: str = "distance"
+    ) -> Tuple[str, List[str]]:
         """Build SELECT clause dynamically using only available DB columns."""
         available_columns = self._get_available_columns()
 
@@ -146,10 +147,7 @@ class PostgresBackend(VectorStoreBackend):
         return ", ".join(fields), available_fields
 
     def vector_search(
-        self,
-        query_vector: NDArray[np.float32],
-        top_k: int = 10,
-        embedding_model: str | None = None
+        self, query_vector: NDArray[np.float32], top_k: int = 10, embedding_model: str | None = None
     ) -> List[SearchResult]:
         """
         Perform pure vector similarity search using pgvector.
@@ -166,7 +164,8 @@ class PostgresBackend(VectorStoreBackend):
             register_vector(conn)
             with conn.cursor() as cur:
                 select_clause, available_fields = self._build_select_clause(
-                    include_distance=True, distance_alias="distance")
+                    include_distance=True, distance_alias="distance"
+                )
 
                 # Build WHERE clause for embedding_model filter
                 where_clause = ""
@@ -187,16 +186,9 @@ class PostgresBackend(VectorStoreBackend):
                     """,
                     tuple(params),
                 )
-                return [
-                    self._format_result(row, available_fields, score_type="vector")
-                    for row in cur.fetchall()
-                ]
+                return [self._format_result(row, available_fields, score_type="vector") for row in cur.fetchall()]
 
-    def keyword_search(
-        self,
-        filters: QueryFilters,
-        top_k: int = 10
-    ) -> List[SearchResult]:
+    def keyword_search(self, filters: QueryFilters, top_k: int = 10) -> List[SearchResult]:
         """Perform pure keyword/metadata search using PostgreSQL."""
         # Convert QueryFilters to SQL where clause
         where_clause, params = self._build_where_clause(filters)
@@ -225,10 +217,7 @@ class PostgresBackend(VectorStoreBackend):
 
                 logger.info(f"📊 Query returned {len(results)} results")
 
-                return [
-                    self._format_result(row, available_fields, score_type="keyword")
-                    for row in results
-                ]
+                return [self._format_result(row, available_fields, score_type="keyword") for row in results]
 
     def hybrid_search(
         self,
@@ -237,7 +226,7 @@ class PostgresBackend(VectorStoreBackend):
         top_k: int = 10,
         vector_weight: float = 0.7,
         keyword_weight: float = 0.3,
-        embedding_model: str | None = None
+        embedding_model: str | None = None,
     ) -> List[SearchResult]:
         """
         Perform hybrid search combining vector and keyword search.
@@ -286,10 +275,7 @@ class PostgresBackend(VectorStoreBackend):
                     """,
                     [query_vector, query_vector] + params + [vector_weight, keyword_weight, top_k],
                 )
-                return [
-                    self._format_result(row, available_fields, score_type="hybrid")
-                    for row in cur.fetchall()
-                ]
+                return [self._format_result(row, available_fields, score_type="hybrid") for row in cur.fetchall()]
 
     def configure(self, **options: Any) -> None:
         """Configure PostgreSQL-specific options."""
@@ -308,14 +294,12 @@ class PostgresBackend(VectorStoreBackend):
                     WHERE table_name = %s
                     ORDER BY ordinal_position
                     """,
-                    (self.table_name,)
+                    (self.table_name,),
                 )
                 columns = cur.fetchall()
 
                 # Get table size
-                cur.execute(
-                    f"SELECT COUNT(*) FROM {self.table_name}"
-                )
+                cur.execute(f"SELECT COUNT(*) FROM {self.table_name}")
                 result = cur.fetchone()
                 row_count = result[0] if result else 0
 
@@ -326,7 +310,7 @@ class PostgresBackend(VectorStoreBackend):
                     FROM pg_indexes
                     WHERE tablename = %s
                     """,
-                    (self.table_name,)
+                    (self.table_name,),
                 )
                 indexes = cur.fetchall()
 
@@ -339,31 +323,18 @@ class PostgresBackend(VectorStoreBackend):
                     "backend_type": "postgres",
                     "table_name": self.table_name,
                     "row_count": row_count,
-                    "columns": [
-                        {
-                            "name": col[0],
-                            "type": col[1],
-                            "nullable": col[2] == "YES"
-                        }
-                        for col in columns
-                    ],
-                    "indexes": [
-                        {
-                            "name": idx[0],
-                            "definition": idx[1]
-                        }
-                        for idx in indexes
-                    ],
+                    "columns": [{"name": col[0], "type": col[1], "nullable": col[2] == "YES"} for col in columns],
+                    "indexes": [{"name": idx[0], "definition": idx[1]} for idx in indexes],
                     "schema_info": {
                         "available_columns": sorted(available_columns),
                         "expected_columns": sorted(expected_columns),
-                        "missing_columns": sorted(missing_columns)
-                    }
+                        "missing_columns": sorted(missing_columns),
+                    },
                 }
 
     def close(self) -> None:
         """Close PostgreSQL connection pool."""
-        if hasattr(self.pool, 'close'):
+        if hasattr(self.pool, "close"):
             self.pool.close()
         # Clear instance-level tracking
         self._columns_warned.clear()
@@ -382,8 +353,9 @@ class PostgresBackend(VectorStoreBackend):
         search_group = MockSearchGroup(filters.conditions, filters.operator)
         return build_sql_where_clause(search_group)  # type: ignore
 
-    def _format_result(self, row: Tuple[Any, ...], available_fields: List[str],
-                       score_type: str = "vector") -> SearchResult:
+    def _format_result(
+        self, row: Tuple[Any, ...], available_fields: List[str], score_type: str = "vector"
+    ) -> SearchResult:
         """Format PostgreSQL database row into SearchResult using available field mapping."""
         # Build dictionary from row values using only available fields
         pg_row = {}
@@ -410,10 +382,11 @@ class PostgresBackend(VectorStoreBackend):
         # Ensure required fields have defaults
         pg_row.setdefault("source_name", "default")
         if "location" not in pg_row and "filename" in pg_row and "start" in pg_row and "end" in pg_row:
-            pg_row["location"] = f"{
-                pg_row['filename']}:{
-                pg_row['start']}-{
-                pg_row['end']}" if pg_row.get('start') and pg_row.get('end') else pg_row['filename']
+            pg_row["location"] = (
+                f"{pg_row['filename']}:{pg_row['start']}-{pg_row['end']}"
+                if pg_row.get("start") and pg_row.get("end")
+                else pg_row["filename"]
+            )
 
         # Convert score_type string to SearchResultType enum
         if score_type == "vector":

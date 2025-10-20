@@ -26,14 +26,9 @@ async def handle_list_tools() -> list[types.Tool]:
             description="A simple test tool",
             inputSchema={
                 "type": "object",
-                "properties": {
-                    "message": {
-                        "type": "string",
-                        "description": "Test message"
-                    }
-                },
-                "required": ["message"]
-            }
+                "properties": {"message": {"type": "string", "description": "Test message"}},
+                "required": ["message"],
+            },
         )
     ]
 
@@ -42,15 +37,9 @@ async def handle_list_tools() -> list[types.Tool]:
 async def handle_call_tool(name: str, arguments: dict) -> list[types.TextContent]:
     """Handle MCP tool calls."""
     if name == "test_tool":
-        return [types.TextContent(
-            type="text",
-            text=f"Test response: {arguments.get('message', 'no message')}"
-        )]
+        return [types.TextContent(type="text", text=f"Test response: {arguments.get('message', 'no message')}")]
     else:
-        return [types.TextContent(
-            type="text",
-            text=f"Unknown tool: {name}"
-        )]
+        return [types.TextContent(type="text", text=f"Unknown tool: {name}")]
 
 
 async def run_http_server(port: int):
@@ -79,17 +68,13 @@ async def run_http_server(port: int):
     app = Starlette(routes=routes)
 
     # Run the server
-    config = uvicorn.Config(
-        app=app,
-        host="127.0.0.1",
-        port=port,
-        log_level="info"
-    )
+    config = uvicorn.Config(app=app, host="127.0.0.1", port=port, log_level="info")
     server_instance = uvicorn.Server(config)
     await server_instance.serve()
 
 
 if __name__ == "__main__":
     import sys
+
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 3034
     asyncio.run(run_http_server(port))

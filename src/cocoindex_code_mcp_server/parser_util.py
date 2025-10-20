@@ -3,8 +3,12 @@ from typing import Any, Dict
 
 
 def is_empty_iterable(value: Any) -> bool:
-    return isinstance(value, Iterable) and not isinstance(
-        value, (str, bytes)) and isinstance(value, Sized) and len(value) == 0
+    return (
+        isinstance(value, Iterable)
+        and not isinstance(value, (str, bytes))
+        and isinstance(value, Sized)
+        and len(value) == 0
+    )
 
 
 def update_defaults(d: Dict[str, Any], defaults: Dict[str, Any]) -> None:

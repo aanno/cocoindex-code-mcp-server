@@ -9,7 +9,7 @@ from cocoindex_code_mcp_server.ast_visitor import (
     TreeWalker,
 )
 
-sys.path.append('src')
+sys.path.append("src")
 
 
 def debug_language(code: str, language: str, filename: str):
@@ -35,8 +35,8 @@ def debug_language(code: str, language: str, filename: str):
     walker = TreeWalker(code, tree)
 
     def debug_visit(node, path=""):
-        node_type = node.type if hasattr(node, 'type') else str(type(node))
-        text = node.text.decode('utf-8') if hasattr(node, 'text') else ""
+        node_type = node.type if hasattr(node, "type") else str(type(node))
+        text = node.text.decode("utf-8") if hasattr(node, "text") else ""
         if len(text) > 50:
             text = text[:50] + "..."
         print(f"  Node: {node_type} | Text: {repr(text)}")
@@ -46,13 +46,13 @@ def debug_language(code: str, language: str, filename: str):
         if depth > 3:  # Limit depth
             return
         indent = "  " * depth
-        node_type = node.type if hasattr(node, 'type') else str(type(node))
-        text = node.text.decode('utf-8') if hasattr(node, 'text') else ""
+        node_type = node.type if hasattr(node, "type") else str(type(node))
+        text = node.text.decode("utf-8") if hasattr(node, "text") else ""
         if len(text) > 30:
             text = text[:30] + "..."
         print(f"{indent}{node_type}: {repr(text)}")
 
-        if hasattr(node, 'children'):
+        if hasattr(node, "children"):
             for child in node.children:
                 walk_tree(child, depth + 1)
 
@@ -64,19 +64,19 @@ def debug_language(code: str, language: str, filename: str):
     print(f"Visitor result: {metadata}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Test C
-    c_code = '''int add(int a, int b) {
+    c_code = """int add(int a, int b) {
     return a + b;
-}'''
-    debug_language(c_code, 'c', 'test.c')
+}"""
+    debug_language(c_code, "c", "test.c")
 
     # Test Rust
-    rust_code = '''fn fibonacci(n: u32) -> u32 {
+    rust_code = """fn fibonacci(n: u32) -> u32 {
     match n {
         0 => 0,
         1 => 1,
         _ => fibonacci(n - 1) + fibonacci(n - 2),
     }
-}'''
-    debug_language(rust_code, 'rust', 'test.rs')
+}"""
+    debug_language(rust_code, "rust", "test.rs")

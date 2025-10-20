@@ -47,26 +47,15 @@ Hybrid Search Queries:
      - (language:python or language:rust) and exists(embedding)
      - filename:"test file.py" and language:python
      - exists(embedding) and (language:rust or language:go)
-        """
+        """,
     )
 
-    parser.add_argument(
-        "paths",
-        nargs="*",
-        help="Code directory paths to index (default: cocoindex)"
-    )
+    parser.add_argument("paths", nargs="*", help="Code directory paths to index (default: cocoindex)")
+
+    parser.add_argument("--paths", dest="explicit_paths", nargs="+", help="Alternative way to specify paths")
 
     parser.add_argument(
-        "--paths",
-        dest="explicit_paths",
-        nargs="+",
-        help="Alternative way to specify paths"
-    )
-
-    parser.add_argument(
-        "--no-live",
-        action="store_true",
-        help="Disable live update mode (live updates are enabled by default)"
+        "--no-live", action="store_true", help="Disable live update mode (live updates are enabled by default)"
     )
 
     parser.add_argument(
@@ -74,7 +63,7 @@ Hybrid Search Queries:
         type=int,
         default=60,
         metavar="SECONDS",
-        help="Polling interval in seconds for live updates (default: 60)"
+        help="Polling interval in seconds for live updates (default: 60)",
     )
 
     return parser.parse_args()
@@ -142,11 +131,7 @@ def main():
     live_enabled = not args.no_live
 
     # Update flow configuration
-    update_flow_config(
-        paths=paths,
-        enable_polling=live_enabled and args.poll > 0,
-        poll_interval=args.poll
-    )
+    update_flow_config(paths=paths, enable_polling=live_enabled and args.poll > 0, poll_interval=args.poll)
 
     # Run the flow update
     if live_enabled:
@@ -159,6 +144,7 @@ def main():
         try:
             # Setup and initial update
             from .cocoindex_config import code_embedding_flow
+
             flow = code_embedding_flow
             flow.setup()
 
@@ -171,7 +157,7 @@ def main():
             print("👁️  Starting live monitoring...")
             live_options = cocoindex.FlowLiveUpdaterOptions(
                 live_mode=True,
-                print_stats=False  # Reduce noise during interactive search
+                print_stats=False,  # Reduce noise during interactive search
             )
 
             with cocoindex.FlowLiveUpdater(flow, live_options) as updater:
@@ -188,6 +174,7 @@ def main():
     else:
         print("🔨 Building index (one-time)...")
         from .cocoindex_config import code_embedding_flow
+
         stats = code_embedding_flow.update()
         print(f"✅ Index built: {stats}")
         print()

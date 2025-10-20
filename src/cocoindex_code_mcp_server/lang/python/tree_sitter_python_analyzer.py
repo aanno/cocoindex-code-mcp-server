@@ -54,10 +54,11 @@ class TreeSitterPythonAnalyzer:
         # Try multiple analysis strategies
         metadata = self._try_enhanced_python_analysis(code, filename)
 
-        if not metadata or metadata.get('analysis_method') == 'basic_text':
+        if not metadata or metadata.get("analysis_method") == "basic_text":
             # Fallback to enhanced Python AST analyzer
             try:
                 from ...lang.python.python_code_analyzer import PythonCodeAnalyzer
+
                 LOGGER.debug(f"Using enhanced PythonCodeAnalyzer for detailed analysis (bad) for {filename}")
                 fallback_analyzer = PythonCodeAnalyzer()
                 fallback_metadata = fallback_analyzer.analyze_code(code, filename)
@@ -66,7 +67,7 @@ class TreeSitterPythonAnalyzer:
             except ImportError:
                 # Last resort: use multi-level analyzer
                 LOGGER.debug(f"Using MultiLevelAnalyzer as fallback for Python code (very bad) for {filename}")
-                fallback_metadata = self.multilevel_analyzer.analyze_code(code, 'python', filename)
+                fallback_metadata = self.multilevel_analyzer.analyze_code(code, "python", filename)
                 if fallback_metadata:
                     metadata = fallback_metadata
 
@@ -80,7 +81,7 @@ class TreeSitterPythonAnalyzer:
             # Strategy 1: Tree-sitter analysis
             ts_metadata = self._try_tree_sitter_analysis(code, filename)
             LOGGER.debug(f"Strategy 1: Tree-sitter analysis result for {filename}: {ts_metadata}")
-            if ts_metadata and ts_metadata.get('analysis_method') == 'tree_sitter':
+            if ts_metadata and ts_metadata.get("analysis_method") == "tree_sitter":
                 # Enhance with Python AST for better semantic analysis
                 ast_metadata = self._try_python_ast_analysis(code, filename)
                 if ast_metadata:
@@ -105,13 +106,13 @@ class TreeSitterPythonAnalyzer:
         """Try tree-sitter based analysis."""
         try:
             # Use the parser factory to get a Python parser
-            tree = self.parser_factory.parse_code(code, 'python')
+            tree = self.parser_factory.parse_code(code, "python")
             if not tree:
                 return None
 
             # Create a visitor with Python handler
-            visitor = GenericMetadataVisitor('python')
-            python_handler = get_handler_for_language('python')
+            visitor = GenericMetadataVisitor("python")
+            python_handler = get_handler_for_language("python")
 
             if python_handler:
                 visitor.add_handler(python_handler)
@@ -121,12 +122,12 @@ class TreeSitterPythonAnalyzer:
             metadata = walker.walk(visitor)
 
             # Get handler summary if available
-            if python_handler and hasattr(python_handler, 'get_summary'):
+            if python_handler and hasattr(python_handler, "get_summary"):
                 handler_summary = python_handler.get_summary()
                 metadata.update(handler_summary)
 
-            metadata['analysis_method'] = 'tree_sitter'
-            metadata['language'] = 'python'
+            metadata["analysis_method"] = "tree_sitter"
+            metadata["language"] = "python"
 
             return metadata
 
@@ -139,12 +140,13 @@ class TreeSitterPythonAnalyzer:
         try:
             # Use the enhanced PythonCodeAnalyzer instead of the simple visitor
             from ...lang.python.python_code_analyzer import PythonCodeAnalyzer
+
             analyzer = PythonCodeAnalyzer()
             metadata = analyzer.analyze_code(code, filename)
 
             if metadata:
                 # Ensure analysis method is set correctly
-                metadata['analysis_method'] = 'python_code_analyzer'
+                metadata["analysis_method"] = "python_code_analyzer"
                 return metadata
             else:
                 return None
@@ -160,20 +162,23 @@ class TreeSitterPythonAnalyzer:
 
                 metadata = visitor.get_metadata()
                 # metadata.update({
-                update_defaults(metadata, {
-                    'analysis_method': 'python_ast',
-                    'language': 'python',
-                    'filename': filename,
-                    'line_count': len(code.split('\n')),
-                    'char_count': len(code),
-                    # Promoted metadata fields for database columns
-                    "analysis_method": "tree_sitter_python_analyzer",
-                    # don't set chunking method in analyzer
-                    # "chunking_method": "ast_tree_sitter",
-                    # "tree_sitter_chunking_error": False,
-                    'tree_sitter_analyze_error': False,
-                    'decorators_used': metadata.get('decorators', [])
-                })
+                update_defaults(
+                    metadata,
+                    {
+                        "analysis_method": "python_ast",
+                        "language": "python",
+                        "filename": filename,
+                        "line_count": len(code.split("\n")),
+                        "char_count": len(code),
+                        # Promoted metadata fields for database columns
+                        "analysis_method": "tree_sitter_python_analyzer",
+                        # don't set chunking method in analyzer
+                        # "chunking_method": "ast_tree_sitter",
+                        # "tree_sitter_chunking_error": False,
+                        "tree_sitter_analyze_error": False,
+                        "decorators_used": metadata.get("decorators", []),
+                    },
+                )
 
                 return metadata
 
@@ -192,29 +197,26 @@ class TreeSitterPythonAnalyzer:
         merged = primary.copy()
 
         # Merge lists and sets
-        for key in ['functions', 'classes', 'imports', 'variables', 'decorators']:
+        for key in ["functions", "classes", "imports", "variables", "decorators"]:
             if key in secondary:
                 primary_items = set(merged.get(key, []))
                 secondary_items = set(secondary.get(key, []))
                 merged[key] = list(primary_items | secondary_items)
 
         # Take the higher complexity score
-        if 'complexity_score' in secondary:
-            merged['complexity_score'] = max(
-                merged.get('complexity_score', 0),
-                secondary['complexity_score']
-            )
+        if "complexity_score" in secondary:
+            merged["complexity_score"] = max(merged.get("complexity_score", 0), secondary["complexity_score"])
 
         # Merge boolean flags (OR operation)
-        for key in ['has_async', 'has_classes', 'has_decorators', 'has_type_hints', 'has_docstrings']:
+        for key in ["has_async", "has_classes", "has_decorators", "has_type_hints", "has_docstrings"]:
             if key in secondary:
                 merged[key] = merged.get(key, False) or secondary.get(key, False)
 
         # Merge class_details with decorators from both sources
-        if 'class_details' in secondary:
+        if "class_details" in secondary:
             # Create a mapping of class names to details for easier merging
-            primary_classes = {cls.get('name'): cls for cls in merged.get('class_details', [])}
-            secondary_classes = {cls.get('name'): cls for cls in secondary['class_details']}
+            primary_classes = {cls.get("name"): cls for cls in merged.get("class_details", [])}
+            secondary_classes = {cls.get("name"): cls for cls in secondary["class_details"]}
 
             merged_class_details = []
             for class_name in set(primary_classes.keys()) | set(secondary_classes.keys()):
@@ -232,51 +234,51 @@ class TreeSitterPythonAnalyzer:
                     merged_cls = primary_cls.copy()
                     # Merge important fields from secondary (especially decorators)
                     for k, v in secondary_cls.items():
-                        if k == 'decorators' and v:  # Prefer non-empty decorators
+                        if k == "decorators" and v:  # Prefer non-empty decorators
                             merged_cls[k] = v
                         elif k not in merged_cls:
                             merged_cls[k] = v
 
                 merged_class_details.append(merged_cls)
 
-            merged['class_details'] = merged_class_details
+            merged["class_details"] = merged_class_details
 
         # Handle function_details and import_details as before
-        for key in ['function_details', 'import_details']:
+        for key in ["function_details", "import_details"]:
             if key in secondary and len(secondary[key]) > len(merged.get(key, [])):
                 merged[key] = secondary[key]
 
         # Combine analysis methods
-        primary_method = merged.get('analysis_method', 'unknown')
-        secondary_method = secondary.get('analysis_method', 'unknown')
-        merged['analysis_method'] = f"{primary_method}+{secondary_method}"
+        primary_method = merged.get("analysis_method", "unknown")
+        secondary_method = secondary.get("analysis_method", "unknown")
+        merged["analysis_method"] = f"{primary_method}+{secondary_method}"
 
         return merged
 
     def _normalize_metadata(self, metadata: Union[Dict[str, Any], None], code: str, filename: str) -> Dict[str, Any]:
         """Ensure metadata has all expected fields without overriding enhanced metadata."""
         base_metadata = {
-            'language': 'Python',
-            'filename': filename,
-            'line_count': len(code.split('\n')),
-            'char_count': len(code),
-            'functions': [],
-            'classes': [],
-            'imports': [],
-            'variables': [],
-            'decorators': [],
-            'complexity_score': 0,
-            'has_async': False,
-            'has_classes': False,
-            'has_decorators': False,
-            'has_type_hints': False,
-            'has_docstrings': False,
-            'private_methods': [],
-            'dunder_methods': [],
-            'function_details': [],
-            'class_details': [],
-            'import_details': [],
-            'analysis_method': 'unknown'
+            "language": "Python",
+            "filename": filename,
+            "line_count": len(code.split("\n")),
+            "char_count": len(code),
+            "functions": [],
+            "classes": [],
+            "imports": [],
+            "variables": [],
+            "decorators": [],
+            "complexity_score": 0,
+            "has_async": False,
+            "has_classes": False,
+            "has_decorators": False,
+            "has_type_hints": False,
+            "has_docstrings": False,
+            "private_methods": [],
+            "dunder_methods": [],
+            "function_details": [],
+            "class_details": [],
+            "import_details": [],
+            "analysis_method": "unknown",
         }
 
         # Only add base fields that are missing, don't override enhanced ones
@@ -338,12 +340,9 @@ class PythonASTVisitor(ast.NodeVisitor):
     def visit_Import(self, node: ast.Import) -> None:
         """Visit import statements."""
         for alias in node.names:
-            self.imports.append({
-                'module': alias.name,
-                'alias': alias.asname,
-                'is_from_import': False,
-                'line': node.lineno
-            })
+            self.imports.append(
+                {"module": alias.name, "alias": alias.asname, "is_from_import": False, "line": node.lineno}
+            )
 
         self.generic_visit(node)
 
@@ -351,13 +350,15 @@ class PythonASTVisitor(ast.NodeVisitor):
         """Visit from...import statements."""
         module = node.module or ""
         for alias in node.names:
-            self.imports.append({
-                'module': module,
-                'name': alias.name,
-                'alias': alias.asname,
-                'is_from_import': True,
-                'line': node.lineno
-            })
+            self.imports.append(
+                {
+                    "module": module,
+                    "name": alias.name,
+                    "alias": alias.asname,
+                    "is_from_import": True,
+                    "line": node.lineno,
+                }
+            )
 
         self.generic_visit(node)
 
@@ -423,47 +424,47 @@ class PythonASTVisitor(ast.NodeVisitor):
     def _process_function(self, node, is_async: bool = False):
         """Process function definition node."""
         func_info = {
-            'name': node.name,
-            'line': node.lineno,
-            'is_async': is_async,
-            'is_private': node.name.startswith('_'),
-            'is_dunder': node.name.startswith('__') and node.name.endswith('__'),
-            'decorators': [self._get_decorator_name(dec) for dec in node.decorator_list],
-            'parameters': self._extract_parameters(node),
-            'return_type': self._get_annotation_name(node.returns) if node.returns else None,
-            'docstring': ast.get_docstring(node),
-            'class': self.current_class
+            "name": node.name,
+            "line": node.lineno,
+            "is_async": is_async,
+            "is_private": node.name.startswith("_"),
+            "is_dunder": node.name.startswith("__") and node.name.endswith("__"),
+            "decorators": [self._get_decorator_name(dec) for dec in node.decorator_list],
+            "parameters": self._extract_parameters(node),
+            "return_type": self._get_annotation_name(node.returns) if node.returns else None,
+            "docstring": ast.get_docstring(node),
+            "class": self.current_class,
         }
 
         self.functions.append(func_info)
 
         # Track decorators
-        for dec_name in func_info['decorators']:
+        for dec_name in func_info["decorators"]:
             self.decorators.add(dec_name)
 
         # Add to class methods if in class scope
         if self.current_class:
             for cls_info in self.classes:
-                if cls_info['name'] == self.current_class:
-                    cls_info.setdefault('methods', []).append(node.name)
+                if cls_info["name"] == self.current_class:
+                    cls_info.setdefault("methods", []).append(node.name)
                     break
 
     def _process_class(self, node):
         """Process class definition node."""
         class_info = {
-            'name': node.name,
-            'line': node.lineno,
-            'is_private': node.name.startswith('_'),
-            'bases': [self._get_annotation_name(base) for base in node.bases],
-            'decorators': [self._get_decorator_name(dec) for dec in node.decorator_list],
-            'docstring': ast.get_docstring(node),
-            'methods': []
+            "name": node.name,
+            "line": node.lineno,
+            "is_private": node.name.startswith("_"),
+            "bases": [self._get_annotation_name(base) for base in node.bases],
+            "decorators": [self._get_decorator_name(dec) for dec in node.decorator_list],
+            "docstring": ast.get_docstring(node),
+            "methods": [],
         }
 
         self.classes.append(class_info)
 
         # Track decorators
-        for dec_name in class_info['decorators']:
+        for dec_name in class_info["decorators"]:
             self.decorators.add(dec_name)
 
     def _extract_parameters(self, node) -> List[Dict[str, Any]]:
@@ -475,48 +476,56 @@ class PythonASTVisitor(ast.NodeVisitor):
         # Regular arguments
         for i, arg in enumerate(args.args):
             param_info = {
-                'name': arg.arg,
-                'type_annotation': self._get_annotation_name(arg.annotation) if arg.annotation else None,
-                'default': None
+                "name": arg.arg,
+                "type_annotation": self._get_annotation_name(arg.annotation) if arg.annotation else None,
+                "default": None,
             }
 
             # Check for default values
             defaults_start = len(args.args) - len(args.defaults)
             if i >= defaults_start:
                 default_index = i - defaults_start
-                param_info['default'] = self._get_default_value(args.defaults[default_index])
+                param_info["default"] = self._get_default_value(args.defaults[default_index])
 
             parameters.append(param_info)
 
         # *args
         if args.vararg:
-            parameters.append({
-                'name': f"*{args.vararg.arg}",
-                'type_annotation': self._get_annotation_name(args.vararg.annotation) if args.vararg.annotation else None,
-                'default': None
-            })
+            parameters.append(
+                {
+                    "name": f"*{args.vararg.arg}",
+                    "type_annotation": self._get_annotation_name(args.vararg.annotation)
+                    if args.vararg.annotation
+                    else None,
+                    "default": None,
+                }
+            )
 
         # Keyword-only arguments
         for i, arg in enumerate(args.kwonlyargs):
             param_info = {
-                'name': arg.arg,
-                'type_annotation': self._get_annotation_name(arg.annotation) if arg.annotation else None,
-                'default': None
+                "name": arg.arg,
+                "type_annotation": self._get_annotation_name(arg.annotation) if arg.annotation else None,
+                "default": None,
             }
 
             # Check for default values in kw_defaults
             if i < len(args.kw_defaults) and args.kw_defaults[i] is not None:
-                param_info['default'] = self._get_default_value(args.kw_defaults[i])
+                param_info["default"] = self._get_default_value(args.kw_defaults[i])
 
             parameters.append(param_info)
 
         # **kwargs
         if args.kwarg:
-            parameters.append({
-                'name': f"**{args.kwarg.arg}",
-                'type_annotation': self._get_annotation_name(args.kwarg.annotation) if args.kwarg.annotation else None,
-                'default': None
-            })
+            parameters.append(
+                {
+                    "name": f"**{args.kwarg.arg}",
+                    "type_annotation": self._get_annotation_name(args.kwarg.annotation)
+                    if args.kwarg.annotation
+                    else None,
+                    "default": None,
+                }
+            )
 
         return parameters
 
@@ -551,33 +560,27 @@ class PythonASTVisitor(ast.NodeVisitor):
     def get_metadata(self) -> Dict[str, Any]:
         """Get extracted metadata."""
         # Extract unique modules from imports
-        imported_modules = list(set([
-            imp['module'] for imp in self.imports
-            if imp['module'] and imp['module'] != ''
-        ]))
+        imported_modules = list(set([imp["module"] for imp in self.imports if imp["module"] and imp["module"] != ""]))
 
         return {
-            'functions': [f['name'] for f in self.functions if not f['class']],
-            'classes': [c['name'] for c in self.classes],
-            'imports': imported_modules,
-            'variables': list(set(self.variables)),
-            'decorators': list(self.decorators),
-            'complexity_score': self.complexity_score,
-            'has_async': any(f['is_async'] for f in self.functions),
-            'has_classes': len(self.classes) > 0,
-            'has_decorators': len(self.decorators) > 0,
-            'has_type_hints': any(
-                f['return_type'] or any(p.get('type_annotation') for p in f['parameters'])
-                for f in self.functions
+            "functions": [f["name"] for f in self.functions if not f["class"]],
+            "classes": [c["name"] for c in self.classes],
+            "imports": imported_modules,
+            "variables": list(set(self.variables)),
+            "decorators": list(self.decorators),
+            "complexity_score": self.complexity_score,
+            "has_async": any(f["is_async"] for f in self.functions),
+            "has_classes": len(self.classes) > 0,
+            "has_decorators": len(self.decorators) > 0,
+            "has_type_hints": any(
+                f["return_type"] or any(p.get("type_annotation") for p in f["parameters"]) for f in self.functions
             ),
-            'has_docstrings': any(
-                f.get('docstring') or f.get('has_docstring') for f in self.functions + self.classes
-            ),
-            'private_methods': [f['name'] for f in self.functions if f['is_private']],
-            'dunder_methods': [f['name'] for f in self.functions if f['is_dunder']],
-            'function_details': self.functions,
-            'class_details': self.classes,
-            'import_details': self.imports
+            "has_docstrings": any(f.get("docstring") or f.get("has_docstring") for f in self.functions + self.classes),
+            "private_methods": [f["name"] for f in self.functions if f["is_private"]],
+            "dunder_methods": [f["name"] for f in self.functions if f["is_dunder"]],
+            "function_details": self.functions,
+            "class_details": self.classes,
+            "import_details": self.imports,
         }
 
 

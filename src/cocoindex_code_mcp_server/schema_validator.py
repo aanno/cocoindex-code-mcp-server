@@ -16,34 +16,46 @@ VALID_COLUMNS: Set[str] = set(CONST_FIELD_MAPPINGS.keys())
 
 # Field aliases - map user-friendly names to actual column names
 FIELD_ALIASES: Dict[str, str] = {
-    'path': 'filename',
-    'file': 'filename',
-    'filepath': 'filename',
-    'name': 'filename',
-    'lang': 'language',
-    'content': 'code',
-    'text': 'code',
-    'source': 'code',
-    'functions_list': 'functions',
-    'classes_list': 'classes',
-    'imports_list': 'imports',
-    'complexity': 'complexity_score',
-    'has_hints': 'has_type_hints',
-    'has_async_functions': 'has_async',
-    'source_file': 'source_name',
-    'metadata': 'metadata_json'
+    "path": "filename",
+    "file": "filename",
+    "filepath": "filename",
+    "name": "filename",
+    "lang": "language",
+    "content": "code",
+    "text": "code",
+    "source": "code",
+    "functions_list": "functions",
+    "classes_list": "classes",
+    "imports_list": "imports",
+    "complexity": "complexity_score",
+    "has_hints": "has_type_hints",
+    "has_async_functions": "has_async",
+    "source_file": "source_name",
+    "metadata": "metadata_json",
 }
 
 # SQL-safe operators for conditions
 SAFE_OPERATORS: Set[str] = {
-    '=', '!=', '<>', '<', '>', '<=', '>=', 'LIKE', 'ILIKE', 'IN', 'NOT IN',
-    'IS NULL', 'IS NOT NULL'
+    "=",
+    "!=",
+    "<>",
+    "<",
+    ">",
+    "<=",
+    ">=",
+    "LIKE",
+    "ILIKE",
+    "IN",
+    "NOT IN",
+    "IS NULL",
+    "IS NOT NULL",
 }
 
 
 @dataclass
 class ValidationResult:
     """Result of field validation."""
+
     is_valid: bool
     mapped_field: Optional[str] = None
     error_message: Optional[str] = None
@@ -52,8 +64,9 @@ class ValidationResult:
 class SchemaValidator:
     """Validates and maps database fields to prevent SQL injection and schema errors."""
 
-    def __init__(self, valid_columns: Optional[Set[str]] = None,
-                 field_aliases: Optional[Dict[str, str]] = None) -> None:
+    def __init__(
+        self, valid_columns: Optional[Set[str]] = None, field_aliases: Optional[Dict[str, str]] = None
+    ) -> None:
         self.valid_columns = valid_columns or VALID_COLUMNS
         self.field_aliases = field_aliases or FIELD_ALIASES
 
@@ -68,16 +81,13 @@ class SchemaValidator:
             ValidationResult with validation status and mapped field
         """
         if not field or not isinstance(field, str):
-            return ValidationResult(
-                is_valid=False,
-                error_message="Field name must be a non-empty string"
-            )
+            return ValidationResult(is_valid=False, error_message="Field name must be a non-empty string")
 
         # Sanitize field name - only allow alphanumeric and underscore
-        if not field.replace('_', '').replace('-', '').isalnum():
+        if not field.replace("_", "").replace("-", "").isalnum():
             return ValidationResult(
                 is_valid=False,
-                error_message=f"Invalid field name '{field}' - only alphanumeric characters and underscores allowed"
+                error_message=f"Invalid field name '{field}' - only alphanumeric characters and underscores allowed",
             )
 
         # Check if field exists directly
@@ -93,8 +103,7 @@ class SchemaValidator:
         # Field not found
         valid_fields = sorted(list(self.valid_columns) + list(self.field_aliases.keys()))
         return ValidationResult(
-            is_valid=False,
-            error_message=f"Unknown field '{field}'. Valid fields: {', '.join(valid_fields)}"
+            is_valid=False, error_message=f"Unknown field '{field}'. Valid fields: {', '.join(valid_fields)}"
         )
 
     def validate_operator(self, operator: str) -> bool:
@@ -139,12 +148,12 @@ class SchemaValidator:
         safe_value = self.sanitize_value(value)
 
         # Build condition with parameter binding (NOT string concatenation)
-        if operator.upper() in ['IS NULL', 'IS NOT NULL']:
+        if operator.upper() in ["IS NULL", "IS NOT NULL"]:
             return f"{mapped_field} {operator.upper()}", []
-        elif operator.upper() in ['IN', 'NOT IN']:
+        elif operator.upper() in ["IN", "NOT IN"]:
             if not isinstance(safe_value, (list, tuple)):
                 raise ValueError(f"Operator {operator} requires a list/tuple value")
-            placeholders = ', '.join(['%s'] * len(safe_value))
+            placeholders = ", ".join(["%s"] * len(safe_value))
             return f"{mapped_field} {operator.upper()} ({placeholders})", list(safe_value)
         else:
             return f"{mapped_field} {operator} %s", [safe_value]
@@ -170,7 +179,7 @@ def validate_field(field: str) -> ValidationResult:
     return schema_validator.validate_field(field)
 
 
-def build_safe_condition(field: str, operator: str = '=', value: Any = None) -> tuple[str, List[Any]]:
+def build_safe_condition(field: str, operator: str = "=", value: Any = None) -> tuple[str, List[Any]]:
     """Build a safe SQL condition using the global validator."""
     return schema_validator.build_safe_condition(field, operator, value)
 
@@ -185,13 +194,13 @@ if __name__ == "__main__":
     validator = SchemaValidator()
 
     test_cases = [
-        ('filename', '=', 'test.py'),
-        ('path', '=', 'test.py'),  # Should map to filename
-        ('invalid_field', '=', 'value'),  # Should fail
-        ('language', 'LIKE', '%python%'),
-        ('code', 'ILIKE', '%function%'),
-        ('complexity_score', '>', 5),
-        ('has_async', 'IS NOT NULL', None),
+        ("filename", "=", "test.py"),
+        ("path", "=", "test.py"),  # Should map to filename
+        ("invalid_field", "=", "value"),  # Should fail
+        ("language", "LIKE", "%python%"),
+        ("code", "ILIKE", "%function%"),
+        ("complexity_score", ">", 5),
+        ("has_async", "IS NOT NULL", None),
     ]
 
     for field, operator, value in test_cases:

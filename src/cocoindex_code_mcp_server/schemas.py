@@ -30,6 +30,7 @@ class ChunkMetadata(TypedDict, total=False):
 
     Total=False allows partial metadata when not all fields are available.
     """
+
     # Core identification fields (always present)
     filename: str
     language: str
@@ -84,6 +85,7 @@ class ExtractedMetadata(TypedDict):
 
     This matches the output from our language handlers and AST analyzers.
     """
+
     functions: List[str]
     classes: List[str]
     imports: List[str]
@@ -102,8 +104,10 @@ class ExtractedMetadata(TypedDict):
 # Query Abstraction
 # =============================================================================
 
+
 class QueryType(Enum):
     """Types of search queries supported."""
+
     VECTOR = "vector"
     KEYWORD = "keyword"
     HYBRID = "hybrid"
@@ -111,6 +115,7 @@ class QueryType(Enum):
 
 class FilterOperator(Enum):
     """Operators for metadata filtering."""
+
     EQUALS = "="
     NOT_EQUALS = "!="
     GREATER_THAN = ">"
@@ -129,17 +134,14 @@ class FilterOperator(Enum):
 @dataclass
 class QueryFilter:
     """Individual filter condition for queries."""
+
     field: str
     operator: FilterOperator
     value: Any
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
-        return {
-            "field": self.field,
-            "operator": self.operator.value,
-            "value": self.value
-        }
+        return {"field": self.field, "operator": self.operator.value, "value": self.value}
 
 
 class ChunkQuery(TypedDict, total=False):
@@ -149,6 +151,7 @@ class ChunkQuery(TypedDict, total=False):
     This abstraction allows the same query structure to work across
     PostgreSQL (SQL) and Qdrant (payload filters) backends.
     """
+
     # Query text for vector search
     text: Optional[str]
 
@@ -169,6 +172,7 @@ class ChunkQuery(TypedDict, total=False):
     # Embedding vector (when doing pure vector search)
     embedding: Optional[NDArray[np.float32]]
 
+
 # =============================================================================
 # Search Results
 # =============================================================================
@@ -176,6 +180,7 @@ class ChunkQuery(TypedDict, total=False):
 
 class SearchResultType(Enum):
     """Types of search result scores."""
+
     VECTOR_SIMILARITY = "vector_similarity"
     KEYWORD_MATCH = "keyword_match"
     HYBRID_COMBINED = "hybrid_combined"
@@ -185,6 +190,7 @@ class SearchResultType(Enum):
 @dataclass
 class SearchResult:
     """Standardized search result across all backends."""
+
     # Core content
     filename: str
     language: str
@@ -215,7 +221,7 @@ class SearchResult:
             "score": self.score,
             "score_type": self.score_type.value,
             "source": self.source,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
 
@@ -223,8 +229,10 @@ class SearchResult:
 # Backend Capability System
 # =============================================================================
 
+
 class BackendCapability(Enum):
     """Capabilities that backends can support."""
+
     VECTOR_SEARCH = "search-vector"
     KEYWORD_SEARCH = "search-keyword"
     HYBRID_SEARCH = "search-hybrid"
@@ -238,6 +246,7 @@ class BackendCapability(Enum):
 @dataclass
 class BackendInfo:
     """Information about a backend's capabilities and configuration."""
+
     backend_type: str
     capabilities: List[BackendCapability]
     max_vector_dimensions: Optional[int] = None
@@ -252,6 +261,7 @@ class BackendInfo:
 # =============================================================================
 # Schema Validation
 # =============================================================================
+
 
 def validate_chunk_metadata(metadata: Dict[str, Any]) -> ChunkMetadata:
     """
@@ -334,9 +344,7 @@ def validate_chunk_metadata(metadata: Dict[str, Any]) -> ChunkMetadata:
 
 
 def create_default_chunk_query(
-    text: Optional[str] = None,
-    query_type: QueryType = QueryType.HYBRID,
-    top_k: int = 10
+    text: Optional[str] = None, query_type: QueryType = QueryType.HYBRID, top_k: int = 10
 ) -> ChunkQuery:
     """Create a default ChunkQuery with sensible defaults."""
     return ChunkQuery(
@@ -346,7 +354,7 @@ def create_default_chunk_query(
         filters=[],
         filter_logic="AND",
         vector_weight=0.7,
-        keyword_weight=0.3
+        keyword_weight=0.3,
     )
 
 
@@ -360,8 +368,14 @@ def create_default_chunk_query(
 
 # Fields that are always extracted as individual database columns
 STANDARD_METADATA_FIELDS = [
-    'functions', 'classes', 'imports', 'complexity_score',
-    'has_type_hints', 'has_async', 'has_classes', 'metadata_json'
+    "functions",
+    "classes",
+    "imports",
+    "complexity_score",
+    "has_type_hints",
+    "has_async",
+    "has_classes",
+    "metadata_json",
 ]
 
 # Note: Any additional fields in metadata_json will be automatically promoted
@@ -378,20 +392,16 @@ __all__ = [
     "ChunkQuery",
     "QueryFilter",
     "SearchResult",
-
     # Enums
     "QueryType",
     "FilterOperator",
     "SearchResultType",
     "BackendCapability",
-
     # Backend info
     "BackendInfo",
-
     # Validation functions
     "validate_chunk_metadata",
     "create_default_chunk_query",
-
     # Configuration constants
-    "STANDARD_METADATA_FIELDS"
+    "STANDARD_METADATA_FIELDS",
 ]

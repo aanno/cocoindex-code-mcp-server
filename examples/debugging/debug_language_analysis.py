@@ -30,7 +30,7 @@ def test_kotlin_analysis():
     print("🔍 Testing Kotlin Analysis")
     print("=" * 50)
 
-    kotlin_code = '''
+    kotlin_code = """
 data class Person(val name: String, val age: Int) {
     fun isAdult(): Boolean = age >= 18
     fun greet(): String = "Hello, I'm $name and I'm $age years old"
@@ -49,9 +49,9 @@ fun main() {
     println(person.greet())
     println("Fibonacci 10: ${fibonacci(10)}")
 }
-'''
+"""
 
-    result = analyze_kotlin_code(kotlin_code, 'example.kt')
+    result = analyze_kotlin_code(kotlin_code, "example.kt")
 
     print(f"Success: {result.get('success', False)}")
     print(f"Analysis Method: {result.get('analysis_method', 'unknown')}")
@@ -59,7 +59,7 @@ fun main() {
     print(f"Classes: {result.get('classes', [])}")
     print(f"Data Classes: {result.get('data_classes', [])}")
 
-    if 'error' in result:
+    if "error" in result:
         print(f"Error: {result['error']}")
 
     print()
@@ -71,7 +71,7 @@ def test_haskell_analysis():
     print("=" * 50)
 
     # Test simple code that should work
-    simple_haskell = '''
+    simple_haskell = """
 fibonacci :: Int -> Int
 fibonacci n
     | n <= 1    = n
@@ -79,7 +79,7 @@ fibonacci n
 
 add :: Int -> Int -> Int
 add x y = x + y
-'''
+"""
 
     print("1. Simple Haskell code:")
 
@@ -90,7 +90,7 @@ add x y = x + y
         print(f"   {i + 1}. {chunk.node_type()}")
 
     # Test full analysis
-    result = analyze_haskell_code(simple_haskell, 'simple.hs')
+    result = analyze_haskell_code(simple_haskell, "simple.hs")
     print(f"   Success: {result.get('success', False)}")
     print(f"   Analysis Method: {result.get('analysis_method', 'unknown')}")
     print(f"   Functions: {result.get('functions', [])}")
@@ -101,7 +101,7 @@ add x y = x + y
     # Test complex code (demonstrates the issue)
     print("2. Complex Haskell code (demonstrates parsing issue):")
 
-    complex_haskell = '''
+    complex_haskell = """
 module Example where
 
 import Data.List
@@ -126,7 +126,7 @@ sumList (x:xs) = x + sumList xs
 treeMap :: (a -> b) -> Tree a -> Tree b
 treeMap f (Leaf x)     = Leaf (f x)
 treeMap f (Branch l r) = Branch (treeMap f l) (treeMap f r)
-'''
+"""
 
     # Compare AST vs fallback parsing
     ast_chunks = hts.get_haskell_ast_chunks(complex_haskell)
@@ -140,7 +140,7 @@ treeMap f (Branch l r) = Branch (treeMap f l) (treeMap f r)
         print(f"   Fallback chunk types (first 5): {chunk_types}")
 
     # Test full analysis
-    result = analyze_haskell_code(complex_haskell, 'complex.hs')
+    result = analyze_haskell_code(complex_haskell, "complex.hs")
     print(f"   Success: {result.get('success', False)}")
     print(f"   Analysis Method: {result.get('analysis_method', 'unknown')}")
     print(f"   Functions: {result.get('functions', [])}")
@@ -154,11 +154,11 @@ def compare_haskell_parsing_methods():
     print("🔍 Comparing Haskell Parsing Methods")
     print("=" * 50)
 
-    test_code = '''
+    test_code = """
 factorial :: Int -> Int
 factorial 0 = 1
 factorial n = n * factorial (n - 1)
-'''
+"""
 
     print(f"Test code:\n{test_code}")
     print()
@@ -176,8 +176,8 @@ factorial n = n * factorial (n - 1)
             for i, chunk in enumerate(chunks):
                 chunk_type = chunk.node_type()
                 print(f"  {i + 1}. {chunk_type}")
-                if hasattr(chunk, 'code'):
-                    code_sample = chunk.code()[:50].replace('\n', '\\n')
+                if hasattr(chunk, "code"):
+                    code_sample = chunk.code()[:50].replace("\n", "\\n")
                     print(f"     Sample: {code_sample}")
             print()
         except Exception as e:
@@ -204,6 +204,7 @@ def main():
     except Exception as e:
         print(f"Error: {e}")
         import traceback
+
         traceback.print_exc()
 
 

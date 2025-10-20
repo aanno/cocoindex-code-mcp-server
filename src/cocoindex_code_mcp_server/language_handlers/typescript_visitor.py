@@ -32,25 +32,25 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
     def visit_node(self, context: NodeContext) -> Optional[Dict[str, Any]]:
         """Visit a node and extract TypeScript-specific metadata."""
         node = context.node
-        node_type = node.type if hasattr(node, 'type') else str(type(node))
+        node_type = node.type if hasattr(node, "type") else str(type(node))
 
         # Track node statistics
         self.node_stats[node_type] = self.node_stats.get(node_type, 0) + 1
 
         # Update complexity score based on node type (inherited from GenericMetadataVisitor)
         self._update_complexity(node_type)
-# Handle TypeScript-specific constructs first
-        if node_type == 'interface_declaration':
+        # Handle TypeScript-specific constructs first
+        if node_type == "interface_declaration":
             self._extract_interface(node)
-        elif node_type == 'type_alias_declaration':
+        elif node_type == "type_alias_declaration":
             self._extract_type_alias(node)
-        elif node_type == 'enum_declaration':
+        elif node_type == "enum_declaration":
             self._extract_enum(node)
-        elif node_type == 'namespace_declaration':
+        elif node_type == "namespace_declaration":
             self._extract_namespace(node)
-        elif node_type == 'module_declaration':
+        elif node_type == "module_declaration":
             self._extract_module(node)
-        elif node_type == 'decorator':
+        elif node_type == "decorator":
             self._extract_decorator(node)
         else:
             # Delegate to parent JavaScript visitor for common constructs
@@ -63,8 +63,8 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
         try:
             # Look for interface name (identifier after 'interface' keyword)
             for child in node.children:
-                if child.type == 'type_identifier':
-                    interface_name = child.text.decode('utf-8')
+                if child.type == "type_identifier":
+                    interface_name = child.text.decode("utf-8")
                     self.interfaces.append(interface_name)
                     LOGGER.debug(f"Found TypeScript interface: {interface_name}")
                     break
@@ -76,8 +76,8 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
         try:
             # Look for type alias name
             for child in node.children:
-                if child.type == 'type_identifier':
-                    type_name = child.text.decode('utf-8')
+                if child.type == "type_identifier":
+                    type_name = child.text.decode("utf-8")
                     self.types.append(type_name)
                     LOGGER.debug(f"Found TypeScript type alias: {type_name}")
                     break
@@ -89,8 +89,8 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
         try:
             # Look for enum name
             for child in node.children:
-                if child.type == 'identifier':
-                    enum_name = child.text.decode('utf-8')
+                if child.type == "identifier":
+                    enum_name = child.text.decode("utf-8")
                     self.enums.append(enum_name)
                     LOGGER.debug(f"Found TypeScript enum: {enum_name}")
                     break
@@ -102,8 +102,8 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
         try:
             # Look for namespace name
             for child in node.children:
-                if child.type == 'identifier':
-                    namespace_name = child.text.decode('utf-8')
+                if child.type == "identifier":
+                    namespace_name = child.text.decode("utf-8")
                     self.namespaces.append(namespace_name)
                     LOGGER.debug(f"Found TypeScript namespace: {namespace_name}")
                     break
@@ -115,8 +115,8 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
         try:
             # TypeScript modules can be similar to namespaces
             for child in node.children:
-                if child.type == 'identifier':
-                    module_name = child.text.decode('utf-8')
+                if child.type == "identifier":
+                    module_name = child.text.decode("utf-8")
                     self.namespaces.append(module_name)  # Treat modules as namespaces
                     LOGGER.debug(f"Found TypeScript module: {module_name}")
                     break
@@ -128,8 +128,8 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
         try:
             # Look for decorator name (typically starts with @)
             for child in node.children:
-                if child.type == 'identifier':
-                    decorator_name = child.text.decode('utf-8')
+                if child.type == "identifier":
+                    decorator_name = child.text.decode("utf-8")
                     self.decorators.append(decorator_name)
                     LOGGER.debug(f"Found TypeScript decorator: {decorator_name}")
                     break
@@ -140,14 +140,16 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
         """Get analysis summary in the expected format."""
         # Get base JavaScript summary and extend with TypeScript-specific fields
         summary = super().get_summary()
-        summary.update({
-            'interfaces': self.interfaces,
-            'types': self.types,
-            'enums': self.enums,
-            'namespaces': self.namespaces,
-            'decorators': self.decorators,
-            'analysis_method': 'typescript_ast_visitor'
-        })
+        summary.update(
+            {
+                "interfaces": self.interfaces,
+                "types": self.types,
+                "enums": self.enums,
+                "namespaces": self.namespaces,
+                "decorators": self.decorators,
+                "analysis_method": "typescript_ast_visitor",
+            }
+        )
         return summary
 
 
@@ -168,12 +170,12 @@ def analyze_typescript_code(code: str, language: str = "typescript", filename: s
         parser = factory.create_parser(language)
         if not parser:
             LOGGER.warning(f"TypeScript parser not available for {language}")
-            return {'success': False, 'error': f'TypeScript parser not available for {language}'}
+            return {"success": False, "error": f"TypeScript parser not available for {language}"}
 
         tree = factory.parse_code(code, language)
         if not tree:
             LOGGER.warning("Failed to parse TypeScript code")
-            return {'success': False, 'error': 'Failed to parse TypeScript code'}
+            return {"success": False, "error": "Failed to parse TypeScript code"}
 
         # Use specialized TypeScript visitor
         visitor = TypeScriptASTVisitor()
@@ -186,28 +188,34 @@ def analyze_typescript_code(code: str, language: str = "typescript", filename: s
         # Get results from visitor
         result = visitor.get_summary()
         # result.update({
-        update_defaults(result, {
-            'success': True,
-            'language': normalized_language,
-            'filename': filename,
-            'line_count': code.count('\n') + 1,
-            'char_count': len(code),
-            'parse_errors': 0,
-            'tree_language': str(parser.language) if parser else None,
-            # Required metadata fields for promoted column implementation
-            # don't set chunking method in analyzer
-            # "chunking_method": "ast_tree_sitter",
-            # "tree_sitter_chunking_error": False,
-            'decorators_used': result.get('decorators', []),  # TypeScript supports decorators
-            'has_type_hints': True,  # TypeScript has strong typing
-            'has_async': any('async' in func.lower() for func in result.get('functions', [])),
-            'has_classes': len(result.get('classes', [])) > 0
-        })
+        update_defaults(
+            result,
+            {
+                "success": True,
+                "language": normalized_language,
+                "filename": filename,
+                "line_count": code.count("\n") + 1,
+                "char_count": len(code),
+                "parse_errors": 0,
+                "tree_language": str(parser.language) if parser else None,
+                # Required metadata fields for promoted column implementation
+                # don't set chunking method in analyzer
+                # "chunking_method": "ast_tree_sitter",
+                # "tree_sitter_chunking_error": False,
+                "decorators_used": result.get("decorators", []),  # TypeScript supports decorators
+                "has_type_hints": True,  # TypeScript has strong typing
+                "has_async": any("async" in func.lower() for func in result.get("functions", [])),
+                "has_classes": len(result.get("classes", [])) > 0,
+            },
+        )
 
         LOGGER.debug(
-            f"TypeScript analysis completed: {len(result.get('functions', []))} functions, {len(result.get('classes', []))} classes found")
+            f"TypeScript analysis completed: {len(result.get('functions',
+                                                             []))} functions, {len(result.get('classes',
+                                                                                              []))} classes found"
+        )
         return result
 
     except Exception as e:
         LOGGER.error(f"TypeScript code analysis failed: {e}")
-        return {'success': False, 'error': str(e)}
+        return {"success": False, "error": str(e)}

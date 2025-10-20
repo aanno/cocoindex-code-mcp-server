@@ -40,7 +40,6 @@ CONST_FIELD_MAPPINGS = {
     "end": "end",
     "source_name": "source_name",
     "embedding": "embedding",
-
     # Metadata fields (promoted from metadata_json)
     "functions": "functions",
     "classes": "classes",
@@ -58,12 +57,10 @@ CONST_FIELD_MAPPINGS = {
     "dunder_methods": "dunder_methods",
     "function_details": "function_details",
     "docstring": "docstring",
-
     # Additional metadata fields
     "success": "success",
     "parse_errors": "parse_errors",
     "char_count": "char_count",
-
     # Language-specific fields
     "nodes_with_errors": "nodes_with_errors",  # Haskell
     "data_types": "data_types",  # Haskell
@@ -79,7 +76,6 @@ CONST_FIELD_MAPPINGS = {
     "types": "types",  # TypeScript
     "enums": "enums",  # TypeScript
     "namespaces": "namespaces",  # TypeScript/JavaScript/C++
-
     # python
     "private_methods": "private_methods",
     "variables": "variables",
@@ -100,33 +96,52 @@ CONST_INDIVIDUAL_COLUMNS = CONST_FIELD_MAPPINGS.keys() - CONST_JSONB_FIELDS
 # SINGLE SOURCE OF TRUTH: Language mappings from file extensions to normalized language names
 CONST_LANGUAGE_MAPPINGS = {
     # Core programming languages
-    ".c": "C", ".h": "C",
-    ".cpp": "C++", ".cc": "C++", ".cxx": "C++", ".hpp": "C++",
+    ".c": "C",
+    ".h": "C",
+    ".cpp": "C++",
+    ".cc": "C++",
+    ".cxx": "C++",
+    ".hpp": "C++",
     ".cs": "C#",
-    ".css": "CSS", ".scss": "CSS",
-    ".f": "Fortran", ".f90": "Fortran", ".f95": "Fortran", ".f03": "Fortran",
+    ".css": "CSS",
+    ".scss": "CSS",
+    ".f": "Fortran",
+    ".f90": "Fortran",
+    ".f95": "Fortran",
+    ".f03": "Fortran",
     ".go": "Go",
-    ".html": "HTML", ".htm": "HTML",
+    ".html": "HTML",
+    ".htm": "HTML",
     ".java": "Java",
-    ".js": "JavaScript", ".mjs": "JavaScript", ".cjs": "JavaScript",
+    ".js": "JavaScript",
+    ".mjs": "JavaScript",
+    ".cjs": "JavaScript",
     ".json": "JSON",
-    ".kt": "Kotlin", ".kts": "Kotlin",  # FIX: Use title case "Kotlin"
-    ".md": "Markdown", ".mdx": "Markdown",
-    ".pas": "Pascal", ".dpr": "Pascal",
+    ".kt": "Kotlin",
+    ".kts": "Kotlin",  # FIX: Use title case "Kotlin"
+    ".md": "Markdown",
+    ".mdx": "Markdown",
+    ".pas": "Pascal",
+    ".dpr": "Pascal",
     ".php": "PHP",
     ".py": "Python",  # ".pyi": "Python",
-    ".r": "R", ".R": "R",
+    ".r": "R",
+    ".R": "R",
     ".rb": "Ruby",
     ".rs": "Rust",
     ".scala": "Scala",
-    ".sql": "SQL", ".ddl": "SQL", ".dml": "SQL",
+    ".sql": "SQL",
+    ".ddl": "SQL",
+    ".dml": "SQL",
     ".swift": "Swift",
     ".toml": "TOML",
     ".tsx": "TSX",
     ".ts": "TypeScript",
     ".xml": "XML",
-    ".hs": "Haskell", ".lhs": "Haskell",
-    ".yaml": "YAML", ".yml": "YAML",
+    ".hs": "Haskell",
+    ".lhs": "Haskell",
+    ".yaml": "YAML",
+    ".yml": "YAML",
 }
 
 # Language name normalization for internal processing (tree-sitter, handlers, etc.)
@@ -166,73 +181,198 @@ SOURCE_CONFIG = {
     "path": "<forgotten to set this>",
     "included_patterns": [
         # Python
-        "*.py", "*.pyi", "*.pyx", "*.pxd",
+        "*.py",
+        "*.pyi",
+        "*.pyx",
+        "*.pxd",
         # Rust
-        "*.rs", "*.toml",
+        "*.rs",
+        "*.toml",
         # Java/Kotlin/JVM
-        "*.java", "*.kt", "*.kts", "*.scala", "*.clj", "*.cljs",
+        "*.java",
+        "*.kt",
+        "*.kts",
+        "*.scala",
+        "*.clj",
+        "*.cljs",
         # JavaScript/TypeScript
-        "*.js", "*.jsx", "*.ts", "*.tsx", "*.mjs", "*.cjs",
+        "*.js",
+        "*.jsx",
+        "*.ts",
+        "*.tsx",
+        "*.mjs",
+        "*.cjs",
         # Go
-        "*.go", "go.mod", "go.sum",
+        "*.go",
+        "go.mod",
+        "go.sum",
         # Haskell
-        "*.hs", "*.lhs", "*.cabal",
+        "*.hs",
+        "*.lhs",
+        "*.cabal",
         # "*.yaml", "*.yml", "stack.yaml",
         # C/C++
-        "*.c", "*.cc", "*.cpp", "*.cxx", "*.h", "*.hh", "*.hpp", "*.hxx",
+        "*.c",
+        "*.cc",
+        "*.cpp",
+        "*.cxx",
+        "*.h",
+        "*.hh",
+        "*.hpp",
+        "*.hxx",
         # C#/.NET
-        "*.cs", "*.fs", "*.fsx", "*.vb", "*.csproj", "*.fsproj", "*.vbproj", "*.sln",
+        "*.cs",
+        "*.fs",
+        "*.fsx",
+        "*.vb",
+        "*.csproj",
+        "*.fsproj",
+        "*.vbproj",
+        "*.sln",
         # Build systems
-        "Makefile", "makefile", "*.mk", "*.cmake", "CMakeLists.txt",
-        "build.gradle", "build.gradle.kts", "settings.gradle", "gradle.properties",
-        "pom.xml", "build.xml", "*.ant",
+        "Makefile",
+        "makefile",
+        "*.mk",
+        "*.cmake",
+        "CMakeLists.txt",
+        "build.gradle",
+        "build.gradle.kts",
+        "settings.gradle",
+        "gradle.properties",
+        "pom.xml",
+        "build.xml",
+        "*.ant",
         # Shell/Scripts
-        "*.sh", "*.bash", "*.zsh", "*.fish", "*.ps1", "*.bat", "*.cmd",
+        "*.sh",
+        "*.bash",
+        "*.zsh",
+        "*.fish",
+        "*.ps1",
+        "*.bat",
+        "*.cmd",
         # Web
-        "*.html", "*.htm", "*.css", "*.scss", "*.sass", "*.less",
-        "*.vue", "*.svelte", "*.astro", "*.php", "*.rb",
+        "*.html",
+        "*.htm",
+        "*.css",
+        "*.scss",
+        "*.sass",
+        "*.less",
+        "*.vue",
+        "*.svelte",
+        "*.astro",
+        "*.php",
+        "*.rb",
         # Swift/Objective-C
-        "*.swift", "*.m", "*.mm", "*.pbxproj", "*.xcconfig",
+        "*.swift",
+        "*.m",
+        "*.mm",
+        "*.pbxproj",
+        "*.xcconfig",
         # Documentation/Config
-        "*.md", "*.mdx", "*.rst", "*.txt", "*.json", "*.xml",
-        "*.ini", "*.cfg", "*.conf", "*.properties", "*.env",
+        "*.md",
+        "*.mdx",
+        "*.rst",
+        "*.txt",
+        "*.json",
+        "*.xml",
+        "*.ini",
+        "*.cfg",
+        "*.conf",
+        "*.properties",
+        "*.env",
         # Database
-        "*.sql", "*.ddl", "*.dml", "*.migration",
+        "*.sql",
+        "*.ddl",
+        "*.dml",
+        "*.migration",
         # Other languages
-        "*.lua", "*.pl", "*.pm", "*.r", "*.R", "*.jl", "*.dart",
-        "*.ex", "*.exs", "*.erl", "*.hrl", "*.elm", "*.nim",
-        "*.zig", "*.odin", "*.v", "*.gleam", "*.crystal",
+        "*.lua",
+        "*.pl",
+        "*.pm",
+        "*.r",
+        "*.R",
+        "*.jl",
+        "*.dart",
+        "*.ex",
+        "*.exs",
+        "*.erl",
+        "*.hrl",
+        "*.elm",
+        "*.nim",
+        "*.zig",
+        "*.odin",
+        "*.v",
+        "*.gleam",
+        "*.crystal",
         # Docker/Container
-        "Dockerfile", "*.dockerfile",
+        "Dockerfile",
+        "*.dockerfile",
         # "docker-compose.yml", "docker-compose.yaml",
         # CI/CD
-        "Jenkinsfile", "*.jenkinsfile",
+        "Jenkinsfile",
+        "*.jenkinsfile",
         # "*.gitlab-ci.yml", ".github/workflows/*.yml", ".github/workflows/*.yaml",
         # "azure-pipelines.yml",
         # Package managers
-        "package.json", "package-lock.json", "yarn.lock", "requirements.txt",
-        "Pipfile", "poetry.lock", "pyproject.toml", "setup.py", "setup.cfg",
-        "Gemfile", "Gemfile.lock", "composer.json", "composer.lock",
+        "package.json",
+        "package-lock.json",
+        "yarn.lock",
+        "requirements.txt",
+        "Pipfile",
+        "poetry.lock",
+        "pyproject.toml",
+        "setup.py",
+        "setup.cfg",
+        "Gemfile",
+        "Gemfile.lock",
+        "composer.json",
+        "composer.lock",
         # IDEs/Editors
-        "*.editorconfig", "*.gitignore", "*.gitattributes",
+        "*.editorconfig",
+        "*.gitignore",
+        "*.gitattributes",
     ],
     "excluded_patterns": [
-        "**/.*", "target", "**/node_modules", "**/build", "**/dist",
-        "**/__pycache__", "**/bin", "**/obj", "**/out", "**/venv",
-        "**/env", "**/.gradle", "**/.idea", "**/.vscode",
-        "**/target/debug", "**/target/release", "**/*.class",
-        "**/*.jar", "**/*.war", "**/*.ear", "**/*.pyc", "**/*.pyo",
+        "**/.*",
+        "target",
+        "**/node_modules",
+        "**/build",
+        "**/dist",
+        "**/__pycache__",
+        "**/bin",
+        "**/obj",
+        "**/out",
+        "**/venv",
+        "**/env",
+        "**/.gradle",
+        "**/.idea",
+        "**/.vscode",
+        "**/target/debug",
+        "**/target/release",
+        "**/*.class",
+        "**/*.jar",
+        "**/*.war",
+        "**/*.ear",
+        "**/*.pyc",
+        "**/*.pyo",
         # cocoindex evaluate
         "**/eval_CodeEmbedding_*",
         # compiled and cached
-        "**/*.o", "**/*.obj", "**/*.exe", "**/*.dll",
+        "**/*.o",
+        "**/*.obj",
+        "**/*.exe",
+        "**/*.dll",
         # scm
-        "**/.git", "**/.svn", "**/.hg",
+        "**/.git",
+        "**/.svn",
+        "**/.hg",
         # misc
-        "**/.DS_Store", "**/Thumbs.db", "**/*.tmp",
+        "**/.DS_Store",
+        "**/Thumbs.db",
+        "**/*.tmp",
         # python
         "**/.venv",
-    ]
+    ],
 }
 
 
@@ -240,6 +380,7 @@ SOURCE_CONFIG = {
 def get_language_from_extension(filename: str) -> str:
     """Get normalized language name from file extension."""
     import os
+
     basename = os.path.basename(filename)
 
     # Handle special files without extensions
@@ -262,7 +403,7 @@ def get_language_from_extension(filename: str) -> str:
 
     # Get extension and map to language
     ext = os.path.splitext(filename)[1].lower()
-    return CONST_LANGUAGE_MAPPINGS.get(ext, ext[1:] if ext.startswith('.') else "Unknown")
+    return CONST_LANGUAGE_MAPPINGS.get(ext, ext[1:] if ext.startswith(".") else "Unknown")
 
 
 def get_internal_language_name(display_name: str) -> str:
@@ -280,12 +421,17 @@ def get_display_language_name(internal_name: str) -> str:
 
 # Fields that should be indexed in Qdrant for fast filtering
 CONST_INDEXED_FIELDS = {
-    "filename", "language", "source_name", "complexity_score",
-    "has_type_hints", "has_async", "has_classes"
+    "filename",
+    "language",
+    "source_name",
+    "complexity_score",
+    "has_type_hints",
+    "has_async",
+    "has_classes",
 }
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class FieldMapper(ABC, Generic[T]):
@@ -406,12 +552,12 @@ class PostgresFieldMapper(FieldMapper[Dict[str, Any]]):
             # Handle IN operator with multiple placeholders
             if not isinstance(query_filter.value, (list, tuple)):
                 raise ValueError("IN operator requires list/tuple value")
-            placeholders = ', '.join(['%s'] * len(query_filter.value))
+            placeholders = ", ".join(["%s"] * len(query_filter.value))
             return f"{pg_column} IN ({placeholders})"
         elif operator == FilterOperator.NOT_IN:
             if not isinstance(query_filter.value, (list, tuple)):
                 raise ValueError("NOT IN operator requires list/tuple value")
-            placeholders = ', '.join(['%s'] * len(query_filter.value))
+            placeholders = ", ".join(["%s"] * len(query_filter.value))
             return f"{pg_column} NOT IN ({placeholders})"
         elif operator == FilterOperator.IS_NULL:
             return f"{pg_column} IS NULL"
@@ -441,14 +587,14 @@ class PostgresFieldMapper(FieldMapper[Dict[str, Any]]):
         row_data = self.to_backend_format(metadata)
 
         columns = list(row_data.keys())
-        placeholders = ['%s'] * len(columns)
+        placeholders = ["%s"] * len(columns)
         values = list(row_data.values())
 
         query = f"""
-            INSERT INTO {table_name} ({', '.join(columns)})
-            VALUES ({', '.join(placeholders)})
+            INSERT INTO {table_name} ({", ".join(columns)})
+            VALUES ({", ".join(placeholders)})
             ON CONFLICT (filename, location) 
-            DO UPDATE SET {', '.join(f'{col} = EXCLUDED.{col}' for col in columns)}
+            DO UPDATE SET {", ".join(f"{col} = EXCLUDED.{col}" for col in columns)}
         """
 
         return query, values
@@ -575,9 +721,7 @@ class ResultMapper:
 
     @staticmethod
     def from_postgres_result(
-        pg_row: Dict[str, Any],
-        score: float,
-        score_type: SearchResultType = SearchResultType.HYBRID_COMBINED
+        pg_row: Dict[str, Any], score: float, score_type: SearchResultType = SearchResultType.HYBRID_COMBINED
     ) -> SearchResult:
         """Convert PostgreSQL row to SearchResult."""
         mapper = PostgresFieldMapper()
@@ -593,7 +737,7 @@ class ResultMapper:
             score=score,
             score_type=score_type,
             source=metadata.get("source_name", ""),
-            metadata=metadata
+            metadata=metadata,
         )
 
         # Dynamically add all metadata fields as attributes to the SearchResult object
@@ -607,9 +751,7 @@ class ResultMapper:
 
     @staticmethod
     def from_qdrant_result(
-        qdrant_point: Dict[str, Any],
-        score: float,
-        score_type: SearchResultType = SearchResultType.VECTOR_SIMILARITY
+        qdrant_point: Dict[str, Any], score: float, score_type: SearchResultType = SearchResultType.VECTOR_SIMILARITY
     ) -> SearchResult:
         """Convert Qdrant search result to SearchResult."""
         mapper = QdrantFieldMapper()
@@ -625,13 +767,14 @@ class ResultMapper:
             score=score,
             score_type=score_type,
             source=metadata.get("source_name", ""),
-            metadata=metadata
+            metadata=metadata,
         )
 
 
 # =============================================================================
 # Factory for creating mappers
 # =============================================================================
+
 
 class MapperFactory:
     """Factory for creating appropriate field mappers."""
@@ -654,10 +797,4 @@ class MapperFactory:
 # Export for convenience
 # =============================================================================
 
-__all__ = [
-    "FieldMapper",
-    "PostgresFieldMapper",
-    "QdrantFieldMapper",
-    "ResultMapper",
-    "MapperFactory"
-]
+__all__ = ["FieldMapper", "PostgresFieldMapper", "QdrantFieldMapper", "ResultMapper", "MapperFactory"]

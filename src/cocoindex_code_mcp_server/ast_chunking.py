@@ -17,6 +17,7 @@ from cocoindex_code_mcp_server import LOGGER
 @dataclass
 class ASTChunkRow:
     """CocoIndex table row for AST chunk data."""
+
     content: str
     location: str
     start: int
@@ -26,6 +27,7 @@ class ASTChunkRow:
 
 class ChunkRow(TypedDict):
     """Represents a code chunk with text and location metadata (internal use)."""
+
     content: str
     location: str
     start: int
@@ -35,6 +37,7 @@ class ChunkRow(TypedDict):
 
 try:
     from astchunk import ASTChunkBuilder  # type: ignore
+
     ASTCHUNK_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"ASTChunk not available: {e}")
@@ -57,6 +60,7 @@ LANGUAGE_MAP = {
 
 class ASTChunkSpec(op.FunctionSpec):
     """AST-based code chunking function spec for CocoIndex."""
+
     max_chunk_size: int = 1800
     chunk_overlap: int = 0
     chunk_expansion: bool = False
@@ -97,13 +101,15 @@ class ASTChunkExecutor:
                 unique_location = f"{base_location}#{suffix}"
             seen_locations.add(unique_location)
 
-            result.append(ASTChunkRow(
-                content=chunk["content"],
-                location=unique_location,  # Use unique location
-                start=chunk["start"],
-                end=chunk["end"],
-                chunking_method=chunk["chunking_method"]
-            ))
+            result.append(
+                ASTChunkRow(
+                    content=chunk["content"],
+                    location=unique_location,  # Use unique location
+                    start=chunk["start"],
+                    end=chunk["end"],
+                    chunking_method=chunk["chunking_method"],
+                )
+            )
         return result
 
     def _get_builder(self, language: str) -> Optional[Any]:
@@ -118,7 +124,7 @@ class ASTChunkExecutor:
                     "max_chunk_size": self.spec.max_chunk_size,
                     "language": language,
                     "metadata_template": self.spec.metadata_template,
-                    "chunk_expansion": self.spec.chunk_expansion
+                    "chunk_expansion": self.spec.chunk_expansion,
                 }
                 self._builders[language] = ASTChunkBuilder(**configs)
             except Exception as e:
@@ -138,9 +144,11 @@ class ASTChunkExecutor:
             try:
                 # Import and call Haskell chunker
                 import importlib
+
                 haskell_module = importlib.import_module(
-                    '.lang.haskell.haskell_ast_chunker', 'cocoindex_code_mcp_server')
-                extract_func = getattr(haskell_module, 'extract_haskell_ast_chunks')
+                    ".lang.haskell.haskell_ast_chunker", "cocoindex_code_mcp_server"
+                )
+                extract_func = getattr(haskell_module, "extract_haskell_ast_chunks")
                 chunks = extract_func(code)
 
                 result_chunks: List[ChunkRow] = []
@@ -157,16 +165,20 @@ class ASTChunkExecutor:
                     # Get chunking method from original metadata (preserves Rust method names)
                     chunking_method = original_metadata.get("chunking_method", "rust_haskell_ast")
 
-                    chunk_row = ChunkRow({
-                        "content": content,
-                        "location": location,
-                        "start": start_line,
-                        "end": end_line,
-                        "chunking_method": chunking_method
-                    })
+                    chunk_row = ChunkRow(
+                        {
+                            "content": content,
+                            "location": location,
+                            "start": start_line,
+                            "end": end_line,
+                            "chunking_method": chunking_method,
+                        }
+                    )
                     result_chunks.append(chunk_row)
 
-                LOGGER.info(f"✅ Haskell AST chunking created {len(result_chunks)} chunks with proper Rust method names")
+                LOGGER.info(
+                    f"✅ Haskell AST chunking created {len(result_chunks)} chunks with proper Rust method names"
+                )
                 return result_chunks
 
             except Exception as e:
@@ -175,27 +187,30 @@ class ASTChunkExecutor:
         # Simple text chunking as last resort
         return self._simple_text_chunking(code, language, "ast_fallback_unavailable")
 
-    def _simple_text_chunking(self, code: str, language: str,
-                              chunking_method: str = "simple_text_chunking") -> List[ChunkRow]:
+    def _simple_text_chunking(
+        self, code: str, language: str, chunking_method: str = "simple_text_chunking"
+    ) -> List[ChunkRow]:
         """Simple text-based chunking as a fallback."""
-        lines = code.split('\n')
+        lines = code.split("\n")
         chunks: List[ChunkRow] = []
         chunk_size = self.spec.max_chunk_size // 10  # Rough estimate for lines
 
         for i in range(0, len(lines), chunk_size):
-            chunk_lines = lines[i:i + chunk_size]
-            content = '\n'.join(chunk_lines)
+            chunk_lines = lines[i: i + chunk_size]
+            content = "\n".join(chunk_lines)
 
             if content.strip():
                 location = f"line:{i + 1}#{len(chunks)}"
 
-                chunk_row = ChunkRow({
-                    "content": content,
-                    "location": location,
-                    "start": i + 1,
-                    "end": i + len(chunk_lines),
-                    "chunking_method": chunking_method
-                })
+                chunk_row = ChunkRow(
+                    {
+                        "content": content,
+                        "location": location,
+                        "start": i + 1,
+                        "end": i + len(chunk_lines),
+                        "chunking_method": chunking_method,
+                    }
+                )
                 chunks.append(chunk_row)
 
         LOGGER.info(f"Simple text chunking created {len(chunks)} chunks")
@@ -219,7 +234,8 @@ class ASTChunkExecutor:
             return self._convert_chunks_to_ast_chunk_rows(chunks)
         else:
             LOGGER.info(
-                f"🔍 Language {detected_language} IS supported by ASTChunk - proceeding with astchunk_language={astchunk_language}")
+                f"🔍 Language {detected_language} IS supported by ASTChunk - proceeding with astchunk_language={astchunk_language}"
+            )
 
         # Get ASTChunkBuilder for this language
         builder = self._get_builder(astchunk_language)
@@ -234,7 +250,7 @@ class ASTChunkExecutor:
                 "max_chunk_size": self.spec.max_chunk_size,
                 "language": astchunk_language,
                 "metadata_template": self.spec.metadata_template,
-                "chunk_expansion": self.spec.chunk_expansion
+                "chunk_expansion": self.spec.chunk_expansion,
             }
 
             astchunk_results = builder.chunkify(content, **configs)
@@ -243,20 +259,22 @@ class ASTChunkExecutor:
             result_chunks: List[ChunkRow] = []
             for i, chunk in enumerate(astchunk_results):
                 # Extract content and metadata
-                chunk_content = chunk.get('content', chunk.get('context', ''))
-                metadata = chunk.get('metadata', {})
+                chunk_content = chunk.get("content", chunk.get("context", ""))
+                metadata = chunk.get("metadata", {})
 
                 # Build location
-                start_line = metadata.get('start_line', 0)
+                start_line = metadata.get("start_line", 0)
                 location = f"line:{start_line}#{i}"
 
-                chunk_row = ChunkRow({
-                    "content": chunk_content,
-                    "location": location,
-                    "start": start_line,
-                    "end": metadata.get('end_line', 0),
-                    "chunking_method": "astchunk_library"  # Use specific name for ASTChunk library usage
-                })
+                chunk_row = ChunkRow(
+                    {
+                        "content": chunk_content,
+                        "location": location,
+                        "start": start_line,
+                        "end": metadata.get("end_line", 0),
+                        "chunking_method": "astchunk_library",  # Use specific name for ASTChunk library usage
+                    }
+                )
                 result_chunks.append(chunk_row)
 
             LOGGER.info(f"AST chunking created {len(result_chunks)} chunks for {detected_language}")

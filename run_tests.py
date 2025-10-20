@@ -4,10 +4,11 @@ Test runner script for haskell-tree-sitter project.
 Provides multiple ways to run tests with different levels of verbosity.
 """
 
-import sys
-import subprocess
 import argparse
+import subprocess
+import sys
 from pathlib import Path
+
 
 def run_unittest():
     """Run tests using unittest discovery."""

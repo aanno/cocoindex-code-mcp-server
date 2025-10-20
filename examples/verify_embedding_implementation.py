@@ -9,7 +9,7 @@ import os
 import sys
 
 # Add the cocoindex python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'cocoindex', 'python'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "cocoindex", "python"))
 
 
 def verify_implementation():
@@ -22,17 +22,15 @@ def verify_implementation():
 
         # We'll import just the classes we need without triggering the full module import
         import importlib.util
-        spec = importlib.util.spec_from_file_location(
-            "functions",
-            "cocoindex/python/cocoindex/functions.py"
-        )
+
+        spec = importlib.util.spec_from_file_location("functions", "cocoindex/python/cocoindex/functions.py")
 
         # This will fail due to dependencies, but let's test our logic classes
         print("   Cannot import full module due to engine dependencies (expected)")
         print("   Testing standalone logic instead...\n")
 
         # Test our standalone implementations
-        sys.path.insert(0, 'tests')
+        sys.path.insert(0, "tests")
         from tests.test_code_embedding_standalone import (
             MockCodeEmbeddingExecutor,
             MockSmartCodeEmbeddingExecutor,
@@ -122,6 +120,7 @@ def verify_implementation():
     except Exception as e:
         print(f"✗ Verification failed: {e}")
         import traceback
+
         traceback.print_exc()
 
 

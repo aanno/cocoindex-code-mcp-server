@@ -64,7 +64,7 @@ if __name__ == "__main__":
 '''
 
     # Create temporary file
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
         f.write(test_code)
         temp_file = f.name
 
@@ -126,14 +126,15 @@ class MyClass:
 
     total_content_length = 0
     for i, chunk in enumerate(chunks):
-        content_preview = chunk.content[:80].replace('\n', '\\n')
+        content_preview = chunk.content[:80].replace("\n", "\\n")
         print(f"  {i + 1}. Length: {len(chunk.content)}, Preview: {content_preview}")
         total_content_length += len(chunk.content)
 
         # Show metadata if available
-        if hasattr(chunk, 'metadata') and chunk.metadata:
-            relevant_metadata = {k: v for k, v in chunk.metadata.items()
-                                 if k in ['functions', 'classes', 'imports', 'analysis_method']}
+        if hasattr(chunk, "metadata") and chunk.metadata:
+            relevant_metadata = {
+                k: v for k, v in chunk.metadata.items() if k in ["functions", "classes", "imports", "analysis_method"]
+            }
             if relevant_metadata:
                 print(f"      Metadata: {relevant_metadata}")
 
@@ -157,7 +158,7 @@ def trace_content_preservation():
     print("🔍 Tracing Content Preservation")
     print("=" * 35)
 
-    original_code = '''
+    original_code = """
 def hello_world():
     print("Hello, World!")
     return "success"
@@ -165,7 +166,7 @@ def hello_world():
 def goodbye_world():
     print("Goodbye, World!")
     return "farewell"
-'''
+"""
 
     print(f"Original code ({len(original_code)} chars):")
     print(original_code)
@@ -203,25 +204,37 @@ def test_metadata_extraction():
     print("=" * 35)
 
     test_cases = [
-        ("Python", "python", '''
+        (
+            "Python",
+            "python",
+            """
 def calculate(a, b):
     return a + b
 
 class Math:
     def power(self, x, y):
         return x ** y
-'''),
-        ("Kotlin", "kotlin", '''
+""",
+        ),
+        (
+            "Kotlin",
+            "kotlin",
+            """
 data class Person(val name: String, val age: Int)
 
 fun greet(person: Person): String {
     return "Hello, ${person.name}!"
 }
-'''),
-        ("Haskell", "haskell", '''
+""",
+        ),
+        (
+            "Haskell",
+            "haskell",
+            """
 fibonacci :: Int -> Int
 fibonacci n = if n <= 1 then n else fibonacci (n-1) + fibonacci (n-2)
-''')
+""",
+        ),
     ]
 
     for name, language, code in test_cases:
@@ -233,14 +246,14 @@ fibonacci n = if n <= 1 then n else fibonacci (n-1) + fibonacci (n-2)
         print(f"  Chunks generated: {len(chunks)}")
 
         for i, chunk in enumerate(chunks):
-            if hasattr(chunk, 'metadata') and chunk.metadata:
+            if hasattr(chunk, "metadata") and chunk.metadata:
                 # Show relevant metadata
                 metadata = chunk.metadata
-                functions = metadata.get('functions', [])
-                classes = metadata.get('classes', [])
-                analysis_method = metadata.get('analysis_method', 'unknown')
+                functions = metadata.get("functions", [])
+                classes = metadata.get("classes", [])
+                analysis_method = metadata.get("analysis_method", "unknown")
 
-                if functions or classes or analysis_method != 'unknown':
+                if functions or classes or analysis_method != "unknown":
                     print(f"    Chunk {i + 1} metadata:")
                     if functions:
                         print(f"      Functions: {functions}")
@@ -268,6 +281,7 @@ def main():
     except Exception as e:
         print(f"Error: {e}")
         import traceback
+
         traceback.print_exc()
 
 

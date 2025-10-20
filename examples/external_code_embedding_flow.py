@@ -21,7 +21,7 @@ from smart_code_embedding import (
 import cocoindex
 
 # Add our source directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 # Import our external smart embedding functionality
 
@@ -56,9 +56,9 @@ def external_code_embedding_flow(flow_builder: cocoindex.FlowBuilder, data_scope
     """
     with flow_builder.read_files(data_scope.input_directory) as file:
         # Filter to code files only
-        file = file.filter(lambda f: f["extension"] in [
-            ".py", ".rs", ".js", ".ts", ".java", ".kt", ".go", ".cpp", ".c", ".rb", ".php"
-        ])
+        file = file.filter(
+            lambda f: f["extension"] in [".py", ".rs", ".js", ".ts", ".java", ".kt", ".go", ".cpp", ".c", ".rb", ".php"]
+        )
 
         # Chunk code using CocoIndex's built-in Tree-sitter functionality
         file["chunks"] = file["content"].transform(
@@ -70,18 +70,18 @@ def external_code_embedding_flow(flow_builder: cocoindex.FlowBuilder, data_scope
 
         with file["chunks"].row() as chunk:
             # Method 1: Smart embedding with automatic detection
-            chunk["embedding"] = chunk["text"].transform(
-                create_smart_code_embedding(file_extension=file["extension"])
-            )
+            chunk["embedding"] = chunk["text"].transform(create_smart_code_embedding(file_extension=file["extension"]))
 
             # Add metadata about which model was selected
             chunk["embedding_model"] = file["extension"]
 
         # Store in vector database
-        file["chunks"].save(cocoindex.targets.QdrantTarget(
-            collection_name="external_code_embeddings",
-            metadata_fields=["file_path", "extension", "embedding_model"]
-        ))
+        file["chunks"].save(
+            cocoindex.targets.QdrantTarget(
+                collection_name="external_code_embeddings",
+                metadata_fields=["file_path", "extension", "embedding_model"],
+            )
+        )
 
 
 @cocoindex.flow_def
@@ -109,16 +109,15 @@ def multi_model_embedding_flow(flow_builder: cocoindex.FlowBuilder, data_scope: 
 
             # General-purpose embedding for broader semantic search
             chunk["embedding_general"] = chunk["text"].transform(
-                cocoindex.functions.SentenceTransformerEmbed(
-                    model="sentence-transformers/all-MiniLM-L6-v2"
-                )
+                cocoindex.functions.SentenceTransformerEmbed(model="sentence-transformers/all-MiniLM-L6-v2")
             )
 
         # Store with both embeddings
-        file["chunks"].save(cocoindex.targets.QdrantTarget(
-            collection_name="multi_model_embeddings",
-            metadata_fields=["file_path", "extension"]
-        ))
+        file["chunks"].save(
+            cocoindex.targets.QdrantTarget(
+                collection_name="multi_model_embeddings", metadata_fields=["file_path", "extension"]
+            )
+        )
 
 
 def demonstrate_api_patterns():
@@ -142,10 +141,7 @@ def demonstrate_api_patterns():
 
     # Pattern 3: Force specific model
     print("3. Force Specific Model:")
-    embedding_func = create_smart_code_embedding(
-        language="python",
-        force_model="microsoft/graphcodebert-base"
-    )
+    embedding_func = create_smart_code_embedding(language="python", force_model="microsoft/graphcodebert-base")
     print("   Usage: create_smart_code_embedding(language='python', force_model='...')")
     print()
 
@@ -159,10 +155,7 @@ def demonstrate_api_patterns():
 
     # Pattern 5: Custom model arguments
     print("5. Custom Model Arguments:")
-    embedding_func = create_smart_code_embedding(
-        language="python",
-        model_args={"device": "cpu", "batch_size": 16}
-    )
+    embedding_func = create_smart_code_embedding(language="python", model_args={"device": "cpu", "batch_size": 16})
     print("   Custom args: device, batch_size, etc.")
     print()
 
@@ -177,20 +170,14 @@ def demonstrate_conditional_embedding():
         if file_extension in [".py", ".js", ".java"]:
             # Use GraphCodeBERT for well-supported languages
             return create_smart_code_embedding(
-                file_extension=file_extension,
-                force_model="microsoft/graphcodebert-base"
+                file_extension=file_extension, force_model="microsoft/graphcodebert-base"
             )
         elif file_extension in [".rs", ".ts"]:
             # Use UniXcode for these languages
-            return create_smart_code_embedding(
-                file_extension=file_extension,
-                force_model="microsoft/unixcoder-base"
-            )
+            return create_smart_code_embedding(file_extension=file_extension, force_model="microsoft/unixcoder-base")
         elif file_extension in [".hs", ".ml"]:
             # Use better general model for functional languages
-            return cocoindex.functions.SentenceTransformerEmbed(
-                model="sentence-transformers/all-mpnet-base-v2"
-            )
+            return cocoindex.functions.SentenceTransformerEmbed(model="sentence-transformers/all-mpnet-base-v2")
         else:
             # Default fallback
             return create_smart_code_embedding(file_extension=file_extension)
@@ -210,7 +197,7 @@ def show_integration_example():
     print("=== Integration with Existing CocoIndex Flows ===")
     print()
 
-    integration_code = '''
+    integration_code = """
 # Before (using standard SentenceTransformerEmbed)
 chunk["embedding"] = chunk["text"].transform(
     cocoindex.functions.SentenceTransformerEmbed(
@@ -229,7 +216,7 @@ chunk["embedding"] = chunk["text"].transform(
 # - Python files → GraphCodeBERT
 # - Rust files → UniXcode
 # - Other files → appropriate fallback
-'''
+"""
 
     print(integration_code)
 

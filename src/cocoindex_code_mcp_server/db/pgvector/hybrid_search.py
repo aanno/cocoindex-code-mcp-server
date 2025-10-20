@@ -35,19 +35,21 @@ from cocoindex_code_mcp_server.keyword_search_parser_lark import (
 class HybridSearchEngine:
     """Hybrid search engine combining vector and keyword search."""
 
-    def __init__(self, table_name: str, parser: KeywordSearchParser,
-                 backend: Union[VectorStoreBackend, None] = None,
-                 pool: Union[ConnectionPool, None] = None,
-                 embedding_func=None,
-                 embedding_model: str | None = None) -> None:
+    def __init__(
+        self,
+        table_name: str,
+        parser: KeywordSearchParser,
+        backend: Union[VectorStoreBackend, None] = None,
+        pool: Union[ConnectionPool, None] = None,
+        embedding_func=None,
+        embedding_model: str | None = None,
+    ) -> None:
         # Support both new backend interface and legacy direct pool access
         if backend is not None:
             self.backend = backend
         elif pool is not None:
             # Create PostgreSQL backend from legacy pool
-            table_name = table_name or cocoindex.utils.get_target_default_name(
-                code_embedding_flow, "code_embeddings"
-            )
+            table_name = table_name or cocoindex.utils.get_target_default_name(code_embedding_flow, "code_embeddings")
             self.backend = BackendFactory.create_backend("postgres", pool=pool, table_name=table_name)
         else:
             raise ValueError("Either 'backend' or 'pool' parameter must be provided")
@@ -59,17 +61,18 @@ class HybridSearchEngine:
         # You cannot compare vectors from different embedding models!
         # If not provided, use the default transformer model
         from cocoindex_code_mcp_server.cocoindex_config import DEFAULT_TRANSFORMER_MODEL
+
         self.embedding_model = embedding_model or DEFAULT_TRANSFORMER_MODEL
 
     @property
     def pool(self):
         """Access to the database connection pool via backend."""
-        return getattr(self.backend, 'pool', None)
+        return getattr(self.backend, "pool", None)
 
     @property
     def table_name(self):
         """Access to the table name via backend."""
-        return getattr(self.backend, 'table_name', None)
+        return getattr(self.backend, "table_name", None)
 
     def _get_embedding_function(self, embedding_model: str):
         """
@@ -82,9 +85,9 @@ class HybridSearchEngine:
             Callable that embeds text using the specified model
         """
         # Map model names to embedding functions
-        if 'graphcodebert' in embedding_model.lower():
+        if "graphcodebert" in embedding_model.lower():
             return lambda q: graphcodebert_embedding.eval(q)
-        elif 'unixcoder' in embedding_model.lower():
+        elif "unixcoder" in embedding_model.lower():
             return lambda q: unixcoder_embedding.eval(q)
         else:
             # Default to sentence-transformers model
@@ -98,7 +101,7 @@ class HybridSearchEngine:
         vector_weight: float = 0.7,
         keyword_weight: float = 0.3,
         language: str | None = None,
-        embedding_model: str | None = None
+        embedding_model: str | None = None,
     ) -> List[Dict[str, Any]]:
         """
         Perform hybrid search combining vector similarity and keyword filtering.
@@ -156,7 +159,7 @@ class HybridSearchEngine:
                 top_k=top_k,
                 vector_weight=vector_weight,
                 keyword_weight=keyword_weight,
-                embedding_model=model_to_use  # CRITICAL: Filter by resolved embedding model
+                embedding_model=model_to_use,  # CRITICAL: Filter by resolved embedding model
             )
         elif vector_query.strip():
             # Vector search only - REQUIRE language or embedding_model
@@ -178,7 +181,7 @@ class HybridSearchEngine:
             results = self.backend.vector_search(
                 query_vector=query_vector,
                 top_k=top_k,
-                embedding_model=model_to_use  # CRITICAL: Filter by resolved embedding model
+                embedding_model=model_to_use,  # CRITICAL: Filter by resolved embedding model
             )
         elif filters:
             # Keyword search only (no embedding model filter needed)
@@ -200,7 +203,7 @@ class HybridSearchEngine:
             "start": result.start,
             "end": result.end,
             "source": result.source,
-            "score_type": result.score_type
+            "score_type": result.score_type,
         }
 
         # Add metadata fields if available
@@ -225,7 +228,7 @@ def format_results_as_json(results: List[Dict[str, Any]], indent: int = 2) -> st
             comma = "" if is_last else ","
             indent_str = "  " * indent_level
 
-            if key in ['code', 'metadata_json'] and isinstance(value, str):
+            if key in ["code", "metadata_json"] and isinstance(value, str):
                 # For code and metadata_json, output the raw string without JSON escaping
                 # Use triple quotes to preserve formatting
                 formatted_value = f'"""{value}"""'
@@ -265,8 +268,8 @@ def format_results_readable(results: List[Dict[str, Any]]) -> str:
     output = [f"📊 Found {len(results)} results:\n"]
 
     for i, result in enumerate(results, 1):
-        source_info = f" [{result['source']}]" if result.get('source') and result['source'] != 'files' else ""
-        score_info = f" ({result['score_type']})" if result.get('score_type') else ""
+        source_info = f" [{result['source']}]" if result.get("source") and result["source"] != "files" else ""
+        score_info = f" ({result['score_type']})" if result.get("score_type") else ""
 
         # Basic result info
         output.append(
@@ -275,25 +278,25 @@ def format_results_readable(results: List[Dict[str, Any]]) -> str:
         )
 
         # Add Python metadata if available
-        if result['language'] == 'Python' and any(key in result for key in ['functions', 'classes', 'imports']):
+        if result["language"] == "Python" and any(key in result for key in ["functions", "classes", "imports"]):
             metadata_parts = []
 
-            if result.get('functions'):
+            if result.get("functions"):
                 metadata_parts.append(f"Functions: {', '.join(result['functions'])}")
-            if result.get('classes'):
+            if result.get("classes"):
                 metadata_parts.append(f"Classes: {', '.join(result['classes'])}")
-            if result.get('imports'):
+            if result.get("imports"):
                 metadata_parts.append(f"Imports: {', '.join(result['imports'][:3])}")  # Show first 3
-            if result.get('decorators'):
+            if result.get("decorators"):
                 metadata_parts.append(f"Decorators: {', '.join(result['decorators'])}")
 
             # Add type hints and async info
             info_parts = []
-            if result.get('has_type_hints'):
+            if result.get("has_type_hints"):
                 info_parts.append("typed")
-            if result.get('has_async'):
+            if result.get("has_async"):
                 info_parts.append("async")
-            if result.get('complexity_score', 0) > 10:
+            if result.get("complexity_score", 0) > 10:
                 info_parts.append(f"complex({result['complexity_score']})")
 
             if metadata_parts:
@@ -311,7 +314,7 @@ def get_multiline_input(prompt_text: str) -> str:
     """Get multiline input using prompt_toolkit with Ctrl+Q to finish."""
     bindings = KeyBindings()
 
-    @bindings.add('c-q')  # Ctrl+Q
+    @bindings.add("c-q")  # Ctrl+Q
     def _(event):
         event.app.exit(result=event.app.current_buffer.text)
 
@@ -334,15 +337,9 @@ def run_interactive_hybrid_search() -> None:
 
     pool = ConnectionPool(url)
     # Use legacy constructor for backward compatibility
-    table_name = cocoindex.utils.get_target_default_name(
-        code_embedding_flow, "code_embeddings"
-    )
+    table_name = cocoindex.utils.get_target_default_name(code_embedding_flow, "code_embeddings")
     parser = KeywordSearchParser()
-    search_engine = HybridSearchEngine(
-        table_name=table_name,
-        pool=pool,
-        parser=parser
-    )
+    search_engine = HybridSearchEngine(table_name=table_name, pool=pool, parser=parser)
 
     print("\n🔍 Interactive Hybrid Search Mode")
     print("Enter two types of queries:")
@@ -356,7 +353,7 @@ def run_interactive_hybrid_search() -> None:
     print("  - exists(field) (e.g., exists(embedding))")
     print("  - and/or operators (e.g., language:python and filename:main_interactive_query.py)")
     print("  - parentheses for grouping (e.g., (language:python or language:rust) and exists(embedding))")
-    print("  - quoted values for spaces (e.g., filename:\"test file.py\")")
+    print('  - quoted values for spaces (e.g., filename:"test file.py")')
     print()
 
     while True:
@@ -371,18 +368,13 @@ def run_interactive_hybrid_search() -> None:
 
             # Perform search
             print("\n🔄 Searching...")
-            results = search_engine.search(
-                vector_query=vector_query,
-                keyword_query=keyword_query,
-                top_k=10
-            )
+            results = search_engine.search(vector_query=vector_query, keyword_query=keyword_query, top_k=10)
 
             # Output results - detect if they're JSON-like and format accordingly
             if results:
                 # Check if any result contains complex nested data that suggests JSON output
                 has_complex_data = any(
-                    isinstance(result.get('start'), dict) or isinstance(result.get('end'), dict)
-                    for result in results
+                    isinstance(result.get("start"), dict) or isinstance(result.get("end"), dict) for result in results
                 )
 
                 if has_complex_data:

@@ -15,7 +15,7 @@ from cocoindex_code_mcp_server.lang.python.python_code_analyzer import (
 )
 
 # Add src to path (examples is one level down from root)
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 
 # Test code
@@ -53,7 +53,7 @@ if metadata is not None:
     print(f"Has Async: {metadata.get('has_async')}")
     print(f"Has Type Hints: {metadata.get('has_type_hints')}")
     print(f"Complexity Score: {metadata.get('complexity_score')}")
-    if metadata.get('function_details'):
+    if metadata.get("function_details"):
         print(f"Function Details: {len(metadata['function_details'])} functions with details")
 
     print("\n✅ Example completed successfully!")

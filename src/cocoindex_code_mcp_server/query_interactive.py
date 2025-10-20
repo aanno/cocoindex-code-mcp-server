@@ -28,9 +28,7 @@ def search(pool: ConnectionPool, query: str, top_k: int = 5) -> List[Dict[str, A
         List of search results with metadata
     """
     # Get the table name, for the export target in the code_embedding_flow above.
-    table_name = cocoindex.utils.get_target_default_name(
-        code_embedding_flow, "code_embeddings"
-    )
+    table_name = cocoindex.utils.get_target_default_name(code_embedding_flow, "code_embeddings")
     # Evaluate the transform flow defined above with the input query, to get the embedding.
     query_vector = code_to_embedding.eval(query)
     # Run the query and get the results.
@@ -79,7 +77,7 @@ def run_interactive_query_mode():
             results = search(pool, query)
             print(f"\n📊 Found {len(results)} results:")
             for result in results:
-                source_info = f" [{result['source']}]" if result.get('source') and result['source'] != 'files' else ""
+                source_info = f" [{result['source']}]" if result.get("source") and result["source"] != "files" else ""
                 print(
                     f"[{result['score']:.3f}] {result['filename']}{source_info} ({result['language']}) (L{result['start']['line']}-L{result['end']['line']})"
                 )
@@ -95,7 +93,7 @@ def display_search_results(results: List[Dict[str, Any]]):
     """Display search results in a formatted way."""
     print(f"\n📊 Found {len(results)} results:")
     for result in results:
-        source_info = f" [{result['source']}]" if result.get('source') and result['source'] != 'files' else ""
+        source_info = f" [{result['source']}]" if result.get("source") and result["source"] != "files" else ""
         print(
             f"[{result['score']:.3f}] {result['filename']}{source_info} ({result['language']}) (L{result['start']['line']}-L{result['end']['line']})"
         )

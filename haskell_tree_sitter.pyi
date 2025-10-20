@@ -1,6 +1,6 @@
 # made from perplexity based on lib.rs
 
-from typing import Optional, List, Dict, Tuple, Any
+from typing import Any, Dict, List, Optional, Tuple
 
 class HaskellParser:
     def __init__(self) -> None: ...

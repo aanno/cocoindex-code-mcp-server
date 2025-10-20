@@ -26,6 +26,7 @@ ERROR_FALLBACK_THRESHOLD = 10
 @dataclass
 class Position:
     """Represents a position in source code."""
+
     line: int
     column: int
     byte_offset: int
@@ -34,6 +35,7 @@ class Position:
 @dataclass
 class CodeSpan:
     """Represents a span of code with start and end positions."""
+
     start: Position
     end: Position
     text: str = ""
@@ -42,6 +44,7 @@ class CodeSpan:
 @dataclass
 class ErrorNodeInfo:
     """Information about an error node found during AST parsing."""
+
     start_byte: int
     end_byte: int
     start_line: int
@@ -55,13 +58,14 @@ class ErrorNodeInfo:
         return CodeSpan(
             start=Position(self.start_line, 0, self.start_byte),
             end=Position(self.end_line, 0, self.end_byte),
-            text=self.text
+            text=self.text,
         )
 
 
 @dataclass
 class ErrorStats:
     """Statistics about error nodes found during parsing."""
+
     error_count: int = 0
     nodes_with_errors: int = 0
     uncovered_ranges: List[tuple[int, int]] = field(default_factory=list)
@@ -76,6 +80,7 @@ class ErrorStats:
 @dataclass
 class NodeContext:
     """Context information for AST node processing."""
+
     node: Node
     parent: Optional[Node] = None
     depth: int = 0
@@ -84,18 +89,18 @@ class NodeContext:
 
     def get_node_text(self) -> str:
         """Get the text content of the current node."""
-        if self.source_text and hasattr(self.node, 'start_byte') and hasattr(self.node, 'end_byte'):
-            return self.source_text[self.node.start_byte:self.node.end_byte]
+        if self.source_text and hasattr(self.node, "start_byte") and hasattr(self.node, "end_byte"):
+            return self.source_text[self.node.start_byte: self.node.end_byte]
         return ""
 
     def get_position(self) -> Position:
         """Get the position of the current node."""
-        if hasattr(self.node, 'start_point'):
+        if hasattr(self.node, "start_point"):
             point = self.node.start_point
             return Position(
                 line=point[0] + 1,  # Convert to 1-based
                 column=point[1] + 1,
-                byte_offset=getattr(self.node, 'start_byte', 0)
+                byte_offset=getattr(self.node, "start_byte", 0),
             )
         return Position(line=1, column=1, byte_offset=0)
 
@@ -156,7 +161,7 @@ class GenericMetadataVisitor(ASTVisitor):
 
     def visit_node(self, context: NodeContext) -> Optional[Dict[str, Any]]:
         """Visit a node using registered handlers."""
-        node_type = context.node.type if hasattr(context.node, 'type') else str(type(context.node))
+        node_type = context.node.type if hasattr(context.node, "type") else str(type(context.node))
 
         # Track error nodes
         self._check_for_errors(context)
@@ -187,24 +192,24 @@ class GenericMetadataVisitor(ASTVisitor):
         node = context.node
 
         # Check if this is an error node
-        if hasattr(node, 'is_error') and node.is_error:
+        if hasattr(node, "is_error") and node.is_error:
             self.error_stats.error_count += 1
             self.parse_errors += 1
 
             # Create error node info
             error_info = ErrorNodeInfo(
-                start_byte=getattr(node, 'start_byte', 0),
-                end_byte=getattr(node, 'end_byte', 0),
-                start_line=getattr(node, 'start_point', (1, 0))[0] + 1,
-                end_line=getattr(node, 'end_point', (1, 0))[0] + 1,
+                start_byte=getattr(node, "start_byte", 0),
+                end_byte=getattr(node, "end_byte", 0),
+                start_line=getattr(node, "start_point", (1, 0))[0] + 1,
+                end_line=getattr(node, "end_point", (1, 0))[0] + 1,
                 text=context.get_node_text(),
-                parent_node_type=getattr(context.parent, 'type', None) if context.parent else None,
-                severity="error"
+                parent_node_type=getattr(context.parent, "type", None) if context.parent else None,
+                severity="error",
             )
             self.error_stats.error_nodes.append(error_info)
 
         # Check if this node has errors (propagated from children)
-        if hasattr(node, 'has_error') and node.has_error:
+        if hasattr(node, "has_error") and node.has_error:
             self.error_stats.nodes_with_errors += 1
 
     def get_error_stats(self) -> ErrorStats:
@@ -223,35 +228,33 @@ class GenericMetadataVisitor(ASTVisitor):
         chunking_method = self._determine_chunking_method()
 
         # Build result metadata
-        update_defaults(self.metadata, {
-            'language': self.language,
-            'line_count': len(source_text.split('\n')),
-            'char_count': len(source_text),
-            'analysis_method': 'ast_with_error_handling',
-            'chunking_method': chunking_method,
-            'errors': self.errors,
-            'node_stats': self.node_stats,
-            'complexity_score': self.complexity_score,
-            'parse_errors': self.parse_errors,
-            'error_count': self.error_stats.error_count,
-            'nodes_with_errors': self.error_stats.nodes_with_errors,
-            'should_fallback': self.error_stats.should_fallback,
-            'tree_language': f'{self.language}_tree_sitter',
-            'success': True
-        })
+        update_defaults(
+            self.metadata,
+            {
+                "language": self.language,
+                "line_count": len(source_text.split("\n")),
+                "char_count": len(source_text),
+                "analysis_method": "ast_with_error_handling",
+                "chunking_method": chunking_method,
+                "errors": self.errors,
+                "node_stats": self.node_stats,
+                "complexity_score": self.complexity_score,
+                "parse_errors": self.parse_errors,
+                "error_count": self.error_stats.error_count,
+                "nodes_with_errors": self.error_stats.nodes_with_errors,
+                "should_fallback": self.error_stats.should_fallback,
+                "tree_language": f"{self.language}_tree_sitter",
+                "success": True,
+            },
+        )
 
         return self.metadata
 
-    def _visit_tree_recursive(self, node: Node, source_text: str,
-                              parent: Optional[Node] = None, depth: int = 0) -> None:
+    def _visit_tree_recursive(
+        self, node: Node, source_text: str, parent: Optional[Node] = None, depth: int = 0
+    ) -> None:
         """Recursively visit tree nodes with error tracking."""
-        context = NodeContext(
-            node=node,
-            parent=parent,
-            depth=depth,
-            scope_stack=[],
-            source_text=source_text
-        )
+        context = NodeContext(node=node, parent=parent, depth=depth, scope_stack=[], source_text=source_text)
 
         # Visit this node
         self.visit_node(context)
@@ -263,7 +266,7 @@ class GenericMetadataVisitor(ASTVisitor):
     def _determine_chunking_method(self) -> str:
         """Determine the appropriate chunking method based on error stats."""
 
-        if self.metadata['chunking_method'] is None:
+        if self.metadata["chunking_method"] is None:
             if self.error_stats.error_count >= ERROR_FALLBACK_THRESHOLD:
                 return "guessing_regex_fallback_because_of_error_count"
             elif self.error_stats.error_count > 0:
@@ -271,49 +274,60 @@ class GenericMetadataVisitor(ASTVisitor):
             else:
                 return "guessing_ast"
         else:
-            return self.metadata['chunking_method']
+            return self.metadata["chunking_method"]
 
     def _update_complexity(self, node_type: str) -> None:
         """Update complexity score based on node type."""
         # Universal complexity indicators
         complexity_weights = {
             # Control flow
-            'if_statement': 1, 'if_expression': 1, 'conditional_expression': 1,
-            'for_statement': 1, 'while_statement': 1, 'for_in_statement': 1,
-            'switch_statement': 2, 'case_statement': 1,
-            'try_statement': 1, 'catch_clause': 1, 'except_clause': 1,
-
+            "if_statement": 1,
+            "if_expression": 1,
+            "conditional_expression": 1,
+            "for_statement": 1,
+            "while_statement": 1,
+            "for_in_statement": 1,
+            "switch_statement": 2,
+            "case_statement": 1,
+            "try_statement": 1,
+            "catch_clause": 1,
+            "except_clause": 1,
             # Functions and methods (including language-specific variants)
-            'function_definition': 2, 'method_definition': 2, 'function_declaration': 2,
-            'method_declaration': 2,  # Java/C#
-            'constructor_declaration': 2,  # Java/C#
-            'lambda': 1, 'arrow_function': 1, 'lambda_expression': 1,
-
+            "function_definition": 2,
+            "method_definition": 2,
+            "function_declaration": 2,
+            "method_declaration": 2,  # Java/C#
+            "constructor_declaration": 2,  # Java/C#
+            "lambda": 1,
+            "arrow_function": 1,
+            "lambda_expression": 1,
             # Classes and structures
-            'class_definition': 3, 'class_declaration': 3, 'struct_declaration': 3,
-            'interface_declaration': 2,  # Java/C#
-
+            "class_definition": 3,
+            "class_declaration": 3,
+            "struct_declaration": 3,
+            "interface_declaration": 2,  # Java/C#
             # Advanced constructs
-            'generator_expression': 2, 'list_comprehension': 1,
-            'with_statement': 1, 'async_function_definition': 2,
-
+            "generator_expression": 2,
+            "list_comprehension": 1,
+            "with_statement": 1,
+            "async_function_definition": 2,
             # Exception handling
-            'try_with_resources_statement': 1,  # Java
-            'catch_clause': 1, 'finally_clause': 1,
-
+            "try_with_resources_statement": 1,  # Java
+            "catch_clause": 1,
+            "finally_clause": 1,
             # Rust-specific node types
-            'function_item': 2,  # Rust function
-            'match_expression': 2,  # Rust match (like switch)
-            'match_arm': 1,  # Rust match arm (like case)
-            'if_let_expression': 1,  # Rust if let
-            'while_let_expression': 1,  # Rust while let
-            'loop_expression': 1,  # Rust infinite loop
-            'for_expression': 1,  # Rust for loop
-            'closure_expression': 1,  # Rust closure/lambda
-            'struct_item': 3,  # Rust struct definition
-            'enum_item': 3,  # Rust enum definition
-            'impl_item': 2,  # Rust implementation block
-            'trait_item': 2,  # Rust trait definition
+            "function_item": 2,  # Rust function
+            "match_expression": 2,  # Rust match (like switch)
+            "match_arm": 1,  # Rust match arm (like case)
+            "if_let_expression": 1,  # Rust if let
+            "while_let_expression": 1,  # Rust while let
+            "loop_expression": 1,  # Rust infinite loop
+            "for_expression": 1,  # Rust for loop
+            "closure_expression": 1,  # Rust closure/lambda
+            "struct_item": 3,  # Rust struct definition
+            "enum_item": 3,  # Rust enum definition
+            "impl_item": 2,  # Rust implementation block
+            "trait_item": 2,  # Rust trait definition
         }
 
         weight = complexity_weights.get(node_type, 0)
@@ -332,7 +346,7 @@ class TreeWalker:
         """Walk the AST tree using the provided visitor."""
         self.visit_order = visit_order
 
-        if not self.tree or not hasattr(self.tree, 'root_node'):
+        if not self.tree or not hasattr(self.tree, "root_node"):
             LOGGER.warning("Invalid tree for walking")
             return {}
 
@@ -343,28 +357,27 @@ class TreeWalker:
         metadata = visitor.get_metadata()
 
         # Get tree language as string, not Language object (which is not JSON serializable)
-        tree_language = 'unknown'
-        if hasattr(self.tree, 'language') and self.tree.language:
-            tree_language = str(self.tree.language) if self.tree.language else 'unknown'
+        tree_language = "unknown"
+        if hasattr(self.tree, "language") and self.tree.language:
+            tree_language = str(self.tree.language) if self.tree.language else "unknown"
 
-        metadata.update({
-            'node_stats': getattr(visitor, 'node_stats', {}),
-            'complexity_score': getattr(visitor, 'complexity_score', 0),
-            'parse_errors': len(visitor.get_errors()),
-            'tree_language': tree_language
-        })
+        metadata.update(
+            {
+                "node_stats": getattr(visitor, "node_stats", {}),
+                "complexity_score": getattr(visitor, "complexity_score", 0),
+                "parse_errors": len(visitor.get_errors()),
+                "tree_language": tree_language,
+            }
+        )
 
         return metadata
 
-    def _walk_recursive(self, node: Node, visitor: ASTVisitor, parent: Optional[Node],
-                        depth: int, scope_stack: List[str]) -> None:
+    def _walk_recursive(
+        self, node: Node, visitor: ASTVisitor, parent: Optional[Node], depth: int, scope_stack: List[str]
+    ) -> None:
         """Recursively walk AST nodes."""
         context = NodeContext(
-            node=node,
-            parent=parent,
-            depth=depth,
-            scope_stack=scope_stack.copy(),
-            source_text=self.source_text
+            node=node, parent=parent, depth=depth, scope_stack=scope_stack.copy(), source_text=self.source_text
         )
 
         # Pre-order processing
@@ -378,7 +391,7 @@ class TreeWalker:
             scope_stack.append(new_scope)
 
         # Recursively process children
-        if hasattr(node, 'children'):
+        if hasattr(node, "children"):
             for child in node.children:
                 self._walk_recursive(child, visitor, node, depth + 1, scope_stack)
 
@@ -394,19 +407,19 @@ class TreeWalker:
 
     def _get_scope_name(self, context: NodeContext) -> Optional[str]:
         """Extract scope name from certain node types."""
-        node_type = context.node.type if hasattr(context.node, 'type') else ""
+        node_type = context.node.type if hasattr(context.node, "type") else ""
 
-        if node_type in ['function_definition', 'method_definition', 'function_declaration']:
+        if node_type in ["function_definition", "method_definition", "function_declaration"]:
             # Try to extract function name
-            for child in context.node.children if hasattr(context.node, 'children') else []:
-                if hasattr(child, 'type') and child.type in ['identifier', 'name']:
-                    return context.source_text[child.start_byte:child.end_byte]
+            for child in context.node.children if hasattr(context.node, "children") else []:
+                if hasattr(child, "type") and child.type in ["identifier", "name"]:
+                    return context.source_text[child.start_byte: child.end_byte]
 
-        elif node_type in ['class_definition', 'class_declaration']:
+        elif node_type in ["class_definition", "class_declaration"]:
             # Try to extract class name
-            for child in context.node.children if hasattr(context.node, 'children') else []:
-                if hasattr(child, 'type') and child.type in ['identifier', 'name', 'type_identifier']:
-                    return context.source_text[child.start_byte:child.end_byte]
+            for child in context.node.children if hasattr(context.node, "children") else []:
+                if hasattr(child, "type") and child.type in ["identifier", "name", "type_identifier"]:
+                    return context.source_text[child.start_byte: child.end_byte]
 
         return None
 
@@ -448,34 +461,38 @@ class ASTParserFactory:
             parser = None
             language_obj = None
 
-            if language == 'python':
+            if language == "python":
                 try:
                     import tree_sitter_python
+
                     language_obj = tree_sitter.Language(tree_sitter_python.language())
                 except ImportError:
                     LOGGER.warning("tree-sitter-python not available")
                     return None
 
-            elif language == 'c_sharp':
+            elif language == "c_sharp":
                 try:
                     import tree_sitter_c_sharp
+
                     language_obj = tree_sitter.Language(tree_sitter_c_sharp.language())
                 except ImportError:
                     LOGGER.warning("tree-sitter-c-sharp not available")
                     return None
 
-            elif language == 'java':
+            elif language == "java":
                 try:
                     import tree_sitter_java
+
                     language_obj = tree_sitter.Language(tree_sitter_java.language())
                 except ImportError:
                     LOGGER.warning("tree-sitter-java not available")
                     return None
 
-            elif language in ['typescript', 'tsx']:
+            elif language in ["typescript", "tsx"]:
                 try:
                     import tree_sitter_typescript
-                    if language == 'tsx':
+
+                    if language == "tsx":
                         language_obj = tree_sitter.Language(tree_sitter_typescript.language_tsx())
                     else:
                         language_obj = tree_sitter.Language(tree_sitter_typescript.language_typescript())
@@ -483,47 +500,52 @@ class ASTParserFactory:
                     LOGGER.warning("tree-sitter-typescript not available")
                     return None
 
-            elif language == 'c':
+            elif language == "c":
                 try:
                     import tree_sitter_c
+
                     language_obj = tree_sitter.Language(tree_sitter_c.language())
                 except ImportError:
                     LOGGER.warning("tree-sitter-c not available")
                     return None
 
-            elif language in ['cpp', 'cc', 'cxx']:
+            elif language in ["cpp", "cc", "cxx"]:
                 try:
                     import tree_sitter_cpp
+
                     language_obj = tree_sitter.Language(tree_sitter_cpp.language())
                 except ImportError:
                     LOGGER.warning("tree-sitter-cpp not available")
                     return None
 
-            elif language == 'rust':
+            elif language == "rust":
                 try:
                     import tree_sitter_rust
+
                     language_obj = tree_sitter.Language(tree_sitter_rust.language())
                 except ImportError:
                     LOGGER.warning("tree-sitter-rust not available")
                     return None
 
-            elif language == 'kotlin':
+            elif language == "kotlin":
                 try:
                     import tree_sitter_kotlin
+
                     language_obj = tree_sitter.Language(tree_sitter_kotlin.language())
                 except ImportError:
                     LOGGER.warning("tree-sitter-kotlin not available")
                     return None
 
-            elif language == 'javascript':
+            elif language == "javascript":
                 try:
                     import tree_sitter_javascript
+
                     language_obj = tree_sitter.Language(tree_sitter_javascript.language())
                 except ImportError:
                     LOGGER.warning("tree-sitter-javascript not available")
                     return None
 
-            elif language == 'haskell':
+            elif language == "haskell":
                 # Haskell uses a specialized visitor, no parser needed here
                 LOGGER.debug("Haskell uses specialized visitor, not generic parser")
                 return None
@@ -553,7 +575,7 @@ class ASTParserFactory:
             return None
 
         try:
-            return parser.parse(bytes(code, 'utf-8'))
+            return parser.parse(bytes(code, "utf-8"))
         except Exception as e:
             LOGGER.error(f"Failed to parse code with {language}: {e}")
             return None
@@ -565,8 +587,7 @@ class MultiLevelAnalyzer:
     def __init__(self) -> None:
         self.parser_factory = ASTParserFactory()
 
-    def analyze_code(self, code: str, language: str = "unknown",
-                     filename: str = "") -> Dict[str, Any]:
+    def analyze_code(self, code: str, language: str = "unknown", filename: str = "") -> Dict[str, Any]:
         """Analyze code using multiple strategies with fallback."""
 
         # Detect language if not provided
@@ -577,19 +598,20 @@ class MultiLevelAnalyzer:
         else:
             # Convert display language name to internal processing name if needed
             from .mappers import get_internal_language_name
+
             language = get_internal_language_name(language)
 
         # Store display language name in metadata for database storage
         from .mappers import get_display_language_name
 
         metadata = {
-            'language': get_display_language_name(language),
-            'filename': filename,
-            'line_count': len(code.split('\n')),
-            'char_count': len(code),
-            'analysis_method': 'unknown',
-            'errors': [],
-            'success': True  # Analysis completed (even if with fallback)
+            "language": get_display_language_name(language),
+            "filename": filename,
+            "line_count": len(code.split("\n")),
+            "char_count": len(code),
+            "analysis_method": "unknown",
+            "errors": [],
+            "success": True,  # Analysis completed (even if with fallback)
         }
 
         # Strategy 1: Tree-sitter AST parsing
@@ -598,21 +620,21 @@ class MultiLevelAnalyzer:
             LOGGER.debug(f"Strategy 1: Tree-sitter analysis result for {filename}: {tree_metadata}")
             if tree_metadata:
                 metadata.update(tree_metadata)
-                metadata['analysis_method'] = 'tree_sitter'
+                metadata["analysis_method"] = "tree_sitter"
                 # Tree-sitter analyze error tracking is already included in tree_metadata
-                if 'tree_sitter_analyze_error' not in metadata:
-                    metadata['tree_sitter_analyze_error'] = 'false'
+                if "tree_sitter_analyze_error" not in metadata:
+                    metadata["tree_sitter_analyze_error"] = "false"
                 return metadata
 
         # Strategy 2: Language-specific AST (Python only for now)
-        if language == 'python':
+        if language == "python":
             python_metadata = self._try_python_ast_analysis(code, filename)
             LOGGER.debug(f"Strategy 2: Python AST analysis result for {filename}: {python_metadata}")
             if python_metadata:
                 metadata.update(python_metadata)
-                metadata['analysis_method'] = 'python_ast'
+                metadata["analysis_method"] = "python_ast"
                 # Tree-sitter not used for Python AST, so no tree-sitter error
-                metadata['tree_sitter_analyze_error'] = 'false'
+                metadata["tree_sitter_analyze_error"] = "false"
                 return metadata
 
         # Strategy 3: Enhanced regex patterns
@@ -620,27 +642,28 @@ class MultiLevelAnalyzer:
         if regex_metadata:
             LOGGER.debug(f"Strategy 3: Regex analysis result for {filename}: {regex_metadata}")
             metadata.update(regex_metadata)
-            metadata['analysis_method'] = 'enhanced_regex'
+            metadata["analysis_method"] = "enhanced_regex"
             # No tree-sitter used for regex analysis
-            metadata['tree_sitter_analyze_error'] = 'false'
+            metadata["tree_sitter_analyze_error"] = "false"
             return metadata
 
         # Strategy 4: Basic text analysis
         basic_metadata = self._basic_text_analysis(code, language)
         LOGGER.debug(f"Strategy 4: Basic text analysis result for {filename}: {basic_metadata}")
         metadata.update(basic_metadata)
-        metadata['analysis_method'] = 'basic_text'
+        metadata["analysis_method"] = "basic_text"
         # No tree-sitter used for basic text analysis
-        metadata['tree_sitter_analyze_error'] = 'false'
+        metadata["tree_sitter_analyze_error"] = "false"
 
         return metadata
 
     def _try_treesitter_analysis(self, code: str, language: str, filename: str = "") -> Optional[Dict[str, Any]]:
         """Try tree-sitter based analysis."""
         # Special handling for languages using dedicated visitors
-        if language == 'haskell':
+        if language == "haskell":
             try:
                 from .language_handlers.haskell_handler import analyze_haskell_code
+
                 metadata = analyze_haskell_code(code, filename)
                 LOGGER.debug("Used specialized Haskell handler")
                 return metadata
@@ -649,9 +672,10 @@ class MultiLevelAnalyzer:
             except Exception as e:
                 LOGGER.warning(f"Haskell handler failed: {e}")
 
-        elif language == 'c':
+        elif language == "c":
             try:
                 from .language_handlers.c_visitor import analyze_c_code
+
                 metadata = analyze_c_code(code, filename)
                 LOGGER.debug("Used specialized C visitor")
                 return metadata
@@ -660,9 +684,10 @@ class MultiLevelAnalyzer:
             except Exception as e:
                 LOGGER.warning(f"C visitor failed: {e}")
 
-        elif language in ['cpp', 'cc', 'cxx']:
+        elif language in ["cpp", "cc", "cxx"]:
             try:
                 from .language_handlers.cpp_visitor import analyze_cpp_code
+
                 metadata = analyze_cpp_code(code, language, filename)
                 LOGGER.debug("Used specialized C++ visitor")
                 return metadata
@@ -671,9 +696,10 @@ class MultiLevelAnalyzer:
             except Exception as e:
                 LOGGER.warning(f"C++ visitor failed: {e}")
 
-        elif language == 'rust':
+        elif language == "rust":
             try:
                 from .language_handlers.rust_visitor import analyze_rust_code
+
                 metadata = analyze_rust_code(code, filename)
                 LOGGER.debug("Used specialized Rust visitor")
                 return metadata
@@ -682,9 +708,10 @@ class MultiLevelAnalyzer:
             except Exception as e:
                 LOGGER.warning(f"Rust visitor failed: {e}")
 
-        elif language == 'kotlin':
+        elif language == "kotlin":
             try:
                 from .language_handlers.kotlin_visitor import analyze_kotlin_code
+
                 metadata = analyze_kotlin_code(code, filename)
                 LOGGER.debug("Used specialized Kotlin visitor")
                 return metadata
@@ -693,9 +720,10 @@ class MultiLevelAnalyzer:
             except Exception as e:
                 LOGGER.warning(f"Kotlin visitor failed: {e}")
 
-        elif language == 'java':
+        elif language == "java":
             try:
                 from .language_handlers.java_visitor import analyze_java_code
+
                 metadata = analyze_java_code(code, filename)
                 LOGGER.debug("Used specialized Java visitor")
                 return metadata
@@ -704,11 +732,12 @@ class MultiLevelAnalyzer:
             except Exception as e:
                 LOGGER.warning(f"Java visitor failed: {e}")
 
-        elif language in ['javascript', 'js']:
+        elif language in ["javascript", "js"]:
             try:
                 from .language_handlers.javascript_visitor import (
                     analyze_javascript_code,
                 )
+
                 metadata = analyze_javascript_code(code, language, filename)
                 LOGGER.debug("Used specialized JavaScript visitor")
                 return metadata
@@ -717,11 +746,12 @@ class MultiLevelAnalyzer:
             except Exception as e:
                 LOGGER.warning(f"JavaScript visitor failed: {e}")
 
-        elif language in ['typescript', 'tsx']:
+        elif language in ["typescript", "tsx"]:
             try:
                 from .language_handlers.typescript_visitor import (
                     analyze_typescript_code,
                 )
+
                 metadata = analyze_typescript_code(code, language, filename)
                 LOGGER.debug("Used specialized TypeScript visitor")
                 return metadata
@@ -742,6 +772,7 @@ class MultiLevelAnalyzer:
             handler = None
             try:
                 from .language_handlers import get_handler_for_language
+
                 handler = get_handler_for_language(language)
                 if handler:
                     visitor.add_handler(handler)
@@ -753,18 +784,18 @@ class MultiLevelAnalyzer:
             metadata = walker.walk(visitor)
 
             # Add tree-sitter analyze error tracking
-            visitor_error_count = getattr(visitor, 'error_stats', None)
-            if visitor_error_count and hasattr(visitor_error_count, 'error_count'):
-                metadata['tree_sitter_analyze_error'] = 'true' if visitor_error_count.error_count > 0 else 'false'
+            visitor_error_count = getattr(visitor, "error_stats", None)
+            if visitor_error_count and hasattr(visitor_error_count, "error_count"):
+                metadata["tree_sitter_analyze_error"] = "true" if visitor_error_count.error_count > 0 else "false"
             else:
-                metadata['tree_sitter_analyze_error'] = 'false'
+                metadata["tree_sitter_analyze_error"] = "false"
 
             # Add language-specific summary if handler was used
             if handler:
                 try:
                     language_summary = handler.get_summary()
                     metadata.update(language_summary)
-                    metadata['analysis_method'] = f'tree_sitter+{language}_handler'
+                    metadata["analysis_method"] = f"tree_sitter+{language}_handler"
                 except Exception as e:
                     LOGGER.warning(f"Error getting {language} handler summary: {e}")
 
@@ -778,14 +809,12 @@ class MultiLevelAnalyzer:
         """Try Python AST analysis as fallback."""
         try:
             import ast
+
             tree = ast.parse(code, filename=filename)
 
             # This would use the existing Python analyzer logic
             # For now, return basic info
-            return {
-                'has_python_ast': True,
-                'python_ast_nodes': len(list(ast.walk(tree)))
-            }
+            return {"has_python_ast": True, "python_ast_nodes": len(list(ast.walk(tree)))}
 
         except Exception as e:
             LOGGER.warning(f"Python AST analysis failed: {e}")
@@ -796,23 +825,23 @@ class MultiLevelAnalyzer:
         try:
             # Universal patterns that work across languages
             patterns = {
-                'functions': [
-                    r'def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(',  # Python
-                    r'function\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(',  # JavaScript
-                    r'fn\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(',  # Rust
-                    r'func\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(',  # Go
+                "functions": [
+                    r"def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(",  # Python
+                    r"function\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(",  # JavaScript
+                    r"fn\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(",  # Rust
+                    r"func\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(",  # Go
                 ],
-                'classes': [
-                    r'class\s+([a-zA-Z_][a-zA-Z0-9_]*)',  # Python, C++, Java
-                    r'struct\s+([a-zA-Z_][a-zA-Z0-9_]*)',  # Rust, C, Go
-                    r'interface\s+([a-zA-Z_][a-zA-Z0-9_]*)',  # TypeScript, Java, Go
+                "classes": [
+                    r"class\s+([a-zA-Z_][a-zA-Z0-9_]*)",  # Python, C++, Java
+                    r"struct\s+([a-zA-Z_][a-zA-Z0-9_]*)",  # Rust, C, Go
+                    r"interface\s+([a-zA-Z_][a-zA-Z0-9_]*)",  # TypeScript, Java, Go
                 ],
-                'imports': [
-                    r'import\s+([a-zA-Z_][a-zA-Z0-9_\.]*)',  # Python, JavaScript
-                    r'from\s+([a-zA-Z_][a-zA-Z0-9_\.]*)\s+import',  # Python
-                    r'use\s+([a-zA-Z_][a-zA-Z0-9_:]*)',  # Rust
+                "imports": [
+                    r"import\s+([a-zA-Z_][a-zA-Z0-9_\.]*)",  # Python, JavaScript
+                    r"from\s+([a-zA-Z_][a-zA-Z0-9_\.]*)\s+import",  # Python
+                    r"use\s+([a-zA-Z_][a-zA-Z0-9_:]*)",  # Rust
                     r'#include\s*[<"]([^>"]+)[>"]',  # C/C++
-                ]
+                ],
             }
 
             metadata: Dict[str, Any] = {}
@@ -826,9 +855,9 @@ class MultiLevelAnalyzer:
                 metadata[category] = list(matches)
 
             # Simple complexity estimation
-            complexity_indicators = ['if', 'for', 'while', 'switch', 'case', 'try', 'catch']
-            complexity = sum(len(re.findall(rf'\b{indicator}\b', code)) for indicator in complexity_indicators)
-            metadata['complexity_score'] = complexity
+            complexity_indicators = ["if", "for", "while", "switch", "case", "try", "catch"]
+            complexity = sum(len(re.findall(rf"\b{indicator}\b", code)) for indicator in complexity_indicators)
+            metadata["complexity_score"] = complexity
 
             return metadata
 
@@ -838,17 +867,17 @@ class MultiLevelAnalyzer:
 
     def _basic_text_analysis(self, code: str, language: str) -> Dict[str, Any]:
         """Basic text-based analysis as last resort."""
-        lines = code.split('\n')
+        lines = code.split("\n")
         non_empty_lines = [line for line in lines if line.strip()]
 
         return {
-            'total_lines': len(lines),
-            'non_empty_lines': len(non_empty_lines),
-            'comment_lines': len([line for line in lines if line.strip().startswith('#')]),
-            'avg_line_length': sum(len(line) for line in lines) / len(lines) if lines else 0,
-            'has_functions': 'def ' in code or 'function ' in code or 'fn ' in code,
-            'has_classes': 'class ' in code or 'struct ' in code,
-            'has_imports': 'import ' in code or '#include' in code or 'use ' in code,
+            "total_lines": len(lines),
+            "non_empty_lines": len(non_empty_lines),
+            "comment_lines": len([line for line in lines if line.strip().startswith("#")]),
+            "avg_line_length": sum(len(line) for line in lines) / len(lines) if lines else 0,
+            "has_functions": "def " in code or "function " in code or "fn " in code,
+            "has_classes": "class " in code or "struct " in code,
+            "has_imports": "import " in code or "#include" in code or "use " in code,
         }
 
 

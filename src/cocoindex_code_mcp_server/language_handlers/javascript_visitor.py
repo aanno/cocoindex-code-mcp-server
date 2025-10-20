@@ -30,29 +30,29 @@ class JavaScriptASTVisitor(GenericMetadataVisitor):
     def visit_node(self, context: NodeContext) -> Optional[Dict[str, Any]]:
         """Visit a node and extract JavaScript-specific metadata."""
         node = context.node
-        node_type = node.type if hasattr(node, 'type') else str(type(node))
+        node_type = node.type if hasattr(node, "type") else str(type(node))
 
         # Track node statistics
         self.node_stats[node_type] = self.node_stats.get(node_type, 0) + 1
 
         # Update complexity score based on node type (inherited from GenericMetadataVisitor)
         self._update_complexity(node_type)
-# Extract JavaScript-specific constructs
-        if node_type == 'function_declaration':
+        # Extract JavaScript-specific constructs
+        if node_type == "function_declaration":
             self._extract_function(node)
-        elif node_type == 'function_expression':
+        elif node_type == "function_expression":
             self._extract_function_expression(node)
-        elif node_type == 'arrow_function':
+        elif node_type == "arrow_function":
             self._extract_arrow_function(node)
-        elif node_type == 'method_definition':
+        elif node_type == "method_definition":
             self._extract_method(node)
-        elif node_type == 'class_declaration':
+        elif node_type == "class_declaration":
             self._extract_class(node)
-        elif node_type == 'variable_declarator':
+        elif node_type == "variable_declarator":
             self._extract_variable(node)
-        elif node_type == 'import_statement':
+        elif node_type == "import_statement":
             self._extract_import(node)
-        elif node_type == 'export_statement':
+        elif node_type == "export_statement":
             self._extract_export(node)
 
         return None
@@ -62,8 +62,8 @@ class JavaScriptASTVisitor(GenericMetadataVisitor):
         try:
             # JavaScript function structure: function_declaration -> identifier
             for child in node.children:
-                if child.type == 'identifier':
-                    func_name = child.text.decode('utf-8')
+                if child.type == "identifier":
+                    func_name = child.text.decode("utf-8")
                     self.functions.append(func_name)
                     LOGGER.debug(f"Found JavaScript function: {func_name}")
                     break
@@ -75,8 +75,8 @@ class JavaScriptASTVisitor(GenericMetadataVisitor):
         try:
             # Function expressions may or may not have names
             for child in node.children:
-                if child.type == 'identifier':
-                    func_name = child.text.decode('utf-8')
+                if child.type == "identifier":
+                    func_name = child.text.decode("utf-8")
                     self.functions.append(func_name)
                     LOGGER.debug(f"Found JavaScript function expression: {func_name}")
                     break
@@ -97,8 +97,8 @@ class JavaScriptASTVisitor(GenericMetadataVisitor):
         try:
             # Method structure: method_definition -> property_identifier or identifier
             for child in node.children:
-                if child.type in ['property_identifier', 'identifier']:
-                    method_name = child.text.decode('utf-8')
+                if child.type in ["property_identifier", "identifier"]:
+                    method_name = child.text.decode("utf-8")
                     self.functions.append(method_name)
                     LOGGER.debug(f"Found JavaScript method: {method_name}")
                     break
@@ -110,8 +110,8 @@ class JavaScriptASTVisitor(GenericMetadataVisitor):
         try:
             # Look for class name (identifier after 'class' keyword)
             for child in node.children:
-                if child.type == 'identifier':
-                    class_name = child.text.decode('utf-8')
+                if child.type == "identifier":
+                    class_name = child.text.decode("utf-8")
                     self.classes.append(class_name)
                     LOGGER.debug(f"Found JavaScript class: {class_name}")
                     break
@@ -123,12 +123,12 @@ class JavaScriptASTVisitor(GenericMetadataVisitor):
         try:
             # Look for variable name
             for child in node.children:
-                if child.type == 'identifier':
-                    var_name = child.text.decode('utf-8')
+                if child.type == "identifier":
+                    var_name = child.text.decode("utf-8")
                     # Only track function assignments and significant variables
                     # Look at the value to see if it's a function
                     for sibling in node.children:
-                        if sibling.type in ['function_expression', 'arrow_function']:
+                        if sibling.type in ["function_expression", "arrow_function"]:
                             self.functions.append(var_name)
                             LOGGER.debug(f"Found JavaScript function variable: {var_name}")
                             break
@@ -141,8 +141,8 @@ class JavaScriptASTVisitor(GenericMetadataVisitor):
         try:
             # Track import modules (simplified)
             for child in node.children:
-                if child.type == 'string':
-                    import_module = child.text.decode('utf-8').strip('"\'')
+                if child.type == "string":
+                    import_module = child.text.decode("utf-8").strip("\"'")
                     self.imports.append(import_module)
                     LOGGER.debug(f"Found JavaScript import: {import_module}")
                     break
@@ -154,8 +154,8 @@ class JavaScriptASTVisitor(GenericMetadataVisitor):
         try:
             # Track what's being exported (simplified)
             for child in node.children:
-                if child.type == 'identifier':
-                    export_name = child.text.decode('utf-8')
+                if child.type == "identifier":
+                    export_name = child.text.decode("utf-8")
                     self.exports.append(export_name)
                     LOGGER.debug(f"Found JavaScript export: {export_name}")
                     break
@@ -165,14 +165,14 @@ class JavaScriptASTVisitor(GenericMetadataVisitor):
     def get_summary(self) -> Dict[str, Any]:
         """Get analysis summary in the expected format."""
         return {
-            'functions': self.functions,
-            'classes': self.classes,
-            'variables': self.variables,
-            'imports': self.imports,
-            'exports': self.exports,
-            'node_stats': dict(self.node_stats),
-            'complexity_score': self.complexity_score,
-            'analysis_method': 'javascript_ast_visitor'
+            "functions": self.functions,
+            "classes": self.classes,
+            "variables": self.variables,
+            "imports": self.imports,
+            "exports": self.exports,
+            "node_stats": dict(self.node_stats),
+            "complexity_score": self.complexity_score,
+            "analysis_method": "javascript_ast_visitor",
         }
 
 
@@ -190,15 +190,15 @@ def analyze_javascript_code(code: str, language: str = "javascript", filename: s
 
         # Create parser and parse code
         factory = ASTParserFactory()
-        parser = factory.create_parser('javascript')
+        parser = factory.create_parser("javascript")
         if not parser:
             LOGGER.warning(f"JavaScript parser not available for {language}")
-            return {'success': False, 'error': f'JavaScript parser not available for {language}'}
+            return {"success": False, "error": f"JavaScript parser not available for {language}"}
 
-        tree = factory.parse_code(code, 'javascript')
+        tree = factory.parse_code(code, "javascript")
         if not tree:
             LOGGER.warning("Failed to parse JavaScript code")
-            return {'success': False, 'error': 'Failed to parse JavaScript code'}
+            return {"success": False, "error": "Failed to parse JavaScript code"}
 
         # Use specialized JavaScript visitor
         visitor = JavaScriptASTVisitor()
@@ -211,29 +211,35 @@ def analyze_javascript_code(code: str, language: str = "javascript", filename: s
         # Get results from visitor
         result = visitor.get_summary()
         # result.update({
-        update_defaults(result, {
-            'success': True,
-            'language': normalized_language,
-            'filename': filename,
-            'line_count': code.count('\n') + 1,
-            'char_count': len(code),
-            'parse_errors': 0,
-            'tree_language': str(parser.language) if parser else None,
-            # Required metadata fields for promoted column implementation
-            # don't set chunking method in analyzer
-            # "chunking_method": "ast_tree_sitter",
-            # "tree_sitter_chunking_error": False,
-            'tree_sitter_analyze_error': False,
-            'decorators_used': [],  # JavaScript doesn't commonly use decorators
-            'has_type_hints': language.lower() in ['typescript', 'ts'],  # TypeScript has type hints
-            'has_async': any('async' in func.lower() for func in result.get('functions', [])),
-            'has_classes': len(result.get('classes', [])) > 0
-        })
+        update_defaults(
+            result,
+            {
+                "success": True,
+                "language": normalized_language,
+                "filename": filename,
+                "line_count": code.count("\n") + 1,
+                "char_count": len(code),
+                "parse_errors": 0,
+                "tree_language": str(parser.language) if parser else None,
+                # Required metadata fields for promoted column implementation
+                # don't set chunking method in analyzer
+                # "chunking_method": "ast_tree_sitter",
+                # "tree_sitter_chunking_error": False,
+                "tree_sitter_analyze_error": False,
+                "decorators_used": [],  # JavaScript doesn't commonly use decorators
+                "has_type_hints": language.lower() in ["typescript", "ts"],  # TypeScript has type hints
+                "has_async": any("async" in func.lower() for func in result.get("functions", [])),
+                "has_classes": len(result.get("classes", [])) > 0,
+            },
+        )
 
         LOGGER.debug(
-            f"JavaScript analysis completed: {len(result.get('functions', []))} functions, {len(result.get('classes', []))} classes found")
+            f"JavaScript analysis completed: {len(result.get('functions',
+                                                             []))} functions, {len(result.get('classes',
+                                                                                              []))} classes found"
+        )
         return result
 
     except Exception as e:
         LOGGER.error(f"JavaScript code analysis failed: {e}")
-        return {'success': False, 'error': str(e)}
+        return {"success": False, "error": str(e)}

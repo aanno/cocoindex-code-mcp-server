@@ -33,23 +33,23 @@ class KotlinASTVisitor(GenericMetadataVisitor):
     def visit_node(self, context: NodeContext) -> Optional[Dict[str, Any]]:
         """Visit a node and extract Kotlin-specific metadata."""
         node = context.node
-        node_type = node.type if hasattr(node, 'type') else str(type(node))
+        node_type = node.type if hasattr(node, "type") else str(type(node))
 
         # Track node statistics
         self.node_stats[node_type] = self.node_stats.get(node_type, 0) + 1
 
         # Update complexity score based on node type (inherited from GenericMetadataVisitor)
         self._update_complexity(node_type)
-# Extract Kotlin-specific constructs
-        if node_type == 'function_declaration':
+        # Extract Kotlin-specific constructs
+        if node_type == "function_declaration":
             self._extract_function(node)
-        elif node_type == 'class_declaration':
+        elif node_type == "class_declaration":
             self._extract_class(node)
-        elif node_type == 'interface_declaration':
+        elif node_type == "interface_declaration":
             self._extract_interface(node)
-        elif node_type == 'object_declaration':
+        elif node_type == "object_declaration":
             self._extract_object(node)
-        elif node_type == 'enum_class_declaration':
+        elif node_type == "enum_class_declaration":
             self._extract_enum(node)
 
         return None
@@ -59,10 +59,10 @@ class KotlinASTVisitor(GenericMetadataVisitor):
         try:
             # Kotlin function structure: function_declaration -> identifier (after 'fun' keyword)
             for child in node.children:
-                if child.type == 'identifier':
+                if child.type == "identifier":
                     text = child.text
                     if text is not None:
-                        func_name = text.decode('utf-8')
+                        func_name = text.decode("utf-8")
                         self.functions.append(func_name)
                         LOGGER.debug(f"Found Kotlin function: {func_name}")
                         break  # Take the first identifier (function name)
@@ -78,15 +78,15 @@ class KotlinASTVisitor(GenericMetadataVisitor):
 
             # Check if it's a data class by looking at modifiers
             for child in node.children:
-                if child.type == 'modifiers':
+                if child.type == "modifiers":
                     # Check for data modifier
                     for modifier_child in child.children:
-                        if modifier_child.type == 'class_modifier':
+                        if modifier_child.type == "class_modifier":
                             for modifier_grandchild in modifier_child.children:
-                                if modifier_grandchild.type == 'data':
+                                if modifier_grandchild.type == "data":
                                     is_data_class = True
-                elif child.type == 'identifier':
-                    class_name = child.text.decode('utf-8')
+                elif child.type == "identifier":
+                    class_name = child.text.decode("utf-8")
                     break
 
             if class_name:
@@ -105,8 +105,8 @@ class KotlinASTVisitor(GenericMetadataVisitor):
         try:
             # Look for interface name
             for child in node.children:
-                if child.type == 'identifier':
-                    interface_name = child.text.decode('utf-8')
+                if child.type == "identifier":
+                    interface_name = child.text.decode("utf-8")
                     self.interfaces.append(interface_name)
                     LOGGER.debug(f"Found Kotlin interface: {interface_name}")
                     break
@@ -118,8 +118,8 @@ class KotlinASTVisitor(GenericMetadataVisitor):
         try:
             # Look for object name
             for child in node.children:
-                if child.type == 'identifier':
-                    object_name = child.text.decode('utf-8')
+                if child.type == "identifier":
+                    object_name = child.text.decode("utf-8")
                     self.objects.append(object_name)
                     LOGGER.debug(f"Found Kotlin object: {object_name}")
                     break
@@ -131,8 +131,8 @@ class KotlinASTVisitor(GenericMetadataVisitor):
         try:
             # Look for enum name
             for child in node.children:
-                if child.type == 'identifier':
-                    enum_name = child.text.decode('utf-8')
+                if child.type == "identifier":
+                    enum_name = child.text.decode("utf-8")
                     self.enums.append(enum_name)
                     LOGGER.debug(f"Found Kotlin enum: {enum_name}")
                     break
@@ -142,15 +142,15 @@ class KotlinASTVisitor(GenericMetadataVisitor):
     def get_summary(self) -> Dict[str, Any]:
         """Get analysis summary in the expected format."""
         return {
-            'functions': self.functions,
-            'classes': self.classes,
-            'interfaces': self.interfaces,
-            'objects': self.objects,
-            'data_classes': self.data_classes,
-            'enums': self.enums,
-            'node_stats': dict(self.node_stats),
-            'complexity_score': self.complexity_score,
-            'analysis_method': 'kotlin_ast_visitor'
+            "functions": self.functions,
+            "classes": self.classes,
+            "interfaces": self.interfaces,
+            "objects": self.objects,
+            "data_classes": self.data_classes,
+            "enums": self.enums,
+            "node_stats": dict(self.node_stats),
+            "complexity_score": self.complexity_score,
+            "analysis_method": "kotlin_ast_visitor",
         }
 
 
@@ -164,15 +164,15 @@ def analyze_kotlin_code(code: str, filename: str = "") -> Dict[str, Any]:
 
         # Create parser and parse code
         factory = ASTParserFactory()
-        parser = factory.create_parser('kotlin')
+        parser = factory.create_parser("kotlin")
         if not parser:
             LOGGER.warning("Kotlin parser not available")
-            return {'success': False, 'error': 'Kotlin parser not available'}
+            return {"success": False, "error": "Kotlin parser not available"}
 
-        tree = factory.parse_code(code, 'kotlin')
+        tree = factory.parse_code(code, "kotlin")
         if not tree:
             LOGGER.warning("Failed to parse Kotlin code")
-            return {'success': False, 'error': 'Failed to parse Kotlin code'}
+            return {"success": False, "error": "Failed to parse Kotlin code"}
 
         # Use specialized Kotlin visitor
         visitor = KotlinASTVisitor()
@@ -183,30 +183,37 @@ def analyze_kotlin_code(code: str, filename: str = "") -> Dict[str, Any]:
         result = visitor.get_summary()
         # Use display language name for database storage
         from ..mappers import get_display_language_name
-        update_defaults(result, {
-            'success': True,
-            'language': get_display_language_name('kotlin'),
-            'filename': filename,
-            'line_count': code.count('\n') + 1,
-            'char_count': len(code),
-            'parse_errors': 0,
-            'tree_language': str(parser.language) if parser else None,
-            # Required metadata fields for promoted column implementation
-            # don't set chunking method in analyzer
-            # "chunking_method": "ast_tree_sitter",
-            # "tree_sitter_chunking_error": False,
-            'tree_sitter_analyze_error': False,
-            'decorators_used': result.get('annotations', []),  # Kotlin uses annotations like Java
-            'has_type_hints': True,  # Kotlin has strong typing
-            # Kotlin uses 'suspend' for async
-            'has_async': any('suspend' in func.lower() for func in result.get('functions', [])),
-            'has_classes': len(result.get('classes', [])) > 0
-        })
+
+        update_defaults(
+            result,
+            {
+                "success": True,
+                "language": get_display_language_name("kotlin"),
+                "filename": filename,
+                "line_count": code.count("\n") + 1,
+                "char_count": len(code),
+                "parse_errors": 0,
+                "tree_language": str(parser.language) if parser else None,
+                # Required metadata fields for promoted column implementation
+                # don't set chunking method in analyzer
+                # "chunking_method": "ast_tree_sitter",
+                # "tree_sitter_chunking_error": False,
+                "tree_sitter_analyze_error": False,
+                "decorators_used": result.get("annotations", []),  # Kotlin uses annotations like Java
+                "has_type_hints": True,  # Kotlin has strong typing
+                # Kotlin uses 'suspend' for async
+                "has_async": any("suspend" in func.lower() for func in result.get("functions", [])),
+                "has_classes": len(result.get("classes", [])) > 0,
+            },
+        )
 
         LOGGER.debug(
-            f"Kotlin analysis completed: {len(result.get('functions', []))} functions, {len(result.get('classes', []))} classes found")
+            f"Kotlin analysis completed: {len(result.get('functions',
+                                                         []))} functions, {len(result.get('classes',
+                                                                                          []))} classes found"
+        )
         return result
 
     except Exception as e:
         LOGGER.error(f"Kotlin code analysis failed: {e}")
-        return {'success': False, 'error': str(e)}
+        return {"success": False, "error": str(e)}

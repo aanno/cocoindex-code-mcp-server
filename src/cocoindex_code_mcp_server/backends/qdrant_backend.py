@@ -18,8 +18,9 @@ from . import QueryFilters, SearchResult, VectorStoreBackend
 class QdrantBackend(VectorStoreBackend):
     """Qdrant backend implementation skeleton."""
 
-    def __init__(self, host: str = "localhost", port: int = 6333,
-                 collection_name: str = "code_embeddings", **kwargs: Any) -> None:
+    def __init__(
+        self, host: str = "localhost", port: int = 6333, collection_name: str = "code_embeddings", **kwargs: Any
+    ) -> None:
         """
         Initialize Qdrant backend.
 
@@ -36,16 +37,10 @@ class QdrantBackend(VectorStoreBackend):
         # from qdrant_client import QdrantClient
         # self.client = QdrantClient(host=host, port=port, **kwargs)
 
-        raise NotImplementedError(
-            "QdrantBackend is not yet implemented. "
-            "This is a skeleton for future development."
-        )
+        raise NotImplementedError("QdrantBackend is not yet implemented. This is a skeleton for future development.")
 
     def vector_search(
-        self,
-        query_vector: NDArray[np.float32],
-        top_k: int = 10,
-        embedding_model: str | None = None
+        self, query_vector: NDArray[np.float32], top_k: int = 10, embedding_model: str | None = None
     ) -> List[SearchResult]:
         """Perform pure vector similarity search using Qdrant."""
         # TODO: Implement Qdrant vector search
@@ -58,11 +53,7 @@ class QdrantBackend(VectorStoreBackend):
 
         raise NotImplementedError("Qdrant vector search not yet implemented")
 
-    def keyword_search(
-        self,
-        filters: QueryFilters,
-        top_k: int = 10
-    ) -> List[SearchResult]:
+    def keyword_search(self, filters: QueryFilters, top_k: int = 10) -> List[SearchResult]:
         """Perform pure keyword/metadata search using Qdrant payload filtering."""
         # TODO: Implement Qdrant payload filtering
         # qdrant_filter = self._build_qdrant_filter(filters)
@@ -82,7 +73,7 @@ class QdrantBackend(VectorStoreBackend):
         top_k: int = 10,
         vector_weight: float = 0.7,
         keyword_weight: float = 0.3,
-        embedding_model: str | None = None
+        embedding_model: str | None = None,
     ) -> List[SearchResult]:
         """Perform hybrid search combining vector similarity and payload filtering."""
         # TODO: Implement Qdrant hybrid search
@@ -126,7 +117,7 @@ class QdrantBackend(VectorStoreBackend):
             "collection_name": self.collection_name,
             "status": "not_implemented",
             "host": self.host,
-            "port": self.port
+            "port": self.port,
         }
 
     def close(self) -> None:

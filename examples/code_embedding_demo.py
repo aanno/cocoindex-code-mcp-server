@@ -39,8 +39,7 @@ if __name__ == "__main__":
     print(f"Fibonacci(10) = {fibonacci(10)}")
     print(f"5 + 3 = {calc.add(5, 3)}")
 ''',
-
-        "rust_example.rs": '''
+        "rust_example.rs": """
 /// Calculate the nth Fibonacci number
 fn fibonacci(n: u32) -> u32 {
     match n {
@@ -70,9 +69,8 @@ fn main() {
     println!("Fibonacci(10) = {}", fibonacci(10));
     println!("5 + 3 = {}", calc.add(5, 3));
 }
-''',
-
-        "javascript_example.js": '''
+""",
+        "javascript_example.js": """
 /**
  * Calculate the nth Fibonacci number
  */
@@ -106,9 +104,8 @@ class Calculator {
 const calc = new Calculator();
 console.log(`Fibonacci(10) = ${fibonacci(10)}`);
 console.log(`5 + 3 = ${calc.add(5, 3)}`);
-''',
-
-        "typescript_example.ts": '''
+""",
+        "typescript_example.ts": """
 /**
  * Calculate the nth Fibonacci number
  */
@@ -150,9 +147,8 @@ class Calculator implements ICalculator {
 const calc: Calculator = new Calculator();
 console.log(`Fibonacci(10) = ${fibonacci(10)}`);
 console.log(`5 + 3 = ${calc.add(5, 3)}`);
-''',
-
-        "haskell_example.hs": '''
+""",
+        "haskell_example.hs": """
 -- | Calculate the nth Fibonacci number
 fibonacci :: Int -> Int
 fibonacci 0 = 0
@@ -176,7 +172,7 @@ main = do
     let calc = Calculator
     putStrLn $ "Fibonacci(10) = " ++ show (fibonacci 10)
     putStrLn $ "5 + 3 = " ++ show (add calc 5 3)
-'''
+""",
     }
 
     # Create temporary directory
@@ -184,7 +180,7 @@ main = do
 
     for filename, content in sample_files.items():
         file_path = Path(temp_dir) / filename
-        with open(file_path, 'w') as f:
+        with open(file_path, "w") as f:
             f.write(content)
 
     return temp_dir
@@ -313,7 +309,7 @@ def demonstrate_advanced_patterns():
     print("=== Advanced Usage Patterns ===\n")
 
     print("1. Multi-Model Embeddings:")
-    multi_model_code = '''
+    multi_model_code = """
 with file["chunks"].row() as chunk:
     # General-purpose embedding for broad semantic search
     chunk["embedding_general"] = chunk["text"].transform(
@@ -330,7 +326,7 @@ with file["chunks"].row() as chunk:
     )
 
     # Store both embeddings for hybrid search
-'''
+"""
     print(multi_model_code)
 
     print("\n2. Language-Conditional Processing:")
@@ -430,6 +426,7 @@ def main():
 
     # Cleanup
     import shutil
+
     shutil.rmtree(temp_dir)
     print(f"Cleaned up temporary directory: {temp_dir}")
 

@@ -26,6 +26,7 @@ class Operator(Enum):
 @dataclass
 class SearchCondition:
     """Represents a single search condition."""
+
     field: str
     value: str
     is_exists_check: bool = False
@@ -35,7 +36,8 @@ class SearchCondition:
 @dataclass
 class SearchGroup:
     """Represents a group of search conditions with an operator."""
-    conditions: List[Union[SearchCondition, 'SearchGroup']]
+
+    conditions: List[Union[SearchCondition, "SearchGroup"]]
     operator: Operator = Operator.AND
 
 
@@ -66,11 +68,7 @@ class KeywordSearchTransformer(Transformer):
     def value_contains_condition(self, items) -> SearchCondition:
         """Transform value_contains(field, string) condition."""
         field, value = items
-        return SearchCondition(
-            field=str(field),
-            value=str(value),
-            is_value_contains_check=True
-        )
+        return SearchCondition(field=str(field), value=str(value), is_value_contains_check=True)
 
     def text_search(self, items) -> SearchCondition:
         """Transform general text search."""
@@ -127,17 +125,17 @@ class KeywordSearchParser:
             # Load the grammar file
             grammar_path = Path(__file__).parent / "grammars" / "keyword_search.lark"
             if grammar_path.exists():
-                with open(grammar_path, 'r') as f:
+                with open(grammar_path, "r") as f:
                     grammar = f.read()
 
                 self.lark_parser = Lark(
                     grammar,
-                    parser='lalr',
+                    parser="lalr",
                     transformer=self.transformer,
                     # Make keywords case insensitive
                     lexer_callbacks={
-                        'UNQUOTED_VALUE': lambda t: Token('UNQUOTED_VALUE', t.value),
-                    }
+                        "UNQUOTED_VALUE": lambda t: Token("UNQUOTED_VALUE", t.value),
+                    },
                 )
             else:
                 logger.warning(f"Grammar file not found at {grammar_path}, falling back to regex parser")
@@ -186,15 +184,15 @@ class KeywordSearchParser:
 
         # Replace keywords with lowercase versions, preserving word boundaries
         replacements = {
-            r'\bAND\b': 'and',
-            r'\bOr\b': 'or',
-            r'\bOR\b': 'or',
-            r'\bAnd\b': 'and',
-            r'\bEXISTS\b': 'exists',
-            r'\bExists\b': 'exists',
-            r'\bVALUE_CONTAINS\b': 'value_contains',
-            r'\bValue_Contains\b': 'value_contains',
-            r'\bvalue_Contains\b': 'value_contains',
+            r"\bAND\b": "and",
+            r"\bOr\b": "or",
+            r"\bOR\b": "or",
+            r"\bAnd\b": "and",
+            r"\bEXISTS\b": "exists",
+            r"\bExists\b": "exists",
+            r"\bVALUE_CONTAINS\b": "value_contains",
+            r"\bValue_Contains\b": "value_contains",
+            r"\bvalue_Contains\b": "value_contains",
         }
 
         result = query
@@ -248,7 +246,7 @@ def build_sql_where_clause(search_group: SearchGroup, table_alias: str = "") -> 
                 params.append(f"%{condition.value}%")
             else:
                 # Use case-insensitive comparison for better language matching
-                if validated_field == 'language':
+                if validated_field == "language":
                     where_parts.append(f"LOWER({prefix}{validated_field}) = LOWER(%s)")
                     params.append(condition.value)
                 else:

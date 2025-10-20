@@ -25,13 +25,21 @@ class LanguageModelSelector:
     """
 
     # Language support mappings based on research and model documentation
-    GRAPHCODEBERT_LANGUAGES = {
-        "python", "java", "javascript", "php", "ruby", "go", "c", "cpp", "c++", "js"
-    }
+    GRAPHCODEBERT_LANGUAGES = {"python", "java", "javascript", "php", "ruby", "go", "c", "cpp", "c++", "js"}
 
     UNIXCODE_LANGUAGES = {
-        "rust", "typescript", "csharp", "c#", "cs", "kotlin", "scala", "swift",
-        "dart", "ts", "rs", "kt"
+        "rust",
+        "typescript",
+        "csharp",
+        "c#",
+        "cs",
+        "kotlin",
+        "scala",
+        "swift",
+        "dart",
+        "ts",
+        "rs",
+        "kt",
     }
 
     # Model name mappings
@@ -108,10 +116,11 @@ class LanguageModelSelector:
 
         # Create a dummy filename to use the centralized mapping
         dummy_filename = f"dummy{file_extension.lower()}"
-        if not file_extension.startswith('.'):
+        if not file_extension.startswith("."):
             dummy_filename = f"dummy.{file_extension.lower()}"
 
         from .mappers import get_internal_language_name, get_language_from_extension
+
         display_language = get_language_from_extension(dummy_filename)
         if display_language.lower() == "unknown":
             return None
@@ -119,9 +128,9 @@ class LanguageModelSelector:
         # Convert to internal processing name for embedding model selection
         return get_internal_language_name(display_language)
 
-    def select_model(self, language: str | None = None,
-                     file_extension: str | None = None,
-                     force_model: str | None = None) -> str:
+    def select_model(
+        self, language: str | None = None, file_extension: str | None = None, force_model: str | None = None
+    ) -> str:
         """
         Select the best embedding model for the given language or file extension.
 
@@ -175,7 +184,7 @@ def create_smart_code_embedding(
     file_extension: str | None = None,
     force_model: str | None = None,
     fallback_model: str = "sentence-transformers/all-mpnet-base-v2",
-    model_args: Dict[str, Any] | None = None
+    model_args: Dict[str, Any] | None = None,
 ) -> cocoindex.functions.SentenceTransformerEmbed:
     """
     Create a CocoIndex SentenceTransformerEmbed function with intelligent model selection.
@@ -212,11 +221,7 @@ def create_smart_code_embedding(
     selector = LanguageModelSelector(fallback_model=fallback_model)
 
     # Select the optimal model
-    selected_model = selector.select_model(
-        language=language,
-        file_extension=file_extension,
-        force_model=force_model
-    )
+    selected_model = selector.select_model(language=language, file_extension=file_extension, force_model=force_model)
 
     # Prepare model arguments
     final_args = selector.get_model_args(selected_model, model_args)
@@ -225,17 +230,14 @@ def create_smart_code_embedding(
     LOGGER.info(f"Selected embedding model: {selected_model} for language: {language or 'auto'}")
 
     # Return CocoIndex SentenceTransformerEmbed with selected model
-    return cocoindex.functions.SentenceTransformerEmbed(
-        model=selected_model,
-        args=final_args
-    )
+    return cocoindex.functions.SentenceTransformerEmbed(model=selected_model, args=final_args)
 
 
 def create_smart_embedding_from_file_context(
     file_record: Dict[str, Any],
     extension_field: str = "extension",
     fallback_model: str = "sentence-transformers/all-mpnet-base-v2",
-    model_args: Dict[str, Any] | None = None
+    model_args: Dict[str, Any] | None = None,
 ) -> cocoindex.functions.SentenceTransformerEmbed:
     """
     Create smart code embedding function from file context in a CocoIndex flow.
@@ -261,9 +263,7 @@ def create_smart_embedding_from_file_context(
     file_extension = file_record.get(extension_field)
 
     return create_smart_code_embedding(
-        file_extension=file_extension,
-        fallback_model=fallback_model,
-        model_args=model_args
+        file_extension=file_extension, fallback_model=fallback_model, model_args=model_args
     )
 
 
@@ -278,14 +278,16 @@ def create_rust_embedding(model_args: Dict[str, Any] | None = None) -> cocoindex
     return create_smart_code_embedding(language="rust", model_args=model_args)
 
 
-def create_javascript_embedding(model_args: Dict[str, Any] |
-                                None = None) -> cocoindex.functions.SentenceTransformerEmbed:
+def create_javascript_embedding(
+    model_args: Dict[str, Any] | None = None,
+) -> cocoindex.functions.SentenceTransformerEmbed:
     """Create embedding function optimized for JavaScript code."""
     return create_smart_code_embedding(language="javascript", model_args=model_args)
 
 
-def create_typescript_embedding(model_args: Dict[str, Any] |
-                                None = None) -> cocoindex.functions.SentenceTransformerEmbed:
+def create_typescript_embedding(
+    model_args: Dict[str, Any] | None = None,
+) -> cocoindex.functions.SentenceTransformerEmbed:
     """Create embedding function optimized for TypeScript code."""
     return create_smart_code_embedding(language="typescript", model_args=model_args)
 

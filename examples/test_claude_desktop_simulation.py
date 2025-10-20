@@ -16,11 +16,7 @@ async def test_claude_desktop_simulation():
     print("🚀 Starting Claude Desktop simulation test...")
 
     # Start supergateway as subprocess
-    cmd = [
-        "pnpm", "dlx", "supergateway",
-        "--streamableHttp", "http://localhost:3033/mcp",
-        "--logLevel", "debug"
-    ]
+    cmd = ["pnpm", "dlx", "supergateway", "--streamableHttp", "http://localhost:3033/mcp", "--logLevel", "debug"]
 
     print(f"📡 Starting supergateway: {' '.join(cmd)}")
 
@@ -32,7 +28,7 @@ async def test_claude_desktop_simulation():
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-            bufsize=0  # Unbuffered
+            bufsize=0,  # Unbuffered
         )
 
         print("⏳ Waiting for supergateway to start...")
@@ -56,11 +52,8 @@ async def test_claude_desktop_simulation():
             "params": {
                 "protocolVersion": "2024-11-05",
                 "capabilities": {},
-                "clientInfo": {
-                    "name": "claude-desktop-simulation",
-                    "version": "1.0.0"
-                }
-            }
+                "clientInfo": {"name": "claude-desktop-simulation", "version": "1.0.0"},
+            },
         }
 
         print("📤 Sending initialize message...")
@@ -71,15 +64,12 @@ async def test_claude_desktop_simulation():
         if stdin is None or stdout is None:
             print("❌ None: process.stdin or process.stdout")
         else:
-            stdin.write(json.dumps(init_message) + '\n')
+            stdin.write(json.dumps(init_message) + "\n")
             stdin.flush()
 
             # Read response
             print("📥 Reading initialize response...")
-            response_line = await asyncio.wait_for(
-                asyncio.create_task(asyncio.to_thread(stdout.readline)),
-                timeout=5.0
-            )
+            response_line = await asyncio.wait_for(asyncio.create_task(asyncio.to_thread(stdout.readline)), timeout=5.0)
 
             if response_line:
                 try:
@@ -92,23 +82,15 @@ async def test_claude_desktop_simulation():
                 print("❌ No response received for initialize")
 
             # Send tools/list message
-            tools_message = {
-                "jsonrpc": "2.0",
-                "id": 2,
-                "method": "tools/list",
-                "params": {}
-            }
+            tools_message = {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}
 
             print("📤 Sending tools/list message...")
-            stdin.write(json.dumps(tools_message) + '\n')
+            stdin.write(json.dumps(tools_message) + "\n")
             stdin.flush()
 
             # Read response
             print("📥 Reading tools/list response...")
-            response_line = await asyncio.wait_for(
-                asyncio.create_task(asyncio.to_thread(stdout.readline)),
-                timeout=5.0
-            )
+            response_line = await asyncio.wait_for(asyncio.create_task(asyncio.to_thread(stdout.readline)), timeout=5.0)
 
             if response_line:
                 try:

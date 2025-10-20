@@ -16,10 +16,7 @@ import click
 from dotenv import load_dotenv
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)8s] %(message)s (%(name)s:%(lineno)d)"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)8s] %(message)s (%(name)s:%(lineno)d)")
 logger = logging.getLogger(__name__)
 
 
@@ -60,7 +57,7 @@ def initialize_cocoindex():
 
 
 @click.group()
-@click.option('--verbose', '-v', is_flag=True, help='Enable verbose logging')
+@click.option("--verbose", "-v", is_flag=True, help="Enable verbose logging")
 def cli(verbose: bool):
     """CocoIndex Management Tool - CLI for setup, update, drop, and evaluate operations."""
     if verbose:
@@ -69,14 +66,10 @@ def cli(verbose: bool):
 
 
 @cli.command()
-@click.option('--paths', '-p', multiple=True, default=['.'],
-              help='Paths to index (default: current directory)')
-@click.option('--enable-polling/--disable-polling', default=False,
-              help='Enable live file polling (default: disabled)')
-@click.option('--poll-interval', default=30, type=int,
-              help='Polling interval in seconds (default: 30)')
-@click.option('--chunk-factor', default=100, type=int,
-              help='Chunk size scaling factor percentage (default: 100)')
+@click.option("--paths", "-p", multiple=True, default=["."], help="Paths to index (default: current directory)")
+@click.option("--enable-polling/--disable-polling", default=False, help="Enable live file polling (default: disabled)")
+@click.option("--poll-interval", default=30, type=int, help="Polling interval in seconds (default: 30)")
+@click.option("--chunk-factor", default=100, type=int, help="Chunk size scaling factor percentage (default: 100)")
 def setup(paths: tuple, enable_polling: bool, poll_interval: int, chunk_factor: int):
     """Set up CocoIndex flow and create database schema."""
     logger.info("🚀 Setting up CocoIndex flow...")
@@ -100,7 +93,7 @@ def setup(paths: tuple, enable_polling: bool, poll_interval: int, chunk_factor: 
             use_default_embedding=True,
             use_default_chunking=True,
             use_default_language_handler=True,
-            chunk_factor_percent=chunk_factor
+            chunk_factor_percent=chunk_factor,
         )
 
         # Setup the flow (creates database schema)
@@ -121,9 +114,8 @@ def setup(paths: tuple, enable_polling: bool, poll_interval: int, chunk_factor: 
 
 
 @cli.command()
-@click.option('--live', is_flag=True, help='Enable live update mode with file monitoring')
-@click.option('--poll-interval', default=30, type=int,
-              help='Polling interval in seconds for live mode (default: 30)')
+@click.option("--live", is_flag=True, help="Enable live update mode with file monitoring")
+@click.option("--poll-interval", default=30, type=int, help="Polling interval in seconds for live mode (default: 30)")
 def update(live: bool, poll_interval: int):
     """Update the CocoIndex flow data."""
     logger.info("🔄 Updating CocoIndex flow...")
@@ -143,10 +135,7 @@ def update(live: bool, poll_interval: int):
 
             # Start live updater
             logger.info("🔄 Starting live file monitoring...")
-            live_options = cocoindex.FlowLiveUpdaterOptions(
-                live_mode=True,
-                print_stats=True
-            )
+            live_options = cocoindex.FlowLiveUpdaterOptions(live_mode=True, print_stats=True)
 
             with cocoindex.FlowLiveUpdater(flow, live_options) as updater:
                 logger.info("✅ Live update mode active. Press Ctrl+C to stop.")
@@ -165,10 +154,8 @@ def update(live: bool, poll_interval: int):
 
 
 @cli.command()
-@click.option('--target-name', default='code_embeddings',
-              help='Name of the target to drop (default: code_embeddings)')
-@click.option('--confirm', is_flag=True,
-              help='Skip confirmation prompt')
+@click.option("--target-name", default="code_embeddings", help="Name of the target to drop (default: code_embeddings)")
+@click.option("--confirm", is_flag=True, help="Skip confirmation prompt")
 def drop(target_name: str, confirm: bool):
     """Drop (delete) the indexed data for a target."""
     if not confirm:
@@ -189,8 +176,9 @@ def drop(target_name: str, confirm: bool):
 
 
 @cli.command()
-@click.option('--output-dir', default='./eval_output',
-              help='Output directory for evaluation results (default: ./eval_output)')
+@click.option(
+    "--output-dir", default="./eval_output", help="Output directory for evaluation results (default: ./eval_output)"
+)
 def evaluate(output_dir: str):
     """Evaluate the flow transformations without changing target data."""
     logger.info("📊 Evaluating CocoIndex flow...")
@@ -241,5 +229,5 @@ def status():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()

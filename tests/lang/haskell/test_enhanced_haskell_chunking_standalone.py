@@ -5,16 +5,17 @@ Standalone tests for enhanced Haskell chunking functionality.
 Tests the new HaskellChunkConfig and EnhancedHaskellChunker classes without CocoIndex imports.
 """
 
+import sys
+from typing import Any, Dict, List
+
+import haskell_tree_sitter
+import pytest
+
 from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
     HaskellChunkConfig,
     create_enhanced_regex_fallback_chunks,
     get_enhanced_haskell_separators,
 )
-import haskell_tree_sitter
-import sys
-from typing import Any, Dict, List
-
-import pytest
 
 
 # Set up mock early to avoid circular import - this runs at module load time

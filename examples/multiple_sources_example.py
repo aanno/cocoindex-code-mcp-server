@@ -2,13 +2,12 @@
 """
 Example demonstrating multiple sources in a single CocoIndex flow
 """
+
 import cocoindex
 
 
 @cocoindex.flow_def(name="MultipleSourcesDemo")
-def multiple_sources_flow(
-    flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope
-) -> None:
+def multiple_sources_flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope) -> None:
     """
     Example flow demonstrating multiple sources in a single flow.
     This shows how CocoIndex can handle multiple data sources simultaneously.
@@ -21,7 +20,7 @@ def multiple_sources_flow(
             included_patterns=["*.py"],
             excluded_patterns=["**/.*", "__pycache__", "*.pyc"],
         ),
-        name="python_source"
+        name="python_source",
     )
 
     # Source 2: Local Rust files
@@ -31,7 +30,7 @@ def multiple_sources_flow(
             included_patterns=["*.rs"],
             excluded_patterns=["**/.*", "target", "*.bak"],
         ),
-        name="rust_source"
+        name="rust_source",
     )
 
     # Source 3: Configuration files
@@ -41,7 +40,7 @@ def multiple_sources_flow(
             included_patterns=["*.toml", "*.yaml", "*.yml"],
             excluded_patterns=["**/.*", "target", "node_modules"],
         ),
-        name="config_source"
+        name="config_source",
     )
 
     # Create collectors for different file types
@@ -60,9 +59,7 @@ def multiple_sources_flow(
 
         with py_file["chunks"].row() as chunk:
             chunk["embedding"] = chunk["text"].transform(
-                cocoindex.functions.SentenceTransformerEmbed(
-                    model="sentence-transformers/all-MiniLM-L6-v2"
-                )
+                cocoindex.functions.SentenceTransformerEmbed(model="sentence-transformers/all-MiniLM-L6-v2")
             )
             code_embeddings.collect(
                 filename=py_file["filename"],
@@ -84,9 +81,7 @@ def multiple_sources_flow(
 
         with rs_file["chunks"].row() as chunk:
             chunk["embedding"] = chunk["text"].transform(
-                cocoindex.functions.SentenceTransformerEmbed(
-                    model="sentence-transformers/all-MiniLM-L6-v2"
-                )
+                cocoindex.functions.SentenceTransformerEmbed(model="sentence-transformers/all-MiniLM-L6-v2")
             )
             code_embeddings.collect(
                 filename=rs_file["filename"],
@@ -101,12 +96,8 @@ def multiple_sources_flow(
         config_metadata.collect(
             filename=config_file["filename"],
             file_type="config",
-            content_length=config_file["content"].transform(
-                cocoindex.functions.CalculateLength()
-            ),
-            content_preview=config_file["content"].transform(
-                cocoindex.functions.TruncateText(max_length=500)
-            ),
+            content_length=config_file["content"].transform(cocoindex.functions.CalculateLength()),
+            content_preview=config_file["content"].transform(cocoindex.functions.TruncateText(max_length=500)),
         )
 
     # Export to different targets
@@ -128,13 +119,12 @@ def multiple_sources_flow(
         primary_key_fields=["filename"],
     )
 
+
 # Example of multiple separate flows
 
 
 @cocoindex.flow_def(name="PythonCodeAnalysis")
-def python_analysis_flow(
-    flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope
-) -> None:
+def python_analysis_flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope) -> None:
     """Separate flow focused on Python code analysis"""
     data_scope["python_files"] = flow_builder.add_source(
         cocoindex.sources.LocalFile(
@@ -172,9 +162,7 @@ def python_analysis_flow(
 
 
 @cocoindex.flow_def(name="RustCodeAnalysis")
-def rust_analysis_flow(
-    flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope
-) -> None:
+def rust_analysis_flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope) -> None:
     """Separate flow focused on Rust code analysis"""
     data_scope["rust_files"] = flow_builder.add_source(
         cocoindex.sources.LocalFile(

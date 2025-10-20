@@ -33,7 +33,7 @@ class JavaASTVisitor(GenericMetadataVisitor):
     def visit_node(self, context: NodeContext) -> Optional[Dict[str, Any]]:
         """Visit a node and extract Java-specific metadata."""
         node = context.node
-        node_type = node.type if hasattr(node, 'type') else str(type(node))
+        node_type = node.type if hasattr(node, "type") else str(type(node))
 
         # Track node statistics
         self.node_stats[node_type] = self.node_stats.get(node_type, 0) + 1
@@ -42,19 +42,19 @@ class JavaASTVisitor(GenericMetadataVisitor):
         self._update_complexity(node_type)
 
         # Extract Java-specific constructs
-        if node_type == 'method_declaration':
+        if node_type == "method_declaration":
             self._extract_method(node)
-        elif node_type == 'constructor_declaration':
+        elif node_type == "constructor_declaration":
             self._extract_constructor(node)
-        elif node_type == 'class_declaration':
+        elif node_type == "class_declaration":
             self._extract_class(node)
-        elif node_type == 'interface_declaration':
+        elif node_type == "interface_declaration":
             self._extract_interface(node)
-        elif node_type == 'enum_declaration':
+        elif node_type == "enum_declaration":
             self._extract_enum(node)
-        elif node_type == 'package_declaration':
+        elif node_type == "package_declaration":
             self._extract_package(node)
-        elif node_type == 'annotation_type_declaration':
+        elif node_type == "annotation_type_declaration":
             self._extract_annotation(node)
 
         return None
@@ -64,10 +64,10 @@ class JavaASTVisitor(GenericMetadataVisitor):
         try:
             # Java method structure: method_declaration -> identifier
             for child in node.children:
-                if child.type == 'identifier':
+                if child.type == "identifier":
                     text = child.text
                     if text is not None:
-                        method_name = text.decode('utf-8')
+                        method_name = text.decode("utf-8")
                         self.functions.append(method_name)
                     LOGGER.debug(f"Found Java method: {method_name}")
                     break
@@ -79,10 +79,10 @@ class JavaASTVisitor(GenericMetadataVisitor):
         try:
             # Java constructor structure: constructor_declaration -> identifier
             for child in node.children:
-                if child.type == 'identifier':
+                if child.type == "identifier":
                     text = child.text
                     if text is not None:
-                        constructor_name = text.decode('utf-8')
+                        constructor_name = text.decode("utf-8")
                         self.functions.append(constructor_name)  # Treat constructors as functions
                     LOGGER.debug(f"Found Java constructor: {constructor_name}")
                     break
@@ -94,10 +94,10 @@ class JavaASTVisitor(GenericMetadataVisitor):
         try:
             # Look for class name (identifier after 'class' keyword)
             for child in node.children:
-                if child.type == 'identifier':
+                if child.type == "identifier":
                     text = child.text
                     if text is not None:
-                        class_name = text.decode('utf-8')
+                        class_name = text.decode("utf-8")
                         self.classes.append(class_name)
                     LOGGER.debug(f"Found Java class: {class_name}")
                     break
@@ -109,10 +109,10 @@ class JavaASTVisitor(GenericMetadataVisitor):
         try:
             # Look for interface name
             for child in node.children:
-                if child.type == 'identifier':
+                if child.type == "identifier":
                     text = child.text
                     if text is not None:
-                        interface_name = text.decode('utf-8')
+                        interface_name = text.decode("utf-8")
                         self.interfaces.append(interface_name)
                     LOGGER.debug(f"Found Java interface: {interface_name}")
                     break
@@ -124,8 +124,8 @@ class JavaASTVisitor(GenericMetadataVisitor):
         try:
             # Look for enum name
             for child in node.children:
-                if child.type == 'identifier':
-                    enum_name = child.text.decode('utf-8')
+                if child.type == "identifier":
+                    enum_name = child.text.decode("utf-8")
                     self.enums.append(enum_name)
                     LOGGER.debug(f"Found Java enum: {enum_name}")
                     break
@@ -137,8 +137,8 @@ class JavaASTVisitor(GenericMetadataVisitor):
         try:
             # Look for package name (scoped_identifier or identifier)
             for child in node.children:
-                if child.type in ['scoped_identifier', 'identifier']:
-                    package_name = child.text.decode('utf-8')
+                if child.type in ["scoped_identifier", "identifier"]:
+                    package_name = child.text.decode("utf-8")
                     self.packages.append(package_name)
                     LOGGER.debug(f"Found Java package: {package_name}")
                     break
@@ -150,8 +150,8 @@ class JavaASTVisitor(GenericMetadataVisitor):
         try:
             # Look for annotation name
             for child in node.children:
-                if child.type == 'identifier':
-                    annotation_name = child.text.decode('utf-8')
+                if child.type == "identifier":
+                    annotation_name = child.text.decode("utf-8")
                     self.annotations.append(annotation_name)
                     LOGGER.debug(f"Found Java annotation: {annotation_name}")
                     break
@@ -161,15 +161,15 @@ class JavaASTVisitor(GenericMetadataVisitor):
     def get_summary(self) -> Dict[str, Any]:
         """Get analysis summary in the expected format."""
         return {
-            'functions': self.functions,
-            'classes': self.classes,
-            'interfaces': self.interfaces,
-            'enums': self.enums,
-            'packages': self.packages,
-            'annotations': self.annotations,
-            'node_stats': dict(self.node_stats),
-            'complexity_score': self.complexity_score,
-            'analysis_method': 'java_ast_visitor'
+            "functions": self.functions,
+            "classes": self.classes,
+            "interfaces": self.interfaces,
+            "enums": self.enums,
+            "packages": self.packages,
+            "annotations": self.annotations,
+            "node_stats": dict(self.node_stats),
+            "complexity_score": self.complexity_score,
+            "analysis_method": "java_ast_visitor",
         }
 
 
@@ -183,15 +183,15 @@ def analyze_java_code(code: str, filename: str = "") -> Dict[str, Any]:
 
         # Create parser and parse code
         factory = ASTParserFactory()
-        parser = factory.create_parser('java')
+        parser = factory.create_parser("java")
         if not parser:
             LOGGER.warning("Java parser not available")
-            return {'success': False, 'error': 'Java parser not available'}
+            return {"success": False, "error": "Java parser not available"}
 
-        tree = factory.parse_code(code, 'java')
+        tree = factory.parse_code(code, "java")
         if not tree:
             LOGGER.warning("Failed to parse Java code")
-            return {'success': False, 'error': 'Failed to parse Java code'}
+            return {"success": False, "error": "Failed to parse Java code"}
 
         # Use specialized Java visitor
         visitor = JavaASTVisitor()
@@ -202,29 +202,36 @@ def analyze_java_code(code: str, filename: str = "") -> Dict[str, Any]:
         result = visitor.get_summary()
         # Use display language name for database storage
         from ..mappers import get_display_language_name
-        update_defaults(result, {
-            'success': True,
-            'language': get_display_language_name('java'),
-            'filename': filename,
-            'line_count': code.count('\n') + 1,
-            'char_count': len(code),
-            'parse_errors': 0,
-            'tree_language': str(parser.language) if parser else None,
-            # Required metadata fields for promoted column implementation
-            # don't set chunking method in analyzer
-            # "chunking_method": "ast_tree_sitter",
-            # "tree_sitter_chunking_error": False,
-            'tree_sitter_analyze_error': False,
-            'decorators_used': result.get('annotations', []),  # Java uses annotations
-            'has_type_hints': True,  # Java has strong typing
-            'has_async': False,  # Java doesn't have async/await syntax like JS/Python
-            'has_classes': len(result.get('classes', [])) > 0 or len(result.get('interfaces', [])) > 0
-        })
+
+        update_defaults(
+            result,
+            {
+                "success": True,
+                "language": get_display_language_name("java"),
+                "filename": filename,
+                "line_count": code.count("\n") + 1,
+                "char_count": len(code),
+                "parse_errors": 0,
+                "tree_language": str(parser.language) if parser else None,
+                # Required metadata fields for promoted column implementation
+                # don't set chunking method in analyzer
+                # "chunking_method": "ast_tree_sitter",
+                # "tree_sitter_chunking_error": False,
+                "tree_sitter_analyze_error": False,
+                "decorators_used": result.get("annotations", []),  # Java uses annotations
+                "has_type_hints": True,  # Java has strong typing
+                "has_async": False,  # Java doesn't have async/await syntax like JS/Python
+                "has_classes": len(result.get("classes", [])) > 0 or len(result.get("interfaces", [])) > 0,
+            },
+        )
 
         LOGGER.debug(
-            f"Java analysis completed: {len(result.get('functions', []))} functions, {len(result.get('classes', []))} classes found")
+            f"Java analysis completed: {len(result.get('functions',
+                                                       []))} functions, {len(result.get('classes',
+                                                                                        []))} classes found"
+        )
         return result
 
     except Exception as e:
         LOGGER.error(f"Java code analysis failed: {e}")
-        return {'success': False, 'error': str(e)}
+        return {"success": False, "error": str(e)}

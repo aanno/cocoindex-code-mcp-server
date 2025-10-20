@@ -9,7 +9,7 @@ import shutil
 import sys
 import tempfile
 
-sys.path.insert(0, 'src')
+sys.path.insert(0, "src")
 
 
 def test_minimal_flow():
@@ -36,7 +36,7 @@ class TestClass:
 
     try:
         # Write test content
-        with open(test_file, 'w') as f:
+        with open(test_file, "w") as f:
             f.write(test_content)
 
         print(f"📁 Created test file: {test_file}")
@@ -47,8 +47,8 @@ class TestClass:
         import cocoindex
 
         # Set database URL if not already set
-        if not os.getenv('COCOINDEX_DATABASE_URL'):
-            os.environ['COCOINDEX_DATABASE_URL'] = 'postgres://cocoindex:cocoindex@host.docker.internal/cocoindex'
+        if not os.getenv("COCOINDEX_DATABASE_URL"):
+            os.environ["COCOINDEX_DATABASE_URL"] = "postgres://cocoindex:cocoindex@host.docker.internal/cocoindex"
 
         cocoindex.init()
 
@@ -61,7 +61,7 @@ class TestClass:
         update_flow_config(
             paths=[temp_dir],  # Use the temp directory
             use_default_chunking=False,  # Use AST chunking
-            use_default_language_handler=False  # Use proper language handler
+            use_default_language_handler=False,  # Use proper language handler
         )
 
         print("✅ Configured CocoIndex for single file test")
@@ -80,9 +80,9 @@ class TestClass:
             print()
 
             # Check what was processed
-            if hasattr(stats, 'updated_rows'):
+            if hasattr(stats, "updated_rows"):
                 print(f"📊 Updated rows: {stats.updated_rows}")
-            if hasattr(stats, 'source_stats'):
+            if hasattr(stats, "source_stats"):
                 print(f"📊 Source stats: {stats.source_stats}")
 
             return True
@@ -90,6 +90,7 @@ class TestClass:
         except Exception as e:
             print(f"❌ Flow operation failed: {e}")
             import traceback
+
             traceback.print_exc()
             return False
 

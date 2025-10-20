@@ -30,6 +30,7 @@ class QueryBuilder:
     Provides a fluent interface for building complex queries that work
     across different vector store backends.
     """
+
     _text: Optional[str] = None
     _query_type: QueryType = QueryType.HYBRID
     _top_k: int = 10
@@ -39,103 +40,103 @@ class QueryBuilder:
     _keyword_weight: float = 0.3
     _embedding: Optional[NDArray[np.float32]] = None
 
-    def text(self, query_text: str) -> 'QueryBuilder':
+    def text(self, query_text: str) -> "QueryBuilder":
         """Set the text query for vector/semantic search."""
         self._text = query_text
         return self
 
-    def vector_search(self) -> 'QueryBuilder':
+    def vector_search(self) -> "QueryBuilder":
         """Set query type to pure vector search."""
         self._query_type = QueryType.VECTOR
         return self
 
-    def keyword_search(self) -> 'QueryBuilder':
+    def keyword_search(self) -> "QueryBuilder":
         """Set query type to pure keyword search."""
         self._query_type = QueryType.KEYWORD
         return self
 
-    def hybrid_search(self, vector_weight: float = 0.7, keyword_weight: float = 0.3) -> 'QueryBuilder':
+    def hybrid_search(self, vector_weight: float = 0.7, keyword_weight: float = 0.3) -> "QueryBuilder":
         """Set query type to hybrid search with custom weights."""
         self._query_type = QueryType.HYBRID
         self._vector_weight = vector_weight
         self._keyword_weight = keyword_weight
         return self
 
-    def limit(self, top_k: int) -> 'QueryBuilder':
+    def limit(self, top_k: int) -> "QueryBuilder":
         """Set maximum number of results to return."""
         self._top_k = top_k
         return self
 
-    def filter_by(self, field: str, operator: FilterOperator, value: Any) -> 'QueryBuilder':
+    def filter_by(self, field: str, operator: FilterOperator, value: Any) -> "QueryBuilder":
         """Add a filter condition."""
         self._filters.append(QueryFilter(field=field, operator=operator, value=value))
         return self
 
-    def where(self, field: str, value: Any) -> 'QueryBuilder':
+    def where(self, field: str, value: Any) -> "QueryBuilder":
         """Add an equality filter (convenience method)."""
         return self.filter_by(field, FilterOperator.EQUALS, value)
 
-    def where_language(self, language: str) -> 'QueryBuilder':
+    def where_language(self, language: str) -> "QueryBuilder":
         """Filter by programming language (convenience method)."""
         return self.where("language", language)
 
-    def where_filename_like(self, pattern: str) -> 'QueryBuilder':
+    def where_filename_like(self, pattern: str) -> "QueryBuilder":
         """Filter by filename pattern (convenience method)."""
         return self.filter_by("filename", FilterOperator.ILIKE, f"%{pattern}%")
 
-    def where_has_functions(self) -> 'QueryBuilder':
+    def where_has_functions(self) -> "QueryBuilder":
         """Filter for chunks that contain functions (convenience method)."""
         return self.filter_by("functions", FilterOperator.IS_NOT_NULL, None)
 
-    def where_complexity_greater_than(self, score: int) -> 'QueryBuilder':
+    def where_complexity_greater_than(self, score: int) -> "QueryBuilder":
         """Filter by minimum complexity score (convenience method)."""
         return self.filter_by("complexity_score", FilterOperator.GREATER_THAN, score)
 
-    def with_type_hints(self) -> 'QueryBuilder':
+    def with_type_hints(self) -> "QueryBuilder":
         """Filter for code with type hints (convenience method)."""
         return self.where("has_type_hints", True)
 
-    def with_async_code(self) -> 'QueryBuilder':
+    def with_async_code(self) -> "QueryBuilder":
         """Filter for code with async functions (convenience method)."""
         return self.where("has_async", True)
 
-#    def where_analysis_method(self, analysis_method: str) -> 'QueryBuilder':
-#        return self.where("analysis_method", analysis_method)
+    #    def where_analysis_method(self, analysis_method: str) -> 'QueryBuilder':
+    #        return self.where("analysis_method", analysis_method)
 
-    def where_chunking_method(self, chunking_method: str) -> 'QueryBuilder':
+    def where_chunking_method(self, chunking_method: str) -> "QueryBuilder":
         return self.where("chunking_method", chunking_method)
 
-    def where_tree_sitter_analyze_error(self) -> 'QueryBuilder':
+    def where_tree_sitter_analyze_error(self) -> "QueryBuilder":
         return self.where("tree_sitter_analyze_error", True)
 
-    def where_tree_sitter_chunking_error(self) -> 'QueryBuilder':
+    def where_tree_sitter_chunking_error(self) -> "QueryBuilder":
         return self.where("tree_sitter_chunking_error", True)
 
-    def where_has_docstrings(self) -> 'QueryBuilder':
+    def where_has_docstrings(self) -> "QueryBuilder":
         return self.where("has_docstrings", True)
 
-    def where_docstring(self, docstring: str) -> 'QueryBuilder':
+    def where_docstring(self, docstring: str) -> "QueryBuilder":
         return self.where("docstring", docstring)
 
-    def contains_decorator_used(self, decorator_used: str) -> 'QueryBuilder':
+    def contains_decorator_used(self, decorator_used: str) -> "QueryBuilder":
         return self.filter_by(decorator_used, FilterOperator.IN, "decorators_used")
 
-    def contains_decorator(self, decorator: str) -> 'QueryBuilder':
+    def contains_decorator(self, decorator: str) -> "QueryBuilder":
         return self.filter_by(decorator, FilterOperator.IN, "decorators")
 
     # TODO: dunder_methods, private_methods, variables, function_details, class_details
 
-    def filter_logic_and(self) -> 'QueryBuilder':
+    def filter_logic_and(self) -> "QueryBuilder":
         """Use AND logic for combining filters."""
         self._filter_logic = "AND"
         return self
 
-    def filter_logic_or(self) -> 'QueryBuilder':
+    def filter_logic_or(self) -> "QueryBuilder":
         """Use OR logic for combining filters."""
         self._filter_logic = "OR"
         return self
 
-    def with_embedding(self, embedding: NDArray[np.float32]) -> 'QueryBuilder':
+    def with_embedding(self, embedding: NDArray[np.float32]) -> "QueryBuilder":
         """Provide pre-computed embedding for vector search."""
         self._embedding = embedding
         return self
@@ -150,7 +151,7 @@ class QueryBuilder:
             filter_logic=self._filter_logic,  # type: ignore
             vector_weight=self._vector_weight,
             keyword_weight=self._keyword_weight,
-            embedding=self._embedding
+            embedding=self._embedding,
         )
 
 
@@ -162,8 +163,11 @@ class QueryExecutor:
     while maintaining consistent result format.
     """
 
-    def __init__(self, backend: 'VectorStoreBackend',
-                 embedding_func: Optional[Callable[[str], Union[NDArray[np.floating], object]]] = None):
+    def __init__(
+        self,
+        backend: "VectorStoreBackend",
+        embedding_func: Optional[Callable[[str], Union[NDArray[np.floating], object]]] = None,
+    ):
         """
         Initialize with a specific backend.
 
@@ -222,10 +226,7 @@ class QueryExecutor:
         # Convert embedding to numpy array if needed
         if not isinstance(embedding, np.ndarray):
             embedding = np.array(embedding, dtype=np.float32)
-        backend_results = self.backend.vector_search(
-            query_vector=embedding,
-            top_k=query.get("top_k", 10)
-        )
+        backend_results = self.backend.vector_search(query_vector=embedding, top_k=query.get("top_k", 10))
 
         # Convert backend results to schema results
         results = []
@@ -240,7 +241,7 @@ class QueryExecutor:
                 score=backend_result.score,
                 score_type=SearchResultType.VECTOR_SIMILARITY,
                 source=backend_result.source,
-                metadata=backend_result.metadata
+                metadata=backend_result.metadata,
             )
             results.append(schema_result)
 
@@ -259,13 +260,10 @@ class QueryExecutor:
 
         query_filters = QueryFilters(
             conditions=filter_conditions,  # type: ignore
-            operator=query.get("filter_logic", "AND")
+            operator=query.get("filter_logic", "AND"),
         )
 
-        backend_results = self.backend.keyword_search(
-            filters=query_filters,
-            top_k=query.get("top_k", 10)
-        )
+        backend_results = self.backend.keyword_search(filters=query_filters, top_k=query.get("top_k", 10))
 
         # Convert backend results to schema results
         results = []
@@ -280,7 +278,7 @@ class QueryExecutor:
                 score=backend_result.score,
                 score_type=SearchResultType.KEYWORD_MATCH,
                 source=backend_result.source,
-                metadata=backend_result.metadata
+                metadata=backend_result.metadata,
             )
             results.append(schema_result)
 
@@ -304,7 +302,7 @@ class QueryExecutor:
 
         query_filters = QueryFilters(
             conditions=filter_conditions,  # type: ignore
-            operator=query.get("filter_logic", "AND")
+            operator=query.get("filter_logic", "AND"),
         )
 
         backend_results = self.backend.hybrid_search(
@@ -312,7 +310,7 @@ class QueryExecutor:
             filters=query_filters,
             top_k=query.get("top_k", 10),
             vector_weight=query.get("vector_weight", 0.7),
-            keyword_weight=query.get("keyword_weight", 0.3)
+            keyword_weight=query.get("keyword_weight", 0.3),
         )
 
         # Convert backend results to schema results
@@ -328,7 +326,7 @@ class QueryExecutor:
                 score=backend_result.score,
                 score_type=SearchResultType.HYBRID_COMBINED,
                 source=backend_result.source,
-                metadata=backend_result.metadata
+                metadata=backend_result.metadata,
             )
             results.append(schema_result)
 
@@ -400,6 +398,7 @@ class QueryOptimizer:
 # Convenience Functions
 # =============================================================================
 
+
 def create_query() -> QueryBuilder:
     """Create a new query builder."""
     return QueryBuilder()
@@ -407,47 +406,26 @@ def create_query() -> QueryBuilder:
 
 def simple_search(text: str, top_k: int = 10) -> ChunkQuery:
     """Create a simple hybrid search query."""
-    return (create_query()
-            .text(text)
-            .hybrid_search()
-            .limit(top_k)
-            .build())
+    return create_query().text(text).hybrid_search().limit(top_k).build()
 
 
 def find_functions_in_language(language: str, top_k: int = 10) -> ChunkQuery:
     """Find code chunks with functions in a specific language."""
-    return (create_query()
-            .keyword_search()
-            .where_language(language)
-            .where_has_functions()
-            .limit(top_k)
-            .build())
+    return create_query().keyword_search().where_language(language).where_has_functions().limit(top_k).build()
 
 
 def find_complex_code(min_complexity: int = 5, top_k: int = 10) -> ChunkQuery:
     """Find complex code chunks."""
-    return (create_query()
-            .keyword_search()
-            .where_complexity_greater_than(min_complexity)
-            .limit(top_k)
-            .build())
+    return create_query().keyword_search().where_complexity_greater_than(min_complexity).limit(top_k).build()
 
 
 def find_async_python_code(top_k: int = 10) -> ChunkQuery:
     """Find Python code with async functions."""
-    return (create_query()
-            .keyword_search()
-            .where_language("Python")
-            .with_async_code()
-            .limit(top_k)
-            .build())
+    return create_query().keyword_search().where_language("Python").with_async_code().limit(top_k).build()
 
 
 def semantic_search_with_filters(
-    text: str,
-    language: Optional[str] = None,
-    min_complexity: Optional[int] = None,
-    top_k: int = 10
+    text: str, language: Optional[str] = None, min_complexity: Optional[int] = None, top_k: int = 10
 ) -> ChunkQuery:
     """Create a semantic search with optional filters."""
     builder = create_query().text(text).hybrid_search().limit(top_k)
@@ -469,12 +447,11 @@ __all__ = [
     "QueryBuilder",
     "QueryExecutor",
     "QueryOptimizer",
-
     # Convenience functions
     "create_query",
     "simple_search",
     "find_functions_in_language",
     "find_complex_code",
     "find_async_python_code",
-    "semantic_search_with_filters"
+    "semantic_search_with_filters",
 ]

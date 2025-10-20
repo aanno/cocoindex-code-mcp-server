@@ -50,6 +50,7 @@ from .lang.python.python_code_analyzer import analyze_python_code
 
 try:
     from coverage import Coverage
+
     HAS_COVERAGE = True
 except ImportError:
     HAS_COVERAGE = False
@@ -98,6 +99,7 @@ async def coverage_context() -> AsyncIterator[Optional[object]]:
             # Don't let coverage cleanup block shutdown
             logger.warning(f"Coverage cleanup warning: {e}")
 
+
 # Configure logging
 logger = logging.getLogger(__name__)
 
@@ -113,6 +115,7 @@ def safe_embedding_function(query: str) -> object:
         # Return a zero vector if shutting down
         try:
             import numpy as np
+
             return np.zeros(384, dtype=np.float32)
         except ImportError:
             return [0.0] * 384
@@ -123,6 +126,7 @@ def safe_embedding_function(query: str) -> object:
         if "cannot schedule new futures after shutdown" in str(e):
             try:
                 import numpy as np
+
                 return np.zeros(384, dtype=np.float32)
             except ImportError:
                 return [0.0] * 384
@@ -131,6 +135,7 @@ def safe_embedding_function(query: str) -> object:
         logger.warning(f"Embedding function failed: {e}")
         try:
             import numpy as np
+
             return np.zeros(384, dtype=np.float32)
         except ImportError:
             return [0.0] * 384
@@ -245,13 +250,20 @@ def get_mcp_resources() -> list[types.Resource]:
 @click.option("--default-embedding", is_flag=True, help="Use default CocoIndex embedding")
 @click.option("--default-chunking", is_flag=True, help="Use default CocoIndex chunking")
 @click.option("--default-language-handler", is_flag=True, help="Use default CocoIndex language handling")
-@click.option("--chunk-factor-percent", default=100,
-              help="Chunk size scaling factor as percentage (100=default, <100=smaller, >100=larger)")
+@click.option(
+    "--chunk-factor-percent",
+    default=100,
+    help="Chunk size scaling factor as percentage (100=default, <100=smaller, >100=larger)",
+)
 @click.option("--port", default=3000, help="Port to listen on for HTTP")
 @click.option("--log-level", default="INFO", help="Logging level")
 @click.option("--json-response", is_flag=True, default=False, help="Enable JSON responses instead of SSE streams")
-@click.option("--rescan", is_flag=True, default=False,
-              help="Clear database and tracking tables before starting to force re-indexing")
+@click.option(
+    "--rescan",
+    is_flag=True,
+    default=False,
+    help="Clear database and tracking tables before starting to force re-indexing",
+)
 def main(
     paths: tuple,
     explicit_paths: tuple,
@@ -313,12 +325,15 @@ def main(
                 from psycopg import sql
 
                 # Clear embeddings table
-                cur.execute("""
+                cur.execute(
+                    """
                     SELECT EXISTS (
                         SELECT FROM information_schema.tables
                         WHERE table_name = %s
                     );
-                """, (embeddings_table,))
+                """,
+                    (embeddings_table,),
+                )
                 exists_result = cur.fetchone()
                 if exists_result and exists_result[0]:
                     # Get count before truncating (for logging)
@@ -327,19 +342,22 @@ def main(
                     count = count_result[0] if count_result else 0
                     # TRUNCATE is faster than DELETE and resets auto-increment
                     cur.execute(
-                        sql.SQL("TRUNCATE TABLE {} RESTART IDENTITY CASCADE").format(
-                            sql.Identifier(embeddings_table)))
+                        sql.SQL("TRUNCATE TABLE {} RESTART IDENTITY CASCADE").format(sql.Identifier(embeddings_table))
+                    )
                     logger.info(f"  ✅ Truncated {embeddings_table} ({count} records removed)")
                 else:
                     logger.info(f"  ⚠️  Table {embeddings_table} does not exist yet")
 
                 # Clear tracking table (critical for re-indexing!)
-                cur.execute("""
+                cur.execute(
+                    """
                     SELECT EXISTS (
                         SELECT FROM information_schema.tables
                         WHERE table_name = %s
                     );
-                """, (tracking_table,))
+                """,
+                    (tracking_table,),
+                )
                 exists_result = cur.fetchone()
                 if exists_result and exists_result[0]:
                     # Get count before truncating (for logging)
@@ -348,8 +366,8 @@ def main(
                     count = count_result[0] if count_result else 0
                     # TRUNCATE is faster than DELETE and resets auto-increment
                     cur.execute(
-                        sql.SQL("TRUNCATE TABLE {} RESTART IDENTITY CASCADE").format(
-                            sql.Identifier(tracking_table)))
+                        sql.SQL("TRUNCATE TABLE {} RESTART IDENTITY CASCADE").format(sql.Identifier(tracking_table))
+                    )
                     logger.info(f"  ✅ Truncated {tracking_table} ({count} records removed)")
                 else:
                     logger.info(f"  ⚠️  Table {tracking_table} does not exist yet")
@@ -387,7 +405,7 @@ def main(
         use_default_embedding=default_embedding,
         use_default_chunking=default_chunking,
         use_default_language_handler=default_language_handler,
-        chunk_factor_percent=chunk_factor_percent
+        chunk_factor_percent=chunk_factor_percent,
     )
 
     logger.info("🚀 CocoIndex RAG MCP Server starting...")
@@ -435,25 +453,13 @@ def main(
             else:
                 raise ValueError(f"Unknown tool '{name}'")
 
-            return [types.TextContent(
-                type="text",
-                text=json.dumps(result, indent=2, ensure_ascii=False)
-            )]
+            return [types.TextContent(type="text", text=json.dumps(result, indent=2, ensure_ascii=False))]
 
         except Exception as e:
             logger.exception(f"Error executing tool '{name}'")
             # Return proper MCP error dict as per protocol recommendation
-            error_response = {
-                "error": {
-                    "type": "mcp_protocol_error",
-                    "code": 32603,
-                    "message": str(e)
-                }
-            }
-            return [types.TextContent(
-                type="text",
-                text=json.dumps(error_response, indent=2, ensure_ascii=False)
-            )]
+            error_response = {"error": {"type": "mcp_protocol_error", "code": 32603, "message": str(e)}}
+            return [types.TextContent(type="text", text=json.dumps(error_response, indent=2, ensure_ascii=False))]
 
     @app.read_resource()
     async def handle_read_resource(uri: AnyUrl) -> List[ReadResourceContents]:
@@ -478,17 +484,17 @@ def main(
             content = json.dumps({"message": "Test resource working", "uri": uri_str}, indent=2)
         else:
             logger.error(
-                f"❌ Unknown resource requested: '{uri_str}' (available: search/stats, search/config, database/schema, query/examples, search/grammar, search/operators, test/simple)")
-            raise McpError(types.ErrorData(
-                code=404,
-                message=f"Resource not found: {uri_str}"
-            ))
+                f"❌ Unknown resource requested: '{uri_str}' (available: search/stats, search/config, database/schema, query/examples, search/grammar, search/operators, test/simple)"
+            )
+            raise McpError(types.ErrorData(code=404, message=f"Resource not found: {uri_str}"))
 
         logger.info(f"✅ Successfully retrieved resource: '{uri_str}'")
-        return [ReadResourceContents(
-            content=content,
-            mime_type="application/json" if uri_str != "cocoindex://search/grammar" else "text/x-lark"
-        )]
+        return [
+            ReadResourceContents(
+                content=content,
+                mime_type="application/json" if uri_str != "cocoindex://search/grammar" else "text/x-lark",
+            )
+        ]
 
     # Helper function to make SearchResult objects JSON serializable
     def serialize_search_results(results) -> list:
@@ -504,7 +510,7 @@ def main(
                 return obj
             elif isinstance(obj, Decimal):
                 return float(obj)
-            elif hasattr(obj, 'item'):  # numpy scalar
+            elif hasattr(obj, "item"):  # numpy scalar
                 return obj.item()
             elif isinstance(obj, Enum):
                 return obj.value
@@ -512,30 +518,30 @@ def main(
                 return [make_serializable(item) for item in obj]
             elif isinstance(obj, dict):
                 return {key: make_serializable(value) for key, value in obj.items()}
-            elif hasattr(obj, '__dict__'):
+            elif hasattr(obj, "__dict__"):
                 # Convert object to dict
-                if hasattr(obj, 'conditions') and hasattr(obj, 'operator'):  # SearchGroup object
+                if hasattr(obj, "conditions") and hasattr(obj, "operator"):  # SearchGroup object
                     return {
-                        'conditions': make_serializable(obj.conditions),
-                        'operator': make_serializable(obj.operator)
+                        "conditions": make_serializable(obj.conditions),
+                        "operator": make_serializable(obj.operator),
                     }
-                elif hasattr(obj, 'field') and hasattr(obj, 'value'):  # SearchCondition object
+                elif hasattr(obj, "field") and hasattr(obj, "value"):  # SearchCondition object
                     return {
-                        'field': make_serializable(obj.field),
-                        'value': make_serializable(obj.value),
-                        'operator': make_serializable(getattr(obj, 'operator', None))
+                        "field": make_serializable(obj.field),
+                        "value": make_serializable(obj.value),
+                        "operator": make_serializable(getattr(obj, "operator", None)),
                     }
-                elif hasattr(obj, 'filename'):  # SearchResult object
+                elif hasattr(obj, "filename"):  # SearchResult object
                     result_dict = {
-                        'filename': make_serializable(obj.filename),
-                        'language': make_serializable(obj.language),
-                        'code': make_serializable(obj.code),
-                        'location': make_serializable(obj.location),
-                        'start': make_serializable(obj.start),
-                        'end': make_serializable(obj.end),
-                        'score': make_serializable(obj.score),
-                        'score_type': make_serializable(obj.score_type),
-                        'source': make_serializable(obj.source)
+                        "filename": make_serializable(obj.filename),
+                        "language": make_serializable(obj.language),
+                        "code": make_serializable(obj.code),
+                        "location": make_serializable(obj.location),
+                        "start": make_serializable(obj.start),
+                        "end": make_serializable(obj.end),
+                        "score": make_serializable(obj.score),
+                        "score_type": make_serializable(obj.score_type),
+                        "source": make_serializable(obj.source),
                     }
 
                     # Add direct metadata fields from SearchResult
@@ -546,7 +552,7 @@ def main(
                             result_dict[key] = make_serializable(value)
 
                     # Extract ALL fields from metadata_json if it exists (generalized promotion)
-                    if hasattr(obj, 'metadata_json') and isinstance(obj.metadata_json, dict):
+                    if hasattr(obj, "metadata_json") and isinstance(obj.metadata_json, dict):
                         metadata_json = obj.metadata_json
                         # Promote all fields from metadata_json to top-level, avoiding conflicts
                         for key, value in metadata_json.items():
@@ -584,13 +590,14 @@ def main(
                     vector_weight=vector_weight,
                     keyword_weight=keyword_weight,
                     language=language,
-                    embedding_model=embedding_model
+                    embedding_model=embedding_model,
                 )
         except ValueError as e:
             # Handle field validation errors with helpful messages
             error_msg = str(e)
             if "Invalid field" in error_msg:
                 from .schema_validator import get_valid_fields_help
+
                 help_text = get_valid_fields_help()
                 raise ValueError(f"{error_msg}\n\n{help_text}")
             raise
@@ -598,6 +605,7 @@ def main(
             # Handle SQL-related errors
             if "column" in str(e) and "does not exist" in str(e):
                 from .schema_validator import get_valid_fields_help
+
                 help_text = get_valid_fields_help()
                 raise ValueError(f"Database schema error: {e}\n\n{help_text}")
             raise
@@ -608,10 +616,10 @@ def main(
                 "keyword_query": keyword_query,
                 "top_k": top_k,
                 "vector_weight": vector_weight,
-                "keyword_weight": keyword_weight
+                "keyword_weight": keyword_weight,
             },
             "results": serialize_search_results(results),
-            "total_results": len(results)
+            "total_results": len(results),
         }
 
     async def perform_vector_search(arguments: dict) -> dict:
@@ -629,14 +637,10 @@ def main(
                 vector_weight=1.0,
                 keyword_weight=0.0,
                 language=language,
-                embedding_model=embedding_model
+                embedding_model=embedding_model,
             )
 
-        return {
-            "query": query,
-            "results": serialize_search_results(results),
-            "total_results": len(results)
-        }
+        return {"query": query, "results": serialize_search_results(results), "total_results": len(results)}
 
     async def perform_keyword_search(arguments: dict) -> dict:
         """Perform pure keyword metadata search."""
@@ -645,18 +649,10 @@ def main(
 
         if hybrid_search_engine is not None:
             results = hybrid_search_engine.search(
-                vector_query="",
-                keyword_query=query,
-                top_k=top_k,
-                vector_weight=0.0,
-                keyword_weight=1.0
+                vector_query="", keyword_query=query, top_k=top_k, vector_weight=0.0, keyword_weight=1.0
             )
 
-        return {
-            "query": query,
-            "results": serialize_search_results(results),
-            "total_results": len(results)
-        }
+        return {"query": query, "results": serialize_search_results(results), "total_results": len(results)}
 
     async def analyze_code_tool(arguments: dict) -> dict:
         """Analyze code and extract metadata."""
@@ -681,14 +677,10 @@ def main(
                 "language": language,
                 "lines_of_code": len(code.splitlines()),
                 "char_count": len(code),
-                "analysis_type": "basic"
+                "analysis_type": "basic",
             }
 
-        return {
-            "file_path": file_path,
-            "language": language,
-            "metadata": metadata
-        }
+        return {"file_path": file_path, "language": language, "metadata": metadata}
 
     async def get_embeddings_tool(arguments: dict) -> dict:
         """Generate embeddings for text."""
@@ -699,8 +691,8 @@ def main(
 
         return {
             "text": text,
-            "embedding": embedding.tolist() if hasattr(embedding, 'tolist') else list(embedding),
-            "dimensions": len(embedding)
+            "embedding": embedding.tolist() if hasattr(embedding, "tolist") else list(embedding),
+            "dimensions": len(embedding),
         }
 
     async def get_keyword_syntax_help_tool(_arguments: dict) -> dict:
@@ -711,28 +703,43 @@ def main(
                 "basic_operators": {
                     "field_matching": {
                         "syntax": "field:value",
-                        "examples": ["language:python", "has_async:true", 'filename:"test file.py"']
+                        "examples": ["language:python", "has_async:true", 'filename:"test file.py"'],
                     },
                     "existence_check": {
                         "syntax": "exists(field)",
-                        "examples": ["exists(embedding)", "exists(functions)", "exists(classes)"]
+                        "examples": ["exists(embedding)", "exists(functions)", "exists(classes)"],
                     },
                     "substring_search": {
                         "syntax": 'value_contains(field, "search_text")',
-                        "examples": ['value_contains(code, "async")', 'value_contains(filename, "test")']
-                    }
+                        "examples": ['value_contains(code, "async")', 'value_contains(filename, "test")'],
+                    },
                 },
                 "boolean_logic": {
                     "AND": "default, i.e. simple separate search terms with spaces",
                     "OR": "parentheses are used to create OR terms",
-                    "examples": ['(language:python language:rust) exists(functions)',
-                                 '(value_contains(code, "async")) exists(functions)) (value_contains(filename, "test") has_async:true)']
+                    "examples": [
+                        "(language:python language:rust) exists(functions)",
+                        '(value_contains(code, "async")) exists(functions)) (value_contains(filename, "test") has_async:true)',
+                    ],
                 },
                 "available_fields": [
-                    "filename", "language", "code", "functions", "classes", "imports",
-                    "complexity_score", "has_type_hints", "has_async", "has_classes",
-                    "embedding", "start", "end", "source_name", "location", "metadata_json"
-                ]
+                    "filename",
+                    "language",
+                    "code",
+                    "functions",
+                    "classes",
+                    "imports",
+                    "complexity_score",
+                    "has_type_hints",
+                    "has_async",
+                    "has_classes",
+                    "embedding",
+                    "start",
+                    "end",
+                    "source_name",
+                    "location",
+                    "metadata_json",
+                ],
             }
         }
 
@@ -765,10 +772,7 @@ def main(
             "table_name": hybrid_search_engine.table_name if hybrid_search_engine else "unknown",
             "embedding_model": "TODO: language dependent",
             "parser_type": "TODO: lark_keyword_parser",
-            "default_weights": {
-                "vector_weight": 0.7,
-                "keyword_weight": 0.3
-            }
+            "default_weights": {"vector_weight": 0.7, "keyword_weight": 0.3},
         }
         return json.dumps(config, indent=2)
 
@@ -791,10 +795,7 @@ def main(
 
                     schema = {
                         "table_name": table_name,
-                        "columns": [
-                            {"name": col[0], "type": col[1], "nullable": col[2] == "YES"}
-                            for col in columns
-                        ]
+                        "columns": [{"name": col[0], "type": col[1], "nullable": col[2] == "YES"} for col in columns],
                     }
 
             return json.dumps(schema, indent=2)
@@ -804,42 +805,29 @@ def main(
     async def get_query_examples() -> str:
         """Get categorized examples of keyword query syntax."""
         examples = {
-            "basic_matching": [
-                "language:python",
-                "filename:main.py",
-                "has_async:true"
-            ],
-            "existence_checks": [
-                "exists(embedding)",
-                "exists(functions)",
-                "exists(language) AND language:rust"
-            ],
+            "basic_matching": ["language:python", "filename:main.py", "has_async:true"],
+            "existence_checks": ["exists(embedding)", "exists(functions)", "exists(language) AND language:rust"],
             "value_contains": [
                 'value_contains(code, "async")',
                 'value_contains(filename, "test")',
-                'value_contains(functions, "parse") AND language:python'
+                'value_contains(functions, "parse") AND language:python',
             ],
-            "boolean_and_logic": [
-                "language:python has_async:true",
-                "language:python exists(embedding)"
-            ],
+            "boolean_and_logic": ["language:python has_async:true", "language:python exists(embedding)"],
             "boolean_or_logic": [
                 "(language:python language:rust)",
-                '(value_contains(code, "async") value_contains(code, "await"))'
+                '(value_contains(code, "async") value_contains(code, "await"))',
             ],
-            "boolean_logic": [
-                "(language:python language:rust) exists(embedding)"
-            ]
+            "boolean_logic": ["(language:python language:rust) exists(embedding)"],
         }
         return json.dumps(examples, indent=2)
 
     async def get_search_grammar() -> str:
         """Get the Lark grammar for keyword search parsing."""
         # This is a simplified version of the grammar used by our parser
-        grammar = '''
+        grammar = """
 TODO:
 include file src/cocoindex_code_mcp_server/grammars/keyword_search.lark here
-        '''
+        """
         return grammar.strip()
 
     async def get_search_operators() -> str:
@@ -850,22 +838,22 @@ include file src/cocoindex_code_mcp_server/grammars/keyword_search.lark here
                 "field_matching": {
                     "syntax": "field:value",
                     "description": "Match field with exact value",
-                    "examples": ["language:python", "filename:test.py"]
+                    "examples": ["language:python", "filename:test.py"],
                 },
                 "existence_check": {
                     "syntax": "exists(field)",
                     "description": "Check if field exists",
-                    "examples": ["exists(functions)", "exists(classes)"]
+                    "examples": ["exists(functions)", "exists(classes)"],
                 },
                 "substring_search": {
                     "syntax": 'value_contains(field, "text")',
                     "description": "Check if field contains substring",
-                    "examples": ['value_contains(code, "async")', 'value_contains(filename, "test")']
+                    "examples": ['value_contains(code, "async")', 'value_contains(filename, "test")'],
                 },
                 "boolean_logic": {
                     "parentheses": "parentheses are used to create OR terms, without parentheses multiple terms are AND ed"
-                }
-            }
+                },
+            },
         }
         return json.dumps(operators, indent=2)
 
@@ -882,14 +870,9 @@ include file src/cocoindex_code_mcp_server/grammars/keyword_search.lark here
             parser = KeywordSearchParser()
 
             # Initialize hybrid search engine
-            table_name = cocoindex.utils.get_target_default_name(
-                code_embedding_flow, "code_embeddings"
-            )
+            table_name = cocoindex.utils.get_target_default_name(code_embedding_flow, "code_embeddings")
             hybrid_search_engine = HybridSearchEngine(
-                table_name=table_name,
-                parser=parser,
-                backend=backend,
-                embedding_func=safe_embedding_function
+                table_name=table_name, parser=parser, backend=backend, embedding_func=safe_embedding_function
             )
 
             logger.info("✅ CocoIndex RAG MCP Server initialized successfully with backend abstraction")
@@ -963,9 +946,7 @@ include file src/cocoindex_code_mcp_server/grammars/keyword_search.lark here
                 logger.info("🚀 MCP Server started with StreamableHTTP session manager!")
 
                 # Create backend using factory pattern
-                table_name = cocoindex.utils.get_target_default_name(
-                    code_embedding_flow, "code_embeddings"
-                )
+                table_name = cocoindex.utils.get_target_default_name(code_embedding_flow, "code_embeddings")
 
                 # Create the appropriate backend
                 if backend_type == "postgres":
@@ -977,17 +958,11 @@ include file src/cocoindex_code_mcp_server/grammars/keyword_search.lark here
                     with pool.connection() as conn:
                         register_vector(conn)
 
-                    backend = BackendFactory.create_backend(
-                        backend_type,
-                        pool=pool,
-                        table_name=table_name
-                    )
+                    backend = BackendFactory.create_backend(backend_type, pool=pool, table_name=table_name)
                 else:
                     # For other backends that might expect connection_string
                     backend = BackendFactory.create_backend(
-                        backend_type,
-                        connection_string=database_url,
-                        table_name=table_name
+                        backend_type, connection_string=database_url, table_name=table_name
                     )
 
                 logger.info(f"🔧 Initializing {backend_type} backend...")
@@ -1001,7 +976,7 @@ include file src/cocoindex_code_mcp_server/grammars/keyword_search.lark here
                 finally:
                     logger.info("🛑 MCP Server shutting down...")
                     shutdown_event.set()
-                    if hasattr(backend, 'close'):
+                    if hasattr(backend, "close"):
                         backend.close()
                     logger.info("🧹 Backend resources cleaned up")
                     if cov:

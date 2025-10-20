@@ -34,19 +34,19 @@ class CppASTVisitor(CASTVisitor):
     def visit_node(self, context: NodeContext) -> Optional[Dict[str, Any]]:
         """Visit a node and extract C++-specific metadata."""
         node = context.node
-        node_type = node.type if hasattr(node, 'type') else str(type(node))
+        node_type = node.type if hasattr(node, "type") else str(type(node))
 
         # Track node statistics
         self.node_stats[node_type] = self.node_stats.get(node_type, 0) + 1
 
         # Update complexity score based on node type (inherited from GenericMetadataVisitor)
         self._update_complexity(node_type)
-# Handle C++-specific constructs first
-        if node_type == 'class_specifier':
+        # Handle C++-specific constructs first
+        if node_type == "class_specifier":
             self._extract_class(node)
-        elif node_type == 'namespace_definition':
+        elif node_type == "namespace_definition":
             self._extract_namespace(node)
-        elif node_type == 'template_declaration':
+        elif node_type == "template_declaration":
             self._extract_template(node)
         else:
             # Delegate to parent C visitor for common constructs (functions, structs, enums, etc.)
@@ -59,10 +59,10 @@ class CppASTVisitor(CASTVisitor):
         try:
             # Look for class name (identifier after 'class' keyword)
             for child in node.children:
-                if child.type == 'type_identifier':
+                if child.type == "type_identifier":
                     text = child.text
                     if text is not None:
-                        class_name = text.decode('utf-8')
+                        class_name = text.decode("utf-8")
                         self.classes.append(class_name)
                         LOGGER.debug(f"Found C++ class: {class_name}")
                         break
@@ -74,10 +74,10 @@ class CppASTVisitor(CASTVisitor):
         try:
             # Look for namespace name
             for child in node.children:
-                if child.type == 'identifier':
+                if child.type == "identifier":
                     text = child.text
                     if text is not None:
-                        namespace_name = text.decode('utf-8')
+                        namespace_name = text.decode("utf-8")
                         self.namespaces.append(namespace_name)
                         LOGGER.debug(f"Found C++ namespace: {namespace_name}")
                     break
@@ -90,11 +90,11 @@ class CppASTVisitor(CASTVisitor):
             # Look for the template name (usually in the following declaration)
             # This is a simplified extraction - templates are complex
             for child in node.children:
-                if child.type in ['class_specifier', 'function_definition']:
+                if child.type in ["class_specifier", "function_definition"]:
                     # Extract the name from the templated construct
-                    if child.type == 'class_specifier':
+                    if child.type == "class_specifier":
                         for grandchild in child.children:
-                            if grandchild.type == 'type_identifier':
+                            if grandchild.type == "type_identifier":
                                 template_name = f"template<{grandchild.text.decode('utf-8')}>"
                                 self.templates.append(template_name)
                                 LOGGER.debug(f"Found C++ template: {template_name}")
@@ -107,12 +107,14 @@ class CppASTVisitor(CASTVisitor):
         """Get analysis summary in the expected format."""
         # Get base C summary and extend with C++-specific fields
         summary = super().get_summary()
-        summary.update({
-            'classes': self.classes,
-            'namespaces': self.namespaces,
-            'templates': self.templates,
-            'analysis_method': 'cpp_ast_visitor'
-        })
+        summary.update(
+            {
+                "classes": self.classes,
+                "namespaces": self.namespaces,
+                "templates": self.templates,
+                "analysis_method": "cpp_ast_visitor",
+            }
+        )
         return summary
 
 
@@ -134,12 +136,12 @@ def analyze_cpp_code(code: str, language: str = "cpp", filename: str = "") -> Di
         parser = factory.create_parser(language)
         if not parser:
             LOGGER.warning(f"C++ parser not available for {language}")
-            return {'success': False, 'error': f'C++ parser not available for {language}'}
+            return {"success": False, "error": f"C++ parser not available for {language}"}
 
         tree = factory.parse_code(code, language)
         if not tree:
             LOGGER.warning("Failed to parse C++ code")
-            return {'success': False, 'error': 'Failed to parse C++ code'}
+            return {"success": False, "error": "Failed to parse C++ code"}
 
         # Use specialized C++ visitor
         visitor = CppASTVisitor()
@@ -151,20 +153,25 @@ def analyze_cpp_code(code: str, language: str = "cpp", filename: str = "") -> Di
 
         # Get results from visitor
         result = visitor.get_summary()
-        result.update({
-            'success': True,
-            'language': normalized_language,
-            'filename': filename,
-            'line_count': code.count('\n') + 1,
-            'char_count': len(code),
-            'parse_errors': 0,
-            'tree_language': str(parser.language) if parser else None
-        })
+        result.update(
+            {
+                "success": True,
+                "language": normalized_language,
+                "filename": filename,
+                "line_count": code.count("\n") + 1,
+                "char_count": len(code),
+                "parse_errors": 0,
+                "tree_language": str(parser.language) if parser else None,
+            }
+        )
 
         LOGGER.debug(
-            f"C++ analysis completed: {len(result.get('functions', []))} functions, {len(result.get('classes', []))} classes found")
+            f"C++ analysis completed: {len(result.get('functions',
+                                                      []))} functions, {len(result.get('classes',
+                                                                                       []))} classes found"
+        )
         return result
 
     except Exception as e:
         LOGGER.error(f"C++ code analysis failed: {e}")
-        return {'success': False, 'error': str(e)}
+        return {"success": False, "error": str(e)}

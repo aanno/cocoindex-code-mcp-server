@@ -30,6 +30,7 @@ LOGGER = logging.getLogger(__name__)
 @dataclass
 class QueryFilters:
     """Query filters for keyword/metadata search."""
+
     conditions: List[SearchCondition | SearchGroup]
     operator: str = "AND"  # AND, OR
 
@@ -45,19 +46,12 @@ class VectorStoreBackend(ABC):
 
     @abstractmethod
     def vector_search(
-        self,
-        query_vector: NDArray[np.float32],
-        top_k: int = 10,
-        embedding_model: str | None = None
+        self, query_vector: NDArray[np.float32], top_k: int = 10, embedding_model: str | None = None
     ) -> List[SearchResult]:
         """Perform pure vector similarity search with optional embedding model filter."""
 
     @abstractmethod
-    def keyword_search(
-        self,
-        filters: QueryFilters,
-        top_k: int = 10
-    ) -> List[SearchResult]:
+    def keyword_search(self, filters: QueryFilters, top_k: int = 10) -> List[SearchResult]:
         """Perform pure keyword/metadata search."""
 
     @abstractmethod
@@ -68,7 +62,7 @@ class VectorStoreBackend(ABC):
         top_k: int = 10,
         vector_weight: float = 0.7,
         keyword_weight: float = 0.3,
-        embedding_model: str | None = None
+        embedding_model: str | None = None,
     ) -> List[SearchResult]:
         """Perform hybrid search combining vector and keyword search with optional embedding model filter."""
 
@@ -136,12 +130,14 @@ def _auto_register_backends() -> None:
     """Automatically register available backends."""
     try:
         from .postgres_backend import PostgresBackend
+
         BackendFactory.register_backend("postgres", PostgresBackend)
     except ImportError:
         pass
 
     try:
         from .qdrant_backend import QdrantBackend
+
         BackendFactory.register_backend("qdrant", QdrantBackend)
     except ImportError:
         pass
@@ -151,9 +147,4 @@ def _auto_register_backends() -> None:
 _auto_register_backends()
 
 
-__all__ = [
-    "VectorStoreBackend",
-    "BackendFactory",
-    "SearchResult",
-    "QueryFilters"
-]
+__all__ = ["VectorStoreBackend", "BackendFactory", "SearchResult", "QueryFilters"]
