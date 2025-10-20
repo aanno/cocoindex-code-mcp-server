@@ -24,8 +24,8 @@ from cocoindex_code_mcp_server.cocoindex_config import (
     code_embedding_flow,
     code_to_embedding,
     graphcodebert_embedding,
-    unixcoder_embedding,
     language_to_embedding_model,
+    unixcoder_embedding,
 )
 from cocoindex_code_mcp_server.keyword_search_parser_lark import (
     KeywordSearchParser,

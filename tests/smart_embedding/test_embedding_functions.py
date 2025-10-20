@@ -7,8 +7,8 @@ Tests that embedding functions are properly defined and configured.
 import inspect
 
 import pytest
-import cocoindex
 
+import cocoindex
 from cocoindex_code_mcp_server.cocoindex_config import (
     SMART_EMBEDDING_AVAILABLE,
     code_to_embedding,

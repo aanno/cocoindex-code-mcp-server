@@ -34,7 +34,8 @@ class MockVectorStoreBackend(VectorStoreBackend):
         self.keyword_search_calls = []
         self.hybrid_search_calls = []
 
-    def vector_search(self, query_vector: ndarray, top_k: int = 10, embedding_model: Optional[str] = None) -> List[SearchResult]:
+    def vector_search(self, query_vector: ndarray, top_k: int = 10,
+                      embedding_model: Optional[str] = None) -> List[SearchResult]:
         self.vector_search_calls.append((query_vector, top_k, embedding_model))
         return [
             SearchResult(
@@ -155,7 +156,7 @@ class TestHybridSearchEngine:
         """Test engine initialization with backend."""
         mock_parser = mocker.Mock()
         mock_embedding_func = mocker.Mock()
-        
+
         engine = HybridSearchEngine(
             table_name="test_table",
             backend=mock_backend,
@@ -193,7 +194,7 @@ class TestHybridSearchEngine:
         """Test engine initialization error when neither backend nor pool provided."""
         mock_parser = mocker.Mock()
         mock_embedding_func = mocker.Mock()
-        
+
         with pytest.raises(ValueError, match="Either 'backend' or 'pool' parameter must be provided"):
             HybridSearchEngine(
                 table_name="test_table",
@@ -219,10 +220,10 @@ class TestHybridSearchEngine:
         assert engine.parser == mock_parser_instance
 
     def test_search_vector_only(self, mocker,
-                                 hybrid_engine_with_backend: HybridSearchEngine,
-                                 mock_backend: MockVectorStoreBackend,
-                                 mock_parser,
-                                 mock_embedding_func):
+                                hybrid_engine_with_backend: HybridSearchEngine,
+                                mock_backend: MockVectorStoreBackend,
+                                mock_parser,
+                                mock_embedding_func):
         """Test search with vector query only."""
         # Mock parser to return empty search group
         empty_group = SearchGroup(conditions=[])
@@ -514,7 +515,7 @@ class TestBackendIntegration:
         """Test that legacy constructor creates PostgreSQL backend."""
         mock_factory = mocker.MagicMock()
         mock_pool = mocker.patch('cocoindex_code_mcp_server.backends.BackendFactory.create_backend')
-        
+
         mock_backend = MockVectorStoreBackend()
         mock_factory.return_value = mock_backend
 
@@ -528,7 +529,7 @@ class TestBackendIntegration:
         # mock_parser: Mock)
         """Test that backend constructor uses provided backend directly."""
         mock_parser = mocker.Mock()
-        
+
         engine = HybridSearchEngine(table_name="test_table", parser=mock_parser, backend=mock_backend)
 
         assert engine.backend == mock_backend
@@ -538,7 +539,7 @@ class TestBackendIntegration:
         # mock_parser: Mock)
         """Test that search methods properly delegate to backend."""
         mock_parser = mocker.Mock()
-        
+
         # Set up parser mock
         empty_group = SearchGroup(conditions=[])
         mock_parser.parse.return_value = empty_group

@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional
 
 class SearchTestConfig:
     """Configuration class for search tests with defaults matching main_mcp_server.py options."""
-    
+
     def __init__(
         self,
         paths: Optional[List[str]] = None,
@@ -33,19 +33,19 @@ class SearchTestConfig:
         self.default_language_handler = default_language_handler
         self.log_level = log_level
         self.poll_interval = poll_interval
-        
+
         # Configure logging immediately
         logging.basicConfig(
             level=getattr(logging, self.log_level.upper()),
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
             force=True  # Override existing configuration
         )
-        
+
     @property
     def enable_polling(self) -> bool:
         """Convert --no-live flag to enable_polling boolean."""
         return not self.no_live
-    
+
     def to_infrastructure_kwargs(self) -> Dict[str, Any]:
         """Convert config to CocoIndexTestInfrastructure kwargs."""
         return {
@@ -57,7 +57,7 @@ class SearchTestConfig:
             "enable_polling": self.enable_polling,
             "poll_interval": self.poll_interval
         }
-    
+
     def log_configuration(self, logger) -> None:
         """Log the current configuration for debugging."""
         logger.info("🔧 Search Test Configuration:")

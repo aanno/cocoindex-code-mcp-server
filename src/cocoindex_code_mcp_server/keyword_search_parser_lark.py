@@ -232,7 +232,7 @@ def build_sql_where_clause(search_group: SearchGroup, table_alias: str = "") -> 
                 where_parts.append(f"{prefix}code ILIKE %s")
                 params.append(f"%{condition.value}%")
                 continue
-                
+
             # Validate and map field name to prevent SQL injection and unknown column errors
             field_result = schema_validator.validate_field(condition.field)
             if not field_result.is_valid:

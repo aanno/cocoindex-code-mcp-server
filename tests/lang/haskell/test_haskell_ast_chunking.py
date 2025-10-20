@@ -11,7 +11,6 @@ import haskell_tree_sitter
 import pytest
 
 from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
-    HaskellChunkExecutor,
     HaskellChunkSpec,
     extract_haskell_ast_chunks,
     get_enhanced_haskell_separators,
@@ -82,7 +81,7 @@ greet (Person name _) = "Hello, " ++ name
             assert "location" in chunk
             assert "start" in chunk
             assert "end" in chunk
-            
+
             # Test that location exists and is meaningful
             assert chunk.get("location") is not None
             assert len(chunk["text"]) > 0
@@ -226,9 +225,9 @@ processAll = map process
         # Check that we get content from various parts (legacy format uses "text")
         contents = [chunk["text"] for chunk in chunks]
         combined_content = " ".join(contents)
-        
+
         assert "import" in combined_content
-        assert "ComplexType" in combined_content 
+        assert "ComplexType" in combined_content
         assert "Processable" in combined_content
         assert "processAll" in combined_content
 

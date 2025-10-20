@@ -38,7 +38,6 @@ class KotlinASTVisitor(GenericMetadataVisitor):
         # Track node statistics
         self.node_stats[node_type] = self.node_stats.get(node_type, 0) + 1
 
-        
         # Update complexity score based on node type (inherited from GenericMetadataVisitor)
         self._update_complexity(node_type)
 # Extract Kotlin-specific constructs

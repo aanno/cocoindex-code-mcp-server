@@ -70,7 +70,7 @@ class TestQueryExecutorIntegration:
         # Create mock embedding function
         mock_embedding_func = mocker.Mock()
         mock_embedding_func.return_value = [0.1, 0.2, 0.3, 0.4, 0.5]  # Mock embedding vector
-        
+
         # Create QueryExecutor with embedding function
         executor = QueryExecutor(mock_backend, embedding_func=mock_embedding_func)
 
@@ -192,7 +192,7 @@ async def test_async_query_execution(mocker):
     # Create mock embedding function for async test
     mock_embedding_func = mocker.Mock()
     mock_embedding_func.return_value = [0.1, 0.2, 0.3, 0.4, 0.5]  # Mock embedding vector
-    
+
     executor = QueryExecutor(mock_backend, embedding_func=mock_embedding_func)
     query = QueryBuilder().text("async function").vector_search().build()
 

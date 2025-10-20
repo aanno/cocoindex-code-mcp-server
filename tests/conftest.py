@@ -5,6 +5,7 @@ Shared pytest fixtures and configuration for hybrid search tests.
 """
 
 import os
+
 import pytest
 
 # Package should be installed via maturin develop or pip install -e .

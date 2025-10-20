@@ -5,10 +5,17 @@ Standalone tests for enhanced Haskell chunking functionality.
 Tests the new HaskellChunkConfig and EnhancedHaskellChunker classes without CocoIndex imports.
 """
 
-from typing import Any, Dict, List
+from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
+    HaskellChunkConfig,
+    create_enhanced_regex_fallback_chunks,
+    get_enhanced_haskell_separators,
+)
+import haskell_tree_sitter
 import sys
+from typing import Any, Dict, List
 
 import pytest
+
 
 # Set up mock early to avoid circular import - this runs at module load time
 @pytest.fixture(scope="session", autouse=True)
@@ -18,12 +25,15 @@ def setup_cocoindex_mock():
     class SimpleMock:
         def __init__(self):
             self._attrs = {}
+
         def __call__(self, *args, **kwargs):
             return lambda f: f
+
         def __getattr__(self, name):
             if name not in self._attrs:
                 self._attrs[name] = SimpleMock()
             return self._attrs[name]
+
         def __setattr__(self, name, value):
             if name == '_attrs':
                 object.__setattr__(self, name, value)
@@ -43,14 +53,8 @@ def setup_cocoindex_mock():
     if 'cocoindex' in sys.modules:
         del sys.modules['cocoindex']
 
-# Import modules after cocoindex mock is available
-import haskell_tree_sitter
 
-from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
-    HaskellChunkConfig,
-    create_enhanced_regex_fallback_chunks,
-    get_enhanced_haskell_separators,
-)
+# Import modules after cocoindex mock is available
 
 
 class TestHaskellChunkConfig:

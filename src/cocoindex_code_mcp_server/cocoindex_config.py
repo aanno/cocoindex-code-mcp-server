@@ -310,7 +310,7 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                     # Always use Java AST visitor for proper analysis
                     from .language_handlers.java_visitor import analyze_java_code
                     metadata = analyze_java_code(text, filename)
-                    
+
                     # Preserve chunking method if it was already set by AST chunking
                     if preserve_chunking_method == "astchunk_library":
                         LOGGER.debug("Preserving ASTChunk chunking_method for Java while keeping AST analysis")
@@ -376,7 +376,9 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                     metadata = analyze_kotlin_code(text, filename)
                 elif lang_lower in ["haskell", "hs"]:
                     # Modern Haskell analysis using AST chunks
-                    from .lang.haskell.haskell_ast_chunker import extract_haskell_ast_chunks
+                    from .lang.haskell.haskell_ast_chunker import (
+                        extract_haskell_ast_chunks,
+                    )
                     chunks = extract_haskell_ast_chunks(text)
 
                     # Extract aggregated metadata from chunks
@@ -394,16 +396,21 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                             # Extract functions array if present
                             if 'functions' in chunk_meta:
                                 try:
-                                    funcs = json.loads(chunk_meta['functions']) if isinstance(chunk_meta['functions'], str) else chunk_meta['functions']
+                                    funcs = json.loads(
+                                        chunk_meta['functions']) if isinstance(
+                                        chunk_meta['functions'],
+                                        str) else chunk_meta['functions']
                                     functions.update(funcs)
-                                except:
+                                except BaseException:
                                     pass
                             # Extract modules array if present
                             if 'modules' in chunk_meta:
                                 try:
-                                    mods = json.loads(chunk_meta['modules']) if isinstance(chunk_meta['modules'], str) else chunk_meta['modules']
+                                    mods = json.loads(
+                                        chunk_meta['modules']) if isinstance(
+                                        chunk_meta['modules'], str) else chunk_meta['modules']
                                     modules.update(mods)
-                                except:
+                                except BaseException:
                                     pass
                             # Extract single module_name if present
                             if 'module_name' in chunk_meta:
@@ -1822,12 +1829,12 @@ def run_flow_update(live_update: bool = False, poll_interval: int = 30) -> None:
 
 def update_specific_flow_config(
     flow_def,
-    paths: Union[List[str], None] = None, 
-    enable_polling: bool = False, 
+    paths: Union[List[str], None] = None,
+    enable_polling: bool = False,
     poll_interval: int = 30,
-    use_default_embedding: bool = False, 
+    use_default_embedding: bool = False,
     use_default_chunking: bool = False,
-    use_default_language_handler: bool = False, 
+    use_default_language_handler: bool = False,
     chunk_factor_percent: int = 100
 ) -> None:
     """Update the global flow configuration for a specific flow definition."""
@@ -1844,14 +1851,14 @@ def update_specific_flow_config(
         'use_default_chunking': use_default_chunking,
         'use_default_language_handler': use_default_language_handler
     })
-    
+
     flow_name = getattr(flow_def, '__name__', str(flow_def))
     LOGGER.info(f"✅ Updated flow config for {flow_name}: paths={paths}, chunking={chunk_factor_percent}%")
 
 
 def run_specific_flow_update(
-    flow_def, 
-    live_update: bool = False, 
+    flow_def,
+    live_update: bool = False,
     poll_interval: int = 30
 ) -> None:
     """Run a specific flow update (one-time or live)."""

@@ -84,7 +84,7 @@ class MCPTestClient:
         try:
             if not self.http_client:
                 raise RuntimeError("HTTP client not initialized")
-        
+
             response = await self.http_client.post(
                 self.server_url,
                 json={
@@ -198,7 +198,7 @@ class MCPTestClient:
         """Call tool using HTTP transport."""
         if not self.http_client:
             raise RuntimeError("HTTP client not initialized")
-        
+
         response = await self.http_client.post(
             self.server_url,
             json={
@@ -309,7 +309,7 @@ class MCPTestClient:
 
         if not self.http_client:
             raise RuntimeError("HTTP client not initialized")
-        
+
         response = await self.http_client.post(
             self.server_url,
             json={
@@ -357,7 +357,7 @@ class MCPTestClient:
         """List tools using HTTP transport."""
         if not self.http_client:
             raise RuntimeError("HTTP client not initialized")
-        
+
         response = await self.http_client.post(
             self.server_url,
             json={
@@ -406,7 +406,7 @@ class MCPTestClient:
         """List resources using HTTP transport."""
         if not self.http_client:
             raise RuntimeError("HTTP client not initialized")
-        
+
         response = await self.http_client.post(
             self.server_url,
             json={
@@ -446,7 +446,7 @@ class MCPTestClient:
                 # Test with a simple tools/list request
                 if not self.http_client:
                     raise RuntimeError("HTTP client not initialized")
-        
+
                 response = await self.http_client.post(
                     self.server_url,
                     json={

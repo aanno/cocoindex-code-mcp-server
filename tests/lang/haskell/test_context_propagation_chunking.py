@@ -7,7 +7,8 @@ Tests the new Rust-based implementation with ChunkingParams, ChunkingContext, an
 
 import haskell_tree_sitter
 import pytest
-from ...common import CocoIndexTestInfrastructure, COCOINDEX_AVAILABLE
+
+from ...common import COCOINDEX_AVAILABLE, CocoIndexTestInfrastructure
 
 
 class TestChunkingParams:
@@ -342,55 +343,55 @@ class TestIntegrationWithCocoIndexFlow:
                 "keyword_query": "language:Haskell",
                 "top_k": 10
             }
-            
+
             result = await infrastructure.perform_hybrid_search(search_query)
-            
+
             results = result.get("results", [])
             context_features_found = []
-            
+
             for r in results:
                 metadata = r.get("metadata_json", {})
                 chunking_method = r.get("chunking_method", "")
-                
+
                 if "haskell" in chunking_method.lower():
                     context_features_found.append(chunking_method)
-                    
+
             print(f"Found Haskell chunking methods with context features: {context_features_found}")
-            
+
             # Test passes if we can execute the flow without errors
             assert True  # Infrastructure test completed successfully
 
-    @pytest.mark.asyncio  
+    @pytest.mark.asyncio
     async def test_haskell_chunking_method_reporting_in_flow(self):
         """Test that Haskell chunking methods are properly reported through CocoIndex flow."""
         if not COCOINDEX_AVAILABLE:
             pytest.skip("CocoIndex infrastructure not available")
-            
+
         async with CocoIndexTestInfrastructure(
             paths=["tmp"],
             enable_polling=False,
             chunk_factor_percent=100
         ) as infrastructure:
-            
-            # Search for any Haskell content 
+
+            # Search for any Haskell content
             search_query = {
                 "vector_query": "haskell code",
                 "keyword_query": "language:Haskell",
                 "top_k": 5
             }
-            
+
             result = await infrastructure.perform_hybrid_search(search_query)
-            
+
             results = result.get("results", [])
             method_patterns = []
-            
+
             for r in results:
                 method = r.get("chunking_method", "")
                 if "rust_haskell" in method or "haskell" in method.lower():
                     method_patterns.append(method)
-                    
+
             print(f"Found Haskell method patterns: {method_patterns}")
-            
+
             # Test completes successfully - validates the infrastructure
             assert True
 

@@ -25,8 +25,8 @@ class TestChunkingFlowIntegration:
     @pytest.fixture(autouse=True, scope="class")
     def setup_cocoindex(self):
         """Setup CocoIndex with in-memory database for testing.
-        
-        PERFORMANCE OPTIMIZATION: Using class scope to avoid reinitializing 
+
+        PERFORMANCE OPTIMIZATION: Using class scope to avoid reinitializing
         CocoIndex for every test method, as cocoindex.init() is expensive.
         """
         # Use in-memory SQLite for testing
@@ -40,7 +40,7 @@ class TestChunkingFlowIntegration:
         except Exception as e:
             print(f"⚠️  CocoIndex initialization failed: {e}")
             # Continue with tests even if init fails - some tests may not need it
-        
+
         yield
 
         # Restore original database URL if it existed
@@ -104,7 +104,7 @@ main = do
     @pytest.mark.integration
     def test_flow_chunking_methods(self, language, filename, content, expected_method_pattern):
         """Test that the flow produces correct chunking methods for different languages.
-        
+
         SLOW TEST: This test is marked as slow because it:
         1. Runs 3 times (parametrized for Python, Java, Haskell)
         2. Initializes the full CocoIndex system for each run (cocoindex.init())
@@ -115,7 +115,7 @@ main = do
            - Performs embedding generation and vector storage
            - Updates search indices
         5. Each language may use different chunking strategies (tree-sitter, AST parsers)
-        
+
         Expected runtime: 30-60 seconds per parameterized run (90-180s total)
         """
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -150,7 +150,7 @@ main = do
     @pytest.mark.integration
     def test_flow_with_multiple_files(self):
         """Test flow with multiple files of different languages.
-        
+
         SLOW TEST: This test is marked as slow because it:
         1. Creates multiple test files (Python, Java, Haskell) in temp directory
         2. Initializes full CocoIndex system with SQLite in-memory database
@@ -160,7 +160,7 @@ main = do
            - Embedding generation for all chunks
            - Database storage and indexing
         4. Each file type may require different parsers and chunking strategies
-        
+
         Expected runtime: 45-90 seconds
         """
         test_files = [
@@ -209,15 +209,15 @@ data Message = Message String deriving Show
                 os.unlink(os.path.join(temp_dir, filename))
 
     @pytest.mark.slow
-    @pytest.mark.integration  
+    @pytest.mark.integration
     def test_flow_with_default_chunking(self):
         """Test flow behavior when default chunking is enabled.
-        
+
         SLOW TEST: This test is marked as slow because it:
         1. Initializes full CocoIndex system and database
         2. Processes files using default CocoIndex chunking (use_default_chunking=True)
         3. Executes complete flow pipeline with embedding generation and storage
-        
+
         Expected runtime: 30-45 seconds
         """
         python_content = '''def test_function():
@@ -256,12 +256,12 @@ class TestClass:
     @pytest.mark.integration
     def test_flow_with_default_language_handler(self):
         """Test flow behavior when default language handler is enabled.
-        
+
         SLOW TEST: This test is marked as slow because it:
         1. Initializes full CocoIndex system and database
         2. Uses default language handler (use_default_language_handler=True)
         3. Executes complete flow pipeline with language detection and processing
-        
+
         Expected runtime: 30-45 seconds
         """
         python_content = '''def example():

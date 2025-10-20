@@ -12,9 +12,12 @@ from pathlib import Path
 import pytest
 from dotenv import load_dotenv
 
-from ..common import COCOINDEX_AVAILABLE, CocoIndexTestInfrastructure, copy_directory_structure
+from ..common import (
+    COCOINDEX_AVAILABLE,
+    CocoIndexTestInfrastructure,
+    copy_directory_structure,
+)
 from ..search_config import SearchTestConfig
-
 
 logger = logging.getLogger(__name__)
 

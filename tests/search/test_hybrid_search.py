@@ -24,7 +24,6 @@ from ..common import (
     run_cocoindex_hybrid_search_tests,
 )
 from ..search_config import SearchTestConfig
-from ..db_comparison import compare_test_with_database
 
 
 @pytest.mark.skipif(not COCOINDEX_AVAILABLE, reason="CocoIndex infrastructure not available")
@@ -54,7 +53,7 @@ class TestMCPDirect:
             # Use default settings which match your requirements:
             # paths=["/workspaces/rust"], no_live=True, default_embedding=True, log_level="DEBUG"
         )
-        
+
         # Log configuration for debugging
         logger = logging.getLogger(__name__)
         config.log_configuration(logger)

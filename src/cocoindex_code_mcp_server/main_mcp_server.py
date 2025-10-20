@@ -38,7 +38,6 @@ from . import mcp_json_schemas
 # Backend abstraction imports
 from .backends import BackendFactory, VectorStoreBackend
 from .cocoindex_config import (
-    code_embedding_flow,
     code_to_embedding,
     run_flow_update,
     update_flow_config,
@@ -251,7 +250,8 @@ def get_mcp_resources() -> list[types.Resource]:
 @click.option("--port", default=3000, help="Port to listen on for HTTP")
 @click.option("--log-level", default="INFO", help="Logging level")
 @click.option("--json-response", is_flag=True, default=False, help="Enable JSON responses instead of SSE streams")
-@click.option("--rescan", is_flag=True, default=False, help="Clear database and tracking tables before starting to force re-indexing")
+@click.option("--rescan", is_flag=True, default=False,
+              help="Clear database and tracking tables before starting to force re-indexing")
 def main(
     paths: tuple,
     explicit_paths: tuple,
@@ -287,6 +287,7 @@ def main(
         logger.info("🗑️  Rescan mode enabled - clearing database and tracking tables...")
         try:
             import psycopg
+
             from .cocoindex_config import code_embedding_flow
 
             # Get database connection
@@ -325,7 +326,9 @@ def main(
                     count_result = cur.fetchone()
                     count = count_result[0] if count_result else 0
                     # TRUNCATE is faster than DELETE and resets auto-increment
-                    cur.execute(sql.SQL("TRUNCATE TABLE {} RESTART IDENTITY CASCADE").format(sql.Identifier(embeddings_table)))
+                    cur.execute(
+                        sql.SQL("TRUNCATE TABLE {} RESTART IDENTITY CASCADE").format(
+                            sql.Identifier(embeddings_table)))
                     logger.info(f"  ✅ Truncated {embeddings_table} ({count} records removed)")
                 else:
                     logger.info(f"  ⚠️  Table {embeddings_table} does not exist yet")
@@ -344,7 +347,9 @@ def main(
                     count_result = cur.fetchone()
                     count = count_result[0] if count_result else 0
                     # TRUNCATE is faster than DELETE and resets auto-increment
-                    cur.execute(sql.SQL("TRUNCATE TABLE {} RESTART IDENTITY CASCADE").format(sql.Identifier(tracking_table)))
+                    cur.execute(
+                        sql.SQL("TRUNCATE TABLE {} RESTART IDENTITY CASCADE").format(
+                            sql.Identifier(tracking_table)))
                     logger.info(f"  ✅ Truncated {tracking_table} ({count} records removed)")
                 else:
                     logger.info(f"  ⚠️  Table {tracking_table} does not exist yet")

@@ -174,9 +174,9 @@ class TestDuplicateKeyDebug:
 
         # Check if Rust is supported by AST chunking
         if AST_CHUNKING_AVAILABLE:
-            from cocoindex_code_mcp_server.ast_chunking import ASTChunkExecutor  # type: ignore
+
             # CocoIndexASTChunker doesn't exist anymore - skipping this test section
-            print(f"Rust supported by AST chunking: Unknown (legacy API removed)")
+            print("Rust supported by AST chunking: Unknown (legacy API removed)")
             is_supported = False  # Default since we can't check with legacy API
 
             if not is_supported:

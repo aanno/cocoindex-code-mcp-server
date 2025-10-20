@@ -6,13 +6,14 @@ Tests the HaskellChunkSpec and HaskellChunkExecutor classes using @op.executor_c
 """
 
 import pytest
-from ...common import CocoIndexTestInfrastructure, COCOINDEX_AVAILABLE
 
 from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
     HaskellChunkConfig,
     create_enhanced_regex_fallback_chunks,
     get_enhanced_haskell_separators,
 )
+
+from ...common import COCOINDEX_AVAILABLE, CocoIndexTestInfrastructure
 
 
 class TestHaskellChunkConfig:
@@ -105,72 +106,72 @@ factorial n = n * factorial (n - 1)
 
 data Tree a = Leaf a | Node (Tree a) (Tree a)
 """
-        
+
         # Set up CocoIndex infrastructure
         async with CocoIndexTestInfrastructure(
             paths=["tmp"],
             enable_polling=False,
             chunk_factor_percent=100
         ) as infrastructure:
-            
+
             # Search for Haskell chunks to verify the executor works
             search_query = {
                 "vector_query": "factorial function haskell",
                 "keyword_query": "language:Haskell",
                 "top_k": 10
             }
-            
+
             result = await infrastructure.perform_hybrid_search(search_query)
-            
+
             # Extract chunking methods from results
             results = result.get("results", [])
             chunking_methods = []
-            
+
             for r in results:
                 method = r.get("chunking_method")
                 if method:
                     chunking_methods.append(method)
-            
+
             print(f"Found chunking methods in flow: {set(chunking_methods)}")
-            
+
             # Look for Haskell-specific chunking methods
             haskell_methods = [m for m in chunking_methods if "haskell" in m.lower()]
             print(f"Haskell-specific methods: {haskell_methods}")
-            
+
             # Test passes if we can execute without errors
             # The actual chunking behavior is tested through the full pipeline
 
-    @pytest.mark.asyncio  
+    @pytest.mark.asyncio
     async def test_haskell_chunking_method_detection(self):
         """Test that HaskellChunkExecutor produces correct chunking method names."""
         if not COCOINDEX_AVAILABLE:
             pytest.skip("CocoIndex infrastructure not available")
-            
+
         async with CocoIndexTestInfrastructure(
             paths=["tmp"],
             enable_polling=False,
             chunk_factor_percent=100
         ) as infrastructure:
-            
+
             # Search for any content with Haskell chunking methods
             search_query = {
                 "vector_query": "haskell code function",
                 "keyword_query": "language:Haskell",
                 "top_k": 5
             }
-            
+
             result = await infrastructure.perform_hybrid_search(search_query)
-            
+
             results = result.get("results", [])
             found_rust_haskell_methods = []
-            
+
             for r in results:
                 method = r.get("chunking_method", "")
                 if "rust_haskell" in method:
                     found_rust_haskell_methods.append(method)
-                    
+
             print(f"Found rust_haskell methods: {found_rust_haskell_methods}")
-            
+
             # Verify we can detect the method name pattern even if no results
             # The test validates the infrastructure works
             assert True  # Test completes successfully

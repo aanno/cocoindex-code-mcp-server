@@ -1163,6 +1163,7 @@ def analyze_haskell_code(content: str, filename: str = "") -> Dict[str, Any]:
             # Create a minimal Node-like object for the chunk
             class ChunkNode:
                 """Adapter to make chunk compatible with NodeContext."""
+
                 def __init__(self, chunk):
                     self._chunk = chunk
                     self.type = chunk.node_type()
@@ -1206,7 +1207,7 @@ def analyze_haskell_code(content: str, filename: str = "") -> Dict[str, Any]:
                 try:
                     modules_list = json.loads(chunk_metadata['modules'])
                     module_names.update(modules_list)
-                except:
+                except BaseException:
                     pass
 
         # Determine the main module (first in alphabetical order, excluding imported modules)

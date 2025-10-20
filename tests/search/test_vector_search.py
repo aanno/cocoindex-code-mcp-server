@@ -53,7 +53,7 @@ class TestVectorSearch:
             # Use default settings which match your requirements:
             # paths=["/workspaces/rust"], no_live=True, default_embedding=True, log_level="DEBUG"
         )
-        
+
         # Log configuration for debugging
         logger = logging.getLogger(__name__)
         config.log_configuration(logger)
@@ -84,7 +84,6 @@ class TestVectorSearch:
                 pytest.fail(error_msg)
             else:
                 logging.info(f"✅ All {len(test_data['tests'])} vector search validation tests passed!")
-
 
 
 if __name__ == "__main__":

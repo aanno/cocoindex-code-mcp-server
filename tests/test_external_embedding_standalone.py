@@ -6,6 +6,7 @@ Tests the logic without importing CocoIndex to avoid circular imports.
 """
 
 import sys
+
 import pytest
 
 from cocoindex_code_mcp_server.smart_code_embedding import (

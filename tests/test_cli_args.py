@@ -49,7 +49,7 @@ class TestCliArguments:
     def test_path_determination_logic(self, mocker):
         """Test the logic for determining which paths to use."""
         from cocoindex_code_mcp_server.arg_parser_old import parse_args
-        
+
         # Test default (no paths)
         mocker.patch('sys.argv', ['main_interactive_query.py'])
         args = parse_args()

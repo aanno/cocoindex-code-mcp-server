@@ -22,8 +22,8 @@ from ..common import (
     generate_test_timestamp,
     parse_jsonc_file,
 )
-from ..search_config import SearchTestConfig
 from ..db_comparison import compare_test_with_database
+from ..search_config import SearchTestConfig
 
 
 @pytest.mark.skipif(not COCOINDEX_AVAILABLE, reason="CocoIndex infrastructure not available")
@@ -53,7 +53,7 @@ class TestKeywordSearch:
             no_live=True,
             log_level="DEBUG"
         )
-        
+
         # Log configuration for debugging
         logger = logging.getLogger(__name__)
         config.log_configuration(logger)
@@ -163,16 +163,18 @@ async def run_cocoindex_keyword_search_tests(
                             db_report = "\n🔍 Database Comparison Analysis:\n"
                             for discrepancy in db_comparison.discrepancies:
                                 db_report += f"  ❌ {discrepancy}\n"
-                            
+
                             if db_comparison.matching_db_records:
                                 db_report += f"\n📋 Database has {len(db_comparison.matching_db_records)} matching records\n"
                                 # Show sample DB record metadata
                                 if db_comparison.matching_db_records:
                                     sample_record = db_comparison.matching_db_records[0]
-                                    db_report += f"  Sample DB record: complexity_score={sample_record.get('complexity_score', 'N/A')}, "
+                                    db_report += f"  Sample DB record: complexity_score={
+                                        sample_record.get(
+                                            'complexity_score', 'N/A')}, "
                                     db_report += f"has_classes={sample_record.get('has_classes', 'N/A')}, "
                                     db_report += f"functions='{sample_record.get('functions', 'N/A')[:50]}...'\n"
-                            
+
                             error_with_db_analysis = f"No matching result found for expected item: {expected_item}{db_report}"
                         except Exception as db_error:
                             logging.warning(f"Database comparison failed: {db_error}")
@@ -192,10 +194,10 @@ async def run_cocoindex_keyword_search_tests(
                                         "classes": r.get("classes", []),
                                         "functions": r.get("functions", []),
                                         "imports": r.get("imports", []),
-                                    "analysis_method": r.get("metadata_json", {}).get("analysis_method", "unknown")
-                                }
-                            } for r in results[:3]]  # Show first 3 results for debugging
-                        })
+                                        "analysis_method": r.get("metadata_json", {}).get("analysis_method", "unknown")
+                                    }
+                                } for r in results[:3]]  # Show first 3 results for debugging
+                            })
 
         except Exception as e:
             error_msg = f"Test execution failed: {str(e)}"

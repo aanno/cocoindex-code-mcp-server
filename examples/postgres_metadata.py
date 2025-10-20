@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import os
-from psycopg import connect
-from psycopg_pool import ConnectionPool
-from pgvector.psycopg import register_vector
+
 from dotenv import load_dotenv
+from pgvector.psycopg import register_vector
+from psycopg import connect
 
 # Lade Umgebungsvariablen
 load_dotenv()
@@ -20,7 +20,7 @@ with connect(database_url, autocommit=True) as conn:
         print("Datenbanken:")
         for db in cur.fetchall():
             print("-", db[0])
-        
+
         # Tabellen auflisten
         cur.execute("""
             SELECT table_schema, table_name
@@ -41,7 +41,7 @@ with connect(database_url, autocommit=True) as conn:
         print("\nSPALTEN:")
         for row in cur.fetchall():
             print(row)
-        
+
         # Primärschlüssel
         cur.execute("""
             SELECT kcu.table_schema, kcu.table_name, tco.constraint_name, kcu.column_name

@@ -17,8 +17,6 @@ from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
 LOGGER = logging.getLogger(__name__)
 try:
     from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
-        HaskellChunkExecutor,
-        HaskellChunkSpec,
         extract_haskell_ast_chunks,
     )
     haskell_ast_chunker_AVAILABLE = True
@@ -81,7 +79,7 @@ main = do
         LOGGER.info(f"Max size: {config.max_chunk_size}, Overlap: {config.chunk_overlap}")
         LOGGER.info(f"Expansion: {config.chunk_expansion}, Template: {config.metadata_template}")
 
-        # Use legacy approach since @op.executor_class requires CocoIndex infrastructure  
+        # Use legacy approach since @op.executor_class requires CocoIndex infrastructure
         chunks = extract_haskell_ast_chunks(haskell_code)
         all_results.append((config, chunks))
 
@@ -93,7 +91,7 @@ main = do
         # Basic assertions - use legacy format
         assert len(chunks) > 0, f"No chunks created for config {i + 1}"
         for chunk in chunks:
-            assert 'text' in chunk  # Legacy format uses 'text' instead of 'content'  
+            assert 'text' in chunk  # Legacy format uses 'text' instead of 'content'
             assert 'metadata' in chunk
 
     print("✅ Enhanced Haskell chunking test passed!")

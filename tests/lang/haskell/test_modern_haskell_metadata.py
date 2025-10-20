@@ -8,8 +8,6 @@ works correctly, extracting functions, modules, and complexity scores.
 
 import json
 
-import pytest
-
 
 def test_modern_haskell_metadata_extraction():
     """Test new modern Haskell metadata extraction."""

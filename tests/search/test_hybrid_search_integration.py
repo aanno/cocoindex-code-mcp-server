@@ -5,6 +5,7 @@ Integration tests for the hybrid search workflow.
 """
 
 import tempfile
+
 import pytest
 
 # Package should be installed via maturin develop or pip install -e .
@@ -29,12 +30,12 @@ class TestMainHybridSearchIntegration:
 
     # @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
     # @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
-    def test_argument_parsing_basic(self, mocker): 
+    def test_argument_parsing_basic(self, mocker):
         # mock_load_dotenv: MagicMock, mock_cocoindex_init: MagicMock):
         """Test basic argument parsing."""
         mock_load_dotenv = mocker.patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
         mock_cocoindex_init = mocker.patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
-        
+
         try:
             from cocoindex_code_mcp_server.main_hybrid_search import (
                 determine_paths,
@@ -54,13 +55,12 @@ class TestMainHybridSearchIntegration:
 
     # @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
     # @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
-    def test_argument_parsing_custom_paths(self, mocker): 
+    def test_argument_parsing_custom_paths(self, mocker):
         # mock_load_dotenv: MagicMock, mock_cocoindex_init: MagicMock)
         """Test argument parsing with custom paths."""
         mock_load_dotenv = mocker.patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
         mock_cocoindex_init = mocker.patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
 
-        
         try:
             from cocoindex_code_mcp_server.main_hybrid_search import (
                 determine_paths,
@@ -78,12 +78,12 @@ class TestMainHybridSearchIntegration:
 
     # @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
     # @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
-    def test_argument_parsing_no_live(self, mocker): 
+    def test_argument_parsing_no_live(self, mocker):
         # mock_load_dotenv: MagicMock, mock_cocoindex_init: MagicMock)
         """Test argument parsing with live updates disabled."""
         mock_load_dotenv = mocker.patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
         mock_cocoindex_init = mocker.patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
-        
+
         try:
             from cocoindex_code_mcp_server.main_hybrid_search import (
                 parse_hybrid_search_args,
@@ -98,7 +98,7 @@ class TestMainHybridSearchIntegration:
 
     # @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
     # @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
-    def test_argument_parsing_custom_poll(self, mocker): 
+    def test_argument_parsing_custom_poll(self, mocker):
         # mock_load_dotenv: MagicMock, mock_cocoindex_init: MagicMock)
         """Test argument parsing with custom polling interval."""
         mock_load_dotenv = mocker.patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
@@ -121,14 +121,15 @@ class TestMainHybridSearchIntegration:
     # @patch('cocoindex_code_mcp_server.main_hybrid_search.run_interactive_hybrid_search')
     # @patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
     # @patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
-    def test_main_workflow_no_live(self, mocker): 
+    def test_main_workflow_no_live(self, mocker):
         # mock_load_dotenv, mock_cocoindex_init, mock_run_interactive, mock_update_config)
         """Test main workflow without live updates."""
         mock_load_dotenv = mocker.patch('cocoindex_code_mcp_server.main_hybrid_search.cocoindex.init')
         mock_cocoindex_init = mocker.patch('cocoindex_code_mcp_server.main_hybrid_search.load_dotenv')
-        mock_run_interactive = mocker.patch('cocoindex_code_mcp_server.main_hybrid_search.run_interactive_hybrid_search')
+        mock_run_interactive = mocker.patch(
+            'cocoindex_code_mcp_server.main_hybrid_search.run_interactive_hybrid_search')
         mock_update_config = mocker.patch('cocoindex_code_mcp_server.main_hybrid_search.update_flow_config')
-        
+
         try:
             from cocoindex_code_mcp_server.main_hybrid_search import main
 
@@ -174,12 +175,12 @@ class TestWorkflowIntegration:
 
     # @patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.os.getenv')
     # @patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.ConnectionPool')
-    def test_interactive_hybrid_search_workflow(self, mocker): 
+    def test_interactive_hybrid_search_workflow(self, mocker):
         # mock_pool_class, mock_getenv, mock_database_setup):
         """Test the complete interactive hybrid search workflow."""
         mock_getenv = mocker.patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.os.getenv')
         mock_pool_class = mocker.patch('cocoindex_code_mcp_server.db.pgvector.hybrid_search.ConnectionPool')
-        
+
         try:
             # Mock environment and database setup
             mock_getenv.return_value = "postgresql://test"
@@ -324,11 +325,11 @@ class TestConfigurationIntegration:
     """Test configuration and setup integration."""
 
     # @patch('cocoindex_code_mcp_server.cocoindex_config.code_embedding_flow')
-    def test_flow_configuration_update(self, mocker): 
+    def test_flow_configuration_update(self, mocker):
         # mock_flow: MagicMock)
         """Test that flow configuration is properly updated."""
         mock_flow = mocker.patch('cocoindex_code_mcp_server.cocoindex_config.code_embedding_flow')
-        
+
         try:
             from cocoindex_code_mcp_server.cocoindex_config import update_flow_config
 
@@ -353,7 +354,7 @@ class TestConfigurationIntegration:
         # mock_flow: MagicMock):
         """Test flow configuration with default values."""
         mock_flow = mocker.patch('cocoindex_code_mcp_server.cocoindex_config.code_embedding_flow')
-        
+
         try:
             from cocoindex_code_mcp_server.cocoindex_config import update_flow_config
 

@@ -27,7 +27,7 @@ class HaskellChunkRow:
     start: int
     end: int
     chunking_method: str
-    
+
     def __getitem__(self, key: Union[str, int]) -> Any:
         """Allow dictionary-style access."""
         if isinstance(key, str):
@@ -41,29 +41,29 @@ class HaskellChunkRow:
                 return self
             else:
                 raise IndexError(f"Chunk index {key} out of range (only index 0 is valid)")
-    
+
     def __setitem__(self, key: str, value) -> None:
         """Allow dictionary-style assignment."""
         if hasattr(self, key):
             setattr(self, key, value)
         else:
             raise KeyError(f"Cannot set unknown attribute '{key}' on HaskellChunkRow")
-    
+
     def __contains__(self, key: str) -> bool:
         """Check if key exists in chunk (for 'key in chunk' syntax)."""
         return hasattr(self, key)
-    
+
     def get(self, key: str, default=""):
         """Dictionary-style get method."""
         try:
             return self[key]
         except KeyError:
             return default
-    
+
     def keys(self):
         """Return available keys (attribute names)."""
         return ["content", "location", "start", "end", "chunking_method"]
-    
+
     def to_dict(self) -> dict:
         """Convert chunk to dictionary for CocoIndex compatibility."""
         return {
@@ -77,15 +77,16 @@ class HaskellChunkRow:
 
 class ChunkRow:
     """Legacy chunk format for backward compatibility (internal use)."""
+
     def __init__(self, data: Dict[str, Any]):
         self.data = data
-    
+
     def get(self, key: str, default=None):
         return self.data.get(key, default)
-    
+
     def __getitem__(self, key: str):
         return self.data[key]
-    
+
     def __contains__(self, key: str) -> bool:
         return key in self.data
 
@@ -599,9 +600,13 @@ def extract_haskell_ast_chunks(content: str) -> List[Dict[str, Any]]:
                 chunks_with_functions += 1
 
         if chunks_with_functions > 0:
-            LOGGER.info(f"✅ Rust Haskell chunking produced {len(legacy_chunks)} chunks, {chunks_with_functions} with function metadata")
+            LOGGER.info(
+                f"✅ Rust Haskell chunking produced {
+                    len(legacy_chunks)} chunks, {chunks_with_functions} with function metadata")
         else:
-            LOGGER.warning(f"⚠️ Rust Haskell chunking produced {len(legacy_chunks)} chunks but NO function metadata - likely using regex fallback")
+            LOGGER.warning(
+                f"⚠️ Rust Haskell chunking produced {
+                    len(legacy_chunks)} chunks but NO function metadata - likely using regex fallback")
             if legacy_chunks:
                 first_chunk = legacy_chunks[0]
                 if 'metadata' in first_chunk and isinstance(first_chunk['metadata'], dict):
@@ -895,10 +900,10 @@ class HaskellChunkExecutor:
             # More accurate logging about chunk content
             LOGGER.info(f"✅ Rust Haskell chunking produced {len(chunks)} chunks (via HaskellChunkExecutor)")
             return self._convert_chunks_to_haskell_chunk_rows(chunks)
-            
+
         except Exception as e:
             LOGGER.warning(f"Rust Haskell chunking failed: {e}, falling back to enhanced Python chunking")
-            
+
             # Fallback to enhanced Python chunker
             config = HaskellChunkConfig(
                 max_chunk_size=self.spec.max_chunk_size,
@@ -908,10 +913,10 @@ class HaskellChunkExecutor:
                 preserve_imports=self.spec.preserve_imports,
                 preserve_exports=self.spec.preserve_exports
             )
-            
+
             chunker = EnhancedHaskellChunker(config)
             enhanced_chunks = chunker.chunk_code(content, "")
-            
+
             LOGGER.info(f"✅ Enhanced Python Haskell chunking produced {len(enhanced_chunks)} chunks")
             return self._convert_chunks_to_haskell_chunk_rows(enhanced_chunks)
 

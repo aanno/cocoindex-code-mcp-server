@@ -82,5 +82,3 @@ class TestCocoIndexIntegration:
         assert len(haskell_code) > 0
         assert "module HaskellExample1 where" in haskell_code
         assert "fibonacci ::" in haskell_code
-
-

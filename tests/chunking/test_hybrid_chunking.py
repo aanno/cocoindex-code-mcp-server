@@ -8,17 +8,16 @@ Test hybrid chunking functionality with different languages and CocoIndex integr
 import pytest
 
 try:
-    from cocoindex_code_mcp_server.ast_chunking import (
-        ASTChunkExecutor,
-    )
     from cocoindex_code_mcp_server.ast_chunking import ChunkRow as Chunk  # type: ignore
+
     # Legacy compatibility - these classes don't exist anymore
     class DummyChunker:  # type: ignore
-        def __init__(self, max_chunk_size=None): 
+        def __init__(self, max_chunk_size=None):
             self.max_chunk_size = max_chunk_size or 1000
+
         def chunk_code(self, *args): return []
         def is_supported_language(self, lang): return False
-    
+
     CocoIndexASTChunker = DummyChunker  # type: ignore
     def detect_language_from_filename(filename): return "Unknown"  # type: ignore
     COCOINDEX_AST_AVAILABLE = False  # Disable tests since old API is gone

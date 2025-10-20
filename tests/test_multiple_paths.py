@@ -62,7 +62,7 @@ class TestMultiplePaths:
         mock_flow = mocker.patch('cocoindex_config.code_embedding_flow')
         mocker.patch('query_interactive.ConnectionPool')  # Mock but don't need reference
         mocker.patch('builtins.input', side_effect=['', ''])  # Empty input to exit
-        
+
         # Mock the flow update
         mock_flow.update.return_value = {"processed": 0}
 

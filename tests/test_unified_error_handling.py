@@ -48,7 +48,8 @@ class TestRustHaskellErrorHandling:
         assert result.error_stats().error_count(
         ) >= ERROR_FALLBACK_THRESHOLD, f"Expected at least {ERROR_FALLBACK_THRESHOLD} errors"
         assert result.error_stats().should_fallback(), "Should trigger fallback"
-        assert result.chunking_method() == "rust_haskell_regex_fallback_2", f"Expected rust_haskell_regex_fallback_2, got {result.chunking_method()}"
+        assert result.chunking_method() == "rust_haskell_regex_fallback_2", f"Expected rust_haskell_regex_fallback_2, got {
+            result.chunking_method()}"
         assert len(result.chunks()) > 0, "Should have fallback chunks"
         assert result.coverage_complete(), "Coverage should be complete"
 
@@ -102,7 +103,8 @@ data Color = Red | Green | Blue
         # Should use pure AST chunking (0 errors)
         assert result.error_stats().error_count() == 0, "Expected 0 errors"
         assert not result.error_stats().should_fallback(), "Should not trigger fallback"
-        assert result.chunking_method() == "rust_haskell_ast", f"Expected rust_haskell_ast, got {result.chunking_method()}"
+        assert result.chunking_method() == "rust_haskell_ast", f"Expected rust_haskell_ast, got {
+            result.chunking_method()}"
         assert len(result.chunks()) > 0, "Should have AST chunks"
         assert result.coverage_complete(), "Coverage should be complete"
 
