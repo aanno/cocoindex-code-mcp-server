@@ -10,7 +10,7 @@ This document describes the comprehensive test organization for all search funct
 
 #### Main Search Test Files
 - **`test_hybrid_search.py`** - Hybrid search combining vector similarity and keyword filtering (17 tests)
-- **`test_full_text_search.py`** - Vector-only semantic search functionality (15 tests)  
+- **`test_full_text_search.py`** - Vector-only semantic search functionality (15 tests)
 - **`test_keyword_search.py`** - Keyword-only metadata filtering search (16 tests)
 
 #### Configuration Management
@@ -65,7 +65,7 @@ async with CocoIndexTestInfrastructure(**config.to_infrastructure_kwargs()) as i
 When tests run, you'll see configuration details:
 ```
 🔧 Search Test Configuration:
-  📁 Paths: ['/workspaces/rust']  
+  📁 Paths: ['/workspaces/rust']
   🔴 Live updates: DISABLED
   🎯 Default embedding: ENABLED
   🎯 Default chunking: DISABLED
@@ -107,7 +107,7 @@ pytest -m "hybrid_search"
 # Run vector-only search tests
 pytest -m "vector_search"
 
-# Run keyword-only search tests  
+# Run keyword-only search tests
 pytest -m "keyword_search"
 
 # Run keyword parser tests
@@ -155,7 +155,7 @@ pytest -v tests/test_hybrid_search_keyword_parser.py
 - Vector + keyword query combination testing
 - Test fixture: `fixtures/hybrid_search.jsonc`
 
-#### Vector-Only Search (`test_full_text_search.py`) 
+#### Vector-Only Search (`test_full_text_search.py`)
 - **15 tests total** covering semantic code understanding
 - Semantic similarity searches across programming concepts
 - Programming paradigm searches (OOP, functional, concurrent)
@@ -187,7 +187,7 @@ pytest -v tests/test_hybrid_search_keyword_parser.py
 #### Search Engine (`test_hybrid_search_engine.py`)
 - Engine initialization and configuration
 - Vector-only search
-- Keyword-only search  
+- Keyword-only search
 - Hybrid search combining both
 - Result formatting (JSON and readable)
 - SQL query generation
@@ -210,7 +210,7 @@ pytest ./tests/search/ -v -s
 
 # Run individual search test types
 pytest tests/search/test_hybrid_search.py -v -s
-pytest tests/search/test_full_text_search.py -v -s  
+pytest tests/search/test_full_text_search.py -v -s
 pytest tests/search/test_keyword_search.py -v -s
 
 # Run with specific test methods
@@ -236,7 +236,7 @@ config = SearchTestConfig(
 ### Working Tests ✅
 - **Core Search Tests**: All three search types with comprehensive coverage (48 total tests)
   - Hybrid search: 17 tests across multiple programming languages
-  - Vector search: 15 tests for semantic code understanding  
+  - Vector search: 15 tests for semantic code understanding
   - Keyword search: 16 tests for metadata-based filtering
 - **Configuration System**: SearchTestConfig provides unified, easy-to-use configuration
 - **Test Infrastructure**: CocoIndex infrastructure with proper setup/teardown
@@ -246,7 +246,7 @@ config = SearchTestConfig(
 ### Test Result Organization
 Test results are automatically saved with timestamps:
 - `/test-results/search-hybrid/` - Hybrid search results combining vector + keyword
-- `/test-results/search-vector/` - Vector-only semantic search results  
+- `/test-results/search-vector/` - Vector-only semantic search results
 - `/test-results/search-keyword/` - Keyword-only metadata filter results
 
 ### Configuration Features ✨
@@ -291,7 +291,7 @@ All three search test methods now include comprehensive **database comparison fu
 
 ### Running Tests with Database Analysis
 1. Use `-v -s` flags for verbose output and database comparison visibility
-2. Test individual search types when debugging specific functionality  
+2. Test individual search types when debugging specific functionality
 3. Check `/test-results/` directories for detailed search result analysis
 4. Review database comparison reports to identify indexing pipeline issues
 5. Modify `SearchTestConfig` defaults for custom test environments
@@ -307,7 +307,7 @@ All three search test methods now include comprehensive **database comparison fu
 ### Test Result Directories
 Test results are automatically saved to organized directories:
 - `/test-results/search-hybrid/` - Hybrid search test results
-- `/test-results/search-vector/` - Vector-only search test results  
+- `/test-results/search-vector/` - Vector-only search test results
 - `/test-results/search-keyword/` - Keyword-only search test results
 
 Each test result file contains:

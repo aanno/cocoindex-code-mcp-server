@@ -1,0 +1,30 @@
+# also see https://pre-commit.com/hooks.html
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-added-large-files
+        args: [--maxkb=1200]
+      - id: check-executables-have-shebangs
+      - id: check-illegal-windows-names
+      - id: check-json
+        exclude: tsconfig.json
+      - id: check-merge-conflict
+      - id: check-shebang-scripts-are-executable
+      - id: check-symlinks
+      - id: check-toml
+      - id: check-xml
+      - id: destroyed-symlinks
+      # -   id: detect-aws-credentials
+      # - id: detect-private-key
+      - id: pretty-format-json
+        exclude: tsconfig.json
+        args: [--autofix, --no-sort-keys]
+  # https://github.com/google/yamlfmt/blob/main/docs/pre-commit.md
+  - repo: https://github.com/google/yamlfmt
+    rev: v0.16.0
+    hooks:
+      - id: yamlfmt

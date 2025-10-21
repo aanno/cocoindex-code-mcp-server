@@ -20,7 +20,7 @@ graph TD
     G --> H[Metadata Extraction]
     H --> I[Database Export]
     I --> J[PostgreSQL + pgvector]
-    
+
     J --> K[Hybrid Search]
     K --> L[Vector Search]
     K --> M[Keyword Search]
@@ -177,7 +177,7 @@ _global_flow_config = {
 
 ### Search Tools (MCP Interface)
 - `search-hybrid` - Combined vector and keyword search
-- `search-vector` - Pure semantic similarity search  
+- `search-vector` - Pure semantic similarity search
 - `search-keyword` - Text and metadata-based search
 - `code-analyze` - Analyze code snippets
 - `code-embeddings` - Generate embeddings for text
@@ -293,7 +293,7 @@ def search_test_flow_def(params: SearchTestFlowParameters):
             extract_chunking_method_field,  # Critical field!
             # ... all other extract_*_field functions
         )
-        
+
         # Reuse exact same flow logic as main flow
         # Export to parameterized table name
         code_embeddings.export(
@@ -313,17 +313,17 @@ def search_test_flow_def(params: SearchTestFlowParameters):
 class CocoIndexTestInfrastructure:
     def __init__(self, test_type: str = None, **kwargs):
         self.test_type = test_type  # 'keyword', 'vector', or 'hybrid'
-        
+
     async def setup(self):
         if self.test_type:
             # Use parameterized flow for this test type
             from .search_test_flows import get_search_test_flow, get_test_table_name
             self.flow_def = get_search_test_flow(self.test_type)
             self.table_name = get_test_table_name(self.test_type)
-        
+
         # Critical: Setup the flow
         self.flow_def.setup()
-        
+
         # Initialize search engine with test-specific table
         self.search_engine = HybridSearchEngine(
             db_name=self.table_name,  # Use test-specific table
@@ -345,7 +345,7 @@ from cocoindex_code_mcp_server.cocoindex_config import (
     extract_success_field, extract_parse_errors_field,
     # Language-specific fields
     extract_nodes_with_errors_field,         # Haskell
-    extract_data_types_field,                # Haskell  
+    extract_data_types_field,                # Haskell
     extract_structs_field,                   # Rust
     extract_traits_field,                    # Rust
     extract_exports_field,                   # TypeScript/JavaScript
@@ -405,7 +405,7 @@ This table separation implementation resolves critical test isolation issues whi
 The CocoIndex flow implementation provides a robust, extensible pipeline for code analysis and search. Key architectural decisions include:
 
 - **Multi-stage processing** with clear separation of concerns
-- **Language-aware chunking** with AST support for major languages  
+- **Language-aware chunking** with AST support for major languages
 - **Smart embedding** with model selection based on language
 - **Rich metadata extraction** with PostgreSQL storage optimization
 - **Hybrid search** combining semantic and keyword-based approaches

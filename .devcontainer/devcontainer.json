@@ -1,40 +1,41 @@
 {
-    "$schema": "https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.schema.json",
-    "name": "cocoindex_code_mcp_server",
-    "image": "localhost/rust-python",
-    "runArgs": [
-        "--userns=keep-id:uid=${localEnv:CONTAINER_USERID},gid=${localEnv:CONTAINER_USERID}",
-        "--cpus=8",
-        "--memory=24g",
-        "--shm-size=1g",
-        "--device", "nvidia.com/gpu=all"
-    ],
-    "mounts": [
-        "source=/run/user/1000/podman/podman.sock,target=/home/vscode/podman.sock,type=bind,z,consistency=cached",
-        "source=${localEnv:LINUX_CONFIG}/build-with-docker/var/lib/apt,target=/var/lib/apt,type=bind,z,consistency=cached",
-        "source=${localEnv:LINUX_CONFIG}/build-with-docker/var/cache/apt,target=/var/cache/apt,type=bind,z,consistency=cached",
-        "source=${localEnv:LINUX_CONFIG}/build-with-docker/var/lib/dnf,target=/var/lib/dnf,type=bind,z,consistency=cached",
-        "source=${localEnv:LINUX_CONFIG}/build-with-docker/var/cache/dnf,target=/var/cache/dnf,type=bind,z,consistency=cached",
-        "source=${localEnv:LINUX_CONFIG}/build-with-docker/.cargo,target=/home/vscode/.cargo,type=bind,z,consistency=cached",
-        "source=${localEnv:LINUX_CONFIG}/build-with-docker/.rustup,target=/home/vscode/.rustup,type=bind,z,consistency=cached",
-        "source=${localEnv:PIP_CACHE_DIR},target=/pip,type=bind,z,consistency=cached",
-        "source=${localEnv:PNPM_CACHE_DIR},target=/pnpm,type=bind,z,consistency=cached",
-        "source=${localEnv:VOLTA_HOME}/tools,target=/home/vscode/.volta/tools,type=bind,z,consistency=cached",
-        "source=${localEnv:HF_HOME},target=/hf,type=bind,z,consistency=cached",
-        "source=${localEnv:VENV}/lib,target=/home/vscode/.venv/lib,type=bind,z,consistency=cached",
-        "source=${localEnv:VENV}/include,target=/home/vscode/.venv/include,type=bind,z,consistency=cached"
-    ],
-    "workspaceFolder": "/workspaces/rust",
-    "workspaceMount": "source=.,target=/workspaces/rust,type=bind,z,consistency=cached",
-    "remoteUser": "vscode",
-    "customizations": {
-        "vscode": {
-            "extensions": [
-                "donjayamanne.python-extension-pack",
-                "knowsuchagency.pdm-task-provider",
-                "dustypomerleau.rust-syntax",
-                "panicbit.cargo"
-            ]
-        }
+  "$schema": "https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.schema.json",
+  "name": "cocoindex_code_mcp_server",
+  "image": "localhost/rust-python",
+  "runArgs": [
+    "--userns=keep-id:uid=${localEnv:CONTAINER_USERID},gid=${localEnv:CONTAINER_USERID}",
+    "--cpus=8",
+    "--memory=24g",
+    "--shm-size=1g",
+    "--device",
+    "nvidia.com/gpu=all"
+  ],
+  "mounts": [
+    "source=/run/user/1000/podman/podman.sock,target=/home/vscode/podman.sock,type=bind,z,consistency=cached",
+    "source=${localEnv:LINUX_CONFIG}/build-with-docker/var/lib/apt,target=/var/lib/apt,type=bind,z,consistency=cached",
+    "source=${localEnv:LINUX_CONFIG}/build-with-docker/var/cache/apt,target=/var/cache/apt,type=bind,z,consistency=cached",
+    "source=${localEnv:LINUX_CONFIG}/build-with-docker/var/lib/dnf,target=/var/lib/dnf,type=bind,z,consistency=cached",
+    "source=${localEnv:LINUX_CONFIG}/build-with-docker/var/cache/dnf,target=/var/cache/dnf,type=bind,z,consistency=cached",
+    "source=${localEnv:LINUX_CONFIG}/build-with-docker/.cargo,target=/home/vscode/.cargo,type=bind,z,consistency=cached",
+    "source=${localEnv:LINUX_CONFIG}/build-with-docker/.rustup,target=/home/vscode/.rustup,type=bind,z,consistency=cached",
+    "source=${localEnv:PIP_CACHE_DIR},target=/pip,type=bind,z,consistency=cached",
+    "source=${localEnv:PNPM_CACHE_DIR},target=/pnpm,type=bind,z,consistency=cached",
+    "source=${localEnv:VOLTA_HOME}/tools,target=/home/vscode/.volta/tools,type=bind,z,consistency=cached",
+    "source=${localEnv:HF_HOME},target=/hf,type=bind,z,consistency=cached",
+    "source=${localEnv:VENV}/lib,target=/home/vscode/.venv/lib,type=bind,z,consistency=cached",
+    "source=${localEnv:VENV}/include,target=/home/vscode/.venv/include,type=bind,z,consistency=cached"
+  ],
+  "workspaceFolder": "/workspaces/rust",
+  "workspaceMount": "source=.,target=/workspaces/rust,type=bind,z,consistency=cached",
+  "remoteUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "donjayamanne.python-extension-pack",
+        "knowsuchagency.pdm-task-provider",
+        "dustypomerleau.rust-syntax",
+        "panicbit.cargo"
+      ]
     }
+  }
 }

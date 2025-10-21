@@ -204,7 +204,7 @@ Result: Function chunks include `ancestor_path: "Functor::fmap"`.
 **`HaskellChunkConfig` Class**
 ```python
 class HaskellChunkConfig:
-    def __init__(self, 
+    def __init__(self,
                  max_chunk_size: int = 1800,
                  chunk_overlap: int = 0,
                  chunk_expansion: bool = False,
@@ -243,14 +243,14 @@ enhanced_separators = [
     # High priority: Module and import boundaries
     r"\nmodule\s+[A-Z][a-zA-Z0-9_.']*",
     r"\nimport\s+(qualified\s+)?[A-Z][a-zA-Z0-9_.']*",
-    
+
     # Medium priority: Type and data definitions
     r"\ndata\s+[A-Z][a-zA-Z0-9_']*",
     r"\nclass\s+[A-Z][a-zA-Z0-9_']*",
-    
+
     # Lower priority: Function definitions
     r"\n[a-zA-Z][a-zA-Z0-9_']*\s*::",
-    
+
     # Comment-based separators
     r"\n--\s*[=-]{3,}",
 ]
@@ -332,13 +332,13 @@ def create_enhanced_regex_fallback_chunks(content, file_path, config):
 ```python
 def _extract_function_names(self, content):
     # Regex: r'^([a-zA-Z][a-zA-Z0-9_\']*)\s*::'
-    
+
 def _extract_type_names(self, content):
     # Patterns for data, newtype, type, class definitions
-    
+
 def _calculate_complexity(self, content):
     # Counts: case, if, where, let, do, monadic ops
-    
+
 def _extract_dependencies(self, content):
     # Parses import statements for module dependencies
 ```
@@ -494,7 +494,7 @@ def _direct_ast_chunking(self, content: str):
     parser = Parser()
     parser.set_language(Language('haskell.so'))
     tree = parser.parse(bytes(content, "utf8"))
-    
+
     chunks = []
     for node in tree.root_node.children:
         if node.type in ['function_declaration', 'data_declaration']:
@@ -510,7 +510,7 @@ def _direct_ast_chunking(self, content: str):
 **Benefits**:
 
 - More granular AST control
-- Custom node traversal strategies  
+- Custom node traversal strategies
 - Better error handling for malformed code
 - Richer AST metadata extraction
 
@@ -523,10 +523,10 @@ def _direct_ast_chunking(self, content: str):
 def _semantic_dependency_chunking(self, content: str):
     functions = self._parse_functions(content)
     call_graph = self._build_call_graph(functions)
-    
+
     # Group functions by dependency clusters
     clusters = self._find_dependency_clusters(call_graph)
-    
+
     semantic_chunks = []
     for cluster in clusters:
         # Combine related functions into logical chunks
@@ -571,7 +571,7 @@ Cross-module dependency consideration for better chunking decisions
 # Consider imports when chunking
 def _module_aware_chunking(self, content: str, module_context: dict):
     imports = self._extract_imports(content)
-    
+
     for chunk in chunks:
         # Analyze which imports are actually used in this chunk
         used_imports = self._find_used_imports(chunk, imports)
@@ -588,7 +588,7 @@ Hot path optimization for large codebases
 def _performance_aware_chunking(self, content: str, profile_data: dict):
     # Use profiling data to inform chunking decisions
     hot_functions = profile_data.get("hot_functions", [])
-    
+
     for chunk in chunks:
         chunk_functions = self._extract_function_names(chunk["content"])
         hotness_score = sum(1 for f in chunk_functions if f in hot_functions)
@@ -617,7 +617,7 @@ ast_chunks = haskell_tree_sitter.get_haskell_ast_chunks_with_fallback(content)
 
 - **Fine-grained AST control**: Direct node traversal and manipulation
 - **Custom chunking strategies**: Based on specific AST node types
-- **Better error handling**: Direct access to syntax error information  
+- **Better error handling**: Direct access to syntax error information
 - **Richer metadata**: AST node types, children, structural information
 - **Performance**: Eliminate wrapper overhead
 
@@ -632,7 +632,7 @@ ast_chunks = haskell_tree_sitter.get_haskell_ast_chunks_with_fallback(content)
 ```haskell
 -- Instead of splitting these syntactically:
 calculatePrice :: Product -> Price
-validateOrder :: Order -> Bool 
+validateOrder :: Order -> Bool
 processPayment :: Payment -> IO Result
 
 -- Semantic chunking would group them as "order processing logic"
@@ -644,14 +644,14 @@ processPayment :: Payment -> IO Result
 -- Group data type with related functions:
 data User = User { name :: String, email :: String }
 validateUser :: User -> Bool
-createUser :: String -> String -> User  
+createUser :: String -> String -> User
 -- ^ These would be chunked together semantically
 ```
 
 #### Domain Concept Clustering
 
 - **Authentication**: login, logout, validateToken functions
-- **Data Processing**: parse, transform, validate functions  
+- **Data Processing**: parse, transform, validate functions
 - **IO Operations**: read, write, network functions
 
 The key insight is moving from **"where does the code split syntactically?"** to **"what code belongs together logically?"**

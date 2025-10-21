@@ -76,4 +76,3 @@ Tree-sitter-based libraries (like **py-tree-sitter** and **rag-pychunk**) enable
 [^1_10]: https://www.brandons.me/blog/write-code-not-too-much-mostly-functions
 
 [^1_11]: https://pypi.org/project/tree-sitter-type-provider/
-

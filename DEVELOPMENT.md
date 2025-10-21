@@ -10,4 +10,3 @@
 * [autoflake8](https://pypi.org/project/autoflake/)
 * [autopep8](https://pypi.org/project/autopep8/)
 * [pydocstyle](https://pypi.org/project/pydocstyle/)
-

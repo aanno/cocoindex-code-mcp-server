@@ -23,7 +23,7 @@ pip install pre-commit maturin psycopg "psycopg[pool]" pgvector "sentence-transf
 
 sudo chown -R vscode:vscode /home/vscode/.cargo/
 
-# In main_interactive_query.py, only main and the argument parsing should reside. We have to refactor it in multiple files and name them appropriate... 
+# In main_interactive_query.py, only main and the argument parsing should reside. We have to refactor it in multiple files and name them appropriate...
 
 # Why we use tree-sitter-haskell in version 0.21 instead of 0.23.1 ?
 

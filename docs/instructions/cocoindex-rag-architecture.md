@@ -16,19 +16,19 @@ Here’s a structured answer to your questions based on the common setup of Coco
 By default, CocoIndex extracts basic metadata from source files using **Tree-sitter** parsers:
 
 *   **Language** (e.g., `python`, `javascript`)
-    
+
 *   **Symbol kind** (e.g., `function`, `variable`, `class`)
-    
+
 *   **Symbol name**
-    
+
 *   **Start and end byte offsets**
-    
+
 *   **Start and end line numbers** (if configured)
-    
+
 *   **File path**
-    
+
 *   **Tree-sitter node type**
-    
+
 
 Depending on the configuration and language support, additional metadata like visibility (`public`/`private`), type annotations, docstrings/comments, and parent-child relationships (like function inside a class) may also be extracted.
 
@@ -46,11 +46,11 @@ endPosition: {row, column}
 To ensure line numbers are included:
 
 *   The extractor must use `node.startPosition.row` and `node.endPosition.row`.
-    
+
 *   Check if your extractor uses `ts.node_position(node)` or equivalent to get this info.
-    
+
 *   If you're writing a custom extractor, you can get it like this (in Python):
-    
+
 
 ```python
 start_line = node.start_point[0] + 1  # Tree-sitter line numbers are 0-based
@@ -95,11 +95,11 @@ EXTRACTORS["python"] = MyExtractor
 Yes. When writing an extractor, you get access to:
 
 *   The **Tree-sitter tree**: `tree.root_node`
-    
+
 *   The **source code**: a `bytes` or `str`
-    
+
 *   The **Tree-sitter Node** API: access to children, field names, types, positions, etc.
-    
+
 
 You can walk the AST via `node.children`, `node.type`, or use queries.
 
@@ -110,11 +110,11 @@ You can walk the AST via `node.children`, `node.type`, or use queries.
 Yes, but with limits:
 
 *   You can **add metadata fields** in your extractor (`extra` dict or top-level).
-    
+
 *   You can **modify the backend schema** (in the database or JSON format), depending on your backend setup.
-    
+
 *   Coco uses a structured metadata export (usually JSON). Your custom fields are passed through if you include them in the extracted dict.
-    
+
 
 * * *
 
@@ -340,11 +340,11 @@ That would be great!
 Awesome! Here's a complete **HaskellExtractor scaffold** for CocoIndex, including:
 
 *   Tree-sitter parser setup
-    
+
 *   Custom extractor class
-    
+
 *   CLI test harness
-    
+
 
 * * *
 
@@ -494,11 +494,11 @@ Or do it dynamically in a plugin setup script.
 You now have a working Haskell extractor using Tree-sitter and CocoIndex. Let me know if you want:
 
 *   Tree-sitter query support (using `.scm` files)
-    
+
 *   Export integration to a backend
-    
+
 *   Automatic tests with `pytest`
-    
+
 
 Happy indexing!
 
@@ -524,15 +524,15 @@ Here’s the typical flow:
 ### Core exported fields:
 
 *   `id` — unique identifier
-    
+
 *   `embedding` — vector representation
-    
+
 *   `metadata` — full dict of all extracted metadata
-    
+
 *   `text` — textual content (used for vectorization)
-    
+
 *   `kind`, `name`, `language`, `start_line`, etc. — optional top-level shortcut fields
-    
+
 
 * * *
 
@@ -558,11 +558,11 @@ When using Qdrant, CocoIndex (or the agent/server layer) typically pushes items 
 In this setup:
 
 *   The **payload** is used for filtering (e.g., `language = "haskell"`)
-    
+
 *   The **vector** is used for similarity search
-    
+
 *   There is **no strict schema enforcement** unless you use **Qdrant's optimizations**
-    
+
 
 * * *
 
@@ -615,11 +615,11 @@ This depends on whether you’re using:
 If you're pushing documents manually (e.g., via `coco-cli export`), then **you manage the schema setup yourself**. You must:
 
 *   Define which fields you want to filter on.
-    
+
 *   Use Qdrant SDK/API to set up payload indexing.
-    
+
 *   Coco will not override or define that schema for you — it's your responsibility.
-    
+
 
 ### B. **Agent-based system (like `coco-agent`)**
 
@@ -639,11 +639,11 @@ qdrant:
 Check for your agent/server config (if used). Otherwise, create a wrapper script that:
 
 1.  Initializes Qdrant collection
-    
+
 2.  Applies payload schema
-    
+
 3.  Pushes data from Coco
-    
+
 
 * * *
 
@@ -663,11 +663,11 @@ Check for your agent/server config (if used). Otherwise, create a wrapper script
 Would you like a full code snippet showing:
 
 *   Exporting a Haskell extraction result
-    
+
 *   Inserting it into Qdrant
-    
+
 *   Defining payload index for fast queries?
-    
+
 
 I can generate a compact working example.undefined
 
@@ -678,11 +678,11 @@ Well, I'm not using the CLI. I'm working on an cocoindex based RAG 
 Great — that makes everything clearer. Since you're using **CocoIndex as a library** inside a custom **RAG system with a memory-consistent processing (MCP) server**, and leveraging **live updates**, you are in full control of:
 
 *   the **metadata extraction**
-    
+
 *   the **export pipeline**
-    
+
 *   and the **Qdrant schema configuration**
-    
+
 
 Let’s break it down with **tailored advice** for your case.
 
@@ -813,22 +813,22 @@ hits = client.search(
 ------------------------------------
 
 *   You manually define schema via Qdrant's Python API (`create_payload_index`)
-    
+
 *   Your extractor adds rich metadata as payload fields
-    
+
 *   You control vector embedding + upsert per extracted unit
-    
+
 *   Use `must` filters to fully benefit from memory-mapped payloads
-    
+
 
 * * *
 
 Would you like:
 
 *   A helper module that wraps Qdrant upserts + schema index creation?
-    
+
 *   Integration pattern for change detection + incremental reindex?
-    
+
 
 I can scaffold that next.
 
@@ -846,9 +846,9 @@ Perfect! Here’s a full solution for your **CocoIndex-based RAG MCP server**, b
 A utility module to:
 
 1.  Initialize Qdrant collection with schema and indexing
-    
+
 2.  Handle upserts with embeddings and metadata
-    
+
 
 ```python
 # qdrant_helpers.py
@@ -984,26 +984,26 @@ while True:
 ---------------------------------
 
 *   Replace `embed_text()` with a real encoder like `sentence-transformers` or `OpenAI`
-    
+
 *   Add deletion for removed/renamed code (not just updated ones)
-    
+
 *   Use `watchdog` instead of polling
-    
+
 *   Include `docstring`, `type`, or `context` in payload
-    
+
 *   Normalize field values for more consistent filtering
-    
+
 
 * * *
 
 Let me know if you'd like:
 
 *   A `watchdog`\-based version
-    
+
 *   A schema visualization of the Qdrant payload
-    
+
 *   Elasticsearch alternative
-    
+
 
 I'm happy to expand based on your stack.
 
@@ -1032,11 +1032,11 @@ By default, **chunking in CocoIndex is language-specific and optional**. Here’
 But this **isn't true chunking** like in RAG. You often want:
 
 *   Tokens-to-chunks by size (`N` tokens)
-    
+
 *   Sliding windows with overlap
-    
+
 *   Semantic-aware chunks (e.g., based on indentation or scope)
-    
+
 
 So **you’ll need to customize** for serious chunking.
 
@@ -1139,11 +1139,11 @@ for snippet in snippets:
 For better results, combine:
 
 *   Line-based scopes
-    
+
 *   Indentation detection
-    
+
 *   Heuristics (like `# comments` or `main =` boundaries)
-    
+
 
 Example for Haskell:
 
@@ -1183,9 +1183,9 @@ def split_by_indentation(source: str, min_lines=3):
 Would you like:
 
 *   A drop-in chunker for your Haskell extractor?
-    
+
 *   RAG-style embedding + Qdrant upsert from chunked files?
-    
+
 
 I can scaffold that as your next step.
 
@@ -1228,18 +1228,18 @@ coco/
 CocoIndex **does not have centralized chunking logic** for token/window-based chunking. Instead, chunking (if present) is part of:
 
 *   Specific extractors (e.g., `python_extractor.py`)
-    
+
 *   Optional `text_splitter.py` (if present in your fork or version)
-    
+
 *   Your own RAG pipeline post-processing
-    
+
 
 So unless you're using a Coco fork that adds chunking (like LangChain integration), you’ll need to **inject chunking yourself**, either:
 
 *   Directly in your extractor (`yield` multiple per node)
-    
+
 *   Or in post-processing before embedding and upserting
-    
+
 
 * * *
 
@@ -1340,24 +1340,24 @@ Let’s ensure you're using it correctly — I’ll walk you through:
 ASTChunk traverses the **Tree-sitter AST** and chunks code into semantically meaningful blocks, such as:
 
 *   Functions
-    
+
 *   Classes
-    
+
 *   Methods
-    
+
 *   Blocks of logic or control flow
-    
+
 
 It returns structured chunk info, including:
 
 *   `text` (the chunk source)
-    
+
 *   `node_type`
-    
+
 *   `start_line`, `end_line`
-    
+
 *   Optional `parent`, `name`, etc.
-    
+
 
 * * *
 
@@ -1457,19 +1457,19 @@ Here’s a checklist:
 ----------------
 
 *   If chunking fails or returns 0 chunks, verify:
-    
+
     *   Tree-sitter parser is correctly loaded
-        
+
     *   Source is `bytes`, not `str`
-        
+
     *   You’re passing the correct Tree-sitter `tree` and `source_code`
-        
+
 *   ASTChunk supports:
-    
+
     *   `"python"`, `"javascript"`, `"typescript"`, `"go"`, `"haskell"`, `"rust"`, etc.
-        
+
 *   You can wrap fallback chunking (e.g., token-based) if ASTChunk gives sparse output
-    
+
 
 * * *
 
@@ -1477,13 +1477,13 @@ Here’s a checklist:
 -------
 
 *   ✅ ASTChunk is **recommended** for semantic chunking
-    
+
 *   ✅ Use `chunker.chunk(tree, code)` — it returns rich, structured chunks
-    
+
 *   ✅ Integrate chunks with CocoIndex-style upserts (with `text`, `name`, `line`)
-    
+
 *   🔍 Check that you're feeding Tree-sitter `tree` and `bytes` source
-    
+
 
 * * *
 
@@ -1608,13 +1608,13 @@ Use this as a backup if `ASTChunk.chunk()` returns empty.
 If you're using ASTChunk and building Haskell support anyway — you can contribute the new chunker upstream! Here’s what to do:
 
 1.  Fork [`cognitivecomputations/ASTChunk`](https://github.com/cognitivecomputations/ASTChunk)
-    
+
 2.  Add your `chunk_haskell()` logic as shown
-    
+
 3.  Update `SUPPORTED_LANGUAGES` registry
-    
+
 4.  PR it back 🙌
-    
+
 
 You’ll then have native ASTChunk Haskell support for yourself + others.
 
@@ -1635,9 +1635,9 @@ You’ll then have native ASTChunk Haskell support for yourself + others.
 Would you like me to:
 
 *   Generate a fully working `chunk_haskell()` patch for ASTChunk?
-    
+
 *   Create a pluggable `HaskellChunkExtractor` that uses this chunker inside CocoIndex?
-    
+
 
 I can also wire it into your live indexer with Qdrant export.undefined
 
@@ -1648,13 +1648,13 @@ I wonder if a implement of the visitor pattern and a tree walker fo
 That’s an **excellent architectural insight** — and yes, implementing or adopting a **Tree-sitter visitor pattern with a proper tree walker** is a smart way to unify:
 
 *   Chunking (like ASTChunk),
-    
+
 *   Symbol extraction (like CocoIndex),
-    
+
 *   Static analysis or linting,
-    
+
 *   Language-agnostic RAG pipelines.
-    
+
 
 Let’s break this down:
 
@@ -1681,33 +1681,33 @@ Let’s break this down:
 ### ✅ 1. **Tree-sitter’s native C API / Rust binding** has a _basic_ cursor walker:
 
 *   `TreeCursor` (Rust)
-    
+
 *   You can walk a tree in depth-first order using `.goto_first_child()`, `.goto_next_sibling()`, etc.
-    
+
 
 But this is:
 
 *   **low-level**
-    
+
 *   non-recursive
-    
+
 *   lacks visitor hooks or reusable callbacks
-    
+
 
 ### ✅ 2. **AST-grep** (Rust) has a powerful visitor/walker
 
 *   Used in the [ast-grep project](https://github.com/ast-grep/ast-grep)
-    
+
 *   Provides:
-    
+
     *   Rule matching
-        
+
     *   Recursive traversal
-        
+
     *   Visitors
-        
+
 *   Written in Rust, used for code search & linting
-    
+
 
 👎 **Limitation:** tightly coupled to `ast-grep` patterns & CLI; not a general-purpose visitor framework for Tree-sitter.
 
@@ -1719,11 +1719,11 @@ But this is:
 There is **no** general-purpose **visitor+walker framework** in:
 
 *   Python (for Tree-sitter)
-    
+
 *   Rust (outside of `ast-grep`)
-    
+
 *   JavaScript (basic `.walk()` exists, but no visitor abstraction)
-    
+
 
 * * *
 
@@ -1760,11 +1760,11 @@ class HaskellChunkVisitor(NodeVisitor):
 ✅ This would:
 
 *   Replace ASTChunk’s per-language logic
-    
+
 *   Improve testability and modularity
-    
+
 *   Allow custom walkers for recursion order, skipping, node types
-    
+
 
 * * *
 
@@ -1799,11 +1799,11 @@ You could compile this into a Rust walker and expose it over FFI/Python bindings
 ------------------
 
 *   A reusable **Python visitor framework** you can drop into CocoIndex or ASTChunk?
-    
+
 *   A **tree-walking class** that yields chunks, matches patterns, or builds symbol tables?
-    
+
 *   A prototype **Rust crate** that supports pluggable visitor callbacks (with Python FFI)?
-    
+
 
 I’d be happy to scaffold any of these for your use.undefined
 
@@ -1831,19 +1831,19 @@ ts_visitor/
 ----------------------------------
 
 *    Rust Tree-sitter parser with `tree.root_node()` traversal
-    
+
 *    Python bindings using `PyO3`
-    
+
 *    Returns a list of AST nodes with:
-    
+
     *   `type` (node type)
-        
+
     *   `start_line`, `end_line`
-        
+
     *   `text` (source slice)
-        
+
 *    Recursively walks the tree (depth-first)
-    
+
 
 * * *
 
@@ -1899,11 +1899,11 @@ for node in nodes:
 Would you like me to:
 
 *   🧩 Integrate **tree-sitter-haskell** into the build?
-    
+
 *   📦 Add CLI or Python-friendly wrappers for CocoIndex chunking?
-    
+
 *   🧪 Add tests or benchmarks?
-    
+
 
 Let me know how far you’d like to take it — this could become a powerful tool for code-aware RAG and symbol indexing.undefined
 
@@ -1981,11 +1981,11 @@ class ChunkMetadata(TypedDict):
 This allows:
 
 *   JSON exports
-    
+
 *   Conversion to DB-specific formats (e.g., Qdrant’s `payload`)
-    
+
 *   Validation with Pydantic (optional)
-    
+
 
 * * *
 
@@ -2104,22 +2104,22 @@ Bonus: Repos Doing It Right
 ---------------------------
 
 *   [**LangChain**](https://github.com/langchain-ai/langchain) uses `VectorStore` interface with adapters.
-    
+
 *   [**LlamaIndex**](https://github.com/jerryjliu/llama_index) uses query engines + node metadata + storage abstraction.
-    
+
 *   [**Marqo**](https://github.com/marqo-ai/marqo) is VDB-native and shows how tightly coupled query formats can become if unwrapped.
-    
+
 
 * * *
 
 Would you like:
 
 *   A code template for `VectorStoreBackend` + `ChunkQuery`?
-    
+
 *   A ready-to-use `QdrantBackend` or `ChromaBackend` implementation?
-    
+
 *   A CocoIndex patch that uses this abstraction?
-    
+
 
 Let me know and I’ll scaffold it for you!undefined
 
@@ -2153,11 +2153,11 @@ These commands help locate where vector DB integration and extractors are config
 Check for modules/files like:
 
 *   `backends/qdrant_backend.py` or `vector_store.py`
-    
+
 *   `exporter.py` where data → DB happens
-    
+
 *   `query_handler.py` for query-time filters
-    
+
 
 Look for abstractions like:
 
@@ -2177,13 +2177,13 @@ If code isn't abstracted, now’s a great time to modularize it.
 Following best patterns:
 
 *   Define a `VectorStoreBackend` interface with methods `configure()`, `upsert()`, `query()`
-    
+
 *   Put all Qdrant-specific code into a `QdrantBackend` implementation
-    
+
 *   Use a `FieldMapper` to convert generic metadata → DB payload
-    
+
 *   Pass through `capabilities` so upstream logic stays generic
-    
+
 
 * * *
 
@@ -2214,13 +2214,12 @@ Write tests that mock `VectorStoreBackend` so the rest of your RAG pipeline work
 ### Summary
 
 *   I can’t access the repo, but I can guide you through inspecting and modularizing it yourself.
-    
+
 *   Focus on defining a small abstraction layer for export and query.
-    
+
 *   Locate where backend-specific logic lives and encapsulate it.
-    
+
 *   Use tools like `grep` and dependency graphs to find candidates.
-    
+
 
 Let me know if you'd like help writing that abstraction layer or extracting a Qdrant adapter from your codebase!
-

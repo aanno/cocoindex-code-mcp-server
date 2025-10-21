@@ -29,7 +29,7 @@ def code_embedding_flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoind
             chunk_size=1000,
             chunk_overlap=200,
         )
-        
+
         with file["chunks"].row() as chunk:
             # Smart embedding automatically detects language and selects best model
             chunk["embedding"] = chunk["text"].transform(
@@ -37,7 +37,7 @@ def code_embedding_flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoind
                     file_extension=file["extension"]
                 )
             )
-        
+
         # Store in vector database
         file["chunks"].save(cocoindex.targets.QdrantTarget(
             collection_name="code_embeddings"
@@ -111,7 +111,7 @@ class CodeEmbedding(op.FunctionSpec):
 ### SmartCodeEmbedding
 
 ```python
-@dataclasses.dataclass  
+@dataclasses.dataclass
 class SmartCodeEmbedding(op.FunctionSpec):
     file_extension: str | None = None        # File extension for language detection
     language_hint: str | None = None         # Override auto-detection
@@ -133,7 +133,7 @@ with file["chunks"].row() as chunk:
             model="sentence-transformers/all-MiniLM-L6-v2"
         )
     )
-    
+
     # Code-specific embedding
     chunk["embedding_code"] = chunk["text"].transform(
         cocoindex.functions.SmartCodeEmbedding(
@@ -197,7 +197,7 @@ chunk["embedding"] = chunk["text"].transform(embedding_func)
 ### Memory Usage
 
 - GraphCodeBERT: ~500MB VRAM
-- UniXcode: ~1.2GB VRAM  
+- UniXcode: ~1.2GB VRAM
 - Consider using smaller models for memory-constrained environments:
 
 ```python
@@ -256,7 +256,7 @@ pip install 'cocoindex[embeddings]'
 
 This includes:
 - `sentence-transformers>=3.3.1`
-- `transformers>=4.21.0` 
+- `transformers>=4.21.0`
 - `torch>=1.12.0`
 
 ## Troubleshooting
@@ -272,7 +272,7 @@ from sentence_transformers import SentenceTransformer
 # Download GraphCodeBERT
 SentenceTransformer("microsoft/graphcodebert-base", trust_remote_code=True)
 
-# Download UniXcode  
+# Download UniXcode
 SentenceTransformer("microsoft/unixcoder-base", trust_remote_code=True)
 ```
 

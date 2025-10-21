@@ -44,12 +44,12 @@ Color get_default_color(void) {
 int main() {
     Point p = create_point(10, 20);
     print_point(p);
-    
+
     int sum = add(5, 3);
     printf("Sum: %d\n", sum);
-    
+
     Color c = get_default_color();
     printf("Default color: %d\n", c);
-    
+
     return 0;
 }

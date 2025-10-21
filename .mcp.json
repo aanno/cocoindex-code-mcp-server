@@ -1,57 +1,57 @@
 {
-    "mcpServers": {
-        "vscode-mcp-server": {
-            "command": "pnpm",
-            "args": [
-                "dlx",
-                "mcp-remote@next",
-                "http://localhost:3000/mcp"
-            ]
-        },
-        "gw-memory": {
-            "command": "pnpm",
-            "args": [
-                "dlx",
-                "supergateway",
-                "--sse",
-                "http://host.docker.internal:3012/sse"
-            ]
-        },
-        "fetch": {
-            "command": "uvx",
-            "args": [
-                "mcp-server-fetch"
-            ]
-        },
-        "git": {
-            "command": "uvx",
-            "args": [
-                "mcp-server-git"
-            ]
-        },
-        "filesystem": {
-            "command": "pnpm",
-            "args": [
-                "dlx",
-                "@modelcontextprotocol/server-filesystem",
-                "/workspaces"
-            ]
-        },
-        "sequential-thinking": {
-            "command": "pnpm",
-            "args": [
-                "dlx",
-                "@modelcontextprotocol/server-sequential-thinking"
-            ]
-        },
-        "cocoindex-rag": {
-            "command": "pnpm",
-            "args": [
-                "dlx",
-                "supergateway",
-                "--streamableHttp",
-                "http://localhost:3033/mcp"
-            ]
-        }
+  "mcpServers": {
+    "vscode-mcp-server": {
+      "command": "pnpm",
+      "args": [
+        "dlx",
+        "mcp-remote@next",
+        "http://localhost:3000/mcp"
+      ]
+    },
+    "gw-memory": {
+      "command": "pnpm",
+      "args": [
+        "dlx",
+        "supergateway",
+        "--sse",
+        "http://host.docker.internal:3012/sse"
+      ]
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-fetch"
+      ]
+    },
+    "git": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-git"
+      ]
+    },
+    "filesystem": {
+      "command": "pnpm",
+      "args": [
+        "dlx",
+        "@modelcontextprotocol/server-filesystem",
+        "/workspaces"
+      ]
+    },
+    "sequential-thinking": {
+      "command": "pnpm",
+      "args": [
+        "dlx",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "cocoindex-rag": {
+      "command": "pnpm",
+      "args": [
+        "dlx",
+        "supergateway",
+        "--streamableHttp",
+        "http://localhost:3033/mcp"
+      ]
     }
+  }
 }

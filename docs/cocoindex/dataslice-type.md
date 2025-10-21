@@ -146,4 +146,3 @@ This rich model enables advanced ETL, embedding, search, and indexing workflows 
 [^2_9]: https://github.com/cocoindex-io/cocoindex/issues
 
 [^2_10]: https://www.wisdomtree.eu/-/media/eu-media-files/other-documents/research/strategy-insights/wisdomtree-strategy-insight_the-case-for-diversified-coco-exposure_en.pdf?sc_lang=fi-fi
-

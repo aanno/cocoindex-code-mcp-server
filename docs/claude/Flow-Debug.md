@@ -25,7 +25,7 @@ The typical CocoIndex flow for code analysis follows this pipeline:
 **Symptoms:**
 - Database shows `code: ""` for all chunks
 - Metadata shows `analysis_method: "unknown"`
-- Metadata shows `chunking_method: "unknown"` 
+- Metadata shows `chunking_method: "unknown"`
 - Hybrid search fails because there's no content to search
 
 **Root Causes:**
@@ -46,7 +46,7 @@ The typical CocoIndex flow for code analysis follows this pipeline:
    ```bash
    # Find your test file
    find eval_CodeEmbedding_* -name "*your_test_file*"
-   
+
    # Check first few lines for code content
    head -20 eval_CodeEmbedding_*/files@path%2Fto%2Ffile.py.yaml
    ```
@@ -105,19 +105,19 @@ The typical CocoIndex flow for code analysis follows this pipeline:
 **Debugging Steps:**
 1. **Direct Database Query:**
    ```sql
-   SELECT filename, location, 
-          LEFT(code, 100) as code_preview, 
+   SELECT filename, location,
+          LEFT(code, 100) as code_preview,
           LEFT(metadata_json, 200) as metadata_preview
-   FROM code_embeddings 
+   FROM code_embeddings
    WHERE filename LIKE '%your_test_file%';
    ```
 
 2. **Check Data Types:**
    ```sql
-   SELECT filename, 
+   SELECT filename,
           CASE WHEN code = '' THEN 'EMPTY' ELSE 'HAS_CONTENT' END as code_status,
           CASE WHEN metadata_json = '{}' THEN 'NO_METADATA' ELSE 'HAS_METADATA' END as metadata_status
-   FROM code_embeddings 
+   FROM code_embeddings
    LIMIT 10;
    ```
 
@@ -135,17 +135,17 @@ CocoIndex now tracks comprehensive metadata about chunking methods and tree-sitt
 **Debugging chunking issues:**
 ```sql
 -- Check chunking method distribution
-SELECT 
+SELECT
     JSON_EXTRACT(metadata_json, '$.chunking_method') as method,
     COUNT(*) as count
-FROM code_embeddings 
+FROM code_embeddings
 GROUP BY method;
 
 -- Find chunks with tree-sitter errors
 SELECT filename, location,
     JSON_EXTRACT(metadata_json, '$.tree_sitter_chunking_error') as chunk_errors,
     JSON_EXTRACT(metadata_json, '$.tree_sitter_analyze_error') as analyze_errors
-FROM code_embeddings 
+FROM code_embeddings
 WHERE JSON_EXTRACT(metadata_json, '$.tree_sitter_chunking_error') = 'true'
    OR JSON_EXTRACT(metadata_json, '$.tree_sitter_analyze_error') = 'true';
 ```
@@ -203,7 +203,7 @@ from cocoindex_code_mcp_server.ast_chunking import CocoIndexASTChunker
 chunker = CocoIndexASTChunker(max_chunk_size=500)
 chunks = chunker.chunk_code(code, "Python", "test.py")
 
-# Test metadata extraction  
+# Test metadata extraction
 from cocoindex_code_mcp_server.cocoindex_config import extract_code_metadata
 metadata = extract_code_metadata(code, "Python", "test.py")
 ```
@@ -228,17 +228,17 @@ update_flow_config(
 SELECT COUNT(*) as empty_chunks FROM code_embeddings WHERE code = '';
 
 -- Check analysis methods
-SELECT 
+SELECT
     JSON_EXTRACT(metadata_json, '$.analysis_method') as analysis_method,
     JSON_EXTRACT(metadata_json, '$.chunking_method') as chunking_method,
     COUNT(*) as count
-FROM code_embeddings 
+FROM code_embeddings
 GROUP BY analysis_method, chunking_method;
 
 -- Sample content
-SELECT filename, LEFT(code, 200) as preview 
-FROM code_embeddings 
-WHERE code != '' 
+SELECT filename, LEFT(code, 200) as preview
+FROM code_embeddings
+WHERE code != ''
 LIMIT 5;
 ```
 
@@ -354,7 +354,7 @@ def validate_flow_config():
 **Problem:** Hybrid search returning no results despite database containing files.
 
 **Investigation Process:**
-1. Checked database - found `analysis_method: "unknown"` for all entries  
+1. Checked database - found `analysis_method: "unknown"` for all entries
 2. Tested Python analyzer directly - worked correctly
 3. Used CocoIndex evaluation - found all `code: ""` (empty chunks)
 4. Tested AST chunking directly - worked correctly, chunks had content
@@ -368,7 +368,7 @@ def validate_flow_config():
 **Key Lessons:**
 - **Systematic debugging** is essential - test each pipeline stage individually
 - **The issue wasn't in obvious places** (Python analyzer, AST chunking) but in a utility function
-- **Different chunking methods use different dictionary keys** - AST uses "content", others use "text"  
+- **Different chunking methods use different dictionary keys** - AST uses "content", others use "text"
 - **DataSlice objects require explicit conversion** to strings before database storage
 - **Pipeline debugging** requires understanding data flow transformations, not just individual components
 
@@ -382,7 +382,7 @@ def validate_flow_config():
    ```json
    {
      "functions": [],
-     "classes": [], 
+     "classes": [],
      "imports": [],
      "analysis_method": "none"
    }
@@ -418,7 +418,7 @@ analysis_metadata = json.loads(metadata_json_str)
 if language == "Rust":  # Missed "rust", "RUST" variations
     from .language_handlers.rust_visitor import analyze_rust_code
 
-# AFTER: Robust case-insensitive matching  
+# AFTER: Robust case-insensitive matching
 lang_lower = language.lower() if language else ""
 if lang_lower == "rust":
     from .language_handlers.rust_visitor import analyze_rust_code
@@ -445,7 +445,7 @@ if validated_field == 'language':
 After fixes, tests showed rich metadata extraction:
 ```json
 {
-  "filename": "tmp/rust_example_1.rs",  
+  "filename": "tmp/rust_example_1.rs",
   "language": "Rust",
   "functions": ["new", "is_adult", "fibonacci", "main"],
   "classes": [],
@@ -505,7 +505,7 @@ All files from same test run now share timestamp: `basename_python_20250801_1344
 ```json
 {
   "analysis_method": "haskell_chunk_visitor",
-  "chunking_method": "ast_recursive", 
+  "chunking_method": "ast_recursive",
   "tree_sitter_chunking_error": "false",
   "tree_sitter_analyze_error": "false"
 }

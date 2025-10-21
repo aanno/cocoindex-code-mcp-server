@@ -7,7 +7,7 @@ Successfully fixed critical issues in the Python AST analysis pipeline and RAG s
 
 ### 1. Fixed TODO at cocoindex_config.py:261 ✅
 **Problem**: PythonNodeHandler not properly integrated with TreeSitterPythonAnalyzer
-**Solution**: 
+**Solution**:
 - **File**: `src/cocoindex_code_mcp_server/cocoindex_config.py`
 - **Change**: Line 261 replaced direct PythonNodeHandler instantiation with proper TreeSitterPythonAnalyzer integration
 - **Code**: `analyzer = TreeSitterPythonAnalyzer(prefer_tree_sitter=True)` instead of `handler = PythonNodeHandler()`
@@ -20,7 +20,7 @@ Successfully fixed critical issues in the Python AST analysis pipeline and RAG s
 - `src/cocoindex_code_mcp_server/language_handlers/python_handler.py`: All extract methods
 **Result**: Function detection now works correctly, finding all methods including class methods
 
-### 3. Fixed Class Decorator Merging ✅ 
+### 3. Fixed Class Decorator Merging ✅
 **Problem**: Class decorators not appearing in global decorators list
 **Files Fixed**:
 - `src/cocoindex_code_mcp_server/lang/python/python_code_analyzer.py`: Added class decorators to global list
@@ -35,8 +35,8 @@ Successfully fixed critical issues in the Python AST analysis pipeline and RAG s
 @cocoindex.op.function()
 def embed_text_with_smart_model(text: str, language: str) -> NDArray[np.float32]:
     # Uses cocoindex.functions.SentenceTransformerEmbed() properly
-    
-@cocoindex.transform_flow() 
+
+@cocoindex.transform_flow()
 def smart_code_to_embedding(text: DataSlice[str], language: DataSlice[str]):
     return text.transform(embed_text_with_smart_model, language)
 ```
@@ -50,7 +50,7 @@ def smart_code_to_embedding(text: DataSlice[str], language: DataSlice[str]):
 
 ### Test Results
 - ✅ Function detection: Finds all methods including class methods, private methods, dunder methods
-- ✅ Docstring detection: Properly detects and extracts docstrings 
+- ✅ Docstring detection: Properly detects and extracts docstrings
 - ✅ Decorator detection: Both function and class decorators detected and merged
 - ✅ No more .kind/.type attribute errors
 - ✅ RAG system no longer crashes with DataSlice errors
@@ -84,7 +84,7 @@ def smart_code_to_embedding(text: DataSlice[str], language: DataSlice[str]):
 chunk["language"] = chunk["text"].transform(detect_language)
 
 # 2. Filter by language to create separate DataSlice subsets
-python_chunks = chunks.filter(lambda row: row["language"] == "python")  
+python_chunks = chunks.filter(lambda row: row["language"] == "python")
 rust_chunks = chunks.filter(lambda row: row["language"] == "rust")
 
 # 3. Embed each subset with appropriate model
@@ -109,10 +109,10 @@ This requires changes to the main flow definition, not individual transform func
 # Test strategy
 def test_rag_improvements():
     # 1. Create sample code with class methods, docstrings, decorators
-    # 2. Index it through RAG system  
+    # 2. Index it through RAG system
     # 3. Query for specific elements:
     #    - "find class methods with docstrings"
-    #    - "find functions with @property decorator"  
+    #    - "find functions with @property decorator"
     #    - "find classes with @dataclass decorator"
     # 4. Verify results include our improvements
 ```
@@ -129,7 +129,7 @@ def test_rag_improvements():
 ```python
 def compare_handlers():
     # Option 1: Disable our handler, use default CocoIndex
-    # Option 2: Mock/bypass our extensions  
+    # Option 2: Mock/bypass our extensions
     # Option 3: Separate test environment with vanilla CocoIndex
     # Compare: function count, decorator detection, docstring extraction
 ```
@@ -138,7 +138,7 @@ def compare_handlers():
 
 ### Key Components
 - **TreeSitterPythonAnalyzer**: Enhanced analyzer with dual AST approach
-- **PythonNodeHandler**: Tree-sitter specific node processing  
+- **PythonNodeHandler**: Tree-sitter specific node processing
 - **PythonCodeAnalyzer**: Python AST fallback with rich metadata
 - **Smart Embedding**: Language-aware model selection
 - **Generic Metadata Visitor**: Framework for pluggable language handlers
@@ -157,13 +157,13 @@ def compare_handlers():
 
 ## Known Limitations
 - Smart embedding falls back to default when language detection fails
-- Some complex decorator expressions may not parse perfectly  
+- Some complex decorator expressions may not parse perfectly
 - Very large code files (>100KB) use regex fallback
 - Nested class analysis depth limited to prevent recursion
 
 ## Files Modified
 ### Core Fixes
-- `src/cocoindex_code_mcp_server/cocoindex_config.py` 
+- `src/cocoindex_code_mcp_server/cocoindex_config.py`
 - `src/cocoindex_code_mcp_server/ast_visitor.py`
 - `src/cocoindex_code_mcp_server/language_handlers/python_handler.py`
 - `src/cocoindex_code_mcp_server/lang/python/python_code_analyzer.py`
@@ -171,7 +171,7 @@ def compare_handlers():
 
 ### Tests Added
 - `tests/test_python_handler_integration.py`
-- `tests/test_debug_ast_nodes.py` 
+- `tests/test_debug_ast_nodes.py`
 - `tests/test_class_decorator_merging.py`
 
 ## Success Metrics

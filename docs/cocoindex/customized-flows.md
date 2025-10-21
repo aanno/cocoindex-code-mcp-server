@@ -569,12 +569,12 @@ def flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope):
     )
     # Add collector for output chunks (embedding, etc.)
     chunk_collector = data_scope.add_collector()
-    
+
     # Process each file
     with data_scope["files"].row() as file:
         # Apply AST chunking transform to the file content
         file["chunks"] = file["content"].transform(ast_chunking, language="python")
-        
+
         # For each chunk, generate embedding and collect it
         with file["chunks"].row() as chunk:
             chunk["embedding"] = chunk["text"].transform(
@@ -586,7 +586,7 @@ def flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope):
                 text=chunk["text"],
                 embedding=chunk["embedding"]
             )
-    
+
     # Export collector to vector DB or other targets
     chunk_collector.export(
         "code_chunks",
@@ -677,19 +677,19 @@ def flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope):
     data_scope["files"] = flow_builder.add_source(
         cocoindex.sources.LocalFile(path="path/to/codebase", included_patterns=["*.py", "*.js", "*.md"])
     )
-    
+
     embeddings_collector = data_scope.add_collector()
-    
+
     with data_scope["files"].row() as file:
         # Chunk the file content (assume chunking also annotates chunk["language"])
         file["chunks"] = file["content"].transform(
             your_astchunking_function_or_coco_chunker,  # custom or builtin chunker
             language=file["language"]  # or infer language per file
         )
-        
+
         # Embed chunks with language-aware embedder
         file["chunks"]["embedding"] = file["chunks"].call(language_based_embedding)
-        
+
         # Collect embeddings
         with file["chunks"].row() as chunk:
             embeddings_collector.collect(
@@ -699,7 +699,7 @@ def flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope):
                 text=chunk["text"],
                 embedding=chunk["embedding"]
             )
-    
+
     embeddings_collector.export(
         "multilang_embeddings",
         cocoindex.storages.Postgres(),
@@ -792,21 +792,21 @@ def flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope):
     data_scope["files"] = flow_builder.add_source(
         cocoindex.sources.LocalFile(path="path/to/codebase", included_patterns=["*.py", "*.ts"])
     )
-    
+
     collector = data_scope.add_collector()
-    
+
     with data_scope["files"].row() as file:
         file["chunks"] = file["content"].transform(your_chunking_function, language=file["language"])
-        
+
         # Extract metadata per chunk
         file["chunks"]["metadata"] = file["chunks"].transform(
             extract_metadata,
             language=file["chunks"]["language"]
         )
-        
+
         # Embed each chunk as before (using language-based embedding)
         file["chunks"]["embedding"] = file["chunks"].call(language_based_embedding)
-        
+
         with file["chunks"].row() as chunk:
             collector.collect(
                 filename=file["filename"],
@@ -817,7 +817,7 @@ def flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope):
                 author=chunk["metadata"].author,
                 complexity=chunk["metadata"].complexity,
             )
-            
+
     collector.export(
         "enhanced_code_index",
         cocoindex.storages.Postgres(),
@@ -1342,4 +1342,3 @@ CocoIndex’s usage of Python for flow composition means you have *fine-grained 
 [^15_19]: https://pypi.org/project/cocoindex/0.1.34/
 
 [^15_20]: https://dev.to/badmonster0/automate-structured-data-extraction-from-pdf-word-by-openai-and-cocoindex-d45
-

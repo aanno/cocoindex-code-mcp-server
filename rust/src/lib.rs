@@ -44,10 +44,10 @@ impl HaskellParser {
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
                 format!("Failed to set Haskell language: {}", e)
             ))?;
-        
+
         Ok(HaskellParser { parser })
     }
-    
+
     fn parse(&mut self, source: &str) -> PyResult<Option<HaskellTree>> {
         match self.parser.parse(source, None) {
             Some(tree) => Ok(Some(HaskellTree { tree })),
@@ -67,7 +67,7 @@ impl HaskellTree {
         let node = self.tree.root_node();
         let start_pos = node.start_position();
         let end_pos = node.end_position();
-        
+
         HaskellNode {
             kind: node.kind().to_string(),
             start_byte: node.start_byte(),
@@ -102,31 +102,31 @@ impl HaskellNode {
     fn kind(&self) -> &str {
         &self.kind
     }
-    
+
     fn start_byte(&self) -> usize {
         self.start_byte
     }
-    
+
     fn end_byte(&self) -> usize {
         self.end_byte
     }
-    
+
     fn start_position(&self) -> (usize, usize) {
         (self.start_row, self.start_column)
     }
-    
+
     fn end_position(&self) -> (usize, usize) {
         (self.end_row, self.end_column)
     }
-    
+
     fn child_count(&self) -> usize {
         self.child_count
     }
-    
+
     fn is_named(&self) -> bool {
         self.is_named
     }
-    
+
     fn is_error(&self) -> bool {
         self.is_error
     }
@@ -185,15 +185,15 @@ impl ErrorNodeStats {
     fn error_count(&self) -> usize {
         self.error_count
     }
-    
+
     fn nodes_with_errors(&self) -> usize {
         self.nodes_with_errors
     }
-    
+
     fn should_fallback(&self) -> bool {
         self.should_fallback
     }
-    
+
     fn uncovered_ranges(&self) -> Vec<(usize, usize)> {
         self.uncovered_ranges.clone()
     }
@@ -252,24 +252,24 @@ impl ChunkingParams {
     fn new(chunk_size: usize, min_chunk_size: usize, chunk_overlap: usize, max_chunk_size: usize) -> Self {
         ChunkingParams {
             chunk_size,
-            min_chunk_size, 
+            min_chunk_size,
             chunk_overlap,
             max_chunk_size,
         }
     }
-    
+
     fn chunk_size(&self) -> usize {
         self.chunk_size
     }
-    
+
     fn min_chunk_size(&self) -> usize {
         self.min_chunk_size
     }
-    
+
     fn chunk_overlap(&self) -> usize {
         self.chunk_overlap
     }
-    
+
     fn max_chunk_size(&self) -> usize {
         self.max_chunk_size
     }
@@ -280,15 +280,15 @@ impl ChunkingResult {
     fn chunks(&self) -> Vec<HaskellChunk> {
         self.chunks.clone()
     }
-    
+
     fn error_stats(&self) -> ErrorNodeStats {
         self.error_stats.clone()
     }
-    
+
     fn chunking_method(&self) -> &str {
         &self.chunking_method
     }
-    
+
     fn coverage_complete(&self) -> bool {
         self.coverage_complete
     }
@@ -299,27 +299,27 @@ impl HaskellChunk {
     fn text(&self) -> &str {
         &self.text
     }
-    
+
     fn start_byte(&self) -> usize {
         self.start_byte
     }
-    
+
     fn end_byte(&self) -> usize {
         self.end_byte
     }
-    
+
     fn start_line(&self) -> usize {
         self.start_line
     }
-    
+
     fn end_line(&self) -> usize {
         self.end_line
     }
-    
+
     fn node_type(&self) -> &str {
         &self.node_type
     }
-    
+
     fn metadata(&self) -> HashMap<String, String> {
         self.metadata.clone()
     }
@@ -329,17 +329,17 @@ impl HaskellChunk {
 fn extract_semantic_chunks(tree: &Tree, source: &str) -> Vec<HaskellChunk> {
     let mut chunks = Vec::new();
     let root_node = tree.root_node();
-    
+
     // Walk through the tree and extract semantic chunks
     let mut cursor = root_node.walk();
     extract_chunks_recursive(&mut cursor, source, &mut chunks, 0);
-    
+
     chunks
 }
 
 fn extract_semantic_chunks_with_recursive_splitting(tree: &Tree, source: &str, params: &ChunkingParams) -> ChunkingResult {
     let root_node = tree.root_node();
-    
+
     // Initialize context with empty ancestors and metadata collections
     let mut context = ChunkingContext {
         ancestors: Vec::new(),
@@ -356,11 +356,11 @@ fn extract_semantic_chunks_with_recursive_splitting(tree: &Tree, source: &str, p
         imports: Vec::new(),
         nodes_with_errors: Vec::new(),
     };
-    
+
     // First pass: collect all metadata from the entire tree
     let mut cursor = root_node.walk();
     collect_aggregate_metadata(&mut cursor, source, &mut context);
-    
+
     // First, count error nodes
     let mut error_stats = ErrorNodeStats {
         error_count: 0,
@@ -368,13 +368,13 @@ fn extract_semantic_chunks_with_recursive_splitting(tree: &Tree, source: &str, p
         uncovered_ranges: Vec::new(),
         should_fallback: false,
     };
-    
+
     let mut cursor = root_node.walk();
     count_error_nodes(&mut cursor, &mut error_stats);
-    
+
     // Check if we should bail out to regex fallback
     error_stats.should_fallback = error_stats.error_count >= ERROR_FALLBACK_THRESHOLD;
-    
+
     if error_stats.should_fallback {
         // Use regex fallback chunking
         let regex_chunks = create_regex_fallback_chunks(source);
@@ -385,21 +385,21 @@ fn extract_semantic_chunks_with_recursive_splitting(tree: &Tree, source: &str, p
             coverage_complete: true,
         };
     }
-    
+
     // Use ASTChunk-style recursive splitting
     let mut chunks = Vec::new();
     let mut cursor = root_node.walk();
     extract_chunks_with_recursive_splitting(&mut cursor, source, &mut chunks, &context, &mut error_stats);
-    
+
     // Merge adjacent small chunks if possible
     let merged_chunks = merge_adjacent_chunks(chunks, params.max_chunk_size);
-    
+
     let chunking_method = if error_stats.error_count > 0 {
         "rust_haskell_ast_recursive_with_errors".to_string()
     } else {
         "rust_haskell_ast_recursive".to_string()
     };
-    
+
     ChunkingResult {
         chunks: merged_chunks,
         error_stats,
@@ -410,7 +410,7 @@ fn extract_semantic_chunks_with_recursive_splitting(tree: &Tree, source: &str, p
 
 fn extract_semantic_chunks_with_error_handling(tree: &Tree, source: &str) -> ChunkingResult {
     let root_node = tree.root_node();
-    
+
     // Initialize context for metadata collection
     let mut context = ChunkingContext {
         ancestors: Vec::new(),
@@ -427,11 +427,11 @@ fn extract_semantic_chunks_with_error_handling(tree: &Tree, source: &str) -> Chu
         imports: Vec::new(),
         nodes_with_errors: Vec::new(),
     };
-    
+
     // Collect aggregate metadata
     let mut cursor = root_node.walk();
     collect_aggregate_metadata(&mut cursor, source, &mut context);
-    
+
     // First, count error nodes
     let mut error_stats = ErrorNodeStats {
         error_count: 0,
@@ -439,13 +439,13 @@ fn extract_semantic_chunks_with_error_handling(tree: &Tree, source: &str) -> Chu
         uncovered_ranges: Vec::new(),
         should_fallback: false,
     };
-    
+
     let mut cursor = root_node.walk();
     count_error_nodes(&mut cursor, &mut error_stats);
-    
+
     // Check if we should bail out to regex fallback
     error_stats.should_fallback = error_stats.error_count >= ERROR_FALLBACK_THRESHOLD;
-    
+
     if error_stats.should_fallback {
         // Use regex fallback chunking
         let regex_chunks = create_regex_fallback_chunks(source);
@@ -456,21 +456,21 @@ fn extract_semantic_chunks_with_error_handling(tree: &Tree, source: &str) -> Chu
             coverage_complete: true, // Regex fallback covers all lines
         };
     }
-    
+
     // Extract semantic chunks with error-aware processing
     let mut chunks = Vec::new();
     let mut cursor = root_node.walk();
     extract_chunks_recursive_with_errors(&mut cursor, source, &mut chunks, 0, &mut error_stats, &context);
-    
+
     // Ensure complete coverage by handling uncovered ranges in error nodes
     ensure_complete_coverage(&mut chunks, &error_stats, source);
-    
+
     let chunking_method = if error_stats.error_count > 0 {
         "rust_haskell_ast_with_errors".to_string()
     } else {
         "rust_haskell_ast".to_string()
     };
-    
+
     ChunkingResult {
         chunks,
         error_stats,
@@ -488,28 +488,28 @@ fn extract_chunks_with_recursive_splitting(
 ) {
     let node = cursor.node();
     let node_type = node.kind();
-    
+
     // Handle error nodes
     if node.is_error() {
         handle_error_node_with_context(cursor, source, chunks, context, error_stats);
         return;
     }
-    
+
     // Update context with current node information
     let mut new_context = context.clone();
     update_context_for_node(&node, source, &mut new_context);
-    
+
     // Define semantic chunk types - removed "module" to prevent tiny chunks
     let chunk_node_types = [
-        "signature", "function", "bind", "data_type", "class", 
+        "signature", "function", "bind", "data_type", "class",
         "instance", "import", "haddock",
     ];
-    
+
     if chunk_node_types.contains(&node_type) {
         let start_byte = node.start_byte();
         let end_byte = node.end_byte();
         let chunk_size = end_byte - start_byte;
-        
+
         // Check if chunk meets minimum size requirement to avoid tiny chunks
         if chunk_size < new_context.min_chunk_size {
             // Skip chunks that are too small - process children instead
@@ -524,7 +524,7 @@ fn extract_chunks_with_recursive_splitting(
             }
             // Don't return here - continue to allow processing of sibling nodes
         }
-        
+
         // Check if this node is too large and needs recursive splitting
         if chunk_size > new_context.max_chunk_size {
             // Recursively process children
@@ -559,7 +559,7 @@ fn extract_chunks_with_recursive_splitting(
 fn collect_aggregate_metadata(cursor: &mut TreeCursor, source: &str, context: &mut ChunkingContext) {
     let node = cursor.node();
     let node_type = node.kind();
-    
+
     // Collect metadata based on node type
     match node_type {
         "function" | "bind" => {
@@ -594,12 +594,12 @@ fn collect_aggregate_metadata(cursor: &mut TreeCursor, source: &str, context: &m
         }
         _ => {}
     }
-    
+
     // Track error nodes
     if node.is_error() || node.has_error() {
         context.nodes_with_errors.push(node_type.to_string());
     }
-    
+
     // Recursively process children
     if cursor.goto_first_child() {
         loop {
@@ -614,7 +614,7 @@ fn collect_aggregate_metadata(cursor: &mut TreeCursor, source: &str, context: &m
 
 fn update_context_for_node(node: &Node, source: &str, context: &mut ChunkingContext) {
     let node_type = node.kind();
-    
+
     match node_type {
         "module" => {
             if let Some(name) = extract_module_name(node, source) {
@@ -659,9 +659,9 @@ fn create_chunk_with_context(node: &Node, source: &str, context: &ChunkingContex
     let start_pos = node.start_position();
     let end_pos = node.end_position();
     let text = source[start_byte..end_byte].to_string();
-    
+
     let mut metadata = HashMap::new();
-    
+
     // Add context information
     if let Some(ref module) = context.current_module {
         metadata.insert("module_name".to_string(), module.clone());
@@ -672,7 +672,7 @@ fn create_chunk_with_context(node: &Node, source: &str, context: &ChunkingContex
     if let Some(ref function) = context.current_function {
         metadata.insert("parent_function".to_string(), function.clone());
     }
-    
+
     // Add ancestor path for semantic context
     let ancestor_path: Vec<String> = context.ancestors.iter()
         .filter_map(|a| a.name.as_ref())
@@ -681,10 +681,10 @@ fn create_chunk_with_context(node: &Node, source: &str, context: &ChunkingContex
     if !ancestor_path.is_empty() {
         metadata.insert("ancestor_path".to_string(), ancestor_path.join("::"));
     }
-    
+
     // Add chunking method
     metadata.insert("chunking_method".to_string(), "rust_haskell_ast_recursive".to_string());
-    
+
     // Add aggregate metadata as JSON arrays (simple string arrays only)
     metadata.insert("functions".to_string(), format!("[{}]", context.functions.iter()
         .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
@@ -707,7 +707,7 @@ fn create_chunk_with_context(node: &Node, source: &str, context: &ChunkingContex
     metadata.insert("nodes_with_errors".to_string(), format!("[{}]", context.nodes_with_errors.iter()
         .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
         .collect::<Vec<_>>().join(", ")));
-    
+
     // Add empty arrays for other expected simple List[str] properties
     metadata.insert("enums".to_string(), "[]".to_string());
     metadata.insert("namespaces".to_string(), "[]".to_string());
@@ -719,10 +719,10 @@ fn create_chunk_with_context(node: &Node, source: &str, context: &ChunkingContex
     metadata.insert("classes".to_string(), format!("[{}]", context.type_classes.iter()
         .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
         .collect::<Vec<_>>().join(", ")));
-    
+
     // Do NOT populate complex JSON fields like function_details, data_type_details, class_details
     // These should be handled by the language-specific analysis handlers
-    
+
     // Add tree-sitter error tracking for chunking
     if node.is_error() {
         metadata.insert("tree_sitter_chunking_error".to_string(), "true".to_string());
@@ -730,7 +730,7 @@ fn create_chunk_with_context(node: &Node, source: &str, context: &ChunkingContex
     } else {
         metadata.insert("tree_sitter_chunking_error".to_string(), "false".to_string());
     }
-    
+
     // Node-specific metadata
     match node_type {
         "function" | "bind" => {
@@ -779,7 +779,7 @@ fn create_chunk_with_context(node: &Node, source: &str, context: &ChunkingContex
             metadata.insert("category".to_string(), "other".to_string());
         }
     }
-    
+
     HaskellChunk {
         text,
         start_byte,
@@ -795,18 +795,18 @@ fn merge_adjacent_chunks(chunks: Vec<HaskellChunk>, max_size: usize) -> Vec<Hask
     if chunks.is_empty() {
         return chunks;
     }
-    
+
     let mut merged = Vec::new();
     let mut current_chunk = chunks[0].clone();
-    
+
     for chunk in chunks.into_iter().skip(1) {
         let combined_size = current_chunk.text.len() + chunk.text.len();
-        
+
         // Check if chunks can be merged (same category and within size limit)
         let can_merge = combined_size <= max_size
             && current_chunk.metadata.get("category") == chunk.metadata.get("category")
             && current_chunk.end_byte == chunk.start_byte;
-            
+
         if can_merge {
             // Merge chunks
             current_chunk.text.push('\n');
@@ -818,7 +818,7 @@ fn merge_adjacent_chunks(chunks: Vec<HaskellChunk>, max_size: usize) -> Vec<Hask
             current_chunk = chunk;
         }
     }
-    
+
     merged.push(current_chunk);
     merged
 }
@@ -833,7 +833,7 @@ fn handle_error_node_with_context(
     let node = cursor.node();
     let start_byte = node.start_byte();
     let end_byte = node.end_byte();
-    
+
     // Try to process children of error node
     if cursor.goto_first_child() {
         loop {
@@ -847,7 +847,7 @@ fn handle_error_node_with_context(
         }
         cursor.goto_parent();
     }
-    
+
     // Create error chunk for uncovered ranges
     let error_chunk = create_error_chunk_with_context(start_byte, end_byte, source, context);
     chunks.push(error_chunk);
@@ -858,14 +858,14 @@ fn create_error_chunk_with_context(start_byte: usize, end_byte: usize, source: &
     let text = source[start_byte..end_byte].to_string();
     let start_line = source[..start_byte].matches('\n').count();
     let end_line = source[..end_byte].matches('\n').count();
-    
+
     let mut metadata = HashMap::new();
     metadata.insert("category".to_string(), "error_recovery".to_string());
     metadata.insert("chunking_method".to_string(), "rust_haskell_error_recovery".to_string());
     metadata.insert("is_error_chunk".to_string(), "true".to_string());
     metadata.insert("tree_sitter_chunking_error".to_string(), "true".to_string());
     metadata.insert("has_error".to_string(), "true".to_string());
-    
+
     // Add context information even for error chunks
     if let Some(ref module) = context.current_module {
         metadata.insert("module_name".to_string(), module.clone());
@@ -873,7 +873,7 @@ fn create_error_chunk_with_context(start_byte: usize, end_byte: usize, source: &
     if let Some(ref class) = context.current_class {
         metadata.insert("class_name".to_string(), class.clone());
     }
-    
+
     HaskellChunk {
         text,
         start_byte,
@@ -899,15 +899,15 @@ fn extract_module_name(node: &Node, source: &str) -> Option<String> {
 
 fn count_error_nodes(cursor: &mut TreeCursor, stats: &mut ErrorNodeStats) {
     let node = cursor.node();
-    
+
     if node.is_error() {
         stats.error_count += 1;
     }
-    
+
     if node.has_error() {
         stats.nodes_with_errors += 1;
     }
-    
+
     // Recursively count in children
     if cursor.goto_first_child() {
         loop {
@@ -930,13 +930,13 @@ fn extract_chunks_recursive_with_errors(
 ) {
     let node = cursor.node();
     let node_type = node.kind();
-    
+
     // Handle error nodes: try to extract valid children, mark uncovered ranges
     if node.is_error() {
         handle_error_node(cursor, source, chunks, depth, error_stats, context);
         return;
     }
-    
+
     // Define which node types we want to extract as chunks
     let chunk_node_types = [
         "signature",      // Type signatures
@@ -948,22 +948,22 @@ fn extract_chunks_recursive_with_errors(
         "import",         // Import statements
         "haddock",        // Haddock documentation comments
     ];
-    
+
     if chunk_node_types.contains(&node_type) {
         let start_byte = node.start_byte();
         let end_byte = node.end_byte();
         let start_pos = node.start_position();
         let end_pos = node.end_position();
-        
+
         let text = source[start_byte..end_byte].to_string();
-        
+
         let mut metadata = HashMap::new();
         metadata.insert("depth".to_string(), depth.to_string());
         metadata.insert("has_children".to_string(), (node.child_count() > 0).to_string());
         metadata.insert("is_named".to_string(), node.is_named().to_string());
         metadata.insert("has_error".to_string(), node.has_error().to_string());
         metadata.insert("chunking_method".to_string(), "rust_haskell_ast_with_errors_2".to_string());
-        
+
         // Add aggregate metadata as JSON arrays (simple string arrays only)
         metadata.insert("functions".to_string(), format!("[{}]", context.functions.iter()
             .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
@@ -986,7 +986,7 @@ fn extract_chunks_recursive_with_errors(
         metadata.insert("nodes_with_errors".to_string(), format!("[{}]", context.nodes_with_errors.iter()
             .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
             .collect::<Vec<_>>().join(", ")));
-        
+
         // Add empty arrays for other expected simple List[str] properties
         metadata.insert("enums".to_string(), "[]".to_string());
         metadata.insert("namespaces".to_string(), "[]".to_string());
@@ -998,7 +998,7 @@ fn extract_chunks_recursive_with_errors(
         metadata.insert("classes".to_string(), format!("[{}]", context.type_classes.iter()
             .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
             .collect::<Vec<_>>().join(", ")));
-        
+
         // Extract additional metadata based on node type
         match node_type {
             "function" => {
@@ -1050,7 +1050,7 @@ fn extract_chunks_recursive_with_errors(
                 metadata.insert("category".to_string(), "other".to_string());
             }
         }
-        
+
         chunks.push(HaskellChunk {
             text,
             start_byte,
@@ -1061,7 +1061,7 @@ fn extract_chunks_recursive_with_errors(
             metadata,
         });
     }
-    
+
     // Recursively process children
     if cursor.goto_first_child() {
         loop {
@@ -1083,7 +1083,7 @@ fn extract_chunks_recursive(
 ) {
     let node = cursor.node();
     let node_type = node.kind();
-    
+
     // Define which node types we want to extract as chunks
     // These are based on actual tree-sitter-haskell node types from debugging
     let chunk_node_types = [
@@ -1096,20 +1096,20 @@ fn extract_chunks_recursive(
         "import",         // Import statements
         "haddock",        // Haddock documentation comments
     ];
-    
+
     if chunk_node_types.contains(&node_type) {
         let start_byte = node.start_byte();
         let end_byte = node.end_byte();
         let start_pos = node.start_position();
         let end_pos = node.end_position();
-        
+
         let text = source[start_byte..end_byte].to_string();
-        
+
         let mut metadata = HashMap::new();
         metadata.insert("depth".to_string(), depth.to_string());
         metadata.insert("has_children".to_string(), (node.child_count() > 0).to_string());
         metadata.insert("is_named".to_string(), node.is_named().to_string());
-        
+
         // Extract additional metadata based on node type
         match node_type {
             "function" => {
@@ -1161,7 +1161,7 @@ fn extract_chunks_recursive(
                 metadata.insert("category".to_string(), "other".to_string());
             }
         }
-        
+
         chunks.push(HaskellChunk {
             text,
             start_byte,
@@ -1172,7 +1172,7 @@ fn extract_chunks_recursive(
             metadata,
         });
     }
-    
+
     // Recursively process children
     if cursor.goto_first_child() {
         loop {
@@ -1251,7 +1251,7 @@ fn get_haskell_ast_chunks(source: &str) -> PyResult<Vec<HaskellChunk>> {
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
             format!("Failed to set Haskell language: {}", e)
         ))?;
-    
+
     match parser.parse(source, None) {
         Some(tree) => {
             // Use the enhanced chunking with proper error handling and method names
@@ -1278,7 +1278,7 @@ fn get_haskell_ast_chunks_with_params(source: &str, params: ChunkingParams) -> P
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
             format!("Failed to set Haskell language: {}", e)
         ))?;
-    
+
     match parser.parse(source, None) {
         Some(tree) => {
             let result = extract_semantic_chunks_with_recursive_splitting(&tree, source, &params);
@@ -1298,7 +1298,7 @@ fn get_haskell_ast_chunks_enhanced(source: &str) -> PyResult<ChunkingResult> {
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
             format!("Failed to set Haskell language: {}", e)
         ))?;
-    
+
     match parser.parse(source, None) {
         Some(tree) => {
             let result = extract_semantic_chunks_with_error_handling(&tree, source);
@@ -1318,7 +1318,7 @@ fn debug_haskell_ast_nodes(source: &str) -> PyResult<Vec<String>> {
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
             format!("Failed to set Haskell language: {}", e)
         ))?;
-    
+
     match parser.parse(source, None) {
         Some(tree) => {
             let mut node_types = Vec::new();
@@ -1336,10 +1336,10 @@ fn debug_haskell_ast_nodes(source: &str) -> PyResult<Vec<String>> {
 fn collect_node_types(cursor: &mut TreeCursor, node_types: &mut Vec<String>, depth: usize) {
     let node = cursor.node();
     let node_type = node.kind();
-    
+
     // Add node type with depth info
     node_types.push(format!("{}{}", "  ".repeat(depth), node_type));
-    
+
     // Recursively collect child node types
     if cursor.goto_first_child() {
         loop {
@@ -1376,10 +1376,10 @@ fn handle_error_node(
     let node = cursor.node();
     let start_byte = node.start_byte();
     let end_byte = node.end_byte();
-    
+
     // Track this as an uncovered range initially
     let mut covered_ranges: Vec<(usize, usize)> = Vec::new();
-    
+
     // Try to process children of error node to find valid semantic chunks
     if cursor.goto_first_child() {
         loop {
@@ -1387,24 +1387,24 @@ fn handle_error_node(
             if !child_node.is_error() {
                 // Process valid child nodes normally
                 extract_chunks_recursive_with_errors(cursor, source, chunks, depth + 1, error_stats, context);
-                
+
                 // Track what we covered
                 covered_ranges.push((child_node.start_byte(), child_node.end_byte()));
             } else {
                 // Recursively handle nested error nodes
                 handle_error_node(cursor, source, chunks, depth + 1, error_stats, context);
             }
-            
+
             if !cursor.goto_next_sibling() {
                 break;
             }
         }
         cursor.goto_parent();
     }
-    
+
     // Find uncovered ranges within this error node
     let uncovered = find_uncovered_ranges_in_node(start_byte, end_byte, &covered_ranges);
-    
+
     // Create error chunks for uncovered ranges
     for (uncov_start, uncov_end) in uncovered {
         if uncov_end > uncov_start {
@@ -1418,11 +1418,11 @@ fn handle_error_node(
 fn find_uncovered_ranges_in_node(start_byte: usize, end_byte: usize, covered_ranges: &[(usize, usize)]) -> Vec<(usize, usize)> {
     let mut uncovered = Vec::new();
     let mut current_pos = start_byte;
-    
+
     // Sort covered ranges by start position
     let mut sorted_ranges = covered_ranges.to_vec();
     sorted_ranges.sort_by_key(|&(start, _)| start);
-    
+
     for (cover_start, cover_end) in sorted_ranges {
         // Add gap before this covered range
         if current_pos < cover_start {
@@ -1430,22 +1430,22 @@ fn find_uncovered_ranges_in_node(start_byte: usize, end_byte: usize, covered_ran
         }
         current_pos = current_pos.max(cover_end);
     }
-    
+
     // Add final gap after last covered range
     if current_pos < end_byte {
         uncovered.push((current_pos, end_byte));
     }
-    
+
     uncovered
 }
 
 fn create_error_chunk(start_byte: usize, end_byte: usize, source: &str, depth: usize, context: &ChunkingContext) -> HaskellChunk {
     let text = source[start_byte..end_byte].to_string();
-    
+
     // Calculate line numbers (approximation)
     let start_line = source[..start_byte].matches('\n').count();
     let end_line = source[..end_byte].matches('\n').count();
-    
+
     let mut metadata = HashMap::new();
     metadata.insert("depth".to_string(), depth.to_string());
     metadata.insert("category".to_string(), "error_recovery".to_string());
@@ -1453,7 +1453,7 @@ fn create_error_chunk(start_byte: usize, end_byte: usize, source: &str, depth: u
     metadata.insert("is_error_chunk".to_string(), "true".to_string());
     metadata.insert("tree_sitter_chunking_error".to_string(), "true".to_string());
     metadata.insert("has_error".to_string(), "true".to_string());
-    
+
     // Add aggregate metadata as JSON arrays (simple string arrays only)
     metadata.insert("functions".to_string(), format!("[{}]", context.functions.iter()
         .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
@@ -1476,7 +1476,7 @@ fn create_error_chunk(start_byte: usize, end_byte: usize, source: &str, depth: u
     metadata.insert("nodes_with_errors".to_string(), format!("[{}]", context.nodes_with_errors.iter()
         .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
         .collect::<Vec<_>>().join(", ")));
-    
+
     // Add empty arrays for other expected simple List[str] properties
     metadata.insert("enums".to_string(), "[]".to_string());
     metadata.insert("namespaces".to_string(), "[]".to_string());
@@ -1488,7 +1488,7 @@ fn create_error_chunk(start_byte: usize, end_byte: usize, source: &str, depth: u
     metadata.insert("classes".to_string(), format!("[{}]", context.type_classes.iter()
         .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
         .collect::<Vec<_>>().join(", ")));
-    
+
     HaskellChunk {
         text,
         start_byte,
@@ -1509,32 +1509,32 @@ fn ensure_complete_coverage(_chunks: &mut Vec<HaskellChunk>, _error_stats: &Erro
 fn create_regex_fallback_chunks(source: &str) -> Vec<HaskellChunk> {
     let separators = get_haskell_separators();
     let mut chunks = Vec::new();
-    
+
     // Simple regex-based chunking as fallback
     let lines: Vec<&str> = source.lines().collect();
     let mut current_start = 0;
     let mut current_line = 0;
-    
+
     for (i, line) in lines.iter().enumerate() {
         let mut is_separator = false;
-        
+
         for separator in &separators {
             if line.starts_with(separator.trim_start_matches("\\n")) {
                 is_separator = true;
                 break;
             }
         }
-        
+
         if is_separator && current_start < i {
             let chunk_lines = &lines[current_start..i];
             let chunk_text = chunk_lines.join("\n");
-            
+
             if !chunk_text.trim().is_empty() {
                 let mut metadata = HashMap::new();
                 metadata.insert("category".to_string(), "regex_fallback".to_string());
                 metadata.insert("chunking_method".to_string(), "rust_haskell_regex_fallback_3".to_string());
                 metadata.insert("tree_sitter_chunking_error".to_string(), "false".to_string());
-                
+
                 let chunk_len = chunk_text.len();
                 chunks.push(HaskellChunk {
                     text: chunk_text,
@@ -1546,23 +1546,23 @@ fn create_regex_fallback_chunks(source: &str) -> Vec<HaskellChunk> {
                     metadata,
                 });
             }
-            
+
             current_start = i;
             current_line = i;
         }
     }
-    
+
     // Handle the last chunk
     if current_start < lines.len() {
         let chunk_lines = &lines[current_start..];
         let chunk_text = chunk_lines.join("\n");
-        
+
         if !chunk_text.trim().is_empty() {
             let mut metadata = HashMap::new();
             metadata.insert("category".to_string(), "regex_fallback".to_string());
             metadata.insert("chunking_method".to_string(), "rust_haskell_regex_fallback_4".to_string());
             metadata.insert("tree_sitter_chunking_error".to_string(), "false".to_string());
-            
+
             let chunk_len = chunk_text.len();
             chunks.push(HaskellChunk {
                 text: chunk_text,
@@ -1575,7 +1575,7 @@ fn create_regex_fallback_chunks(source: &str) -> Vec<HaskellChunk> {
             });
         }
     }
-    
+
     chunks
 }
 

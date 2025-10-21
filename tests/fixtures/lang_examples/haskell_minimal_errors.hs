@@ -2,7 +2,7 @@
 module TestModule where
 
 -- Valid function
-add :: Int -> Int -> Int  
+add :: Int -> Int -> Int
 add x y = x + y
 
 -- Error: missing closing parenthesis (should create 1-2 error nodes)
@@ -17,5 +17,5 @@ multiply x y = x * y
 data Color = Red | Green | Blue
 
 -- Valid function
-greeting :: String -> String  
+greeting :: String -> String
 greeting name = "Hello, " ++ name ++ "!"

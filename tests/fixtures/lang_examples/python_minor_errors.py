@@ -30,7 +30,7 @@ def broken_function():
   y = 10  # Error: inconsistent indentation
     return x + y
 
-# Valid function  
+# Valid function
 def subtract(a, b):
     return a - b
 

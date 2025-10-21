@@ -32,7 +32,7 @@ The tests expect:
 - **Purpose**: Test hybrid search engine functionality with mocked and real database connections
 - **Requirements**: Mock database setup or real PostgreSQL with pgvector
 
-#### `/test_hybrid_search_integration.py` 
+#### `/test_hybrid_search_integration.py`
 - **Classes**: All test classes in this file
 - **Purpose**: Integration tests for the complete hybrid search workflow
 - **Requirements**: Full database setup with proper schema and data

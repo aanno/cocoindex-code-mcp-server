@@ -9,7 +9,7 @@ The CocoIndex MCP Server now features a complete database abstraction layer that
 ## Key Features
 
 - **Unified Interface**: Single API for all vector database operations
-- **Schema Standardization**: Type-safe metadata structures across all backends  
+- **Schema Standardization**: Type-safe metadata structures across all backends
 - **Query Abstraction**: Database-agnostic query building and execution
 - **Backend Factory**: Easy backend switching via configuration
 - **MCP Protocol Compliance**: Full JSON Schema support for all endpoints
@@ -61,7 +61,7 @@ query = (create_query()
          .build())
 ```
 
-### 4. Field Mapping (`mappers.py`) 
+### 4. Field Mapping (`mappers.py`)
 
 Backend-specific field mapping handles differences in data storage formats:
 
@@ -86,8 +86,8 @@ Usage:
 ```python
 from src.cocoindex_code_mcp_server.backends import create_backend
 
-backend = create_backend("postgres", 
-                        connection_pool=pool, 
+backend = create_backend("postgres",
+                        connection_pool=pool,
                         table_name="code_chunks")
 ```
 
@@ -103,8 +103,8 @@ Prepared features:
 
 Usage:
 ```python
-backend = create_backend("qdrant", 
-                        host="localhost", 
+backend = create_backend("qdrant",
+                        host="localhost",
                         port=6333,
                         collection_name="code_chunks")
 ```
@@ -120,7 +120,7 @@ Following MCP best practices, all endpoints use strict JSON Schema validation:
 {
   "name": "search_code",
   "inputSchema": {
-    "type": "object", 
+    "type": "object",
     "properties": {
       "query": {"type": "string"},
       "language": {"type": "string"},
@@ -195,7 +195,7 @@ qdrant_backend = create_backend("qdrant", host="localhost", port=6333)
 
 # Same query works with both backends
 executor_pg = QueryExecutor(pg_backend)
-executor_qdrant = QueryExecutor(qdrant_backend) 
+executor_qdrant = QueryExecutor(qdrant_backend)
 ```
 
 ## Extending to New Database Implementations
@@ -214,13 +214,13 @@ class MilvusBackend(VectorStoreBackend):
         self.port = port
         self.collection_name = collection_name
         # Initialize Milvus connection
-        
+
     def upsert(self, embeddings: List[List[float]], metadata: List[ChunkMetadata]) -> None:
         # Convert metadata using MilvusFieldMapper
         mapper = create_mapper("milvus")
         milvus_data = [mapper.to_backend_format(meta) for meta in metadata]
         # Implement Milvus-specific upsert logic
-        
+
     def query(self, embedding: List[float], top_k: int, filters: Optional[Dict] = None) -> List[SearchResult]:
         # Implement Milvus-specific query logic
         # Convert results back using mapper.from_backend_format()
@@ -239,14 +239,14 @@ class MilvusFieldMapper(FieldMapper):
         # Convert ChunkMetadata to Milvus payload format
         return {
             "filename": metadata["filename"],
-            "language": metadata["language"], 
+            "language": metadata["language"],
             "metadata_json": {
                 "functions": metadata["functions"],
                 "classes": metadata["classes"],
                 # ... other fields
             }
         }
-        
+
     def from_backend_format(self, data: Dict[str, Any]) -> ChunkMetadata:
         # Convert Milvus result back to ChunkMetadata
         return ChunkMetadata(
@@ -300,14 +300,14 @@ def test_milvus_upsert():
     backend = MilvusBackend(host="localhost", port=19530)
     metadata = [create_test_metadata()]
     embeddings = [[0.1, 0.2, 0.3]]
-    
+
     backend.upsert(embeddings, metadata)
     # Verify data was stored correctly
 
 def test_milvus_query():
     backend = MilvusBackend(host="localhost", port=19530)
     results = backend.query([0.1, 0.2, 0.3], top_k=5)
-    
+
     assert len(results) <= 5
     assert all(isinstance(r, SearchResult) for r in results)
 ```
@@ -327,7 +327,7 @@ def optimize_for_postgres(self, query: ChunkQuery) -> str:
         FROM {table_name}
         WHERE language = %s
     )
-    SELECT * FROM vector_scores 
+    SELECT * FROM vector_scores
     ORDER BY distance ASC LIMIT %s
     """
     return sql
@@ -369,7 +369,7 @@ def build_query(self, backend_info: BackendInfo, query: ChunkQuery):
    - `CustomBackend(VectorStoreBackend)`: Main backend interface
    - Location: `backends/custom_backend.py`
 
-2. **Field Mapper**  
+2. **Field Mapper**
    - `CustomFieldMapper(FieldMapper)`: Data format conversion
    - Location: `mappers.py` (add to existing file)
 
@@ -423,7 +423,7 @@ def build_query(self, backend_info: BackendInfo, query: ChunkQuery):
 - ACID compliance requirements
 - Full-text search integration
 
-**Qdrant**: Best for  
+**Qdrant**: Best for
 - Large datasets (>10M vectors)
 - High-performance vector similarity search
 - Memory-constrained environments
@@ -461,7 +461,7 @@ migrate_backend(
 
 ### Phase 3 Extensions (Optional)
 - Advanced chunking strategy selection
-- Multi-backend hybrid queries  
+- Multi-backend hybrid queries
 - Real-time index updates
 - Performance monitoring dashboard
 
@@ -540,14 +540,14 @@ The backend only selects fields that actually exist in the database:
 def _build_select_clause(self, include_distance: bool = False) -> Tuple[str, List[str]]:
     """Build SELECT clause dynamically using only available DB columns."""
     available_columns = self._get_available_columns()
-    
+
     # Filter CONST_SELECTABLE_FIELDS to only those that exist
     for field in CONST_SELECTABLE_FIELDS:
         if field in available_columns:
             fields.append(field)
         else:
             missing_fields.append(field)
-    
+
     # Log warnings for missing expected fields
     if new_missing_fields:
         logger.warning(f"Expected columns missing: {sorted(new_missing_fields)}")
@@ -579,7 +579,7 @@ def extract_complexity_rating_field(metadata_json: str) -> int:
 chunk["complexity_rating"] = chunk["extracted_metadata"].transform(extract_complexity_rating_field)
 
 # Step 4: Add PostgreSQL column (migration)
-ALTER TABLE codeembedding__code_embeddings 
+ALTER TABLE codeembedding__code_embeddings
 ADD COLUMN complexity_rating INTEGER DEFAULT 0;
 ```
 
@@ -589,18 +589,18 @@ For PostgreSQL, you'll need to add the actual column to your database schema:
 
 ```sql
 -- Add the new column with appropriate type and default
-ALTER TABLE codeembedding__code_embeddings 
+ALTER TABLE codeembedding__code_embeddings
 ADD COLUMN your_new_field VARCHAR(255) DEFAULT '';
 
 -- Add index if needed for query performance
-CREATE INDEX IF NOT EXISTS idx_your_new_field 
+CREATE INDEX IF NOT EXISTS idx_your_new_field
 ON codeembedding__code_embeddings(your_new_field);
 ```
 
 #### Benefits of This Approach
 
 1. **Graceful Degradation**: Application continues working even when database schema is behind
-2. **Warning System**: Clear logs about missing expected columns  
+2. **Warning System**: Clear logs about missing expected columns
 3. **Automatic Integration**: New columns are automatically detected and used once added
 4. **Caching**: Column introspection is cached (60s TTL) for performance
 5. **Case Handling**: Automatic handling of PostgreSQL's lowercase table name conventions

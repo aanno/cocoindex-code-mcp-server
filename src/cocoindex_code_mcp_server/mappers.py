@@ -612,7 +612,7 @@ class PostgresFieldMapper(FieldMapper[Dict[str, Any]]):
         query = f"""
             INSERT INTO {table_name} ({", ".join(columns)})
             VALUES ({", ".join(placeholders)})
-            ON CONFLICT (filename, location) 
+            ON CONFLICT (filename, location)
             DO UPDATE SET {", ".join(f"{col} = EXCLUDED.{col}" for col in columns)}
         """
 

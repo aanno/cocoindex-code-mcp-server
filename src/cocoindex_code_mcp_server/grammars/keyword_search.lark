@@ -30,7 +30,7 @@ or_expr: and_expr ("or"? and_expr)*
 and_expr: condition (("and"? condition)*)
 
 ?condition: field_condition
-          | exists_condition  
+          | exists_condition
           | value_contains_condition
           | "(" or_expr ")"
           | text_search
@@ -44,7 +44,7 @@ exists_condition: "exists" "(" FIELD ")"
 // Value contains check: value_contains(field, "search_string")
 value_contains_condition: "value_contains" "(" FIELD "," value ")"
 
-// General text search (no field specified) - multiple words allowed  
+// General text search (no field specified) - multiple words allowed
 text_search: word+
 
 // Values can be quoted or unquoted

@@ -381,4 +381,3 @@ If you want, I can help draft pseudocode or a checklist to implement these error
 [^7_7]: https://stackoverflow.com/questions/70373650/how-to-solve-treesitter-highlighter-error-executing-lua-problem-in-neovim-confi
 
 [^7_8]: https://docs.llamaindex.ai/en/v0.10.23/api_reference/node_parsers/code/
-

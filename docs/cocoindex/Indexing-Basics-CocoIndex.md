@@ -29,9 +29,9 @@ See [Data Types](https://cocoindex.io/docs/core/data_types) for more details abo
 An **operation** in an indexing flow defines a step in the flow. An operation is defined by:
 
 -   **Action**, which defines the behavior of the operation, e.g. _import_, _transform_, _for each_, _collect_ and _export_. See [Flow Definition](https://cocoindex.io/docs/core/flow_def) for more details for each action.
-    
+
 -   Some actions (i.e. "import", "transform" and "export") require an **Operation Spec**, which describes the specific behavior of the operation, e.g. a source to import from, a function describing the transformation behavior, a target to export to (as an index).
-    
+
     -   Each operation spec has a **operation type**, e.g. `LocalFile` (data source), `SplitRecursively` (function), `SentenceTransformerEmbed` (function), `Postgres` (target).
     -   CocoIndex framework maintains a set of supported operation types. Users can also implement their own.
 
@@ -60,22 +60,22 @@ This shows schema and example data for the indexing flow:
 An indexing flow, once set up, maintains a long-lived relationship between data source and target. This means:
 
 1.  The target created by the flow remain available for querying at any time
-    
+
 2.  As source data changes (new data added, existing data updated or deleted), data in the target are updated to reflect those changes, on certain pace, according to the update mode:
-    
+
     -   **One time update**: Once triggered, CocoIndex updates the target data to reflect the version of source data up to the current moment.
     -   **Live update**: CocoIndex continuously reacts to changes of source data and updates the target data accordingly, based on various **change capture mechanisms** for the source.
-    
+
     See more details in the [build / update target data](https://cocoindex.io/docs/core/flow_methods#build--update-target-data) section.
-    
+
 3.  CocoIndex intelligently reprocesses to propagate source changes to target by:
-    
+
     -   Determining which parts of the target data need to be recomputed
     -   Reusing existing computations where possible
     -   Only reprocessing the minimum necessary data
-    
+
     This is known as **incremental processing**.
-    
+
 
 You can think of an indexing flow similar to formulas in a spreadsheet:
 

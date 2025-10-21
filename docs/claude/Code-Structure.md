@@ -69,7 +69,7 @@ main_interactive_query.py
 
 All existing tests have been updated to work with the new modular structure:
 - `tests/test_haskell_ast_chunking.py` - Updated imports
-- `test_ast_chunking.py` - Updated imports  
+- `test_ast_chunking.py` - Updated imports
 - `test_integration.py` - Updated imports
 
 All tests pass successfully, ensuring the refactoring maintains functionality.

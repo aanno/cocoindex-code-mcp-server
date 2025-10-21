@@ -239,8 +239,8 @@ Leverage the `SplitRecursively` operation in your dataflow pipeline, specifying 
 with data_scope["files"].row() as file:
     file["chunks"] = file["content"].transform(
         cocoindex.functions.SplitRecursively(),
-        language=file["extension"], 
-        chunk_size=1000, 
+        language=file["extension"],
+        chunk_size=1000,
         chunk_overlap=300
     )
 ```
@@ -380,4 +380,3 @@ If you need this information, you should visit the official CocoIndex website or
 [^2_9]: https://www.itransition.com/developers/in-demand-programming-languages
 
 ---
-

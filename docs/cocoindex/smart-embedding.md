@@ -215,7 +215,7 @@ def detect_language(text: str) -> str:
 def split_by_language(flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope):
     # Assume you have a source table of documents or chunks
     data_scope["chunks"] = flow_builder.add_source(...)  # your input source
-    
+
     # Add language field to each chunk
     with data_scope["chunks"].row() as chunk:
         chunk["language"] = chunk["text"].transform(detect_language)
@@ -285,4 +285,3 @@ If you want, I can provide a runnable minimal example for your specific use case
 [^7_9]: https://hackernoon.com/build-your-own-semantic-search-engine-in-under-50-linesno-joke
 
 [^7_10]: https://colab.research.google.com/github/cocoindex-io/cocoindex/blob/main/examples/text_embedding/Text_Embedding.ipynb
-

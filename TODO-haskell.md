@@ -32,7 +32,7 @@ Testing simple code (155 chars, 8 lines)
   ✅ get_haskell_ast_chunks: 7 chunks
      Types: ['signature', 'function', 'function', 'signature', 'function']
 
-Testing complex code (1571 chars, 58 lines)  
+Testing complex code (1571 chars, 58 lines)
   ✅ get_haskell_ast_chunks: 0 chunks ❌ No chunks returned!
   ✅ get_haskell_ast_chunks_with_fallback: 44 chunks
      Types: ['regex_chunk', 'regex_chunk', 'regex_chunk']
@@ -65,7 +65,7 @@ Update Python handler to process chunks even when some ERROR nodes exist:
 ## Expected Outcome
 After fix: `haskell_example_1.hs` should detect:
 - **Functions**: fibonacci, sumList, treeMap, compose, addTen, multiplyByTwo, main (7 functions)
-- **Data types**: Person, Tree (2 types)  
+- **Data types**: Person, Tree (2 types)
 - **Imports**: No imports in test file
 - **Analysis method**: `haskell_chunk_visitor` (already correct)
 

@@ -304,4 +304,3 @@ my_project/
 [^3_8]: https://www.pyopensci.org/python-package-guide/package-structure-code/python-package-structure.html
 
 [^3_9]: https://labex.io/tutorials/python-how-to-structure-python-modules-into-packages-398249
-

@@ -519,4 +519,3 @@ Here’s what a typical pipeline might look like:
 [^6_19]: https://vi.stackexchange.com/questions/6834/how-to-find-out-what-a-key-is-mapped-to
 
 [^6_20]: https://www.youtube.com/watch?v=ZnmyoHslBSc
-

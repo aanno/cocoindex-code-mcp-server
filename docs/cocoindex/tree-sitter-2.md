@@ -365,4 +365,3 @@ Design your endpoint to:
 [^5_8]: https://www.timescale.com/blog/combining-semantic-search-and-full-text-search-in-postgresql-with-cohere-pgvector-and-pgai
 
 [^5_9]: https://www.cockroachlabs.com/blog/vector-search-pgvector-cockroachdb/
-

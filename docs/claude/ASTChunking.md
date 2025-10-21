@@ -21,14 +21,14 @@ class MyChunkRow:
     start: int
     end: int
     chunking_method: str
-    
+
     # Dictionary-style access for backward compatibility
     def __getitem__(self, key: str) -> Any:
         return getattr(self, key)
-    
+
     def __contains__(self, key: str) -> bool:
         return hasattr(self, key)
-    
+
     def get(self, key: str, default: Any = None) -> Any:
         return getattr(self, key, default)
 
@@ -130,7 +130,7 @@ else:
 
 ### **Integration Points**
 1. **CocoIndex Operation**: `create_hybrid_chunking_operation()`
-2. **Language Support**: 
+2. **Language Support**:
    - AST-based: Python, Java, C#, TypeScript
    - Haskell: Our existing tree-sitter implementation
    - Others: Regex-based with custom separators

@@ -47,7 +47,7 @@ chunk["embedding"] = chunk["text"].transform(embedding_func)
 
 **Convenience Functions:**
 - `create_python_embedding()` - Pre-configured for Python (GraphCodeBERT)
-- `create_rust_embedding()` - Pre-configured for Rust (UniXcode)  
+- `create_rust_embedding()` - Pre-configured for Rust (UniXcode)
 - `create_javascript_embedding()` - Pre-configured for JavaScript
 - `create_typescript_embedding()` - Pre-configured for TypeScript
 
@@ -61,18 +61,18 @@ def external_code_embedding_flow(flow_builder, data_scope):
         file = file.filter(lambda f: f["extension"] in [
             ".py", ".rs", ".js", ".ts", ".java", ".kt"
         ])
-        
+
         file["chunks"] = file["content"].transform(
             cocoindex.functions.SplitRecursively(),
             language=file["extension"], chunk_size=1000
         )
-        
+
         with file["chunks"].row() as chunk:
             # External smart embedding - no CocoIndex modification!
             chunk["embedding"] = chunk["text"].transform(
                 create_smart_code_embedding(file_extension=file["extension"])
             )
-        
+
         file["chunks"].save(cocoindex.targets.QdrantTarget(
             collection_name="external_code_embeddings"
         ))
@@ -100,14 +100,14 @@ $ python -m pytest tests/test_external_embedding_standalone.py -v
 ```python
 def create_smart_code_embedding(file_extension=".py"):
     selector = LanguageModelSelector()
-    
+
     # Intelligent model selection
     model = selector.select_model(file_extension=file_extension)
     # ".py" → "python" → "microsoft/graphcodebert-base"
-    
+
     args = selector.get_model_args(model)
     # Adds trust_remote_code=True for Microsoft models
-    
+
     # Return CocoIndex's existing function with smart model
     return cocoindex.functions.SentenceTransformerEmbed(
         model=model, args=args
@@ -120,7 +120,7 @@ def create_smart_code_embedding(file_extension=".py"):
 - Uses CocoIndex purely as external dependency
 - Submodule remains for reference only, not integration
 
-✅ **Full Compatibility** 
+✅ **Full Compatibility**
 - Works with all existing CocoIndex workflows
 - Drop-in replacement for `SentenceTransformerEmbed`
 
@@ -137,7 +137,7 @@ chunk["embedding"] = chunk["text"].transform(
     )
 )
 
-# After: Intelligent language-aware embedding  
+# After: Intelligent language-aware embedding
 from cocoindex_code_mcp_server.smart_code_embedding import create_smart_code_embedding
 
 chunk["embedding"] = chunk["text"].transform(
@@ -155,14 +155,14 @@ embedding_func = create_smart_code_embedding(file_extension=".py")
 
 ### Pattern 2: Manual Language
 ```python
-embedding_func = create_smart_code_embedding(language="rust") 
+embedding_func = create_smart_code_embedding(language="rust")
 # Manually: rust → UniXcode
 ```
 
 ### Pattern 3: Force Specific Model
 ```python
 embedding_func = create_smart_code_embedding(
-    language="python", 
+    language="python",
     force_model="microsoft/graphcodebert-base"
 )
 ```
@@ -187,9 +187,9 @@ embedding_func = create_smart_code_embedding(
 ### ✅ **Benefits Achieved**
 - **No CocoIndex source modification** (per your requirement)
 - **GraphCodeBERT default** for supported languages
-- **UniXcode default** for other supported languages  
+- **UniXcode default** for other supported languages
 - **Fallback handling** for unsupported languages
-- **Configurable language-level embeddings** 
+- **Configurable language-level embeddings**
 
 ### ✅ **Ready for Production Use**
 - Tested external wrapper functions
@@ -225,7 +225,7 @@ for language, model in get_supported_languages().items():
 The external approach achieves all your requirements:
 
 1. ✅ **Configurable language-level embeddings**
-2. ✅ **GraphCodeBERT as default for supported languages** 
+2. ✅ **GraphCodeBERT as default for supported languages**
 3. ✅ **UniXcode as default for other supported languages**
 4. ✅ **No CocoIndex source code modification**
 5. ✅ **CocoIndex used purely as external dependency**

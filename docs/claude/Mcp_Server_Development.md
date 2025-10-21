@@ -59,7 +59,7 @@ return {
 # WRONG: Using SSE flag with StreamableHTTP server
 pnpm dlx supergateway --sse "http://localhost:3033/mcp"
 
-# CORRECT: Using streamableHttp flag with StreamableHTTP server  
+# CORRECT: Using streamableHttp flag with StreamableHTTP server
 pnpm dlx supergateway --streamableHttp "http://localhost:3033/mcp"
 ```
 
@@ -103,7 +103,7 @@ async def handle_call_tool(name: str, arguments: dict):
 
 **Good Pattern**:
 ```python
-@server.call_tool() 
+@server.call_tool()
 async def handle_call_tool(name: str, arguments: dict):
     # DO: Proper async operations with connection pooling
     async with connection_pool.connection() as conn:
@@ -132,7 +132,7 @@ async def handle_call_tool(name: str, arguments: dict):
         return [types.TextContent(type="text", text=json.dumps(result, indent=2))]
     except Exception as e:
         return [types.TextContent(
-            type="text", 
+            type="text",
             text=f"Error executing tool '{name}': {str(e)}"
         )]
 ```
@@ -233,10 +233,10 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 # Create test utilities like these:
 def test_mcp_protocol_compliance():
     """Test actual MCP protocol messages"""
-    
+
 def test_claude_desktop_simulation():
     """Simulate Claude Desktop interaction"""
-    
+
 def test_tool_schema_validation():
     """Validate tool schemas work with MCP clients"""
 ```
@@ -270,7 +270,7 @@ def validate_tool_format(tool_response):
         null_fields = [k for k, v in tool.items() if v is None]
         if null_fields:
             print(f"WARNING: Tool '{tool['name']}' has null fields: {null_fields}")
-        
+
         # Validate required fields
         required = ["name", "description", "inputSchema"]
         missing = [f for f in required if f not in tool]
@@ -359,7 +359,7 @@ async def handle_list_tools():
 
 ```json
 {
-  "jsonrpc": "2.0", 
+  "jsonrpc": "2.0",
   "id": 1,
   "error": {"code": 0, "message": "Unknown resource: invalid://uri"}
 }
@@ -376,12 +376,12 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
             raise ValueError(f"Unknown tool '{name}'")
         # ... normal processing
         return [types.TextContent(type="text", text=json.dumps(result))]
-    
+
     except Exception as e:
         # Return proper MCP error dict manually
         error_response = {
             "error": {
-                "type": "mcp_protocol_error", 
+                "type": "mcp_protocol_error",
                 "code": 32603,
                 "message": str(e)
             }
@@ -428,7 +428,7 @@ curl -X POST .../mcp/ -d '{"method": "resources/list"}'
 # Returns: {"resources": [{"uri": "cocoindex://search/config", ...}]}
 
 # But reading fails
-curl -X POST .../mcp/ -d '{"method": "resources/read", "params": {"uri": "cocoindex://search/config"}}'  
+curl -X POST .../mcp/ -d '{"method": "resources/read", "params": {"uri": "cocoindex://search/config"}}'
 # Returns: {"error": {"message": "Unknown resource: cocoindex://search/config"}}
 ```
 

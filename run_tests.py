@@ -14,7 +14,7 @@ def run_unittest():
     """Run tests using unittest discovery."""
     print("Running tests with unittest...")
     result = subprocess.run([
-        sys.executable, "-m", "unittest", "discover", 
+        sys.executable, "-m", "unittest", "discover",
         "tests/", "-v"
     ], cwd=Path(__file__).parent)
     return result.returncode
@@ -36,7 +36,7 @@ def run_coverage():
     print("Running tests with coverage...")
     try:
         result = subprocess.run([
-            sys.executable, "-m", "pytest", "tests/", 
+            sys.executable, "-m", "pytest", "tests/",
             "--cov=haskell_tree_sitter", "--cov-report=term-missing"
         ], cwd=Path(__file__).parent)
         return result.returncode
@@ -46,11 +46,11 @@ def run_coverage():
 
 def main():
     parser = argparse.ArgumentParser(description="Run tests for haskell-tree-sitter")
-    parser.add_argument("--runner", choices=["unittest", "pytest", "coverage"], 
+    parser.add_argument("--runner", choices=["unittest", "pytest", "coverage"],
                        default="unittest", help="Test runner to use")
-    
+
     args = parser.parse_args()
-    
+
     if args.runner == "unittest":
         return run_unittest()
     elif args.runner == "pytest":

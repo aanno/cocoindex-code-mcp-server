@@ -1669,8 +1669,8 @@ client = QdrantClient(url='http://localhost:6333')
 client.create_collection(
     collection_name="my_collection",
     vectors_config=models.VectorParams(
-        size=768, 
-        distance=models.Distance.COSINE, 
+        size=768,
+        distance=models.Distance.COSINE,
         on_disk=True           # Store vectors on disk (memmap)
     ),
     on_disk_payload=True        # Store payload on disk (RocksDB)
@@ -2203,4 +2203,3 @@ Let me know if you want sample fine-tuning scripts or help mining Haskell code p
 [^27_9]: https://www.reddit.com/r/OpenWebUI/comments/1i1qnek/custom_embedding_models_sbert_format/
 
 [^27_10]: https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
-

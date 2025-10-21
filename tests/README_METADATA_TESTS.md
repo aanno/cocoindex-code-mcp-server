@@ -62,7 +62,7 @@ python tests/test_metadata_search.py
 - `test_python_metadata.py` - Tests core metadata analysis
 - `test_json_formatting.py` - Tests output formatting
 
-### Integration Tests  
+### Integration Tests
 - `test_metadata_search.py` - Tests full search pipeline
 
 ## Requirements

@@ -33,7 +33,7 @@ The baseline test calculates standard information retrieval metrics:
 # Recall: What percentage of expected items were found
 function_recall = len(detected ∩ expected) / len(expected)
 
-# Precision: What percentage of detected items were correct  
+# Precision: What percentage of detected items were correct
 function_precision = len(detected ∩ expected) / len(detected)
 
 # F1 Score: Harmonic mean of precision and recall
@@ -153,15 +153,15 @@ from pathlib import Path
 def run_baseline_test():
     """Run the baseline test and return metrics."""
     result = subprocess.run([
-        sys.executable, '-m', 'pytest', 
+        sys.executable, '-m', 'pytest',
         'tests/lang/haskell/test_haskell_comprehensive_baseline.py',
         '-q'  # Quiet mode
     ], cwd=Path.cwd(), capture_output=True, text=True)
-    
+
     if result.returncode != 0:
         print(f"Test failed: {result.stderr}")
         return None
-    
+
     # Read results file
     results_file = Path('tests/lang/haskell/haskell_baseline_results.json')
     if results_file.exists():
@@ -242,7 +242,7 @@ You can use these metrics as quality gates in CI:
 - name: Run Baseline Tests
   run: |
     python -m pytest tests/lang/haskell/test_haskell_comprehensive_baseline.py
-    
+
 - name: Check Quality Metrics
   run: |
     RECALL=$(cat tests/lang/haskell/haskell_baseline_results.json | jq -r '.metrics.specialized_visitor.function_recall')

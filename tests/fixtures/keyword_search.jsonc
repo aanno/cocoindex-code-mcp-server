@@ -324,7 +324,7 @@
     "description": "Keyword search tests to validate metadata-based filtering across all supported languages",
     "search_type": "keyword_only",
     "supported_languages": [
-      "python", "rust", "java", "javascript", "typescript", 
+      "python", "rust", "java", "javascript", "typescript",
       "cpp", "c", "kotlin", "haskell"
     ],
     "test_categories": [
@@ -335,7 +335,7 @@
     ],
     "keyword_syntax_examples": [
       "language:python - Filter by programming language",
-      "has_classes:true - Filter files containing classes", 
+      "has_classes:true - Filter files containing classes",
       "functions:fibonacci - Filter files containing specific function name",
       "filename:handler - Filter by filename pattern",
       "complexity_score:>2 - Numeric comparisons (not supported in keyword search)",

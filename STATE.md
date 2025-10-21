@@ -48,7 +48,7 @@ for key, value in metadata_json.items():
 
 ### ✅ **Missing Fields Should Now Appear:**
 - `chunking_method` - in metadata_json AND top-level
-- `tree_sitter_chunking_error` - in metadata_json AND top-level  
+- `tree_sitter_chunking_error` - in metadata_json AND top-level
 - `tree_sitter_analyze_error` - in metadata_json AND top-level
 
 ### ✅ **Previously Partial Fields Should Now Be Complete:**
@@ -58,7 +58,7 @@ for key, value in metadata_json.items():
 
 ### ✅ **All Language Analyzers Should Work:**
 - Python ✅
-- Java ✅ 
+- Java ✅
 - Kotlin ✅ (confirmed tree-sitter-kotlin is installed)
 - C/C++ ✅
 - Rust ✅
@@ -80,15 +80,15 @@ for key, value in metadata_json.items():
    - Removed hardcoded field lists, added generalized documentation
 
 ### **Architecture Benefits:**
-✅ **Automatic**: Any field in metadata_json gets promoted automatically  
-✅ **Future-proof**: No config updates needed for new fields  
-✅ **Maintainable**: Single promotion logic handles everything  
-✅ **Safe**: Avoids overwriting existing top-level fields  
+✅ **Automatic**: Any field in metadata_json gets promoted automatically
+✅ **Future-proof**: No config updates needed for new fields
+✅ **Maintainable**: Single promotion logic handles everything
+✅ **Safe**: Avoids overwriting existing top-level fields
 ✅ **Flexible**: Works with any language analyzer
 
 ## Previous Session Context
 - Fixed `max_chunk_size` ChunkingParams errors ✅
-- Updated test fixtures for metadata validation ✅  
+- Updated test fixtures for metadata validation ✅
 - Fixed fallback metadata sections in cocoindex_config.py ✅
 - Enhanced language analyzers with promoted fields ✅
 
@@ -102,7 +102,7 @@ pytest -c pytest.ini tests/mcp_server/test_mcp.py
 
 ## Next Steps (if needed)
 1. **Validate fix with pytest tests**
-2. **Restart MCP server and verify no errors**  
+2. **Restart MCP server and verify no errors**
 3. **Run evaluation with CocoIndex to confirm metadata appears**
 
 ---
@@ -142,7 +142,7 @@ METADATA_FIELDS = list(CONST_METADATA_FIELDS)
 `analysis_method` should now appear as top-level field in search results.
 
 ### STATUS:
-- ✅ Architecture consolidated  
+- ✅ Architecture consolidated
 - ✅ PostgreSQL reserved keyword fixed
 - 🔄 Test validation ready to complete
 

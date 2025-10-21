@@ -13,6 +13,5 @@ services:
       - QDRANT__STORAGE__OPTIMIZERS__MEMMAP_THRESHOLD_KB=50000
       - QDRANT__SERVICE__GRPC_PORT=6334
     restart: unless-stopped
-
 volumes:
   qdrant_data:

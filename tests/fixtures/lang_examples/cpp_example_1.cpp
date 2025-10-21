@@ -16,15 +16,15 @@ private:
 
 public:
     Person(const std::string& name, int age) : name(name), age(age) {}
-    
+
     bool isAdult() const {
         return age >= 18;
     }
-    
+
     std::string greet() const {
         return "Hello, I'm " + name + " and I'm " + std::to_string(age) + " years old";
     }
-    
+
     const std::string& getName() const { return name; }
     int getAge() const { return age; }
 };
@@ -40,13 +40,13 @@ public:
         history.push_back(std::to_string(a) + " + " + std::to_string(b) + " = " + std::to_string(result));
         return result;
     }
-    
+
     T multiply(T a, T b) {
         T result = a * b;
         history.push_back(std::to_string(a) + " * " + std::to_string(b) + " = " + std::to_string(result));
         return result;
     }
-    
+
     const std::vector<std::string>& getHistory() const {
         return history;
     }
@@ -80,21 +80,21 @@ int main() {
     Person person("Alice", 25);
     std::cout << person.greet() << std::endl;
     std::cout << "Is adult: " << (person.isAdult() ? "true" : "false") << std::endl;
-    
+
     std::cout << "Fibonacci 10: " << fibonacci(10) << std::endl;
-    
+
     std::vector<int> numbers = {1, 2, 3, 4, 5};
     std::cout << "Sum: " << calculateSum(numbers) << std::endl;
-    
+
     Calculator<int> calc;
     std::cout << "5 + 3 = " << calc.add(5, 3) << std::endl;
     std::cout << "4 * 7 = " << calc.multiply(4, 7) << std::endl;
-    
+
     std::cout << "Is 17 prime? " << (isPrime(17) ? "true" : "false") << std::endl;
-    
+
     // Lambda example
     auto square = [](int x) { return x * x; };
     std::cout << "Square of 5: " << square(5) << std::endl;
-    
+
     return 0;
 }

@@ -343,10 +343,10 @@ The keyword search system is extensible and supports adding new operators. Here'
    ```lark
    // Add new operator rule
    my_new_operator: "my_operator" "(" FIELD "," value ")"
-   
+
    // Add to conditions
    ?condition: field_condition
-             | exists_condition  
+             | exists_condition
              | value_contains_condition
              | my_new_operator        // Add here
              | "(" or_expr ")"
@@ -369,8 +369,8 @@ The keyword search system is extensible and supports adding new operators. Here'
        """Transform my_operator(field, value) condition."""
        field, value = items
        return SearchCondition(
-           field=str(field), 
-           value=str(value), 
+           field=str(field),
+           value=str(value),
            is_my_new_operator_check=True
        )
    ```
@@ -399,7 +399,7 @@ For a `range(field, min, max)` operator:
 # 1. Grammar addition
 range_condition: "range" "(" FIELD "," value "," value ")"
 
-# 2. SearchCondition extension  
+# 2. SearchCondition extension
 is_range_check: bool = False
 range_min: str = ""
 range_max: str = ""

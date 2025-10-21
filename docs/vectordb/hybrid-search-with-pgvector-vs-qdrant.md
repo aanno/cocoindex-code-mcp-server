@@ -922,4 +922,3 @@ For scalable vector search with rich metadata queries (including sorting, filter
 [^12_9]: https://risingwave.com/blog/exploring-json-vs-jsonb-postgresqls-dilemma/
 
 [^12_10]: https://dev.to/dbvismarketing/json-vs-jsonb-in-postgresql-for-database-development-1hbp
-

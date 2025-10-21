@@ -92,7 +92,7 @@ class UnifiedASTProcessor:
     def __init__(self):
         self.haskell_processor = HaskellASTProcessor()  # Our existing work
         self.astchunk_processor = ASTChunkProcessor()   # New integration
-    
+
     def process_code(self, code, language):
         if language == "Haskell":
             return self.haskell_processor.process(code)

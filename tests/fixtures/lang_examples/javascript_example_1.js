@@ -18,11 +18,11 @@ class Calculator {
     constructor() {
         this.history = [];
     }
-    
+
     /**
      * Add two numbers and record the operation
      * @param {number} a - First number
-     * @param {number} b - Second number  
+     * @param {number} b - Second number
      * @returns {number} Sum of a and b
      */
     add(a, b) {
@@ -30,7 +30,7 @@ class Calculator {
         this.history.push(`${a} + ${b} = ${result}`);
         return result;
     }
-    
+
     /**
      * Get calculation history
      * @returns {Array<string>} Array of calculation strings

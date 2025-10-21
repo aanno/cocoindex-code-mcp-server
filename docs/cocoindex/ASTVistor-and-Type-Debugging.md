@@ -195,4 +195,3 @@ This approach will help you “freebie” (fix) cryptic type-related value error
 [^3_9]: https://docs.python.org/3/library/typing.html
 
 [^3_10]: https://www.reddit.com/r/learnpython/comments/1espz01/what_is_the_point_of_type_hinting_when_python/
-

@@ -8,7 +8,7 @@ A Model Context Protocol (MCP) server that provides hybrid search capabilities c
 
 ### MCP Tools
 - **hybrid_search** - Combine vector similarity and keyword metadata filtering
-- **vector_search** - Pure vector similarity search  
+- **vector_search** - Pure vector similarity search
 - **keyword_search** - Pure keyword metadata search
 - **analyze_code** - Code analysis and metadata extraction
 - **get_embeddings** - Generate embeddings for text
@@ -24,7 +24,7 @@ A Model Context Protocol (MCP) server that provides hybrid search capabilities c
    ```bash
    # Install MCP server dependencies
    pip install -e ".[mcp-server]"
-   
+
    # Or install test dependencies if you want to run tests
    pip install -e ".[mcp-server,test]"
    ```
@@ -45,7 +45,7 @@ Set environment variables for database connection:
 
 ```bash
 export DB_HOST=localhost
-export DB_PORT=5432  
+export DB_PORT=5432
 export DB_NAME=cocoindex
 export DB_USER=postgres
 export DB_PASSWORD=password
@@ -59,7 +59,7 @@ Run the test suite to verify functionality:
 # From project root, run all MCP server tests
 python -m pytest tests/test_mcp_server.py -v
 
-# Run only MCP server marked tests  
+# Run only MCP server marked tests
 python -m pytest tests/test_mcp_server.py -m main_mcp_server -v
 
 # Run specific test classes
@@ -124,7 +124,7 @@ Add to your Claude Code MCP configuration:
     "args": ["/path/to/cocoindex_code_mcp_server/main_mcp_server.py"],
     "env": {
       "DB_HOST": "localhost",
-      "DB_NAME": "cocoindex", 
+      "DB_NAME": "cocoindex",
       "DB_USER": "postgres",
       "DB_PASSWORD": "password"
     }
@@ -151,7 +151,7 @@ Add to your Claude Code MCP configuration:
 ### Vector Search
 ```json
 {
-  "tool": "search-vector", 
+  "tool": "search-vector",
   "arguments": {
     "query": "error handling in async functions",
     "top_k": 10
@@ -210,7 +210,7 @@ result = hybrid_search(
 #### Feature Development
 
 ```python
-# Discover existing patterns before implementing new features  
+# Discover existing patterns before implementing new features
 # "Show me how database connections are managed"
 result = vector_search("database connection pool management")
 ```
@@ -259,7 +259,7 @@ The MCP server integrates with existing CocoIndex components:
 ## Supported Keyword Operators
 
 - `AND`, `OR`, `NOT` - Boolean logic
-- `==`, `!=`, `<`, `>`, `<=`, `>=` - Comparison operators  
+- `==`, `!=`, `<`, `>`, `<=`, `>=` - Comparison operators
 - `value_contains` - Substring matching
 - Field targeting: `function_name:parse`, `language:python`
 

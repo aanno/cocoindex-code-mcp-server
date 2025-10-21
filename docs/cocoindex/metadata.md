@@ -38,7 +38,7 @@ from typing import Dict, Any, List
 
 class {Language}CodeAnalyzer:
     """Analyzer for {Language} code chunks."""
-    
+
     def analyze_code(self, code: str, filename: str = "") -> Dict[str, Any]:
         """Extract metadata from {Language} code."""
         try:
@@ -47,7 +47,7 @@ class {Language}CodeAnalyzer:
             return self._build_metadata(code, filename)
         except Exception as e:
             return self._build_fallback_metadata(code, filename)
-    
+
     def _build_metadata(self, code: str, filename: str) -> Dict[str, Any]:
         """Build comprehensive metadata dictionary."""
         return {
@@ -133,7 +133,7 @@ The current implementation adds metadata as JSON fields at search time:
 ```python
 result.update({
     "functions": [...],           # Array of function names
-    "classes": [...],            # Array of class names  
+    "classes": [...],            # Array of class names
     "metadata_json": json.dumps(metadata)  # Full metadata as JSON
 })
 ```
@@ -190,7 +190,7 @@ SEARCHABLE_FIELDS = [
 
 # Enable searches like:
 # "function_names:contains(process_data)"
-# "class_names:contains(DataProcessor)" 
+# "class_names:contains(DataProcessor)"
 # "import_modules:contains(numpy)"
 ```
 
@@ -246,11 +246,11 @@ def test_python_analyzer():
     code = '''
 def hello(name: str) -> str:
     return f"Hello {name}"
-    
+
 class Greeter:
     def greet(self): pass
     '''
-    
+
     metadata = analyze_python_code(code)
     assert "hello" in metadata["functions"]
     assert "Greeter" in metadata["classes"]
@@ -267,7 +267,7 @@ def test_metadata_search():
         vector_query="greeting function",
         keyword_query="language:Python and has_type_hints:true"
     )
-    
+
     assert len(results) > 0
     assert all(r["language"] == "Python" for r in results)
     assert all(r.get("has_type_hints") for r in results)

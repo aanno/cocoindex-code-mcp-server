@@ -33,8 +33,8 @@ Our code is mypy compatible! Use the type checking script:
 Don't use tool 'vscode-mcp-server - execute_shell_command_code (MCP)' because of
 issues. Instead, use bash directly.
 
-For editing file, use tool 'Opened changes in Visual Studio Code'. This is 
-much better than tool 'update'. But if you use tool 'update', don't forget to 
+For editing file, use tool 'Opened changes in Visual Studio Code'. This is
+much better than tool 'update'. But if you use tool 'update', don't forget to
 use tool 'filesystem - read_text_file (MCP)' before that. Otherwise you get the
 following error: File has not been read yet. Read it first before writing to it.
 

@@ -2,7 +2,7 @@
 module TestModule where
 
 -- Valid function
-add :: Int -> Int -> Int  
+add :: Int -> Int -> Int
 add x y = x + y
 
 -- Error 1: Invalid syntax in pattern matching (missing = after case)
@@ -19,7 +19,7 @@ multiply x y = x * y
 data Color = Red | Green | Blue
 
 -- Error 2: Invalid where clause syntax
-greeting :: String -> String  
+greeting :: String -> String
 greeting name = "Hello, " ++ name ++ "!"
   where validName = if null name then "World" else name
         -- This line has correct syntax
