@@ -23,8 +23,8 @@
 
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
-use tree_sitter::{Parser, Tree, Node, TreeCursor};
 use std::collections::HashMap;
+use tree_sitter::{Node, Parser, Tree, TreeCursor};
 
 /// Threshold for error count above which we bail out to regex fallback parsing
 const ERROR_FALLBACK_THRESHOLD: usize = 10;
@@ -40,10 +40,12 @@ impl HaskellParser {
     fn new() -> PyResult<Self> {
         let mut parser = Parser::new();
         let language = tree_sitter_haskell::LANGUAGE.into();
-        parser.set_language(&language)
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
-                format!("Failed to set Haskell language: {}", e)
-            ))?;
+        parser.set_language(&language).map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+                "Failed to set Haskell language: {}",
+                e
+            ))
+        })?;
 
         Ok(HaskellParser { parser })
     }
@@ -249,7 +251,12 @@ pub struct ChunkingParams {
 #[pymethods]
 impl ChunkingParams {
     #[new]
-    fn new(chunk_size: usize, min_chunk_size: usize, chunk_overlap: usize, max_chunk_size: usize) -> Self {
+    fn new(
+        chunk_size: usize,
+        min_chunk_size: usize,
+        chunk_overlap: usize,
+        max_chunk_size: usize,
+    ) -> Self {
         ChunkingParams {
             chunk_size,
             min_chunk_size,
@@ -337,7 +344,11 @@ fn extract_semantic_chunks(tree: &Tree, source: &str) -> Vec<HaskellChunk> {
     chunks
 }
 
-fn extract_semantic_chunks_with_recursive_splitting(tree: &Tree, source: &str, params: &ChunkingParams) -> ChunkingResult {
+fn extract_semantic_chunks_with_recursive_splitting(
+    tree: &Tree,
+    source: &str,
+    params: &ChunkingParams,
+) -> ChunkingResult {
     let root_node = tree.root_node();
 
     // Initialize context with empty ancestors and metadata collections
@@ -389,7 +400,13 @@ fn extract_semantic_chunks_with_recursive_splitting(tree: &Tree, source: &str, p
     // Use ASTChunk-style recursive splitting
     let mut chunks = Vec::new();
     let mut cursor = root_node.walk();
-    extract_chunks_with_recursive_splitting(&mut cursor, source, &mut chunks, &context, &mut error_stats);
+    extract_chunks_with_recursive_splitting(
+        &mut cursor,
+        source,
+        &mut chunks,
+        &context,
+        &mut error_stats,
+    );
 
     // Merge adjacent small chunks if possible
     let merged_chunks = merge_adjacent_chunks(chunks, params.max_chunk_size);
@@ -460,7 +477,14 @@ fn extract_semantic_chunks_with_error_handling(tree: &Tree, source: &str) -> Chu
     // Extract semantic chunks with error-aware processing
     let mut chunks = Vec::new();
     let mut cursor = root_node.walk();
-    extract_chunks_recursive_with_errors(&mut cursor, source, &mut chunks, 0, &mut error_stats, &context);
+    extract_chunks_recursive_with_errors(
+        &mut cursor,
+        source,
+        &mut chunks,
+        0,
+        &mut error_stats,
+        &context,
+    );
 
     // Ensure complete coverage by handling uncovered ranges in error nodes
     ensure_complete_coverage(&mut chunks, &error_stats, source);
@@ -501,8 +525,14 @@ fn extract_chunks_with_recursive_splitting(
 
     // Define semantic chunk types - removed "module" to prevent tiny chunks
     let chunk_node_types = [
-        "signature", "function", "bind", "data_type", "class",
-        "instance", "import", "haddock",
+        "signature",
+        "function",
+        "bind",
+        "data_type",
+        "class",
+        "instance",
+        "import",
+        "haddock",
     ];
 
     if chunk_node_types.contains(&node_type) {
@@ -515,7 +545,13 @@ fn extract_chunks_with_recursive_splitting(
             // Skip chunks that are too small - process children instead
             if cursor.goto_first_child() {
                 loop {
-                    extract_chunks_with_recursive_splitting(cursor, source, chunks, &new_context, error_stats);
+                    extract_chunks_with_recursive_splitting(
+                        cursor,
+                        source,
+                        chunks,
+                        &new_context,
+                        error_stats,
+                    );
                     if !cursor.goto_next_sibling() {
                         break;
                     }
@@ -530,7 +566,13 @@ fn extract_chunks_with_recursive_splitting(
             // Recursively process children
             if cursor.goto_first_child() {
                 loop {
-                    extract_chunks_with_recursive_splitting(cursor, source, chunks, &new_context, error_stats);
+                    extract_chunks_with_recursive_splitting(
+                        cursor,
+                        source,
+                        chunks,
+                        &new_context,
+                        error_stats,
+                    );
                     if !cursor.goto_next_sibling() {
                         break;
                     }
@@ -546,7 +588,13 @@ fn extract_chunks_with_recursive_splitting(
         // For non-chunk nodes, process children
         if cursor.goto_first_child() {
             loop {
-                extract_chunks_with_recursive_splitting(cursor, source, chunks, &new_context, error_stats);
+                extract_chunks_with_recursive_splitting(
+                    cursor,
+                    source,
+                    chunks,
+                    &new_context,
+                    error_stats,
+                );
                 if !cursor.goto_next_sibling() {
                     break;
                 }
@@ -556,7 +604,11 @@ fn extract_chunks_with_recursive_splitting(
     }
 }
 
-fn collect_aggregate_metadata(cursor: &mut TreeCursor, source: &str, context: &mut ChunkingContext) {
+fn collect_aggregate_metadata(
+    cursor: &mut TreeCursor,
+    source: &str,
+    context: &mut ChunkingContext,
+) {
     let node = cursor.node();
     let node_type = node.kind();
 
@@ -653,7 +705,12 @@ fn update_context_for_node(node: &Node, source: &str, context: &mut ChunkingCont
     }
 }
 
-fn create_chunk_with_context(node: &Node, source: &str, context: &ChunkingContext, node_type: &str) -> HaskellChunk {
+fn create_chunk_with_context(
+    node: &Node,
+    source: &str,
+    context: &ChunkingContext,
+    node_type: &str,
+) -> HaskellChunk {
     let start_byte = node.start_byte();
     let end_byte = node.end_byte();
     let start_pos = node.start_position();
@@ -674,7 +731,9 @@ fn create_chunk_with_context(node: &Node, source: &str, context: &ChunkingContex
     }
 
     // Add ancestor path for semantic context
-    let ancestor_path: Vec<String> = context.ancestors.iter()
+    let ancestor_path: Vec<String> = context
+        .ancestors
+        .iter()
         .filter_map(|a| a.name.as_ref())
         .cloned()
         .collect();
@@ -683,30 +742,96 @@ fn create_chunk_with_context(node: &Node, source: &str, context: &ChunkingContex
     }
 
     // Add chunking method
-    metadata.insert("chunking_method".to_string(), "rust_haskell_ast_recursive".to_string());
+    metadata.insert(
+        "chunking_method".to_string(),
+        "rust_haskell_ast_recursive".to_string(),
+    );
 
     // Add aggregate metadata as JSON arrays (simple string arrays only)
-    metadata.insert("functions".to_string(), format!("[{}]", context.functions.iter()
-        .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
-        .collect::<Vec<_>>().join(", ")));
-    metadata.insert("data_types".to_string(), format!("[{}]", context.data_types.iter()
-        .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
-        .collect::<Vec<_>>().join(", ")));
-    metadata.insert("type_classes".to_string(), format!("[{}]", context.type_classes.iter()
-        .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
-        .collect::<Vec<_>>().join(", ")));
-    metadata.insert("instances".to_string(), format!("[{}]", context.instances.iter()
-        .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
-        .collect::<Vec<_>>().join(", ")));
-    metadata.insert("modules".to_string(), format!("[{}]", context.modules.iter()
-        .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
-        .collect::<Vec<_>>().join(", ")));
-    metadata.insert("imports".to_string(), format!("[{}]", context.imports.iter()
-        .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
-        .collect::<Vec<_>>().join(", ")));
-    metadata.insert("nodes_with_errors".to_string(), format!("[{}]", context.nodes_with_errors.iter()
-        .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
-        .collect::<Vec<_>>().join(", ")));
+    metadata.insert(
+        "functions".to_string(),
+        format!(
+            "[{}]",
+            context
+                .functions
+                .iter()
+                .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+    );
+    metadata.insert(
+        "data_types".to_string(),
+        format!(
+            "[{}]",
+            context
+                .data_types
+                .iter()
+                .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+    );
+    metadata.insert(
+        "type_classes".to_string(),
+        format!(
+            "[{}]",
+            context
+                .type_classes
+                .iter()
+                .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+    );
+    metadata.insert(
+        "instances".to_string(),
+        format!(
+            "[{}]",
+            context
+                .instances
+                .iter()
+                .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+    );
+    metadata.insert(
+        "modules".to_string(),
+        format!(
+            "[{}]",
+            context
+                .modules
+                .iter()
+                .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+    );
+    metadata.insert(
+        "imports".to_string(),
+        format!(
+            "[{}]",
+            context
+                .imports
+                .iter()
+                .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+    );
+    metadata.insert(
+        "nodes_with_errors".to_string(),
+        format!(
+            "[{}]",
+            context
+                .nodes_with_errors
+                .iter()
+                .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+    );
 
     // Add empty arrays for other expected simple List[str] properties
     metadata.insert("enums".to_string(), "[]".to_string());
@@ -716,9 +841,18 @@ fn create_chunk_with_context(node: &Node, source: &str, context: &ChunkingContex
     metadata.insert("private_methods".to_string(), "[]".to_string());
     metadata.insert("variables".to_string(), "[]".to_string());
     metadata.insert("decorators".to_string(), "[]".to_string());
-    metadata.insert("classes".to_string(), format!("[{}]", context.type_classes.iter()
-        .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
-        .collect::<Vec<_>>().join(", ")));
+    metadata.insert(
+        "classes".to_string(),
+        format!(
+            "[{}]",
+            context
+                .type_classes
+                .iter()
+                .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+    );
 
     // Do NOT populate complex JSON fields like function_details, data_type_details, class_details
     // These should be handled by the language-specific analysis handlers
@@ -728,7 +862,10 @@ fn create_chunk_with_context(node: &Node, source: &str, context: &ChunkingContex
         metadata.insert("tree_sitter_chunking_error".to_string(), "true".to_string());
         metadata.insert("has_error".to_string(), "true".to_string());
     } else {
-        metadata.insert("tree_sitter_chunking_error".to_string(), "false".to_string());
+        metadata.insert(
+            "tree_sitter_chunking_error".to_string(),
+            "false".to_string(),
+        );
     }
 
     // Node-specific metadata
@@ -839,7 +976,13 @@ fn handle_error_node_with_context(
         loop {
             let child_node = cursor.node();
             if !child_node.is_error() {
-                extract_chunks_with_recursive_splitting(cursor, source, chunks, context, error_stats);
+                extract_chunks_with_recursive_splitting(
+                    cursor,
+                    source,
+                    chunks,
+                    context,
+                    error_stats,
+                );
             }
             if !cursor.goto_next_sibling() {
                 break;
@@ -854,14 +997,22 @@ fn handle_error_node_with_context(
     error_stats.uncovered_ranges.push((start_byte, end_byte));
 }
 
-fn create_error_chunk_with_context(start_byte: usize, end_byte: usize, source: &str, context: &ChunkingContext) -> HaskellChunk {
+fn create_error_chunk_with_context(
+    start_byte: usize,
+    end_byte: usize,
+    source: &str,
+    context: &ChunkingContext,
+) -> HaskellChunk {
     let text = source[start_byte..end_byte].to_string();
     let start_line = source[..start_byte].matches('\n').count();
     let end_line = source[..end_byte].matches('\n').count();
 
     let mut metadata = HashMap::new();
     metadata.insert("category".to_string(), "error_recovery".to_string());
-    metadata.insert("chunking_method".to_string(), "rust_haskell_error_recovery".to_string());
+    metadata.insert(
+        "chunking_method".to_string(),
+        "rust_haskell_error_recovery".to_string(),
+    );
     metadata.insert("is_error_chunk".to_string(), "true".to_string());
     metadata.insert("tree_sitter_chunking_error".to_string(), "true".to_string());
     metadata.insert("has_error".to_string(), "true".to_string());
@@ -939,14 +1090,14 @@ fn extract_chunks_recursive_with_errors(
 
     // Define which node types we want to extract as chunks
     let chunk_node_types = [
-        "signature",      // Type signatures
-        "function",       // Function definitions
-        "bind",           // Top-level bindings
-        "data_type",      // Data type declarations
-        "class",          // Type class declarations
-        "instance",       // Type class instances
-        "import",         // Import statements
-        "haddock",        // Haddock documentation comments
+        "signature", // Type signatures
+        "function",  // Function definitions
+        "bind",      // Top-level bindings
+        "data_type", // Data type declarations
+        "class",     // Type class declarations
+        "instance",  // Type class instances
+        "import",    // Import statements
+        "haddock",   // Haddock documentation comments
     ];
 
     if chunk_node_types.contains(&node_type) {
@@ -959,33 +1110,102 @@ fn extract_chunks_recursive_with_errors(
 
         let mut metadata = HashMap::new();
         metadata.insert("depth".to_string(), depth.to_string());
-        metadata.insert("has_children".to_string(), (node.child_count() > 0).to_string());
+        metadata.insert(
+            "has_children".to_string(),
+            (node.child_count() > 0).to_string(),
+        );
         metadata.insert("is_named".to_string(), node.is_named().to_string());
         metadata.insert("has_error".to_string(), node.has_error().to_string());
-        metadata.insert("chunking_method".to_string(), "rust_haskell_ast_with_errors_2".to_string());
+        metadata.insert(
+            "chunking_method".to_string(),
+            "rust_haskell_ast_with_errors_2".to_string(),
+        );
 
         // Add aggregate metadata as JSON arrays (simple string arrays only)
-        metadata.insert("functions".to_string(), format!("[{}]", context.functions.iter()
-            .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
-            .collect::<Vec<_>>().join(", ")));
-        metadata.insert("data_types".to_string(), format!("[{}]", context.data_types.iter()
-            .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
-            .collect::<Vec<_>>().join(", ")));
-        metadata.insert("type_classes".to_string(), format!("[{}]", context.type_classes.iter()
-            .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
-            .collect::<Vec<_>>().join(", ")));
-        metadata.insert("instances".to_string(), format!("[{}]", context.instances.iter()
-            .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
-            .collect::<Vec<_>>().join(", ")));
-        metadata.insert("modules".to_string(), format!("[{}]", context.modules.iter()
-            .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
-            .collect::<Vec<_>>().join(", ")));
-        metadata.insert("imports".to_string(), format!("[{}]", context.imports.iter()
-            .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
-            .collect::<Vec<_>>().join(", ")));
-        metadata.insert("nodes_with_errors".to_string(), format!("[{}]", context.nodes_with_errors.iter()
-            .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
-            .collect::<Vec<_>>().join(", ")));
+        metadata.insert(
+            "functions".to_string(),
+            format!(
+                "[{}]",
+                context
+                    .functions
+                    .iter()
+                    .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+        );
+        metadata.insert(
+            "data_types".to_string(),
+            format!(
+                "[{}]",
+                context
+                    .data_types
+                    .iter()
+                    .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+        );
+        metadata.insert(
+            "type_classes".to_string(),
+            format!(
+                "[{}]",
+                context
+                    .type_classes
+                    .iter()
+                    .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+        );
+        metadata.insert(
+            "instances".to_string(),
+            format!(
+                "[{}]",
+                context
+                    .instances
+                    .iter()
+                    .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+        );
+        metadata.insert(
+            "modules".to_string(),
+            format!(
+                "[{}]",
+                context
+                    .modules
+                    .iter()
+                    .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+        );
+        metadata.insert(
+            "imports".to_string(),
+            format!(
+                "[{}]",
+                context
+                    .imports
+                    .iter()
+                    .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+        );
+        metadata.insert(
+            "nodes_with_errors".to_string(),
+            format!(
+                "[{}]",
+                context
+                    .nodes_with_errors
+                    .iter()
+                    .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+        );
 
         // Add empty arrays for other expected simple List[str] properties
         metadata.insert("enums".to_string(), "[]".to_string());
@@ -995,9 +1215,18 @@ fn extract_chunks_recursive_with_errors(
         metadata.insert("private_methods".to_string(), "[]".to_string());
         metadata.insert("variables".to_string(), "[]".to_string());
         metadata.insert("decorators".to_string(), "[]".to_string());
-        metadata.insert("classes".to_string(), format!("[{}]", context.type_classes.iter()
-            .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
-            .collect::<Vec<_>>().join(", ")));
+        metadata.insert(
+            "classes".to_string(),
+            format!(
+                "[{}]",
+                context
+                    .type_classes
+                    .iter()
+                    .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+        );
 
         // Extract additional metadata based on node type
         match node_type {
@@ -1065,7 +1294,14 @@ fn extract_chunks_recursive_with_errors(
     // Recursively process children
     if cursor.goto_first_child() {
         loop {
-            extract_chunks_recursive_with_errors(cursor, source, chunks, depth + 1, error_stats, context);
+            extract_chunks_recursive_with_errors(
+                cursor,
+                source,
+                chunks,
+                depth + 1,
+                error_stats,
+                context,
+            );
             if !cursor.goto_next_sibling() {
                 break;
             }
@@ -1087,14 +1323,14 @@ fn extract_chunks_recursive(
     // Define which node types we want to extract as chunks
     // These are based on actual tree-sitter-haskell node types from debugging
     let chunk_node_types = [
-        "signature",      // Type signatures
-        "function",       // Function definitions
-        "bind",           // Top-level bindings
-        "data_type",      // Data type declarations
-        "class",          // Type class declarations
-        "instance",       // Type class instances
-        "import",         // Import statements
-        "haddock",        // Haddock documentation comments
+        "signature", // Type signatures
+        "function",  // Function definitions
+        "bind",      // Top-level bindings
+        "data_type", // Data type declarations
+        "class",     // Type class declarations
+        "instance",  // Type class instances
+        "import",    // Import statements
+        "haddock",   // Haddock documentation comments
     ];
 
     if chunk_node_types.contains(&node_type) {
@@ -1107,7 +1343,10 @@ fn extract_chunks_recursive(
 
         let mut metadata = HashMap::new();
         metadata.insert("depth".to_string(), depth.to_string());
-        metadata.insert("has_children".to_string(), (node.child_count() > 0).to_string());
+        metadata.insert(
+            "has_children".to_string(),
+            (node.child_count() > 0).to_string(),
+        );
         metadata.insert("is_named".to_string(), node.is_named().to_string());
 
         // Extract additional metadata based on node type
@@ -1224,7 +1463,6 @@ fn extract_class_name(node: &Node, source: &str) -> Option<String> {
     None
 }
 
-
 fn extract_import_name(node: &Node, source: &str) -> Option<String> {
     // Look for module nodes in imports
     for child in node.children(&mut node.walk()) {
@@ -1247,10 +1485,12 @@ fn extract_import_name(node: &Node, source: &str) -> Option<String> {
 fn get_haskell_ast_chunks(source: &str) -> PyResult<Vec<HaskellChunk>> {
     let mut parser = Parser::new();
     let language = tree_sitter_haskell::LANGUAGE.into();
-    parser.set_language(&language)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
-            format!("Failed to set Haskell language: {}", e)
-        ))?;
+    parser.set_language(&language).map_err(|e| {
+        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+            "Failed to set Haskell language: {}",
+            e
+        ))
+    })?;
 
     match parser.parse(source, None) {
         Some(tree) => {
@@ -1261,23 +1501,29 @@ fn get_haskell_ast_chunks(source: &str) -> PyResult<Vec<HaskellChunk>> {
                 chunk_overlap: 0,
                 max_chunk_size: 1800,
             };
-            let result = extract_semantic_chunks_with_recursive_splitting(&tree, source, &default_params);
+            let result =
+                extract_semantic_chunks_with_recursive_splitting(&tree, source, &default_params);
             Ok(result.chunks)
         }
         None => Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
-            "Failed to parse Haskell source"
+            "Failed to parse Haskell source",
         )),
     }
 }
 
 #[pyfunction]
-fn get_haskell_ast_chunks_with_params(source: &str, params: ChunkingParams) -> PyResult<ChunkingResult> {
+fn get_haskell_ast_chunks_with_params(
+    source: &str,
+    params: ChunkingParams,
+) -> PyResult<ChunkingResult> {
     let mut parser = Parser::new();
     let language = tree_sitter_haskell::LANGUAGE.into();
-    parser.set_language(&language)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
-            format!("Failed to set Haskell language: {}", e)
-        ))?;
+    parser.set_language(&language).map_err(|e| {
+        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+            "Failed to set Haskell language: {}",
+            e
+        ))
+    })?;
 
     match parser.parse(source, None) {
         Some(tree) => {
@@ -1285,7 +1531,7 @@ fn get_haskell_ast_chunks_with_params(source: &str, params: ChunkingParams) -> P
             Ok(result)
         }
         None => Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
-            "Failed to parse Haskell source"
+            "Failed to parse Haskell source",
         )),
     }
 }
@@ -1294,10 +1540,12 @@ fn get_haskell_ast_chunks_with_params(source: &str, params: ChunkingParams) -> P
 fn get_haskell_ast_chunks_enhanced(source: &str) -> PyResult<ChunkingResult> {
     let mut parser = Parser::new();
     let language = tree_sitter_haskell::LANGUAGE.into();
-    parser.set_language(&language)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
-            format!("Failed to set Haskell language: {}", e)
-        ))?;
+    parser.set_language(&language).map_err(|e| {
+        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+            "Failed to set Haskell language: {}",
+            e
+        ))
+    })?;
 
     match parser.parse(source, None) {
         Some(tree) => {
@@ -1305,7 +1553,7 @@ fn get_haskell_ast_chunks_enhanced(source: &str) -> PyResult<ChunkingResult> {
             Ok(result)
         }
         None => Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
-            "Failed to parse Haskell source"
+            "Failed to parse Haskell source",
         )),
     }
 }
@@ -1314,10 +1562,12 @@ fn get_haskell_ast_chunks_enhanced(source: &str) -> PyResult<ChunkingResult> {
 fn debug_haskell_ast_nodes(source: &str) -> PyResult<Vec<String>> {
     let mut parser = Parser::new();
     let language = tree_sitter_haskell::LANGUAGE.into();
-    parser.set_language(&language)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
-            format!("Failed to set Haskell language: {}", e)
-        ))?;
+    parser.set_language(&language).map_err(|e| {
+        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+            "Failed to set Haskell language: {}",
+            e
+        ))
+    })?;
 
     match parser.parse(source, None) {
         Some(tree) => {
@@ -1328,7 +1578,7 @@ fn debug_haskell_ast_nodes(source: &str) -> PyResult<Vec<String>> {
             Ok(node_types)
         }
         None => Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
-            "Failed to parse Haskell source"
+            "Failed to parse Haskell source",
         )),
     }
 }
@@ -1386,7 +1636,14 @@ fn handle_error_node(
             let child_node = cursor.node();
             if !child_node.is_error() {
                 // Process valid child nodes normally
-                extract_chunks_recursive_with_errors(cursor, source, chunks, depth + 1, error_stats, context);
+                extract_chunks_recursive_with_errors(
+                    cursor,
+                    source,
+                    chunks,
+                    depth + 1,
+                    error_stats,
+                    context,
+                );
 
                 // Track what we covered
                 covered_ranges.push((child_node.start_byte(), child_node.end_byte()));
@@ -1415,7 +1672,11 @@ fn handle_error_node(
     }
 }
 
-fn find_uncovered_ranges_in_node(start_byte: usize, end_byte: usize, covered_ranges: &[(usize, usize)]) -> Vec<(usize, usize)> {
+fn find_uncovered_ranges_in_node(
+    start_byte: usize,
+    end_byte: usize,
+    covered_ranges: &[(usize, usize)],
+) -> Vec<(usize, usize)> {
     let mut uncovered = Vec::new();
     let mut current_pos = start_byte;
 
@@ -1439,7 +1700,13 @@ fn find_uncovered_ranges_in_node(start_byte: usize, end_byte: usize, covered_ran
     uncovered
 }
 
-fn create_error_chunk(start_byte: usize, end_byte: usize, source: &str, depth: usize, context: &ChunkingContext) -> HaskellChunk {
+fn create_error_chunk(
+    start_byte: usize,
+    end_byte: usize,
+    source: &str,
+    depth: usize,
+    context: &ChunkingContext,
+) -> HaskellChunk {
     let text = source[start_byte..end_byte].to_string();
 
     // Calculate line numbers (approximation)
@@ -1449,33 +1716,99 @@ fn create_error_chunk(start_byte: usize, end_byte: usize, source: &str, depth: u
     let mut metadata = HashMap::new();
     metadata.insert("depth".to_string(), depth.to_string());
     metadata.insert("category".to_string(), "error_recovery".to_string());
-    metadata.insert("chunking_method".to_string(), "rust_haskell_error_recovery_2".to_string());
+    metadata.insert(
+        "chunking_method".to_string(),
+        "rust_haskell_error_recovery_2".to_string(),
+    );
     metadata.insert("is_error_chunk".to_string(), "true".to_string());
     metadata.insert("tree_sitter_chunking_error".to_string(), "true".to_string());
     metadata.insert("has_error".to_string(), "true".to_string());
 
     // Add aggregate metadata as JSON arrays (simple string arrays only)
-    metadata.insert("functions".to_string(), format!("[{}]", context.functions.iter()
-        .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
-        .collect::<Vec<_>>().join(", ")));
-    metadata.insert("data_types".to_string(), format!("[{}]", context.data_types.iter()
-        .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
-        .collect::<Vec<_>>().join(", ")));
-    metadata.insert("type_classes".to_string(), format!("[{}]", context.type_classes.iter()
-        .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
-        .collect::<Vec<_>>().join(", ")));
-    metadata.insert("instances".to_string(), format!("[{}]", context.instances.iter()
-        .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
-        .collect::<Vec<_>>().join(", ")));
-    metadata.insert("modules".to_string(), format!("[{}]", context.modules.iter()
-        .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
-        .collect::<Vec<_>>().join(", ")));
-    metadata.insert("imports".to_string(), format!("[{}]", context.imports.iter()
-        .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
-        .collect::<Vec<_>>().join(", ")));
-    metadata.insert("nodes_with_errors".to_string(), format!("[{}]", context.nodes_with_errors.iter()
-        .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
-        .collect::<Vec<_>>().join(", ")));
+    metadata.insert(
+        "functions".to_string(),
+        format!(
+            "[{}]",
+            context
+                .functions
+                .iter()
+                .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+    );
+    metadata.insert(
+        "data_types".to_string(),
+        format!(
+            "[{}]",
+            context
+                .data_types
+                .iter()
+                .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+    );
+    metadata.insert(
+        "type_classes".to_string(),
+        format!(
+            "[{}]",
+            context
+                .type_classes
+                .iter()
+                .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+    );
+    metadata.insert(
+        "instances".to_string(),
+        format!(
+            "[{}]",
+            context
+                .instances
+                .iter()
+                .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+    );
+    metadata.insert(
+        "modules".to_string(),
+        format!(
+            "[{}]",
+            context
+                .modules
+                .iter()
+                .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+    );
+    metadata.insert(
+        "imports".to_string(),
+        format!(
+            "[{}]",
+            context
+                .imports
+                .iter()
+                .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+    );
+    metadata.insert(
+        "nodes_with_errors".to_string(),
+        format!(
+            "[{}]",
+            context
+                .nodes_with_errors
+                .iter()
+                .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+    );
 
     // Add empty arrays for other expected simple List[str] properties
     metadata.insert("enums".to_string(), "[]".to_string());
@@ -1485,9 +1818,18 @@ fn create_error_chunk(start_byte: usize, end_byte: usize, source: &str, depth: u
     metadata.insert("private_methods".to_string(), "[]".to_string());
     metadata.insert("variables".to_string(), "[]".to_string());
     metadata.insert("decorators".to_string(), "[]".to_string());
-    metadata.insert("classes".to_string(), format!("[{}]", context.type_classes.iter()
-        .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
-        .collect::<Vec<_>>().join(", ")));
+    metadata.insert(
+        "classes".to_string(),
+        format!(
+            "[{}]",
+            context
+                .type_classes
+                .iter()
+                .map(|s| format!("\"{}\"", s.replace("\"", "\\\"")))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+    );
 
     HaskellChunk {
         text,
@@ -1500,7 +1842,11 @@ fn create_error_chunk(start_byte: usize, end_byte: usize, source: &str, depth: u
     }
 }
 
-fn ensure_complete_coverage(_chunks: &mut Vec<HaskellChunk>, _error_stats: &ErrorNodeStats, _source: &str) {
+fn ensure_complete_coverage(
+    _chunks: &mut Vec<HaskellChunk>,
+    _error_stats: &ErrorNodeStats,
+    _source: &str,
+) {
     // This function ensures all source code is covered by chunks
     // For now, we rely on the error node handling above to create error chunks
     // In the future, we could add additional gap detection here
@@ -1532,8 +1878,14 @@ fn create_regex_fallback_chunks(source: &str) -> Vec<HaskellChunk> {
             if !chunk_text.trim().is_empty() {
                 let mut metadata = HashMap::new();
                 metadata.insert("category".to_string(), "regex_fallback".to_string());
-                metadata.insert("chunking_method".to_string(), "rust_haskell_regex_fallback_3".to_string());
-                metadata.insert("tree_sitter_chunking_error".to_string(), "false".to_string());
+                metadata.insert(
+                    "chunking_method".to_string(),
+                    "rust_haskell_regex_fallback_3".to_string(),
+                );
+                metadata.insert(
+                    "tree_sitter_chunking_error".to_string(),
+                    "false".to_string(),
+                );
 
                 let chunk_len = chunk_text.len();
                 chunks.push(HaskellChunk {
@@ -1560,8 +1912,14 @@ fn create_regex_fallback_chunks(source: &str) -> Vec<HaskellChunk> {
         if !chunk_text.trim().is_empty() {
             let mut metadata = HashMap::new();
             metadata.insert("category".to_string(), "regex_fallback".to_string());
-            metadata.insert("chunking_method".to_string(), "rust_haskell_regex_fallback_4".to_string());
-            metadata.insert("tree_sitter_chunking_error".to_string(), "false".to_string());
+            metadata.insert(
+                "chunking_method".to_string(),
+                "rust_haskell_regex_fallback_4".to_string(),
+            );
+            metadata.insert(
+                "tree_sitter_chunking_error".to_string(),
+                "false".to_string(),
+            );
 
             let chunk_len = chunk_text.len();
             chunks.push(HaskellChunk {

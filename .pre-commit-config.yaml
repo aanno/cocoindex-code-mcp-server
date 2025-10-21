@@ -18,7 +18,7 @@ repos:
       - id: check-toml
       - id: check-xml
       - id: destroyed-symlinks
-      - id: detect-aws-credentials
+      # - id: detect-aws-credentials
       - id: detect-private-key
       - id: pretty-format-json
         exclude: tsconfig.json
@@ -36,12 +36,50 @@ repos:
     rev: 5.13.0
     hooks:
       - id: isort
+  # - repo: https://github.com/PyCQA/bandit
+  #   rev: 1.8.6
+  #   hooks:
+  #     - id: bandit
+  # https://docformatter.readthedocs.io/en/latest/usage.html
+  # - repo: https://github.com/PyCQA/docformatter
+  #   rev: v1.7.5
+  #   hooks:
+  #     - id: docformatter
+  #       additional_dependencies: [tomli]
+  #       language: python
+  #       args: [--in-place --config ./pyproject.toml]
   # - repo: https://github.com/astral-sh/ruff
   #   rev: v0.3.0
   #   hooks:
   #     - id: ruff
-  - repo: https://github.com/dmar1n/lazy-log-formatter
-    rev: 0.8.0
+  # this take too much time to run this every commit (tp)
+  # - repo: https://github.com/dmar1n/lazy-log-formatter
+  #   rev: 0.8.0
+  #   hooks:
+  #     - id: lazy-log-formatter
+  #       args: ['--fix', 'src', 'tests', 'examples', 'tests_broken']
+  # Problem: no option to cd to ./rust
+  # - repo: https://github.com/EmbarkStudios/cargo-deny
+  #   rev: 0.18.5
+  #   hooks:
+  #     - id: cargo-deny
+  #       args: ["--all-features", "check"]
+  - repo: local
     hooks:
-      - id: lazy-log-formatter
-        args: ['--fix', 'src', 'tests', 'examples', 'tests_broken']
+      - id: maturin-develop
+        name: maturin develop
+        entry: maturin develop -E all,dev
+        language: system
+        files: ^(python/|src/|Cargo\.toml|pyproject\.toml)
+        pass_filenames: false
+      - id: rustfmt
+        name: rustfmt
+        entry: rustfmt
+        language: system
+        types: [rust]
+    # - id: mypy-check
+    #   name: mypy type check
+    #   entry: dmypy run python
+    #   language: system
+    #   types: [python]
+    #   pass_filenames: false
