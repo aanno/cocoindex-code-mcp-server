@@ -79,14 +79,14 @@ class TreeSitterPythonAnalyzer:
             try:
                 from ...lang.python.python_code_analyzer import PythonCodeAnalyzer
 
-                LOGGER.debug(f"Using enhanced PythonCodeAnalyzer for detailed analysis (bad) for {filename}")
+                LOGGER.debug("Using enhanced PythonCodeAnalyzer for detailed analysis (bad) for %s", filename)
                 fallback_analyzer = PythonCodeAnalyzer()
                 fallback_metadata = fallback_analyzer.analyze_code(code, filename)
                 if fallback_metadata:
                     metadata = fallback_metadata
             except ImportError:
                 # Last resort: use multi-level analyzer
-                LOGGER.debug(f"Using MultiLevelAnalyzer as fallback for Python code (very bad) for {filename}")
+                LOGGER.debug("Using MultiLevelAnalyzer as fallback for Python code (very bad) for %s", filename)
                 fallback_metadata = self.multilevel_analyzer.analyze_code(code, "python", filename)
                 if fallback_metadata:
                     metadata = fallback_metadata
@@ -100,12 +100,12 @@ class TreeSitterPythonAnalyzer:
         if self.prefer_tree_sitter:
             # Strategy 1: Tree-sitter analysis
             ts_metadata = self._try_tree_sitter_analysis(code, filename)
-            LOGGER.debug(f"Strategy 1: Tree-sitter analysis result for {filename}: {ts_metadata}")
+            LOGGER.debug("Strategy 1: Tree-sitter analysis result for %s: %s", filename, ts_metadata)
             if ts_metadata and ts_metadata.get("analysis_method") == "tree_sitter":
                 # Enhance with Python AST for better semantic analysis
                 ast_metadata = self._try_python_ast_analysis(code, filename)
                 if ast_metadata:
-                    LOGGER.debug(f"Enhanced tree-sitter metadata with Python AST for {filename}: {ast_metadata}")
+                    LOGGER.debug("Enhanced tree-sitter metadata with Python AST for %s: %s", filename, ast_metadata)
                     return self._merge_metadata(ts_metadata, ast_metadata)
                 return ts_metadata
 
@@ -115,7 +115,7 @@ class TreeSitterPythonAnalyzer:
             if self.prefer_tree_sitter:
                 # Try to enhance with tree-sitter position info
                 ts_metadata = self._try_tree_sitter_analysis(code, filename)
-                LOGGER.debug(f"Strategy 2: Python AST analysis result for {filename}: {ast_metadata}")
+                LOGGER.debug("Strategy 2: Python AST analysis result for %s: %s", filename, ast_metadata)
                 if ts_metadata:
                     return self._merge_metadata(ast_metadata, ts_metadata)
             return ast_metadata
@@ -152,7 +152,7 @@ class TreeSitterPythonAnalyzer:
             return metadata
 
         except Exception as e:
-            LOGGER.warning(f"Tree-sitter Python analysis failed: {e}")
+            LOGGER.warning("Tree-sitter Python analysis failed: %s", e)
             return None
 
     def _try_python_ast_analysis(self, code: str, filename: str) -> Optional[Dict[str, Any]]:
@@ -203,13 +203,13 @@ class TreeSitterPythonAnalyzer:
                 return metadata
 
             except Exception as e:
-                LOGGER.warning(f"Python AST analysis failed: {e}")
+                LOGGER.warning("Python AST analysis failed: %s", e)
                 return None
         except SyntaxError as e:
-            LOGGER.warning(f"Python AST parsing failed (syntax error): {e}")
+            LOGGER.warning("Python AST parsing failed (syntax error): %s", e)
             return None
         except Exception as e:
-            LOGGER.warning(f"Python AST analysis failed: {e}")
+            LOGGER.warning("Python AST analysis failed: %s", e)
             return None
 
     def _merge_metadata(self, primary: Dict[str, Any], secondary: Dict[str, Any]) -> Dict[str, Any]:
@@ -514,9 +514,9 @@ class PythonASTVisitor(ast.NodeVisitor):
             parameters.append(
                 {
                     "name": f"*{args.vararg.arg}",
-                    "type_annotation": self._get_annotation_name(args.vararg.annotation)
-                    if args.vararg.annotation
-                    else None,
+                    "type_annotation": (
+                        self._get_annotation_name(args.vararg.annotation) if args.vararg.annotation else None
+                    ),
                     "default": None,
                 }
             )
@@ -540,9 +540,9 @@ class PythonASTVisitor(ast.NodeVisitor):
             parameters.append(
                 {
                     "name": f"**{args.kwarg.arg}",
-                    "type_annotation": self._get_annotation_name(args.kwarg.annotation)
-                    if args.kwarg.annotation
-                    else None,
+                    "type_annotation": (
+                        self._get_annotation_name(args.kwarg.annotation) if args.kwarg.annotation else None
+                    ),
                     "default": None,
                 }
             )

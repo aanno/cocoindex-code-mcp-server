@@ -65,7 +65,7 @@ try:
     LOGGER.info("Smart code embedding enabled and loaded successfully")
 except ImportError as e:
     SMART_EMBEDDING_AVAILABLE = False
-    LOGGER.warning(f"Smart code embedding not available: {e}")
+    LOGGER.warning("Smart code embedding not available: %s", e)
 
 try:
     AST_CHUNKING_AVAILABLE = True
@@ -74,7 +74,7 @@ try:
     LOGGER.info("AST chunking extension loaded")
 except ImportError as e:
     AST_CHUNKING_AVAILABLE = False
-    LOGGER.warning(f"AST chunking not available: {e}")
+    LOGGER.warning("AST chunking not available: %s", e)
 
 try:
     PYTHON_HANDLER_AVAILABLE = True
@@ -83,7 +83,7 @@ try:
     LOGGER.info("Python language handler extension loaded")
 except ImportError as e:
     PYTHON_HANDLER_AVAILABLE = False
-    LOGGER.warning(f"Python language handler not available: {e}")
+    LOGGER.warning("Python language handler not available: %s", e)
 
 
 @dataclass
@@ -270,24 +270,24 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
     if not preserve_chunking_method and not use_default_chunking:
         # AST chunking is enabled (use_default_chunking=False), so set appropriate method
         preserve_chunking_method = "ast_tree_sitter"
-        LOGGER.debug(f"✅ Setting chunking method to ast_tree_sitter for AST chunking (file: {filename})")
+        LOGGER.debug("✅ Setting chunking method to ast_tree_sitter for AST chunking (file: %s)", filename)
 
     # DEBUG: Log chunking method preservation for debugging
     if filename and ("math_utils" in filename or "tmp" in filename or "simple" in filename):
-        LOGGER.debug(f"🔍 DEBUG extract_code_metadata for {filename}")
-        LOGGER.debug(f"   existing_metadata keys: {list(existing_metadata.keys())[:10]}")
-        LOGGER.debug(f"   preserve_chunking_method: '{preserve_chunking_method}'")
+        LOGGER.debug("🔍 DEBUG extract_code_metadata for %s", filename)
+        LOGGER.debug("   existing_metadata keys: %s", list(existing_metadata.keys())[:10])
+        LOGGER.debug("   preserve_chunking_method: '%s'", preserve_chunking_method)
 
     # Check if we should use default language handler
     use_default_handler = _global_flow_config.get("use_default_language_handler", False)
 
     # DEBUG: Log configuration for specific files
     if filename and "cpp_visitor.py" in filename:
-        LOGGER.info(f"🔍 DEBUGGING extract_code_metadata for {filename}")
-        LOGGER.info(f"   language: {language}")
-        LOGGER.info(f"   use_default_handler: {use_default_handler}")
-        LOGGER.info(f"   PYTHON_HANDLER_AVAILABLE: {PYTHON_HANDLER_AVAILABLE}")
-        LOGGER.info(f"   _global_flow_config: {_global_flow_config}")
+        LOGGER.info("🔍 DEBUGGING extract_code_metadata for %s", filename)
+        LOGGER.info("   language: %s", language)
+        LOGGER.info("   use_default_handler: %s", use_default_handler)
+        LOGGER.info("   PYTHON_HANDLER_AVAILABLE: %s", PYTHON_HANDLER_AVAILABLE)
+        LOGGER.info("   _global_flow_config: %s", _global_flow_config)
 
     try:
         if language.lower() == "python" and PYTHON_HANDLER_AVAILABLE and not use_default_handler:
@@ -301,7 +301,7 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                 analyzer = TreeSitterPythonAnalyzer(prefer_tree_sitter=True)
                 metadata = analyzer.analyze_code(text, filename)
             except Exception as e:
-                LOGGER.debug(f"TreeSitterPythonAnalyzer failed, falling back to basic analysis: {e}")
+                LOGGER.debug("TreeSitterPythonAnalyzer failed, falling back to basic analysis: %s", e)
                 metadata = analyze_python_code(text, filename)
         elif language.lower() == "python":
             metadata = analyze_python_code(text, filename)
@@ -455,12 +455,12 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
                         "tree_sitter_analyze_error": False,
                     }
                 else:
-                    LOGGER.debug(f"No specialized analyzer for language: {language}")
+                    LOGGER.debug("No specialized analyzer for language: %s", language)
 
             except ImportError as e:
-                LOGGER.warning(f"Failed to import analyzer for {language}: {e}")
+                LOGGER.warning("Failed to import analyzer for %s: %s", language, e)
             except Exception as e:
-                LOGGER.warning(f"Analysis failed for {language}: {e}")
+                LOGGER.warning("Analysis failed for %s: %s", language, e)
 
             # Fallback to basic metadata if analysis failed or no analyzer available
             if metadata is None:
@@ -517,12 +517,12 @@ def extract_code_metadata(text: str, language: str, filename: str = "", existing
     except Exception as e:
         # Fallback to empty metadata if everything fails
         if filename and "cpp_visitor.py" in filename:
-            LOGGER.error(f"❌ EXCEPTION in extract_code_metadata for {filename}: {e}")
+            LOGGER.error("❌ EXCEPTION in extract_code_metadata for %s: %s", filename, e)
             import traceback
 
-            LOGGER.error(f"   Traceback: {traceback.format_exc()}")
+            LOGGER.error("   Traceback: %s", traceback.format_exc())
         else:
-            LOGGER.debug(f"Metadata extraction failed for {filename}, using empty metadata: {e}")
+            LOGGER.debug("Metadata extraction failed for %s, using empty metadata: %s", filename, e)
         fallback_result: dict = {
             "functions": [],
             "classes": [],
@@ -565,7 +565,7 @@ def extract_string_field(metadata_json: str, field_name: str = "field", default_
         metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         return str(metadata_dict.get(field_name, default_value))
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for {field_name}: {e}")
+        LOGGER.debug("Failed to parse metadata JSON for %s: %s", field_name, e)
         return default_value
 
 
@@ -595,7 +595,7 @@ def extract_list_as_string_field(metadata_json: str, field_name: str = "field", 
         else:
             return json.dumps([field_value]) if field_value else default_value
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for {field_name}: {e}")
+        LOGGER.debug("Failed to parse metadata JSON for %s: %s", field_name, e)
         return default_value
 
 
@@ -619,7 +619,7 @@ def extract_bool_field(metadata_json: str, field_name: str = "field", default_va
         metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         return bool(metadata_dict.get(field_name, default_value))
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for {field_name}: {e}")
+        LOGGER.debug("Failed to parse metadata JSON for %s: %s", field_name, e)
         return default_value
 
 
@@ -649,7 +649,7 @@ def extract_int_field(metadata_json: str, field_name: str = "field", default_val
             else default_value
         )
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for {field_name}: {e}")
+        LOGGER.debug("Failed to parse metadata JSON for %s: %s", field_name, e)
         return default_value
 
 
@@ -668,7 +668,7 @@ def extract_functions_field(metadata_json: str) -> List[str]:
         functions = metadata_dict.get("functions", [])
         return functions if isinstance(functions, list) else [functions]
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for functions: {e}")
+        LOGGER.debug("Failed to parse metadata JSON for functions: %s", e)
         return []
 
 
@@ -688,7 +688,7 @@ def extract_classes_field(metadata_json: str) -> List[str]:
         classes = metadata_dict.get("classes", [])
         return classes if isinstance(classes, list) else [classes]
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for classes: {e}")
+        LOGGER.debug("Failed to parse metadata JSON for classes: %s", e)
         return []
 
 
@@ -702,7 +702,7 @@ def extract_imports_field(metadata_json: str) -> List[str]:
         imports = metadata_dict.get("imports", [])
         return imports if isinstance(imports, list) else [imports]
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for imports: {e}")
+        LOGGER.debug("Failed to parse metadata JSON for imports: %s", e)
         return []
 
 
@@ -758,7 +758,7 @@ def extract_decorators_used_field(metadata_json: str) -> List[str]:
         decorators_used = metadata_dict.get("decorators_used", [])
         return decorators_used if isinstance(decorators_used, list) else [decorators_used]
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for decorators_used: {e}")
+        LOGGER.debug("Failed to parse metadata JSON for decorators_used: %s", e)
         return []
 
 
@@ -772,7 +772,7 @@ def extract_dunder_methods_field(metadata_json: str) -> List[str]:
         dunder_methods = metadata_dict.get("dunder_methods", [])
         return dunder_methods if isinstance(dunder_methods, list) else [dunder_methods]
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for dunder_methods: {e}")
+        LOGGER.debug("Failed to parse metadata JSON for dunder_methods: %s", e)
         return []
 
 
@@ -785,7 +785,7 @@ def extract_success_field(metadata_json: str) -> bool:
         metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         return bool(metadata_dict.get("success", True))
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for success: {e}")
+        LOGGER.debug("Failed to parse metadata JSON for success: %s", e)
         return True
 
 
@@ -798,7 +798,7 @@ def extract_parse_errors_field(metadata_json: str) -> int:
         metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         return int(metadata_dict.get("parse_errors", 0))
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for parse_errors: {e}")
+        LOGGER.debug("Failed to parse metadata JSON for parse_errors: %s", e)
         return 0
 
 
@@ -811,7 +811,7 @@ def extract_char_count_field(metadata_json: str) -> int:
         metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         return int(metadata_dict.get("char_count", 0))
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for char_count: {e}")
+        LOGGER.debug("Failed to parse metadata JSON for char_count: %s", e)
         return 0
 
 
@@ -834,7 +834,7 @@ def extract_nodes_with_errors_field(metadata_json: str) -> List[str]:
         else:
             return [str(nodes_with_errors)]
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for nodes_with_errors: {e}")
+        LOGGER.debug("Failed to parse metadata JSON for nodes_with_errors: %s", e)
         return []
 
 
@@ -848,7 +848,7 @@ def extract_data_types_field(metadata_json: str) -> List[str]:
         data_types = metadata_dict.get("data_types", [])
         return data_types if isinstance(data_types, list) else [data_types]
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for data_types: {e}")
+        LOGGER.debug("Failed to parse metadata JSON for data_types: %s", e)
         return []
 
 
@@ -862,7 +862,7 @@ def extract_instances_field(metadata_json: str) -> List[str]:
         instances = metadata_dict.get("instances", [])
         return instances if isinstance(instances, list) else [instances]
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for instances: {e}")
+        LOGGER.debug("Failed to parse metadata JSON for instances: %s", e)
         return []
 
 
@@ -876,7 +876,7 @@ def extract_type_classes_field(metadata_json: str) -> List[str]:
         type_classes = metadata_dict.get("type_classes", [])
         return type_classes if isinstance(type_classes, list) else [type_classes]
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for type_classes: {e}")
+        LOGGER.debug("Failed to parse metadata JSON for type_classes: %s", e)
         return []
 
 
@@ -894,7 +894,7 @@ def extract_list_str(name: str, metadata_json: str) -> List[str]:
         result = metadata_dict.get(name, [])
         return result if isinstance(result, list) else [result]
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for {name}: {e}")
+        LOGGER.debug("Failed to parse metadata JSON for %s: %s", name, e)
         return []
 
 
@@ -913,7 +913,7 @@ def extract_has_module_field(metadata_json: str) -> bool:
         metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         return bool(metadata_dict.get("has_module", False))
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for has_module: {e}")
+        LOGGER.debug("Failed to parse metadata JSON for has_module: %s", e)
         return False
 
 
@@ -928,7 +928,7 @@ def extract_function_details_field(metadata_json: str) -> str:
         function_details = metadata_dict.get("function_details", [])
         return json.dumps(function_details)
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for function_details: {e}")
+        LOGGER.debug("Failed to parse metadata JSON for function_details: %s", e)
         return "[]"
 
 
@@ -945,7 +945,7 @@ def extract_data_type_details_field(metadata_json: str) -> str:
         data_type_details = metadata_dict.get("data_type_details", [])
         return json.dumps(data_type_details)
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for data_type_details: {e}")
+        LOGGER.debug("Failed to parse metadata JSON for data_type_details: %s", e)
         return "[]"
 
 
@@ -1010,7 +1010,7 @@ def extract_class_details_field(metadata_json: str) -> str:
         class_details = metadata_dict.get("class_details", [])
         return json.dumps(class_details)
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for class_details: {e}")
+        LOGGER.debug("Failed to parse metadata JSON for class_details: %s", e)
         return "[]"
 
 
@@ -1024,7 +1024,7 @@ def extract_enums_field(metadata_json: str) -> List[str]:
         enums = metadata_dict.get("enums", [])
         return enums if isinstance(enums, list) else [enums]
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for enums: {e}")
+        LOGGER.debug("Failed to parse metadata JSON for enums: %s", e)
         return []
 
 
@@ -1052,7 +1052,7 @@ def extract_namespaces_field(metadata_json: str) -> List[str]:
         namespaces = metadata_dict.get("namespaces", [])
         return namespaces if isinstance(namespaces, list) else [namespaces]
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for namespaces: {e}")
+        LOGGER.debug("Failed to parse metadata JSON for namespaces: %s", e)
         return []
 
 
@@ -1138,12 +1138,12 @@ def convert_dataslice_to_string(content) -> str:
     """Convert CocoIndex DataSlice content to string."""
     try:
         result = str(content) if content else ""
-        LOGGER.info(f"🔍 DataSlice conversion: input type={type(content)}, output_len={len(result)}")
+        LOGGER.info("🔍 DataSlice conversion: input type=%s, output_len=%s", type(content), len(result))
         if len(result) == 0:
-            LOGGER.error(f"❌ DataSlice conversion produced empty string! Input: {repr(content)}")
+            LOGGER.error("❌ DataSlice conversion produced empty string! Input: %s", repr(content))
         return result
     except Exception as e:
-        LOGGER.error(f"Failed to convert content to string: {e}")
+        LOGGER.error("Failed to convert content to string: %s", e)
         return ""
 
 
@@ -1157,7 +1157,7 @@ def extract_has_classes_field(metadata_json: str) -> bool:
         metadata_dict = json.loads(metadata_json) if isinstance(metadata_json, str) else metadata_json
         return bool(metadata_dict.get("has_classes", False))
     except Exception as e:
-        LOGGER.debug(f"Failed to parse metadata JSON for has_classes: {e}")
+        LOGGER.debug("Failed to parse metadata JSON for has_classes: %s", e)
         return False
 
 
@@ -1188,16 +1188,12 @@ def promote_metadata_fields(metadata_json: str) -> Dict[str, Any]:
             "filename": lambda x: str(x) if x is not None else "",
             "docstring": lambda x: str(x) if x is not None else "",
             # Boolean fields (handle string "true"/"false" values)
-            "tree_sitter_chunking_error": lambda x: x.lower() == "true"
-            if isinstance(x, str)
-            else bool(x)
-            if x is not None
-            else False,
-            "tree_sitter_analyze_error": lambda x: x.lower() == "true"
-            if isinstance(x, str)
-            else bool(x)
-            if x is not None
-            else False,
+            "tree_sitter_chunking_error": lambda x: (
+                x.lower() == "true" if isinstance(x, str) else bool(x) if x is not None else False
+            ),
+            "tree_sitter_analyze_error": lambda x: (
+                x.lower() == "true" if isinstance(x, str) else bool(x) if x is not None else False
+            ),
             "has_type_hints": lambda x: bool(x) if x is not None else False,
             "has_async": lambda x: bool(x) if x is not None else False,
             "has_classes": lambda x: bool(x) if x is not None else False,
@@ -1230,7 +1226,7 @@ def promote_metadata_fields(metadata_json: str) -> Dict[str, Any]:
                 try:
                     promoted[field] = converter(metadata_dict[field])
                 except Exception as e:
-                    LOGGER.debug(f"Failed to convert field {field}: {e}")
+                    LOGGER.debug("Failed to convert field %s: %s", field, e)
                     # Set safe defaults based on field type
                     if field in ["analysis_method", "chunking_method", "language", "filename"]:
                         promoted[field] = "unknown" if field != "filename" else ""
@@ -1259,7 +1255,7 @@ def promote_metadata_fields(metadata_json: str) -> Dict[str, Any]:
         return promoted
 
     except Exception as e:
-        LOGGER.debug(f"Failed to promote metadata fields: {e}")
+        LOGGER.debug("Failed to promote metadata fields: %s", e)
         return {}
 
 
@@ -1286,14 +1282,14 @@ def select_embedding_model_for_language(language: str) -> str:
     Select appropriate embedding model based on programming language.
     """
     if not SMART_EMBEDDING_AVAILABLE:
-        LOGGER.debug(f"Smart embedding not available for {language}, using default")
+        LOGGER.debug("Smart embedding not available for %s, using default", language)
         return DEFAULT_TRANSFORMER_MODEL
 
     # Use the smart embedding selector with actual language value
     selector = LanguageModelSelector()
     selected_model = selector.select_model(language=language.lower())
 
-    LOGGER.debug(f"Selected embedding model: {selected_model} for language: {language}")
+    LOGGER.debug("Selected embedding model: %s for language: %s", selected_model, language)
     return selected_model
 
 
@@ -1454,13 +1450,13 @@ def get_chunking_method_from_metadata(metadata_json: str) -> str:
         # Debug logging
         chunking_method = str(metadata.get("chunking_method", "unknown_chunking"))
         if chunking_method == "unknown_chunking":
-            LOGGER.debug(f"🔍 No chunking_method in metadata: {list(metadata.keys())[:10]}")
+            LOGGER.debug("🔍 No chunking_method in metadata: %s", list(metadata.keys())[:10])
         else:
-            LOGGER.debug(f"✅ Found chunking_method: {chunking_method}")
+            LOGGER.debug("✅ Found chunking_method: %s", chunking_method)
 
         return chunking_method
     except Exception as e:
-        LOGGER.debug(f"❌ Error extracting chunking method: {e}")
+        LOGGER.debug("❌ Error extracting chunking method: %s", e)
         return "unknown_chunking"
 
 
@@ -1511,7 +1507,7 @@ def code_embedding_flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoind
     paths_list = list(paths) if hasattr(paths, "__iter__") else ["cocoindex"]
     for i, path in enumerate(paths_list):
         source_name = f"files_{i}" if len(paths_list) > 1 else "files"
-        LOGGER.info(f"Adding source: {path} as '{source_name}'")
+        LOGGER.info("Adding source: %s as '%s'", path, source_name)
 
         # Configure LocalFile source with optional polling
         source_config = SOURCE_CONFIG.copy()
@@ -1519,11 +1515,9 @@ def code_embedding_flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoind
 
         # Note: Polling configuration is handled by CocoIndex live updater, not LocalFile
         if enable_polling:
-            LOGGER.info(f"  Polling enabled: {poll_interval}s interval (handled by live updater)")
+            LOGGER.info("  Polling enabled: %ss interval (handled by live updater)", poll_interval)
 
-        data_scope[source_name] = flow_builder.add_source(
-            cocoindex.sources.LocalFile(**source_config)  # type: ignore
-        )
+        data_scope[source_name] = flow_builder.add_source(cocoindex.sources.LocalFile(**source_config))  # type: ignore
         all_files_sources.append(source_name)
 
     # Create a single collector for all sources
@@ -1580,7 +1574,9 @@ def code_embedding_flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoind
             # Choose embedding method based on configuration
             use_smart_embedding = _global_flow_config.get("use_smart_embedding", False)
             LOGGER.debug(
-                f"Embedding config: use_smart_embedding={use_smart_embedding}, SMART_EMBEDDING_AVAILABLE={SMART_EMBEDDING_AVAILABLE}"
+                "Embedding config: use_smart_embedding=%s, SMART_EMBEDDING_AVAILABLE=%s",
+                use_smart_embedding,
+                SMART_EMBEDDING_AVAILABLE,
             )
 
             # Add model group information for smart embedding
@@ -1593,13 +1589,13 @@ def code_embedding_flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoind
                 if use_smart_embedding and SMART_EMBEDDING_AVAILABLE:
                     model_group: Any = chunk["model_group"]
                     if model_group == "graphcodebert":
-                        LOGGER.info(f"Using GraphCodeBERT for {file['language']}")
+                        LOGGER.info("Using GraphCodeBERT for %s", file["language"])
                         chunk["embedding"] = chunk["content"].call(graphcodebert_embedding)
                     elif model_group == "unixcoder":
-                        LOGGER.info(f"Using UniXcode for {file['language']}")
+                        LOGGER.info("Using UniXcode for %s", file["language"])
                         chunk["embedding"] = chunk["content"].call(unixcoder_embedding)
                     else:  # fallback
-                        LOGGER.info(f"Using fallback model for {file['language']}")
+                        LOGGER.info("Using fallback model for %s", file["language"])
                         chunk["embedding"] = chunk["content"].call(fallback_embedding)
                     # Store the actual embedding model name (critical for search filtering)
                     chunk["embedding_model"] = chunk["model_group"].transform(get_embedding_model_name)
@@ -1789,15 +1785,17 @@ def scale_chunking_params(chunk_factor_percent: int) -> None:
             chunk_size=params.chunk_size * chunk_factor_percent // 100,
             min_chunk_size=params.min_chunk_size * chunk_factor_percent // 100,
             chunk_overlap=params.chunk_overlap * chunk_factor_percent // 100,
-            max_chunk_size=max(params.max_chunk_size * chunk_factor_percent // 100, params.chunk_size * 2)
-            if params.max_chunk_size > 0
-            else params.chunk_size * 2,
+            max_chunk_size=(
+                max(params.max_chunk_size * chunk_factor_percent // 100, params.chunk_size * 2)
+                if params.max_chunk_size > 0
+                else params.chunk_size * 2
+            ),
         )
 
     # Update the global EFFECTIVE_CHUNKING_PARAMS
     EFFECTIVE_CHUNKING_PARAMS = scaled_params
 
-    LOGGER.info(f"Scaled chunking parameters by {chunk_factor_percent}%")
+    LOGGER.info("Scaled chunking parameters by %s%%", chunk_factor_percent)
 
 
 def update_flow_config(
@@ -1832,7 +1830,7 @@ def run_flow_update(live_update: bool = False, poll_interval: int = 30) -> None:
     if live_update:
         LOGGER.info("🔄 Starting live update mode...")
         if poll_interval > 0:
-            LOGGER.info(f"📊 File polling enabled: {poll_interval} seconds")
+            LOGGER.info("📊 File polling enabled: %s seconds", poll_interval)
         else:
             LOGGER.info("📊 Event-based monitoring (no polling)")
 
@@ -1891,16 +1889,16 @@ def update_specific_flow_config(
     )
 
     flow_name = getattr(flow_def, "__name__", str(flow_def))
-    LOGGER.info(f"✅ Updated flow config for {flow_name}: paths={paths}, chunking={chunk_factor_percent}%")
+    LOGGER.info("✅ Updated flow config for %s: paths=%s, chunking=%s%%", flow_name, paths, chunk_factor_percent)
 
 
 def run_specific_flow_update(flow_def, live_update: bool = False, poll_interval: int = 30) -> None:
     """Run a specific flow update (one-time or live)."""
     if live_update:
         flow_name = getattr(flow_def, "__name__", str(flow_def))
-        LOGGER.info(f"🔄 Starting live update mode for {flow_name}...")
+        LOGGER.info("🔄 Starting live update mode for %s...", flow_name)
         if poll_interval > 0:
-            LOGGER.info(f"📊 File polling enabled: {poll_interval} seconds")
+            LOGGER.info("📊 File polling enabled: %s seconds", poll_interval)
         else:
             LOGGER.info("📊 Event-based monitoring (no polling)")
 
@@ -1926,6 +1924,6 @@ def run_specific_flow_update(flow_def, live_update: bool = False, poll_interval:
     else:
         # Regular one-time update mode
         flow_name = getattr(flow_def, "__name__", str(flow_def))
-        LOGGER.info(f"🔄 Running one-time update for {flow_name}...")
+        LOGGER.info("🔄 Running one-time update for %s...", flow_name)
         stats = flow_def.update()
         LOGGER.info("Updated index: %s", stats)

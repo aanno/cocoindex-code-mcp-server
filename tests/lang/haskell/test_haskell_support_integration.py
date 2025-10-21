@@ -19,20 +19,33 @@ try:
     from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
         extract_haskell_ast_chunks,
     )
+
     haskell_ast_chunker_AVAILABLE = True
 except ImportError as e:
-    LOGGER.warning(f"Haskell support not available: {e}")
+    LOGGER.warning("Haskell support not available: %s", e)
     haskell_ast_chunker_AVAILABLE = False
 
 
-def test_enhanced_haskell_chunking() -> List[Union[Tuple[HaskellChunkConfig, List[Dict[str, Union[str, Dict[str, Union[int, str, bool]]]]]], Tuple[HaskellChunkConfig,
-                                                                                                                                                   List[Union[Dict[str, Union[str, Dict[str, Union[int, str, bool]]]], Dict[str, Union[str, Dict[str, Union[int, str, bool, List[str]]]]]]]]]]:
+def test_enhanced_haskell_chunking() -> List[
+    Union[
+        Tuple[HaskellChunkConfig, List[Dict[str, Union[str, Dict[str, Union[int, str, bool]]]]]],
+        Tuple[
+            HaskellChunkConfig,
+            List[
+                Union[
+                    Dict[str, Union[str, Dict[str, Union[int, str, bool]]]],
+                    Dict[str, Union[str, Dict[str, Union[int, str, bool, List[str]]]]],
+                ]
+            ],
+        ],
+    ]
+]:
     """Test the enhanced Haskell chunking functionality."""
     if not haskell_ast_chunker_AVAILABLE:
         print("⚠️ Skipping Haskell test - haskell_ast_chunker not available")
         return []
 
-    haskell_code = '''
+    haskell_code = """
 module Main where
 
 import Data.List
@@ -63,7 +76,7 @@ main = do
     putStrLn $ "Tree: " ++ show tree
     putStrLn $ "Depth: " ++ show (treeDepth tree)
     putStrLn $ "Doubled: " ++ show (mapTree (*2) tree)
-'''
+"""
 
     # Test with different configurations
     configs = [
@@ -75,24 +88,24 @@ main = do
     all_results = []
 
     for i, config in enumerate(configs):
-        LOGGER.info(f"\n--- Configuration {i + 1} ---")
-        LOGGER.info(f"Max size: {config.max_chunk_size}, Overlap: {config.chunk_overlap}")
-        LOGGER.info(f"Expansion: {config.chunk_expansion}, Template: {config.metadata_template}")
+        LOGGER.info("\n--- Configuration %s ---", i + 1)
+        LOGGER.info("Max size: %s, Overlap: %s", config.max_chunk_size, config.chunk_overlap)
+        LOGGER.info("Expansion: %s, Template: %s", config.chunk_expansion, config.metadata_template)
 
         # Use legacy approach since @op.executor_class requires CocoIndex infrastructure
         chunks = extract_haskell_ast_chunks(haskell_code)
         all_results.append((config, chunks))
 
-        LOGGER.info(f"Created {len(chunks)} chunks:")
+        LOGGER.info("Created %s chunks:", len(chunks))
         for j, chunk in enumerate(chunks):
-            metadata = chunk['metadata']
-            LOGGER.info(f"  Chunk {j + 1}: {metadata.get('chunking_method', 'unknown')} method")
+            metadata = chunk["metadata"]
+            LOGGER.info("  Chunk %s: %s method", j + 1, metadata.get("chunking_method", "unknown"))
 
         # Basic assertions - use legacy format
         assert len(chunks) > 0, f"No chunks created for config {i + 1}"
         for chunk in chunks:
-            assert 'text' in chunk  # Legacy format uses 'text' instead of 'content'
-            assert 'metadata' in chunk
+            assert "text" in chunk  # Legacy format uses 'text' instead of 'content'
+            assert "metadata" in chunk
 
     print("✅ Enhanced Haskell chunking test passed!")
     return all_results
@@ -120,7 +133,7 @@ def test_haskell_chunk_config():
         chunk_expansion=True,
         metadata_template="repoeval",
         preserve_imports=False,
-        preserve_exports=False
+        preserve_exports=False,
     )
     assert custom_config.max_chunk_size == 1000
     assert custom_config.chunk_overlap == 5
@@ -138,7 +151,7 @@ def test_haskell_simple_chunking():
         print("⚠️ Skipping simple Haskell test - haskell_ast_chunker not available")
         return
 
-    simple_code = '''
+    simple_code = """
 module Simple where
 
 -- Simple function
@@ -148,7 +161,7 @@ add x y = x + y
 -- Another function
 multiply :: Int -> Int -> Int
 multiply x y = x * y
-'''
+"""
 
     # Use legacy approach since @op.executor_class requires CocoIndex infrastructure
     chunks = extract_haskell_ast_chunks(simple_code)
@@ -156,9 +169,9 @@ multiply x y = x * y
     assert len(chunks) > 0
 
     # Check that we have some content (legacy format uses 'text')
-    total_content = "".join(chunk['text'] for chunk in chunks)
-    assert 'add' in total_content
-    assert 'multiply' in total_content
+    total_content = "".join(chunk["text"] for chunk in chunks)
+    assert "add" in total_content
+    assert "multiply" in total_content
 
     print("✅ Simple Haskell chunking test passed!")
 
@@ -176,5 +189,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)

@@ -84,10 +84,10 @@ class CppASTVisitor(CASTVisitor):
                     if text is not None:
                         class_name = text.decode("utf-8")
                         self.classes.append(class_name)
-                        LOGGER.debug(f"Found C++ class: {class_name}")
+                        LOGGER.debug("Found C++ class: %s", class_name)
                         break
         except Exception as e:
-            LOGGER.warning(f"Error extracting C++ class: {e}")
+            LOGGER.warning("Error extracting C++ class: %s", e)
 
     def _extract_namespace(self, node: Node) -> None:
         """Extract namespace name from namespace_definition node."""
@@ -99,10 +99,10 @@ class CppASTVisitor(CASTVisitor):
                     if text is not None:
                         namespace_name = text.decode("utf-8")
                         self.namespaces.append(namespace_name)
-                        LOGGER.debug(f"Found C++ namespace: {namespace_name}")
+                        LOGGER.debug("Found C++ namespace: %s", namespace_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting C++ namespace: {e}")
+            LOGGER.warning("Error extracting C++ namespace: %s", e)
 
     def _extract_template(self, node):
         """Extract template information from template_declaration node."""
@@ -117,11 +117,11 @@ class CppASTVisitor(CASTVisitor):
                             if grandchild.type == "type_identifier":
                                 template_name = f"template<{grandchild.text.decode('utf-8')}>"
                                 self.templates.append(template_name)
-                                LOGGER.debug(f"Found C++ template: {template_name}")
+                                LOGGER.debug("Found C++ template: %s", template_name)
                                 break
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting C++ template: {e}")
+            LOGGER.warning("Error extracting C++ template: %s", e)
 
     def get_summary(self) -> Dict[str, Any]:
         """Get analysis summary in the expected format."""
@@ -155,7 +155,7 @@ def analyze_cpp_code(code: str, language: str = "cpp", filename: str = "") -> Di
         factory = ASTParserFactory()
         parser = factory.create_parser(language)
         if not parser:
-            LOGGER.warning(f"C++ parser not available for {language}")
+            LOGGER.warning("C++ parser not available for %s", language)
             return {"success": False, "error": f"C++ parser not available for {language}"}
 
         tree = factory.parse_code(code, language)
@@ -186,12 +186,12 @@ def analyze_cpp_code(code: str, language: str = "cpp", filename: str = "") -> Di
         )
 
         LOGGER.debug(
-            f"C++ analysis completed: {len(result.get('functions',
-                                                      []))} functions, {len(result.get('classes',
-                                                                                       []))} classes found"
+            "C++ analysis completed: %s functions, %s classes found",
+            len(result.get("functions", [])),
+            len(result.get("classes", [])),
         )
         return result
 
     except Exception as e:
-        LOGGER.error(f"C++ code analysis failed: {e}")
+        LOGGER.error("C++ code analysis failed: %s", e)
         return {"success": False, "error": str(e)}

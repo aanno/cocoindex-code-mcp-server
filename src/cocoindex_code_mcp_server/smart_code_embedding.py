@@ -246,7 +246,7 @@ def create_smart_code_embedding(
     final_args = selector.get_model_args(selected_model, model_args)
 
     # Log the selection for debugging
-    LOGGER.info(f"Selected embedding model: {selected_model} for language: {language or 'auto'}")
+    LOGGER.info("Selected embedding model: %s for language: %s", selected_model, language or "auto")
 
     # Return CocoIndex SentenceTransformerEmbed with selected model
     return cocoindex.functions.SentenceTransformerEmbed(model=selected_model, args=final_args)
@@ -359,7 +359,8 @@ if __name__ == "__main__":
 
     print()
     print("Example Usage:")
-    print("""
+    print(
+        """
     # In your CocoIndex flow:
     from cocoindex_code_mcp_server.smart_code_embedding import create_smart_code_embedding
 
@@ -370,4 +371,5 @@ if __name__ == "__main__":
     # Manual language selection
     embedding_func = create_smart_code_embedding(language="rust")
     chunk["embedding"] = chunk["text"].transform(embedding_func)
-    """)
+    """
+    )

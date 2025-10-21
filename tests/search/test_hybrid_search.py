@@ -60,7 +60,7 @@ class TestMCPDirect:
 
         # Create and initialize infrastructure using configuration with hybrid test type
         infrastructure_kwargs = config.to_infrastructure_kwargs()
-        infrastructure_kwargs['test_type'] = 'hybrid'  # Use separate hybrid test table
+        infrastructure_kwargs["test_type"] = "hybrid"  # Use separate hybrid test table
         async with CocoIndexTestInfrastructure(**infrastructure_kwargs) as infrastructure:
 
             # CocoIndex indexing completes synchronously during infrastructure setup
@@ -72,9 +72,7 @@ class TestMCPDirect:
 
             # Run hybrid search tests using direct infrastructure
             failed_tests = await run_cocoindex_hybrid_search_tests(
-                test_cases=test_data["tests"],
-                infrastructure=infrastructure,
-                run_timestamp=run_timestamp
+                test_cases=test_data["tests"], infrastructure=infrastructure, run_timestamp=run_timestamp
             )
 
             # Report results using common helper
@@ -83,7 +81,7 @@ class TestMCPDirect:
                 logging.info(error_msg)
                 pytest.fail(error_msg)
             else:
-                logging.info(f"✅ All {len(test_data['tests'])} hybrid search validation tests passed!")
+                logging.info("✅ All %s hybrid search validation tests passed!", len(test_data["tests"]))
 
 
 if __name__ == "__main__":

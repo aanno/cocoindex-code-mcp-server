@@ -67,35 +67,35 @@ if __name__ == "__main__":
     else:
         # Log the results
         LOGGER.info("📊 Enhanced Python Code Analysis Results:")
-        LOGGER.info(f"Analysis Method: {metadata.get('analysis_method', 'unknown')}")
-        LOGGER.info(f"Functions: {metadata['functions']}")
-        LOGGER.info(f"Classes: {metadata['classes']}")
-        LOGGER.info(f"Imports: {metadata['imports']}")
-        LOGGER.info(f"Complexity Score: {metadata['complexity_score']}")
-        LOGGER.info(f"Has Async: {metadata['has_async']}")
-        LOGGER.info(f"Has Type Hints: {metadata['has_type_hints']}")
-        LOGGER.info(f"Private Methods: {metadata['private_methods']}")
-        LOGGER.info(f"Dunder Methods: {metadata.get('dunder_methods', [])}")
+        LOGGER.info("Analysis Method: %s", metadata.get("analysis_method", "unknown"))
+        LOGGER.info("Functions: %s", metadata["functions"])
+        LOGGER.info("Classes: %s", metadata["classes"])
+        LOGGER.info("Imports: %s", metadata["imports"])
+        LOGGER.info("Complexity Score: %s", metadata["complexity_score"])
+        LOGGER.info("Has Async: %s", metadata["has_async"])
+        LOGGER.info("Has Type Hints: %s", metadata["has_type_hints"])
+        LOGGER.info("Private Methods: %s", metadata["private_methods"])
+        LOGGER.info("Dunder Methods: %s", metadata.get("dunder_methods", []))
 
         # Show analysis details if available
-        if 'function_details' in metadata and metadata['function_details']:
-            LOGGER.info(f"Function Details Count: {len(metadata['function_details'])}")
-        if 'class_details' in metadata and metadata['class_details']:
-            LOGGER.info(f"Class Details Count: {len(metadata['class_details'])}")
+        if "function_details" in metadata and metadata["function_details"]:
+            LOGGER.info("Function Details Count: %s", len(metadata["function_details"]))
+        if "class_details" in metadata and metadata["class_details"]:
+            LOGGER.info("Class Details Count: %s", len(metadata["class_details"]))
 
         # Assertions for testing
-        assert metadata['language'].lower() == 'python'  # Handle case variations
-        assert 'standalone_function' in metadata['functions']
-        assert 'DataProcessor' in metadata['classes']
-        assert metadata['has_async'] is True
-        assert metadata['has_type_hints'] is True
-        assert len(metadata['imports']) >= 3  # os, typing, numpy
-        assert metadata['complexity_score'] > 0
+        assert metadata["language"].lower() == "python"  # Handle case variations
+        assert "standalone_function" in metadata["functions"]
+        assert "DataProcessor" in metadata["classes"]
+        assert metadata["has_async"] is True
+        assert metadata["has_type_hints"] is True
+        assert len(metadata["imports"]) >= 3  # os, typing, numpy
+        assert metadata["complexity_score"] > 0
 
         # Check for expected metadata structure
-        assert 'function_details' in metadata
-        assert 'class_details' in metadata
-        assert 'import_details' in metadata
+        assert "function_details" in metadata
+        assert "class_details" in metadata
+        assert "import_details" in metadata
 
         print("✅ Python analyzer integration test passed!")
 
@@ -106,9 +106,9 @@ def test_python_analyzer_edge_cases() -> None:
     # Test empty code
     empty_metadata: Union[Dict[str, Any], None] = analyze_python_code("", "empty.py")
     if empty_metadata is not None:
-        assert empty_metadata['line_count'] == 1
-        assert len(empty_metadata['functions']) == 0
-        assert len(empty_metadata['classes']) == 0
+        assert empty_metadata["line_count"] == 1
+        assert len(empty_metadata["functions"]) == 0
+        assert len(empty_metadata["classes"]) == 0
     else:
         pytest.fail("no metadata in chunk")
 
@@ -116,8 +116,8 @@ def test_python_analyzer_edge_cases() -> None:
     minimal_code = "x = 1"
     minimal_metadata: Union[Dict[str, Any], None] = analyze_python_code(minimal_code, "minimal.py")
     if minimal_metadata is not None:
-        assert minimal_metadata['language'].lower() == 'python'  # Handle case variations
-        assert minimal_metadata['line_count'] == 1
+        assert minimal_metadata["language"].lower() == "python"  # Handle case variations
+        assert minimal_metadata["line_count"] == 1
     else:
         pytest.fail("no metadata in chunk")
 
@@ -126,8 +126,8 @@ def test_python_analyzer_edge_cases() -> None:
     broken_metadata: Union[Dict[str, Any], None] = analyze_python_code(broken_code, "broken.py")
     # Should handle gracefully and return basic metadata
     if broken_metadata is not None:
-        assert 'language' in broken_metadata
-        assert broken_metadata['language'].lower() == 'python'  # Handle case variations
+        assert "language" in broken_metadata
+        assert broken_metadata["language"].lower() == "python"  # Handle case variations
     else:
         pytest.fail("no metadata in chunk")
 
@@ -218,30 +218,30 @@ DEBUG = True
 
     if metadata is not None:
         # Verify comprehensive analysis
-        assert metadata['has_classes'] is True
-        assert metadata['has_async'] is True
-        assert metadata['has_type_hints'] is True
-        assert metadata['has_decorators'] is True
-        assert metadata['has_docstrings'] is True
+        assert metadata["has_classes"] is True
+        assert metadata["has_async"] is True
+        assert metadata["has_type_hints"] is True
+        assert metadata["has_decorators"] is True
+        assert metadata["has_docstrings"] is True
 
         # Check specific elements
-        assert 'Config' in metadata['classes']
-        assert 'Processor' in metadata['classes']
-        assert 'GenericProcessor' in metadata['classes']
+        assert "Config" in metadata["classes"]
+        assert "Processor" in metadata["classes"]
+        assert "GenericProcessor" in metadata["classes"]
 
-        assert 'utility_function' in metadata['functions']
+        assert "utility_function" in metadata["functions"]
 
-        expected_imports = ['asyncio', 'typing', 'dataclasses', 'pathlib']
+        expected_imports = ["asyncio", "typing", "dataclasses", "pathlib"]
         for imp in expected_imports:
-            assert imp in metadata['imports'], f"Missing import: {imp}"
+            assert imp in metadata["imports"], f"Missing import: {imp}"
 
         # Check for decorators
-        assert 'dataclass' in metadata['decorators']
-        assert 'classmethod' in metadata['decorators']
-        assert 'staticmethod' in metadata['decorators']
+        assert "dataclass" in metadata["decorators"]
+        assert "classmethod" in metadata["decorators"]
+        assert "staticmethod" in metadata["decorators"]
 
         # Should have reasonable complexity (adjusted expectation)
-        assert metadata['complexity_score'] > 2
+        assert metadata["complexity_score"] > 2
 
         print("✅ Python analyzer comprehensive test passed!")
     else:
@@ -261,5 +261,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)

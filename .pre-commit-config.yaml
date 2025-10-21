@@ -1,7 +1,7 @@
 # also see https://pre-commit.com/hooks.html
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-yaml
       - id: end-of-file-fixer
@@ -13,13 +13,13 @@ repos:
       - id: check-json
         exclude: tsconfig.json
       - id: check-merge-conflict
-      - id: check-shebang-scripts-are-executable
+      # - id: check-shebang-scripts-are-executable
       - id: check-symlinks
       - id: check-toml
       - id: check-xml
       - id: destroyed-symlinks
-      # -   id: detect-aws-credentials
-      # - id: detect-private-key
+      - id: detect-aws-credentials
+      - id: detect-private-key
       - id: pretty-format-json
         exclude: tsconfig.json
         args: [--autofix, --no-sort-keys]
@@ -28,3 +28,20 @@ repos:
     rev: v0.16.0
     hooks:
       - id: yamlfmt
+  # - repo: https://github.com/psf/black
+  #   rev: 24.3.0
+  #   hooks:
+  #     - id: black
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.0
+    hooks:
+      - id: isort
+  # - repo: https://github.com/astral-sh/ruff
+  #   rev: v0.3.0
+  #   hooks:
+  #     - id: ruff
+  - repo: https://github.com/dmar1n/lazy-log-formatter
+    rev: 0.8.0
+    hooks:
+      - id: lazy-log-formatter
+        args: ['--fix', 'src', 'tests', 'examples', 'tests_broken']

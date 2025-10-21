@@ -24,7 +24,7 @@ def test_keyword_search_parser_boolean_or():
 
     # Test the boolean OR query
     query = "language:rust OR language:c"
-    logger.info(f"Testing query: {query}")
+    logger.info("Testing query: %s", query)
 
     result = parser.parse(query)
 
@@ -74,6 +74,7 @@ def test_keyword_search_parser_simple_query():
 
     # Should have a single condition in a SearchGroup
     from cocoindex_code_mcp_server.keyword_search_parser_lark import SearchCondition
+
     assert hasattr(result, "conditions"), "Result should have conditions"
     assert len(result.conditions) == 1, "Should have exactly 1 condition"
     first_cond = result.conditions[0]
@@ -135,6 +136,7 @@ def test_keyword_search_parser_field_value_pairs(query, expected_field, expected
 
     # Parser now returns SearchGroup with conditions list
     from cocoindex_code_mcp_server.keyword_search_parser_lark import SearchCondition
+
     assert hasattr(result, "conditions"), "Result should have conditions"
     assert len(result.conditions) == 1, "Should have exactly 1 condition"
     first_cond = result.conditions[0]
@@ -151,6 +153,7 @@ def test_keyword_search_parser_invalid_query():
 
     # Plain text without colon is now treated as text search
     from cocoindex_code_mcp_server.keyword_search_parser_lark import SearchCondition
+
     result = parser.parse("invalid query without colon")
     assert hasattr(result, "conditions"), "Result should have conditions"
     assert len(result.conditions) == 1, "Should have exactly 1 condition"

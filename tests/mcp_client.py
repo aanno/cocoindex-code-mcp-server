@@ -29,7 +29,7 @@ class MCPTestClient:
     proper connection management and response parsing.
     """
 
-    def __init__(self, host: str = '127.0.0.1', port: int = 3033, transport: str = 'http'):
+    def __init__(self, host: str = "127.0.0.1", port: int = 3033, transport: str = "http"):
         """
         Initialize MCP test client.
 
@@ -42,7 +42,7 @@ class MCPTestClient:
         self.port = port
         self.transport = transport
 
-        if transport == 'http':
+        if transport == "http":
             self.server_url = f"http://{host}:{port}/mcp/"
             self.http_client: Optional[httpx.AsyncClient] = httpx.AsyncClient(timeout=30.0)
         else:
@@ -56,7 +56,7 @@ class MCPTestClient:
 
     async def connect(self):
         """Connect to the MCP server using the specified transport."""
-        if self.transport == 'http':
+        if self.transport == "http":
             await self._connect_http()
         else:
             await self._connect_streaming()
@@ -66,16 +66,13 @@ class MCPTestClient:
         if not self.server_url:
             raise RuntimeError("Server URL not set for streaming transport")
 
-        self._client_context = streamablehttp_client(
-            url=self.server_url,
-            timeout=timedelta(seconds=30)
-        )
+        self._client_context = streamablehttp_client(url=self.server_url, timeout=timedelta(seconds=30))
         read_stream, write_stream, get_session_id = await self._client_context.__aenter__()
 
         self._session_context = ClientSession(read_stream, write_stream)
         self.session = await self._session_context.__aenter__()
         await self.session.initialize()
-        logger.info(f"Connected to MCP server at {self.server_url} (streaming)")
+        logger.info("Connected to MCP server at %s (streaming)", self.server_url)
 
     async def _connect_http(self):
         """Connect using direct HTTP transport (for compatibility)."""
@@ -87,25 +84,17 @@ class MCPTestClient:
 
             response = await self.http_client.post(
                 self.server_url,
-                json={
-                    "jsonrpc": "2.0",
-                    "id": 1,
-                    "method": "tools/list",
-                    "params": {}
-                },
-                headers={
-                    "Content-Type": "application/json",
-                    "Accept": "application/json, text/event-stream"
-                }
+                json={"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}},
+                headers={"Content-Type": "application/json", "Accept": "application/json, text/event-stream"},
             )
 
             result = self._parse_http_response(response)
             if "error" in result:
                 raise Exception(f"MCP Error: {result['error']}")
 
-            logger.info(f"Connected to MCP server at {self.server_url} (HTTP)")
+            logger.info("Connected to MCP server at %s (HTTP)", self.server_url)
         except Exception as e:
-            logger.error(f"Failed to connect to MCP server: {e}")
+            logger.error("Failed to connect to MCP server: %s", e)
             raise
 
     def _parse_http_response(self, response):
@@ -118,8 +107,8 @@ class MCPTestClient:
         # Handle Server-Sent Events format
         if response.headers.get("content-type", "").startswith("text/event-stream"):
             # Parse SSE format
-            for line in response_text.split('\n'):
-                if line.startswith('data: '):
+            for line in response_text.split("\n"):
+                if line.startswith("data: "):
                     data = line[6:]  # Remove 'data: ' prefix
                     if data.strip():
                         try:
@@ -133,7 +122,7 @@ class MCPTestClient:
 
     async def close(self):
         """Close the connection."""
-        if self.transport == 'http' and self.http_client:
+        if self.transport == "http" and self.http_client:
             await self.http_client.aclose()
         else:
             # Streaming transport cleanup
@@ -141,12 +130,12 @@ class MCPTestClient:
                 try:
                     await self._session_context.__aexit__(None, None, None)
                 except Exception as e:
-                    logger.warning(f"Error closing session context: {e}")
+                    logger.warning("Error closing session context: %s", e)
             if self._client_context:
                 try:
                     await self._client_context.__aexit__(None, None, None)
                 except Exception as e:
-                    logger.warning(f"Error closing client context: {e}")
+                    logger.warning("Error closing client context: %s", e)
 
     async def __aenter__(self):
         await self.connect()
@@ -165,7 +154,7 @@ class MCPTestClient:
                 - content: List of content items (for compatibility)
                 - result: Raw result data
         """
-        if self.transport == 'http':
+        if self.transport == "http":
             return await self._call_tool_http(tool_name, params)
         else:
             return await self._call_tool_streaming(tool_name, params)
@@ -178,18 +167,14 @@ class MCPTestClient:
         result = await self.session.call_tool(tool_name, params or {})
 
         # Normalize result format
-        response: Dict[str, Any] = {
-            "isError": getattr(result, 'isError', False),
-            "content": [],
-            "result": result
-        }
+        response: Dict[str, Any] = {"isError": getattr(result, "isError", False), "content": [], "result": result}
 
-        if hasattr(result, 'content') and result.content:
+        if hasattr(result, "content") and result.content:
             for content in result.content:
-                if hasattr(content, 'text'):
+                if hasattr(content, "text"):
                     response["content"].append(content.text)
 
-        if hasattr(result, 'structuredContent') and result.structuredContent:
+        if hasattr(result, "structuredContent") and result.structuredContent:
             response["structuredContent"] = result.structuredContent
 
         return response
@@ -205,24 +190,14 @@ class MCPTestClient:
                 "jsonrpc": "2.0",
                 "id": 1,
                 "method": "tools/call",
-                "params": {
-                    "name": tool_name,
-                    "arguments": params or {}
-                }
+                "params": {"name": tool_name, "arguments": params or {}},
             },
-            headers={
-                "Content-Type": "application/json",
-                "Accept": "application/json, text/event-stream"
-            }
+            headers={"Content-Type": "application/json", "Accept": "application/json, text/event-stream"},
         )
 
         result = self._parse_http_response(response)
         if "error" in result:
-            return {
-                "isError": True,
-                "content": [f"MCP Error: {result['error']['message']}"],
-                "result": result
-            }
+            return {"isError": True, "content": [f"MCP Error: {result['error']['message']}"], "result": result}
 
         # Parse MCP result format
         mcp_result = result["result"]
@@ -238,18 +213,14 @@ class MCPTestClient:
                         return {
                             "isError": True,
                             "content": [f"MCP Tool Error: {content_data['error']['message']}"],
-                            "result": result
+                            "result": result,
                         }
                 except json.JSONDecodeError:
                     pass  # Not JSON, continue normally
 
                 content_items.append(item["text"])
 
-        return {
-            "isError": False,
-            "content": content_items,
-            "result": mcp_result
-        }
+        return {"isError": False, "content": content_items, "result": mcp_result}
 
     async def read_resource(self, resource_name_or_uri: str) -> str:
         """
@@ -258,7 +229,7 @@ class MCPTestClient:
         Args:
             resource_name_or_uri: Either resource name or full URI
         """
-        if self.transport == 'http':
+        if self.transport == "http":
             return await self._read_resource_http(resource_name_or_uri)
         else:
             return await self._read_resource_streaming(resource_name_or_uri)
@@ -269,7 +240,7 @@ class MCPTestClient:
             raise RuntimeError("Not connected to server")
 
         # If it's just a name, find the URI
-        if not resource_name_or_uri.startswith(('http://', 'https://', 'cocoindex://')):
+        if not resource_name_or_uri.startswith(("http://", "https://", "cocoindex://")):
             resources_result = await self.session.list_resources()
             resource = next((r for r in resources_result.resources if r.name == resource_name_or_uri), None)
 
@@ -281,9 +252,9 @@ class MCPTestClient:
 
         result = await self.session.read_resource(resource_uri)
 
-        if hasattr(result, 'contents') and result.contents:
+        if hasattr(result, "contents") and result.contents:
             for content in result.contents:
-                if hasattr(content, 'text'):
+                if hasattr(content, "text"):
                     return content.text
 
         return ""
@@ -291,13 +262,13 @@ class MCPTestClient:
     async def _read_resource_http(self, resource_name_or_uri: str) -> str:
         """Read resource using HTTP transport."""
         # If it's just a name, we need to resolve it to a URI
-        if not resource_name_or_uri.startswith(('http://', 'https://', 'cocoindex://')):
+        if not resource_name_or_uri.startswith(("http://", "https://", "cocoindex://")):
             # List resources to find the URI
             resources = await self.list_resources()
             # For HTTP transport, we get resource objects with attributes
             matching_resource = None
             for resource in resources:
-                if hasattr(resource, 'name') and resource.name == resource_name_or_uri:
+                if hasattr(resource, "name") and resource.name == resource_name_or_uri:
                     matching_resource = resource
                     break
 
@@ -312,18 +283,8 @@ class MCPTestClient:
 
         response = await self.http_client.post(
             self.server_url,
-            json={
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "resources/read",
-                "params": {
-                    "uri": resource_uri
-                }
-            },
-            headers={
-                "Content-Type": "application/json",
-                "Accept": "application/json, text/event-stream"
-            }
+            json={"jsonrpc": "2.0", "id": 1, "method": "resources/read", "params": {"uri": resource_uri}},
+            headers={"Content-Type": "application/json", "Accept": "application/json, text/event-stream"},
         )
 
         result = self._parse_http_response(response)
@@ -340,7 +301,7 @@ class MCPTestClient:
 
     async def list_tools(self) -> List[Any]:
         """Get list of available tools."""
-        if self.transport == 'http':
+        if self.transport == "http":
             return await self._list_tools_http()
         else:
             return await self._list_tools_streaming()
@@ -360,16 +321,8 @@ class MCPTestClient:
 
         response = await self.http_client.post(
             self.server_url,
-            json={
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "tools/list",
-                "params": {}
-            },
-            headers={
-                "Content-Type": "application/json",
-                "Accept": "application/json, text/event-stream"
-            }
+            json={"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}},
+            headers={"Content-Type": "application/json", "Accept": "application/json, text/event-stream"},
         )
 
         result = self._parse_http_response(response)
@@ -378,18 +331,17 @@ class MCPTestClient:
 
         # Convert MCP result to tool objects for compatibility
         from types import SimpleNamespace
+
         tools = []
         for tool in result["result"]["tools"]:
-            tools.append(SimpleNamespace(
-                name=tool["name"],
-                description=tool["description"],
-                inputSchema=tool["inputSchema"]
-            ))
+            tools.append(
+                SimpleNamespace(name=tool["name"], description=tool["description"], inputSchema=tool["inputSchema"])
+            )
         return tools
 
     async def list_resources(self) -> List[Any]:
         """Get list of available resources."""
-        if self.transport == 'http':
+        if self.transport == "http":
             return await self._list_resources_http()
         else:
             return await self._list_resources_streaming()
@@ -409,16 +361,8 @@ class MCPTestClient:
 
         response = await self.http_client.post(
             self.server_url,
-            json={
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "resources/list",
-                "params": {}
-            },
-            headers={
-                "Content-Type": "application/json",
-                "Accept": "application/json, text/event-stream"
-            }
+            json={"jsonrpc": "2.0", "id": 1, "method": "resources/list", "params": {}},
+            headers={"Content-Type": "application/json", "Accept": "application/json, text/event-stream"},
         )
 
         result = self._parse_http_response(response)
@@ -427,19 +371,18 @@ class MCPTestClient:
 
         # Convert MCP result to resource objects for compatibility
         from types import SimpleNamespace
+
         resources = []
         for resource in result["result"]["resources"]:
-            resources.append(SimpleNamespace(
-                name=resource["name"],
-                uri=resource["uri"],
-                description=resource["description"]
-            ))
+            resources.append(
+                SimpleNamespace(name=resource["name"], uri=resource["uri"], description=resource["description"])
+            )
         return resources
 
     async def check_server_running(self) -> bool:
         """Check if MCP server is running."""
         try:
-            if self.transport == 'http':
+            if self.transport == "http":
                 if not self.http_client:
                     return False
 
@@ -449,26 +392,18 @@ class MCPTestClient:
 
                 response = await self.http_client.post(
                     self.server_url,
-                    json={
-                        "jsonrpc": "2.0",
-                        "id": 1,
-                        "method": "tools/list",
-                        "params": {}
-                    },
-                    headers={
-                        "Content-Type": "application/json",
-                        "Accept": "application/json, text/event-stream"
-                    }
+                    json={"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}},
+                    headers={"Content-Type": "application/json", "Accept": "application/json, text/event-stream"},
                 )
                 return response.status_code == 200
             else:
                 # For streaming transport, create a temporary connection
-                temp_client = MCPTestClient(self.host, self.port, 'streaming')
+                temp_client = MCPTestClient(self.host, self.port, "streaming")
                 async with temp_client:
                     tools = await temp_client.list_tools()
                     return len(tools) > 0
         except Exception as e:
-            logger.debug(f"Server check error: {e}")
+            logger.debug("Server check error: %s", e)
             return False
 
 
@@ -476,8 +411,8 @@ class MCPTestClient:
 class MCPHTTPClient(MCPTestClient):
     """Legacy wrapper for backward compatibility."""
 
-    def __init__(self, host: str = '127.0.0.1', port: int = 3033):
-        super().__init__(host=host, port=port, transport='http')
+    def __init__(self, host: str = "127.0.0.1", port: int = 3033):
+        super().__init__(host=host, port=port, transport="http")
         # For compatibility with existing tests
         self.base_url = f"http://{host}:{port}/mcp/"
         self.client = self.http_client

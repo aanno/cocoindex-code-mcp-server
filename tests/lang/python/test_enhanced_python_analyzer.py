@@ -21,7 +21,7 @@ def test_enhanced_analyzer():
             analyze_python_code,
         )
     except ImportError as e:
-        LOGGER.error(f"Could not import analyzer: {e}")
+        LOGGER.error("Could not import analyzer: %s", e)
         print(f"❌ Could not import analyzer: {e}")
         return False
 
@@ -93,33 +93,33 @@ MODULE_VAR = "test_value"
 
             # Test specific features
             features = []
-            if metadata.get('has_async'):
+            if metadata.get("has_async"):
                 features.append("async")
-            if metadata.get('has_type_hints'):
+            if metadata.get("has_type_hints"):
                 features.append("type_hints")
-            if metadata.get('has_decorators'):
+            if metadata.get("has_decorators"):
                 features.append("decorators")
-            if metadata.get('has_classes'):
+            if metadata.get("has_classes"):
                 features.append("classes")
-            if metadata.get('has_docstrings'):
+            if metadata.get("has_docstrings"):
                 features.append("docstrings")
 
             print(f"✨ Features detected: {', '.join(features)}")
 
             # Check for detailed information
-            if 'function_details' in metadata:
+            if "function_details" in metadata:
                 print(f"📋 Function details available: {len(metadata['function_details'])} functions")
-            if 'class_details' in metadata:
+            if "class_details" in metadata:
                 print(f"📋 Class details available: {len(metadata['class_details'])} classes")
 
             # Check for specific elements we expect
-            expected_functions = ['standalone_function']
-            expected_classes = ['TestClass']
-            expected_imports = ['os', 'typing', 'asyncio']
+            expected_functions = ["standalone_function"]
+            expected_classes = ["TestClass"]
+            expected_imports = ["os", "typing", "asyncio"]
 
-            found_functions = metadata.get('functions', [])
-            found_classes = metadata.get('classes', [])
-            found_imports = metadata.get('imports', [])
+            found_functions = metadata.get("functions", [])
+            found_classes = metadata.get("classes", [])
+            found_imports = metadata.get("imports", [])
 
             all_good = True
 
@@ -145,9 +145,9 @@ MODULE_VAR = "test_value"
                     print(f"✅ Found expected import: {expected}")
 
             # Check for enhanced features
-            if metadata.get('private_methods'):
+            if metadata.get("private_methods"):
                 print(f"🔒 Private methods found: {metadata['private_methods']}")
-            if metadata.get('dunder_methods'):
+            if metadata.get("dunder_methods"):
                 print(f"🔮 Dunder methods found: {metadata['dunder_methods']}")
 
             if all_good:

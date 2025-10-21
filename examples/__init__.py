@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+#
 # Test package for haskell-tree-sitter project
 
 import logging

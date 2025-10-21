@@ -23,7 +23,7 @@ def test_rag_metadata_compliance():
             analyze_python_code,
         )
     except ImportError as e:
-        LOGGER.error(f"Could not import analyzer: {e}")
+        LOGGER.error("Could not import analyzer: %s", e)
         print(f"❌ Could not import analyzer: {e}")
         return False
 
@@ -211,7 +211,6 @@ nested_structure = [
                 "hash": str,
                 "node_relationships": dict,
                 "additional_metadata": dict,
-
                 # Our extended fields
                 "language": str,
                 "filename": str,
@@ -222,7 +221,6 @@ nested_structure = [
                 "start_column": int,
                 "end_column": int,
                 "content_hash": str,
-
                 # Content analysis
                 "functions": list,
                 "classes": list,
@@ -230,23 +228,20 @@ nested_structure = [
                 "variables": list,
                 "decorators": list,
                 "complexity_score": int,
-
                 # Feature flags
                 "has_async": bool,
                 "has_classes": bool,
                 "has_decorators": bool,
                 "has_type_hints": bool,
                 "has_docstrings": bool,
-
                 # Detailed information
                 "function_details": list,
                 "class_details": list,
                 "import_details": list,
                 "private_methods": list,
                 "dunder_methods": list,
-
                 # JSON compatibility
-                "metadata_json": str
+                "metadata_json": str,
             }
 
             print("\n📋 Checking Required RAG Metadata Fields:")
@@ -269,14 +264,15 @@ nested_structure = [
             print("\n🔗 Checking Node Relationships Structure:")
             print("-" * 40)
 
-            node_rel = metadata.get('node_relationships', {})
+            node_rel = metadata.get("node_relationships", {})
             expected_rel_fields = [
                 "parent",
                 "children",
                 "scope",
                 "contains",
                 "class_hierarchies",
-                "import_dependencies"]
+                "import_dependencies",
+            ]
 
             for rel_field in expected_rel_fields:
                 if rel_field in node_rel:
@@ -289,9 +285,16 @@ nested_structure = [
             print("\n📊 Checking Additional Metadata Structure:")
             print("-" * 40)
 
-            add_meta = metadata.get('additional_metadata', {})
-            expected_add_fields = ["analysis_method", "parser_version", "extracted_at",
-                                   "total_functions", "total_classes", "total_imports", "code_patterns"]
+            add_meta = metadata.get("additional_metadata", {})
+            expected_add_fields = [
+                "analysis_method",
+                "parser_version",
+                "extracted_at",
+                "total_functions",
+                "total_classes",
+                "total_imports",
+                "code_patterns",
+            ]
 
             for add_field in expected_add_fields:
                 if add_field in add_meta:
@@ -312,7 +315,7 @@ nested_structure = [
                 "has_classes": True,
                 "has_decorators": True,
                 "has_type_hints": True,
-                "has_docstrings": True
+                "has_docstrings": True,
             }
 
             content_accurate = True
@@ -338,11 +341,21 @@ nested_structure = [
             print("\n🔍 Checking Detailed Function Information:")
             print("-" * 40)
 
-            func_details = metadata.get('function_details', [])
+            func_details = metadata.get("function_details", [])
             if func_details:
                 sample_func = func_details[0]
-                required_func_fields = ["name", "line", "end_line", "column", "end_column",
-                                        "lines_of_code", "parameters", "return_type", "decorators", "docstring"]
+                required_func_fields = [
+                    "name",
+                    "line",
+                    "end_line",
+                    "column",
+                    "end_column",
+                    "lines_of_code",
+                    "parameters",
+                    "return_type",
+                    "decorators",
+                    "docstring",
+                ]
 
                 for func_field in required_func_fields:
                     if func_field in sample_func:
@@ -357,7 +370,7 @@ nested_structure = [
             print("-" * 40)
 
             try:
-                json_str = metadata.get('metadata_json', '')
+                json_str = metadata.get("metadata_json", "")
                 if json_str:
                     json.loads(json_str)
                     print(f"✅ metadata_json: valid JSON ({len(json_str)} chars)")
@@ -393,6 +406,7 @@ nested_structure = [
     except Exception as e:
         print(f"❌ Error during analysis: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -432,18 +446,18 @@ def last_function(x: int) -> str:
             print("📍 Position Information Test:")
             print("-" * 30)
 
-            func_details = metadata.get('function_details', [])
+            func_details = metadata.get("function_details", [])
             for func in func_details:
-                if func['name'] == 'first_function':
+                if func["name"] == "first_function":
                     expected_line = 1
-                    actual_line = func.get('line', 0)
+                    actual_line = func.get("line", 0)
                     if actual_line == expected_line:
                         print(f"✅ first_function line position: {actual_line}")
                     else:
                         print(f"❌ first_function line position: expected {expected_line}, got {actual_line}")
 
                 # Check lines_of_code tuple format
-                lines_of_code = func.get('lines_of_code')
+                lines_of_code = func.get("lines_of_code")
                 if isinstance(lines_of_code, tuple) and len(lines_of_code) == 2:
                     print(f"✅ {func['name']} lines_of_code format: {lines_of_code}")
                 else:
@@ -453,7 +467,7 @@ def last_function(x: int) -> str:
             print("\n🔑 Hash Uniqueness Test:")
             print("-" * 30)
 
-            hash1 = metadata.get('hash', '')
+            hash1 = metadata.get("hash", "")
 
             # Analyze slightly different code
             modified_code = position_test_code + "\n# comment\n"
@@ -462,7 +476,7 @@ def last_function(x: int) -> str:
             if metadata2 is None:
                 pytest.fail("metadata2 is None")
             else:
-                hash2 = metadata2.get('hash', '')
+                hash2 = metadata2.get("hash", "")
 
                 if hash1 and hash2 and hash1 != hash2:
                     print("✅ Hashes are unique for different content")

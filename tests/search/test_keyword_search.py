@@ -49,9 +49,7 @@ class TestKeywordSearch:
 
         # Create search test configuration with only tmp directory for faster processing:
         config = SearchTestConfig(
-            paths=[str(tmp_dir)],  # Only process the copied test files, not entire repo
-            no_live=True,
-            log_level="DEBUG"
+            paths=[str(tmp_dir)], no_live=True, log_level="DEBUG"  # Only process the copied test files, not entire repo
         )
 
         # Log configuration for debugging
@@ -60,7 +58,7 @@ class TestKeywordSearch:
 
         # Create and initialize infrastructure using configuration with keyword test type
         infrastructure_kwargs = config.to_infrastructure_kwargs()
-        infrastructure_kwargs['test_type'] = 'keyword'  # Use separate keyword test table
+        infrastructure_kwargs["test_type"] = "keyword"  # Use separate keyword test table
         async with CocoIndexTestInfrastructure(**infrastructure_kwargs) as infrastructure:
 
             # CocoIndex indexing completes synchronously during infrastructure setup
@@ -72,9 +70,7 @@ class TestKeywordSearch:
 
             # Run keyword search tests using direct infrastructure
             failed_tests = await run_cocoindex_keyword_search_tests(
-                test_cases=test_data["tests"],
-                infrastructure=infrastructure,
-                run_timestamp=run_timestamp
+                test_cases=test_data["tests"], infrastructure=infrastructure, run_timestamp=run_timestamp
             )
 
             # Report results using common helper
@@ -83,13 +79,11 @@ class TestKeywordSearch:
                 logging.info(error_msg)
                 pytest.fail(error_msg)
             else:
-                logging.info(f"✅ All {len(test_data['tests'])} keyword search validation tests passed!")
+                logging.info("✅ All %s keyword search validation tests passed!", len(test_data["tests"]))
 
 
 async def run_cocoindex_keyword_search_tests(
-    test_cases: list,
-    infrastructure: CocoIndexTestInfrastructure,
-    run_timestamp: str
+    test_cases: list, infrastructure: CocoIndexTestInfrastructure, run_timestamp: str
 ) -> list:
     """
     Run keyword-only search tests using CocoIndex infrastructure directly.
@@ -112,10 +106,10 @@ async def run_cocoindex_keyword_search_tests(
         fail_expected = test_case.get("fail_expected", False)
         fail_reason = test_case.get("fail_reason", "")
 
-        logging.info(f"Running keyword search test: {test_name}")
-        logging.info(f"Description: {description}")
+        logging.info("Running keyword search test: %s", test_name)
+        logging.info("Description: %s", description)
         if fail_expected:
-            logging.info(f"⚠️  Expected to fail: {fail_reason}")
+            logging.info("⚠️  Expected to fail: %s", fail_reason)
 
         try:
             # Execute keyword-only search using infrastructure backend
@@ -132,14 +126,10 @@ async def run_cocoindex_keyword_search_tests(
             if total_results < min_results:
                 error_msg = f"Expected at least {min_results} results, got {total_results}"
                 if fail_expected:
-                    logging.info(f"✅ Test failed as expected: {test_name} - {fail_reason}")
-                    logging.info(f"   Failure: {error_msg}")
+                    logging.info("✅ Test failed as expected: %s - %s", test_name, fail_reason)
+                    logging.info("   Failure: %s", error_msg)
                 else:
-                    failed_tests.append({
-                        "test": test_name,
-                        "error": error_msg,
-                        "query": query
-                    })
+                    failed_tests.append({"test": test_name, "error": error_msg, "query": query})
                 continue
 
             # Check expected results using common helper
@@ -149,6 +139,7 @@ async def run_cocoindex_keyword_search_tests(
 
                     for result_item in results:
                         from ..common import compare_expected_vs_actual
+
                         match_found, _ = compare_expected_vs_actual(expected_item, result_item)
                         if match_found:
                             found_match = True
@@ -157,15 +148,15 @@ async def run_cocoindex_keyword_search_tests(
                     if not found_match:
                         # Enhanced error reporting with database comparison
                         try:
-                            db_comparison = await compare_test_with_database(
-                                test_name, query, expected_item, results
-                            )
+                            db_comparison = await compare_test_with_database(test_name, query, expected_item, results)
                             db_report = "\n🔍 Database Comparison Analysis:\n"
                             for discrepancy in db_comparison.discrepancies:
                                 db_report += f"  ❌ {discrepancy}\n"
 
                             if db_comparison.matching_db_records:
-                                db_report += f"\n📋 Database has {len(db_comparison.matching_db_records)} matching records\n"
+                                db_report += (
+                                    f"\n📋 Database has {len(db_comparison.matching_db_records)} matching records\n"
+                                )
                                 # Show sample DB record metadata
                                 if db_comparison.matching_db_records:
                                     sample_record = db_comparison.matching_db_records[0]
@@ -175,51 +166,52 @@ async def run_cocoindex_keyword_search_tests(
                                     db_report += f"has_classes={sample_record.get('has_classes', 'N/A')}, "
                                     db_report += f"functions='{sample_record.get('functions', 'N/A')[:50]}...'\n"
 
-                            error_with_db_analysis = f"No matching result found for expected item: {expected_item}{db_report}"
+                            error_with_db_analysis = (
+                                f"No matching result found for expected item: {expected_item}{db_report}"
+                            )
                         except Exception as db_error:
-                            logging.warning(f"Database comparison failed: {db_error}")
+                            logging.warning("Database comparison failed: %s", db_error)
                             error_with_db_analysis = f"No matching result found for expected item: {expected_item}"
 
                         if fail_expected:
-                            logging.info(f"✅ Test failed as expected: {test_name} - {fail_reason}")
-                            logging.info(f"   Failure: {error_with_db_analysis}")
+                            logging.info("✅ Test failed as expected: %s - %s", test_name, fail_reason)
+                            logging.info("   Failure: %s", error_with_db_analysis)
                         else:
-                            failed_tests.append({
-                                "test": test_name,
-                                "error": error_with_db_analysis,
-                                "query": query,
-                                "actual_results": [{
-                                    "filename": r.get("filename"),
-                                    "metadata_summary": {
-                                        "classes": r.get("classes", []),
-                                        "functions": r.get("functions", []),
-                                        "imports": r.get("imports", []),
-                                        "analysis_method": r.get("metadata_json", {}).get("analysis_method", "unknown")
-                                    }
-                                } for r in results[:3]]  # Show first 3 results for debugging
-                            })
+                            failed_tests.append(
+                                {
+                                    "test": test_name,
+                                    "error": error_with_db_analysis,
+                                    "query": query,
+                                    "actual_results": [
+                                        {
+                                            "filename": r.get("filename"),
+                                            "metadata_summary": {
+                                                "classes": r.get("classes", []),
+                                                "functions": r.get("functions", []),
+                                                "imports": r.get("imports", []),
+                                                "analysis_method": r.get("metadata_json", {}).get(
+                                                    "analysis_method", "unknown"
+                                                ),
+                                            },
+                                        }
+                                        for r in results[:3]
+                                    ],  # Show first 3 results for debugging
+                                }
+                            )
 
         except Exception as e:
             error_msg = f"Test execution failed: {str(e)}"
             if fail_expected:
-                logging.info(f"✅ Test failed as expected: {test_name} - {fail_reason}")
-                logging.info(f"   Failure: {error_msg}")
+                logging.info("✅ Test failed as expected: %s - %s", test_name, fail_reason)
+                logging.info("   Failure: %s", error_msg)
             else:
-                failed_tests.append({
-                    "test": test_name,
-                    "error": error_msg,
-                    "query": query
-                })
+                failed_tests.append({"test": test_name, "error": error_msg, "query": query})
 
     return failed_tests
 
 
 def save_search_results(
-    test_name: str,
-    query: dict,
-    search_data: dict,
-    run_timestamp: str,
-    results_subdir: str = "search-keyword"
+    test_name: str, query: dict, search_data: dict, run_timestamp: str, results_subdir: str = "search-keyword"
 ) -> None:
     """
     Save search results to test-results directory with unique naming.
@@ -247,12 +239,12 @@ def save_search_results(
         "test_name": test_name,
         "timestamp": datetime.datetime.now().isoformat(),
         "query": query,
-        "search_results": search_data
+        "search_results": search_data,
     }
 
     # Save to file with proper JSON serialization
     filepath = os.path.join(results_dir, filename)
-    with open(filepath, 'w', encoding='utf-8') as f:
+    with open(filepath, "w", encoding="utf-8") as f:
         json.dump(result_data, f, indent=2, ensure_ascii=False, default=str)
 
     print(f"💾 Saved keyword search results: {filepath}")

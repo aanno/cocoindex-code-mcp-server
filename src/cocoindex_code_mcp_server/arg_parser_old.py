@@ -98,11 +98,11 @@ def display_configuration(args, paths):
     """Display the configuration based on parsed arguments."""
     if paths:
         if len(paths) == 1:
-            LOGGER.info(f"📁 Indexing path: {paths[0]}")
+            LOGGER.info("📁 Indexing path: %s", paths[0])
         else:
-            LOGGER.info(f"📁 Indexing {len(paths)} paths:")
+            LOGGER.info("📁 Indexing %s paths:", len(paths))
             for i, path in enumerate(paths, 1):
-                LOGGER.info(f"  {i}. {path}")
+                LOGGER.info("  %s. %s", i, path)
     else:
         LOGGER.info("📁 Using default path: cocoindex")
 
@@ -110,7 +110,7 @@ def display_configuration(args, paths):
     if args.live:
         LOGGER.info("🔴 Mode: Live updates")
         if args.poll > 0:
-            LOGGER.info(f"⏰ Polling: {args.poll} seconds")
+            LOGGER.info("⏰ Polling: %s seconds", args.poll)
         else:
             LOGGER.info("⚡ Monitoring: Event-based")
     else:

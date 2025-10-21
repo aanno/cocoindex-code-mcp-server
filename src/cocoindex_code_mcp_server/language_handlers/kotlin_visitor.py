@@ -84,10 +84,10 @@ class KotlinASTVisitor(GenericMetadataVisitor):
                     if text is not None:
                         func_name = text.decode("utf-8")
                         self.functions.append(func_name)
-                        LOGGER.debug(f"Found Kotlin function: {func_name}")
+                        LOGGER.debug("Found Kotlin function: %s", func_name)
                         break  # Take the first identifier (function name)
         except Exception as e:
-            LOGGER.warning(f"Error extracting Kotlin function: {e}")
+            LOGGER.warning("Error extracting Kotlin function: %s", e)
 
     def _extract_class(self, node):
         """Extract class name from class_declaration node."""
@@ -112,13 +112,13 @@ class KotlinASTVisitor(GenericMetadataVisitor):
             if class_name:
                 if is_data_class:
                     self.data_classes.append(class_name)
-                    LOGGER.debug(f"Found Kotlin data class: {class_name}")
+                    LOGGER.debug("Found Kotlin data class: %s", class_name)
                 else:
                     self.classes.append(class_name)
-                    LOGGER.debug(f"Found Kotlin class: {class_name}")
+                    LOGGER.debug("Found Kotlin class: %s", class_name)
 
         except Exception as e:
-            LOGGER.warning(f"Error extracting Kotlin class: {e}")
+            LOGGER.warning("Error extracting Kotlin class: %s", e)
 
     def _extract_interface(self, node):
         """Extract interface name from interface_declaration node."""
@@ -128,10 +128,10 @@ class KotlinASTVisitor(GenericMetadataVisitor):
                 if child.type == "identifier":
                     interface_name = child.text.decode("utf-8")
                     self.interfaces.append(interface_name)
-                    LOGGER.debug(f"Found Kotlin interface: {interface_name}")
+                    LOGGER.debug("Found Kotlin interface: %s", interface_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting Kotlin interface: {e}")
+            LOGGER.warning("Error extracting Kotlin interface: %s", e)
 
     def _extract_object(self, node):
         """Extract object name from object_declaration node."""
@@ -141,10 +141,10 @@ class KotlinASTVisitor(GenericMetadataVisitor):
                 if child.type == "identifier":
                     object_name = child.text.decode("utf-8")
                     self.objects.append(object_name)
-                    LOGGER.debug(f"Found Kotlin object: {object_name}")
+                    LOGGER.debug("Found Kotlin object: %s", object_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting Kotlin object: {e}")
+            LOGGER.warning("Error extracting Kotlin object: %s", e)
 
     def _extract_enum(self, node):
         """Extract enum name from enum_class_declaration node."""
@@ -154,10 +154,10 @@ class KotlinASTVisitor(GenericMetadataVisitor):
                 if child.type == "identifier":
                     enum_name = child.text.decode("utf-8")
                     self.enums.append(enum_name)
-                    LOGGER.debug(f"Found Kotlin enum: {enum_name}")
+                    LOGGER.debug("Found Kotlin enum: %s", enum_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting Kotlin enum: {e}")
+            LOGGER.warning("Error extracting Kotlin enum: %s", e)
 
     def get_summary(self) -> Dict[str, Any]:
         """Get analysis summary in the expected format."""
@@ -228,12 +228,12 @@ def analyze_kotlin_code(code: str, filename: str = "") -> Dict[str, Any]:
         )
 
         LOGGER.debug(
-            f"Kotlin analysis completed: {len(result.get('functions',
-                                                         []))} functions, {len(result.get('classes',
-                                                                                          []))} classes found"
+            "Kotlin analysis completed: %s functions, %s classes found",
+            len(result.get("functions", [])),
+            len(result.get("classes", [])),
         )
         return result
 
     except Exception as e:
-        LOGGER.error(f"Kotlin code analysis failed: {e}")
+        LOGGER.error("Kotlin code analysis failed: %s", e)
         return {"success": False, "error": str(e)}

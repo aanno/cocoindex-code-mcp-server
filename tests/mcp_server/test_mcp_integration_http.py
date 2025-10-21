@@ -19,10 +19,7 @@ from dotenv import load_dotenv
 from ..mcp_client import MCPHTTPClient, MCPTestClient
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 
 @pytest_asyncio.fixture
@@ -50,7 +47,7 @@ async def mcp_client_streaming():
     """MCP streaming client for testing with official MCP transport."""
     load_dotenv()
 
-    client = MCPTestClient(host="127.0.0.1", port=3033, transport='streaming')
+    client = MCPTestClient(host="127.0.0.1", port=3033, transport="streaming")
 
     # Verify server is running
     if not await client.check_server_running():
@@ -85,7 +82,7 @@ class TestMCPIntegrationHTTP:
             "search-keyword",
             "code-analyze",
             "code-embeddings",
-            "help-keyword_syntax"
+            "help-keyword_syntax",
         ]
 
         for expected_tool in expected_tools:
@@ -93,9 +90,9 @@ class TestMCPIntegrationHTTP:
 
         # Check tool structure
         for tool in tools:
-            assert hasattr(tool, 'name'), "Tool should have name attribute"
-            assert hasattr(tool, 'description'), "Tool should have description attribute"
-            assert hasattr(tool, 'inputSchema'), "Tool should have inputSchema attribute"
+            assert hasattr(tool, "name"), "Tool should have name attribute"
+            assert hasattr(tool, "description"), "Tool should have description attribute"
+            assert hasattr(tool, "inputSchema"), "Tool should have inputSchema attribute"
 
     async def test_list_resources(self, mcp_server):
         """Test listing resources via proper MCP client."""
@@ -106,23 +103,19 @@ class TestMCPIntegrationHTTP:
 
         # Check specific resources exist
         resource_names = [resource.name for resource in resources]
-        expected_resources = [
-            "search-statistics",
-            "search-configuration",
-            "database-schema",
-            "search:examples"
-        ]
+        expected_resources = ["search-statistics", "search-configuration", "database-schema", "search:examples"]
 
         for expected_resource in expected_resources:
             assert expected_resource in resource_names, f"Expected resource '{expected_resource}' not found"
 
         # Check resource structure
         for resource in resources:
-            assert hasattr(resource, 'name'), "Resource should have name attribute"
-            assert hasattr(resource, 'uri'), "Resource should have uri attribute"
-            assert hasattr(resource, 'description'), "Resource should have description attribute"
+            assert hasattr(resource, "name"), "Resource should have name attribute"
+            assert hasattr(resource, "uri"), "Resource should have uri attribute"
+            assert hasattr(resource, "description"), "Resource should have description attribute"
             assert str(resource.uri).startswith(
-                "cocoindex://"), f"Resource URI should start with cocoindex://, got {resource.uri}"
+                "cocoindex://"
+            ), f"Resource URI should start with cocoindex://, got {resource.uri}"
 
     @pytest.mark.skip(reason="Resource handler registration issue - see docs/claude/Mcp_Server_Development.md#12")
     async def test_read_resource(self, mcp_server):
@@ -139,8 +132,8 @@ class TestMCPIntegrationHTTP:
 
         # Check content structure
         content = contents[0]
-        assert hasattr(content, 'uri'), "Content should have uri attribute"
-        assert hasattr(content, 'text'), "Content should have text attribute"
+        assert hasattr(content, "uri"), "Content should have uri attribute"
+        assert hasattr(content, "text"), "Content should have text attribute"
         assert content.uri == "cocoindex://search/config"
 
         # Content should be valid JSON
@@ -148,22 +141,14 @@ class TestMCPIntegrationHTTP:
         assert isinstance(config_data, dict), "Config should be a dictionary"
 
         # Check expected configuration keys
-        expected_keys = [
-            "table_name",
-            "embedding_model",
-            "parser_type",
-            "default_weights"
-        ]
+        expected_keys = ["table_name", "embedding_model", "parser_type", "default_weights"]
 
         for key in expected_keys:
             assert key in config_data, f"Expected config key '{key}' not found"
 
     async def test_execute_tool_get_embeddings(self, mcp_server):
         """Test executing the get_embeddings tool via proper MCP client."""
-        result = await mcp_server.execute_tool(
-            "code-embeddings",
-            {"text": "test text for embedding"}
-        )
+        result = await mcp_server.execute_tool("code-embeddings", {"text": "test text for embedding"})
 
         # Should get proper MCP response format
         assert isinstance(result, list), "Tool result should return a list"
@@ -175,8 +160,8 @@ class TestMCPIntegrationHTTP:
 
         # Check content structure
         content = content_list[0]
-        assert hasattr(content, 'type'), "Content should have type attribute"
-        assert hasattr(content, 'text'), "Content should have text attribute"
+        assert hasattr(content, "type"), "Content should have type attribute"
+        assert hasattr(content, "text"), "Content should have text attribute"
         assert content.type == "text"
 
         # Parse the JSON response to check embedding format
@@ -190,11 +175,7 @@ class TestMCPIntegrationHTTP:
     async def test_execute_tool_vector_search(self, mcp_server):
         """Test executing the vector_search tool via proper MCP client."""
         result = await mcp_server.execute_tool(
-            "search-vector",
-            {
-                "query": "Python async function for processing data",
-                "top_k": 3
-            }
+            "search-vector", {"query": "Python async function for processing data", "top_k": 3}
         )
 
         # Should get proper MCP response format
@@ -245,12 +226,7 @@ class DataProcessor:
 '''
 
         result = await mcp_server.execute_tool(
-            "code-analyze",
-            {
-                "code": test_code,
-                "file_path": "test.py",
-                "language": "python"
-            }
+            "code-analyze", {"code": test_code, "file_path": "test.py", "language": "python"}
         )
 
         # Should get proper MCP response format
@@ -285,13 +261,7 @@ class DataProcessor:
 
     async def test_execute_tool_keyword_search_basic(self, mcp_server):
         """Test executing the keyword_search tool with basic queries."""
-        result = await mcp_server.execute_tool(
-            "search-keyword",
-            {
-                "query": "language:Python",
-                "top_k": 5
-            }
-        )
+        result = await mcp_server.execute_tool("search-keyword", {"query": "language:Python", "top_k": 5})
 
         # Should get proper MCP response format without errors
         assert isinstance(result, list), "Tool result should return a list"
@@ -313,10 +283,7 @@ class DataProcessor:
 
     async def test_execute_tool_get_keyword_syntax_help(self, mcp_server):
         """Test executing the get_keyword_syntax_help tool."""
-        result = await mcp_server.execute_tool(
-            "help-keyword_syntax",
-            {}
-        )
+        result = await mcp_server.execute_tool("help-keyword_syntax", {})
 
         # Should get proper MCP response format
         assert isinstance(result, list), "Tool result should return a list"
@@ -342,10 +309,7 @@ class DataProcessor:
     async def test_error_handling_invalid_tool(self, mcp_server):
         """Test error handling for invalid tool calls."""
         with pytest.raises(Exception):  # Should raise an exception for unknown tool
-            await mcp_server.execute_tool(
-                "nonexistent_tool",
-                {}
-            )
+            await mcp_server.execute_tool("nonexistent_tool", {})
 
     async def test_error_handling_invalid_resource(self, mcp_server):
         """Test error handling for invalid resource URIs."""
@@ -356,11 +320,7 @@ class DataProcessor:
         """Test that smart embedding is working with language-aware model selection."""
         # Test Python code - should use GraphCodeBERT
         python_result = await mcp_server.execute_tool(
-            "search-vector",
-            {
-                "query": "Python async function with type hints",
-                "top_k": 3
-            }
+            "search-vector", {"query": "Python async function with type hints", "top_k": 3}
         )
 
         # Parse result
@@ -382,13 +342,17 @@ class DataProcessor:
 
                 # Check for analysis_method in metadata_json since it's not being flattened
                 metadata_json = result.get("metadata_json", {})
-                assert "analysis_method" in metadata_json, "Python results should have analysis method info in metadata_json"
+                assert (
+                    "analysis_method" in metadata_json
+                ), "Python results should have analysis method info in metadata_json"
 
                 # Should use enhanced analysis method (allow 'unknown' for now since test
                 # data may not have real analysis)
                 analysis_method = metadata_json.get("analysis_method", "")
                 # For now, just check that analysis_method exists - the actual test data shows 'unknown'
-                assert analysis_method is not None, f"Python results should have analysis method, got: {analysis_method}"
+                assert (
+                    analysis_method is not None
+                ), f"Python results should have analysis method, got: {analysis_method}"
 
     @pytest.mark.xfail(reason="Hybrid search tests not ready for prime time")
     async def test_hybrid_search_validation(self, mcp_server):
@@ -431,15 +395,12 @@ class DataProcessor:
             query = test_case["query"]
             expected_results = test_case["expected_results"]
 
-            logging.info(f"Running hybrid search test: {test_name}")
-            logging.info(f"Description: {description}")
+            logging.info("Running hybrid search test: %s", test_name)
+            logging.info("Description: %s", description)
 
             try:
                 # Execute hybrid search
-                result = await mcp_server.execute_tool(
-                    "search-hybrid",
-                    query
-                )
+                result = await mcp_server.execute_tool("search-hybrid", query)
 
                 # Parse result
                 content_list = result[1]
@@ -455,11 +416,13 @@ class DataProcessor:
                 # Check minimum results requirement
                 min_results = expected_results.get("min_results", 1)
                 if total_results < min_results:
-                    failed_tests.append({
-                        "test": test_name,
-                        "error": f"Expected at least {min_results} results, got {total_results}",
-                        "query": query
-                    })
+                    failed_tests.append(
+                        {
+                            "test": test_name,
+                            "error": f"Expected at least {min_results} results, got {total_results}",
+                            "query": query,
+                        }
+                    )
                     continue
 
                 # Check expected results using common helper
@@ -474,27 +437,30 @@ class DataProcessor:
                                 break
 
                         if not found_match:
-                            failed_tests.append({
-                                "test": test_name,
-                                "error": f"No matching result found for expected item: {expected_item}",
-                                "query": query,
-                                "actual_results": [{
-                                    "filename": r.get("filename"),
-                                    "metadata_summary": {
-                                        "classes": r.get("classes", []),
-                                        "functions": r.get("functions", []),
-                                        "imports": r.get("imports", []),
-                                        "analysis_method": r.get("metadata_json", {}).get("analysis_method", "unknown")
-                                    }
-                                } for r in results[:3]]  # Show first 3 results for debugging
-                            })
+                            failed_tests.append(
+                                {
+                                    "test": test_name,
+                                    "error": f"No matching result found for expected item: {expected_item}",
+                                    "query": query,
+                                    "actual_results": [
+                                        {
+                                            "filename": r.get("filename"),
+                                            "metadata_summary": {
+                                                "classes": r.get("classes", []),
+                                                "functions": r.get("functions", []),
+                                                "imports": r.get("imports", []),
+                                                "analysis_method": r.get("metadata_json", {}).get(
+                                                    "analysis_method", "unknown"
+                                                ),
+                                            },
+                                        }
+                                        for r in results[:3]
+                                    ],  # Show first 3 results for debugging
+                                }
+                            )
 
             except Exception as e:
-                failed_tests.append({
-                    "test": test_name,
-                    "error": f"Test execution failed: {str(e)}",
-                    "query": query
-                })
+                failed_tests.append({"test": test_name, "error": f"Test execution failed: {str(e)}", "query": query})
 
         # Report results using common helper
         if failed_tests:
@@ -502,7 +468,7 @@ class DataProcessor:
             logging.info(error_msg)
             pytest.fail(error_msg)
         else:
-            logging.info(f"✅ All {len(test_data['tests'])} hybrid search validation tests passed!")
+            logging.info("✅ All %s hybrid search validation tests passed!", len(test_data["tests"]))
 
 
 if __name__ == "__main__":

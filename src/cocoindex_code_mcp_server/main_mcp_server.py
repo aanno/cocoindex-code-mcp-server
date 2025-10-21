@@ -56,11 +56,7 @@ from . import mcp_json_schemas
 
 # Backend abstraction imports
 from .backends import BackendFactory, VectorStoreBackend
-from .cocoindex_config import (
-    code_to_embedding,
-    run_flow_update,
-    update_flow_config,
-)
+from .cocoindex_config import code_to_embedding, run_flow_update, update_flow_config
 
 # Local imports
 from .db.pgvector.hybrid_search import HybridSearchEngine
@@ -103,7 +99,7 @@ async def coverage_context() -> AsyncIterator[Optional[object]]:
             cov.stop()
             cov.save()
         except Exception as e:
-            logger.warning(f"Error stopping coverage: {e}")
+            logger.warning("Error stopping coverage: %s", e)
 
     # Register cleanup handlers
     atexit.register(stop_coverage)
@@ -116,7 +112,7 @@ async def coverage_context() -> AsyncIterator[Optional[object]]:
             stop_coverage()
         except Exception as e:
             # Don't let coverage cleanup block shutdown
-            logger.warning(f"Coverage cleanup warning: {e}")
+            logger.warning("Coverage cleanup warning: %s", e)
 
 
 # Configure logging
@@ -151,7 +147,7 @@ def safe_embedding_function(query: str) -> object:
                 return [0.0] * 384
         raise
     except Exception as e:
-        logger.warning(f"Embedding function failed: {e}")
+        logger.warning("Embedding function failed: %s", e)
         try:
             import numpy as np
 
@@ -332,8 +328,8 @@ def main(
             embeddings_table = cocoindex.utils.get_target_default_name(code_embedding_flow, "code_embeddings").lower()
             tracking_table = f"{code_embedding_flow.name}__cocoindex_tracking".lower()
 
-            logger.info(f"  Clearing embeddings table: {embeddings_table}")
-            logger.info(f"  Clearing tracking table:   {tracking_table}")
+            logger.info("  Clearing embeddings table: %s", embeddings_table)
+            logger.info("  Clearing tracking table:   %s", tracking_table)
 
             # Clear tables using SQL TRUNCATE (faster and resets auto-increment)
             conn = psycopg.connect(database_url)
@@ -363,9 +359,9 @@ def main(
                     cur.execute(
                         sql.SQL("TRUNCATE TABLE {} RESTART IDENTITY CASCADE").format(sql.Identifier(embeddings_table))
                     )
-                    logger.info(f"  ✅ Truncated {embeddings_table} ({count} records removed)")
+                    logger.info("  ✅ Truncated %s (%s records removed)", embeddings_table, count)
                 else:
-                    logger.info(f"  ⚠️  Table {embeddings_table} does not exist yet")
+                    logger.info("  ⚠️  Table %s does not exist yet", embeddings_table)
 
                 # Clear tracking table (critical for re-indexing!)
                 cur.execute(
@@ -387,23 +383,23 @@ def main(
                     cur.execute(
                         sql.SQL("TRUNCATE TABLE {} RESTART IDENTITY CASCADE").format(sql.Identifier(tracking_table))
                     )
-                    logger.info(f"  ✅ Truncated {tracking_table} ({count} records removed)")
+                    logger.info("  ✅ Truncated %s (%s records removed)", tracking_table, count)
                 else:
-                    logger.info(f"  ⚠️  Table {tracking_table} does not exist yet")
+                    logger.info("  ⚠️  Table %s does not exist yet", tracking_table)
 
                 conn.commit()
                 logger.info("✅ Rescan complete - tables cleared, ready for fresh indexing")
 
             except Exception as e:
                 conn.rollback()
-                logger.error(f"❌ Failed to clear tables: {e}")
+                logger.error("❌ Failed to clear tables: %s", e)
                 return 1
             finally:
                 cur.close()
                 conn.close()
 
         except Exception as e:
-            logger.error(f"❌ Rescan failed: {e}")
+            logger.error("❌ Rescan failed: %s", e)
             return 1
 
     # Determine paths to use
@@ -428,12 +424,12 @@ def main(
     )
 
     logger.info("🚀 CocoIndex RAG MCP Server starting...")
-    logger.info(f"📁 Paths: {final_paths or ['cocoindex (default)']}")
-    logger.info(f"🔴 Live updates: {'ENABLED' if live_enabled else 'DISABLED'}")
+    logger.info("📁 Paths: %s", final_paths or ["cocoindex (default)"])
+    logger.info("🔴 Live updates: %s", "ENABLED" if live_enabled else "DISABLED")
     if live_enabled:
-        logger.info(f"⏰ Polling interval: {poll} seconds")
+        logger.info("⏰ Polling interval: %s seconds", poll)
     if chunk_factor_percent != 100:
-        logger.info(f"📏 Chunk size scaling: {chunk_factor_percent}%")
+        logger.info("📏 Chunk size scaling: %s%%", chunk_factor_percent)
 
     # Create the MCP server
     app: Server = Server("cocoindex-rag")
@@ -484,7 +480,7 @@ def main(
     async def handle_read_resource(uri: AnyUrl) -> List[ReadResourceContents]:
         """Read MCP resource content."""
         uri_str = str(uri)
-        logger.info(f"🔍 Reading resource: '{uri_str}' (type: {type(uri)}, repr: {repr(uri)})")
+        logger.info("🔍 Reading resource: '%s' (type: %s, repr: %s)", uri_str, type(uri), repr(uri))
 
         if uri_str == "cocoindex://search/stats":
             content = await get_search_stats()
@@ -503,11 +499,12 @@ def main(
             content = json.dumps({"message": "Test resource working", "uri": uri_str}, indent=2)
         else:
             logger.error(
-                f"❌ Unknown resource requested: '{uri_str}' (available: search/stats, search/config, database/schema, query/examples, search/grammar, search/operators, test/simple)"
+                "❌ Unknown resource requested: '%s' (available: search/stats, search/config, database/schema, query/examples, search/grammar, search/operators, test/simple)",
+                uri_str,
             )
             raise McpError(types.ErrorData(code=404, message=f"Resource not found: {uri_str}"))
 
-        logger.info(f"✅ Successfully retrieved resource: '{uri_str}'")
+        logger.info("✅ Successfully retrieved resource: '%s'", uri_str)
         return [
             ReadResourceContents(
                 content=content,
@@ -804,12 +801,14 @@ def main(
             with hybrid_search_engine.pool.connection() as conn:
                 with conn.cursor() as cur:
                     table_name = hybrid_search_engine.table_name
-                    cur.execute(f"""
+                    cur.execute(
+                        f"""
                         SELECT column_name, data_type, is_nullable
                         FROM information_schema.columns
                         WHERE table_name = '{table_name}'
                         ORDER BY ordinal_position
-                    """)
+                    """
+                    )
                     columns = cur.fetchall()
 
                     schema = {
@@ -897,7 +896,7 @@ include file src/cocoindex_code_mcp_server/grammars/keyword_search.lark here
             logger.info("✅ CocoIndex RAG MCP Server initialized successfully with backend abstraction")
 
         except Exception as e:
-            logger.error(f"Failed to initialize search engine: {e}")
+            logger.error("Failed to initialize search engine: %s", e)
             raise
 
     # Background initialization and flow updates
@@ -917,7 +916,7 @@ include file src/cocoindex_code_mcp_server/grammars/keyword_search.lark here
                                 break
                         except Exception as e:
                             if not shutdown_event.is_set():
-                                logger.error(f"Error in background flow update: {e}")
+                                logger.error("Error in background flow update: %s", e)
                                 if shutdown_event.wait(10):
                                     break
 
@@ -932,7 +931,7 @@ include file src/cocoindex_code_mcp_server/grammars/keyword_search.lark here
                 logger.info("✅ Flow update completed")
 
         except Exception as e:
-            logger.error(f"❌ Background initialization failed: {e}")
+            logger.error("❌ Background initialization failed: %s", e)
 
     # Create session manager
     session_manager = StreamableHTTPSessionManager(
@@ -984,7 +983,7 @@ include file src/cocoindex_code_mcp_server/grammars/keyword_search.lark here
                         backend_type, connection_string=database_url, table_name=table_name
                     )
 
-                logger.info(f"🔧 Initializing {backend_type} backend...")
+                logger.info("🔧 Initializing %s backend...", backend_type)
                 await initialize_search_engine(backend)
 
                 # Initialize background components
@@ -1013,7 +1012,7 @@ include file src/cocoindex_code_mcp_server/grammars/keyword_search.lark here
     # Run the server
     import uvicorn
 
-    logger.info(f"🌐 Starting HTTP MCP server on http://127.0.0.1:{port}/mcp")
+    logger.info("🌐 Starting HTTP MCP server on http://127.0.0.1:%s/mcp", port)
     uvicorn.run(starlette_app, host="127.0.0.1", port=port)
 
     return 0
@@ -1025,5 +1024,5 @@ if __name__ == "__main__":
     except (KeyboardInterrupt, SystemExit):
         pass
     except Exception as e:
-        logger.error(f"❌ Unexpected error: {e}")
+        logger.error("❌ Unexpected error: %s", e)
         sys.exit(1)

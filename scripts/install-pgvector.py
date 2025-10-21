@@ -2,7 +2,9 @@
 
 import psycopg
 
-conn = psycopg.connect("postgresql://cocoindex:cocoindex@host.docker.internal/cocoindex")
+conn = psycopg.connect(
+    "postgresql://cocoindex:cocoindex@host.docker.internal/cocoindex"
+)
 
 # psycopg3 also supports autocommit at connection level
 conn.autocommit = True

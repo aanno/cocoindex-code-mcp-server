@@ -52,9 +52,7 @@ class TestASTChunkLibraryUsage:
     def test_astchunk_library_direct_usage(self):
         """Test direct usage of ASTChunk library through ASTChunkExecutor."""
         # Import the executor directly
-        from cocoindex_code_mcp_server.ast_chunking import (
-            ASTChunkSpec,
-        )
+        from cocoindex_code_mcp_server.ast_chunking import ASTChunkSpec
 
         # Test Python code that should use ASTChunk library
         python_code = '''

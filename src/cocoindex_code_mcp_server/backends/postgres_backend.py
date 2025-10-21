@@ -37,10 +37,7 @@ from psycopg_pool import ConnectionPool
 
 from ..keyword_search_parser_lark import Operator, build_sql_where_clause
 from ..mappers import CONST_SELECTABLE_FIELDS, PostgresFieldMapper, ResultMapper
-from ..schemas import (
-    SearchResult,
-    SearchResultType,
-)
+from ..schemas import SearchResult, SearchResultType
 from . import QueryFilters, VectorStoreBackend
 
 logger = logging.getLogger(__name__)
@@ -91,7 +88,7 @@ def _get_table_columns(pool: ConnectionPool, table_name: str) -> Set[str]:
 
                 # Return both the columns and indicate if we used lowercase
                 if available_columns:
-                    logger.info(f"Table name '{table_name}' not found, using lowercase '{lowercase_table_name}'")
+                    logger.info("Table name '%s' not found, using lowercase '%s'", table_name, lowercase_table_name)
 
     return available_columns
 
@@ -124,7 +121,7 @@ class PostgresBackend(VectorStoreBackend):
 
             # If we found columns with lowercase, update the table name for future queries
             if available_columns:
-                logger.info(f"Table name '{self.table_name}' not found, using lowercase '{lowercase_table_name}'")
+                logger.info("Table name '%s' not found, using lowercase '%s'", self.table_name, lowercase_table_name)
                 self.table_name = lowercase_table_name
 
         return available_columns
@@ -228,13 +225,13 @@ class PostgresBackend(VectorStoreBackend):
 
                 # Log the SQL query for debugging
                 logger.info("🔍 Keyword Search SQL Query:")
-                logger.info(f"   Query: {query}")
-                logger.info(f"   Params: {query_params}")
+                logger.info("   Query: %s", query)
+                logger.info("   Params: %s", query_params)
 
                 cur.execute(query, query_params)
                 results = cur.fetchall()
 
-                logger.info(f"📊 Query returned {len(results)} results")
+                logger.info("📊 Query returned %s results", len(results))
 
                 return [self._format_result(row, available_fields, score_type="keyword") for row in results]
 

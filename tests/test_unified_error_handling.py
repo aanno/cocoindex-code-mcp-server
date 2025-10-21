@@ -115,9 +115,7 @@ class TestPythonTreeSitterErrorHandling:
     def test_python_error_stats_initialization(self):
         """Test that Python error detection infrastructure is available."""
         try:
-            from cocoindex_code_mcp_server.ast_visitor import (
-                GenericMetadataVisitor,
-            )
+            from cocoindex_code_mcp_server.ast_visitor import GenericMetadataVisitor
         except ImportError:
             pytest.skip("Python ast_visitor module not available")
 

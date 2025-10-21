@@ -89,10 +89,10 @@ class JavaASTVisitor(GenericMetadataVisitor):
                     if text is not None:
                         method_name = text.decode("utf-8")
                         self.functions.append(method_name)
-                    LOGGER.debug(f"Found Java method: {method_name}")
+                    LOGGER.debug("Found Java method: %s", method_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting Java method: {e}")
+            LOGGER.warning("Error extracting Java method: %s", e)
 
     def _extract_constructor(self, node: Node) -> None:
         """Extract constructor name from constructor_declaration node."""
@@ -104,10 +104,10 @@ class JavaASTVisitor(GenericMetadataVisitor):
                     if text is not None:
                         constructor_name = text.decode("utf-8")
                         self.functions.append(constructor_name)  # Treat constructors as functions
-                    LOGGER.debug(f"Found Java constructor: {constructor_name}")
+                    LOGGER.debug("Found Java constructor: %s", constructor_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting Java constructor: {e}")
+            LOGGER.warning("Error extracting Java constructor: %s", e)
 
     def _extract_class(self, node: Node) -> None:
         """Extract class name from class_declaration node."""
@@ -119,10 +119,10 @@ class JavaASTVisitor(GenericMetadataVisitor):
                     if text is not None:
                         class_name = text.decode("utf-8")
                         self.classes.append(class_name)
-                    LOGGER.debug(f"Found Java class: {class_name}")
+                    LOGGER.debug("Found Java class: %s", class_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting Java class: {e}")
+            LOGGER.warning("Error extracting Java class: %s", e)
 
     def _extract_interface(self, node: Node) -> None:
         """Extract interface name from interface_declaration node."""
@@ -134,10 +134,10 @@ class JavaASTVisitor(GenericMetadataVisitor):
                     if text is not None:
                         interface_name = text.decode("utf-8")
                         self.interfaces.append(interface_name)
-                    LOGGER.debug(f"Found Java interface: {interface_name}")
+                    LOGGER.debug("Found Java interface: %s", interface_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting Java interface: {e}")
+            LOGGER.warning("Error extracting Java interface: %s", e)
 
     def _extract_enum(self, node):
         """Extract enum name from enum_declaration node."""
@@ -147,10 +147,10 @@ class JavaASTVisitor(GenericMetadataVisitor):
                 if child.type == "identifier":
                     enum_name = child.text.decode("utf-8")
                     self.enums.append(enum_name)
-                    LOGGER.debug(f"Found Java enum: {enum_name}")
+                    LOGGER.debug("Found Java enum: %s", enum_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting Java enum: {e}")
+            LOGGER.warning("Error extracting Java enum: %s", e)
 
     def _extract_package(self, node):
         """Extract package name from package_declaration node."""
@@ -160,10 +160,10 @@ class JavaASTVisitor(GenericMetadataVisitor):
                 if child.type in ["scoped_identifier", "identifier"]:
                     package_name = child.text.decode("utf-8")
                     self.packages.append(package_name)
-                    LOGGER.debug(f"Found Java package: {package_name}")
+                    LOGGER.debug("Found Java package: %s", package_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting Java package: {e}")
+            LOGGER.warning("Error extracting Java package: %s", e)
 
     def _extract_annotation(self, node):
         """Extract annotation name from annotation_type_declaration node."""
@@ -173,10 +173,10 @@ class JavaASTVisitor(GenericMetadataVisitor):
                 if child.type == "identifier":
                     annotation_name = child.text.decode("utf-8")
                     self.annotations.append(annotation_name)
-                    LOGGER.debug(f"Found Java annotation: {annotation_name}")
+                    LOGGER.debug("Found Java annotation: %s", annotation_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting Java annotation: {e}")
+            LOGGER.warning("Error extracting Java annotation: %s", e)
 
     def get_summary(self) -> Dict[str, Any]:
         """Get analysis summary in the expected format."""
@@ -246,12 +246,12 @@ def analyze_java_code(code: str, filename: str = "") -> Dict[str, Any]:
         )
 
         LOGGER.debug(
-            f"Java analysis completed: {len(result.get('functions',
-                                                       []))} functions, {len(result.get('classes',
-                                                                                        []))} classes found"
+            "Java analysis completed: %s functions, %s classes found",
+            len(result.get("functions", [])),
+            len(result.get("classes", [])),
         )
         return result
 
     except Exception as e:
-        LOGGER.error(f"Java code analysis failed: {e}")
+        LOGGER.error("Java code analysis failed: %s", e)
         return {"success": False, "error": str(e)}

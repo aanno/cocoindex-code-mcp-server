@@ -110,7 +110,7 @@ class NodeContext:
     def get_node_text(self) -> str:
         """Get the text content of the current node."""
         if self.source_text and hasattr(self.node, "start_byte") and hasattr(self.node, "end_byte"):
-            return self.source_text[self.node.start_byte: self.node.end_byte]
+            return self.source_text[self.node.start_byte : self.node.end_byte]
         return ""
 
     def get_position(self) -> Position:
@@ -433,13 +433,13 @@ class TreeWalker:
             # Try to extract function name
             for child in context.node.children if hasattr(context.node, "children") else []:
                 if hasattr(child, "type") and child.type in ["identifier", "name"]:
-                    return context.source_text[child.start_byte: child.end_byte]
+                    return context.source_text[child.start_byte : child.end_byte]
 
         elif node_type in ["class_definition", "class_declaration"]:
             # Try to extract class name
             for child in context.node.children if hasattr(context.node, "children") else []:
                 if hasattr(child, "type") and child.type in ["identifier", "name", "type_identifier"]:
-                    return context.source_text[child.start_byte: child.end_byte]
+                    return context.source_text[child.start_byte : child.end_byte]
 
         return None
 
@@ -571,7 +571,7 @@ class ASTParserFactory:
                 return None
 
             else:
-                LOGGER.debug(f"Tree-sitter language '{language}' not yet implemented")
+                LOGGER.debug("Tree-sitter language '%s' not yet implemented", language)
                 return None
 
             if language_obj:
@@ -580,12 +580,12 @@ class ASTParserFactory:
 
                 # Cache the parser
                 self._parsers[language] = parser
-                LOGGER.debug(f"Created tree-sitter parser for {language}")
+                LOGGER.debug("Created tree-sitter parser for %s", language)
 
             return parser
 
         except Exception as e:
-            LOGGER.error(f"Failed to create parser for {language}: {e}")
+            LOGGER.error("Failed to create parser for %s: %s", language, e)
             return None
 
     def parse_code(self, code: str, language: str) -> Optional[Tree]:
@@ -597,7 +597,7 @@ class ASTParserFactory:
         try:
             return parser.parse(bytes(code, "utf-8"))
         except Exception as e:
-            LOGGER.error(f"Failed to parse code with {language}: {e}")
+            LOGGER.error("Failed to parse code with %s: %s", language, e)
             return None
 
 
@@ -637,7 +637,7 @@ class MultiLevelAnalyzer:
         # Strategy 1: Tree-sitter AST parsing
         if TREE_SITTER_AVAILABLE:
             tree_metadata = self._try_treesitter_analysis(code, language, filename)
-            LOGGER.debug(f"Strategy 1: Tree-sitter analysis result for {filename}: {tree_metadata}")
+            LOGGER.debug("Strategy 1: Tree-sitter analysis result for %s: %s", filename, tree_metadata)
             if tree_metadata:
                 metadata.update(tree_metadata)
                 metadata["analysis_method"] = "tree_sitter"
@@ -649,7 +649,7 @@ class MultiLevelAnalyzer:
         # Strategy 2: Language-specific AST (Python only for now)
         if language == "python":
             python_metadata = self._try_python_ast_analysis(code, filename)
-            LOGGER.debug(f"Strategy 2: Python AST analysis result for {filename}: {python_metadata}")
+            LOGGER.debug("Strategy 2: Python AST analysis result for %s: %s", filename, python_metadata)
             if python_metadata:
                 metadata.update(python_metadata)
                 metadata["analysis_method"] = "python_ast"
@@ -660,7 +660,7 @@ class MultiLevelAnalyzer:
         # Strategy 3: Enhanced regex patterns
         regex_metadata = self._try_regex_analysis(code, language)
         if regex_metadata:
-            LOGGER.debug(f"Strategy 3: Regex analysis result for {filename}: {regex_metadata}")
+            LOGGER.debug("Strategy 3: Regex analysis result for %s: %s", filename, regex_metadata)
             metadata.update(regex_metadata)
             metadata["analysis_method"] = "enhanced_regex"
             # No tree-sitter used for regex analysis
@@ -669,7 +669,7 @@ class MultiLevelAnalyzer:
 
         # Strategy 4: Basic text analysis
         basic_metadata = self._basic_text_analysis(code, language)
-        LOGGER.debug(f"Strategy 4: Basic text analysis result for {filename}: {basic_metadata}")
+        LOGGER.debug("Strategy 4: Basic text analysis result for %s: %s", filename, basic_metadata)
         metadata.update(basic_metadata)
         metadata["analysis_method"] = "basic_text"
         # No tree-sitter used for basic text analysis
@@ -688,9 +688,9 @@ class MultiLevelAnalyzer:
                 LOGGER.debug("Used specialized Haskell handler")
                 return metadata
             except ImportError as ie:
-                LOGGER.debug(f"Haskell handler not available, falling back to generic: {ie}")
+                LOGGER.debug("Haskell handler not available, falling back to generic: %s", ie)
             except Exception as e:
-                LOGGER.warning(f"Haskell handler failed: {e}")
+                LOGGER.warning("Haskell handler failed: %s", e)
 
         elif language == "c":
             try:
@@ -702,7 +702,7 @@ class MultiLevelAnalyzer:
             except ImportError:
                 LOGGER.debug("C visitor not available, falling back to generic")
             except Exception as e:
-                LOGGER.warning(f"C visitor failed: {e}")
+                LOGGER.warning("C visitor failed: %s", e)
 
         elif language in ["cpp", "cc", "cxx"]:
             try:
@@ -714,7 +714,7 @@ class MultiLevelAnalyzer:
             except ImportError:
                 LOGGER.debug("C++ visitor not available, falling back to generic")
             except Exception as e:
-                LOGGER.warning(f"C++ visitor failed: {e}")
+                LOGGER.warning("C++ visitor failed: %s", e)
 
         elif language == "rust":
             try:
@@ -726,7 +726,7 @@ class MultiLevelAnalyzer:
             except ImportError:
                 LOGGER.debug("Rust visitor not available, falling back to generic")
             except Exception as e:
-                LOGGER.warning(f"Rust visitor failed: {e}")
+                LOGGER.warning("Rust visitor failed: %s", e)
 
         elif language == "kotlin":
             try:
@@ -738,7 +738,7 @@ class MultiLevelAnalyzer:
             except ImportError:
                 LOGGER.debug("Kotlin visitor not available, falling back to generic")
             except Exception as e:
-                LOGGER.warning(f"Kotlin visitor failed: {e}")
+                LOGGER.warning("Kotlin visitor failed: %s", e)
 
         elif language == "java":
             try:
@@ -750,7 +750,7 @@ class MultiLevelAnalyzer:
             except ImportError:
                 LOGGER.debug("Java visitor not available, falling back to generic")
             except Exception as e:
-                LOGGER.warning(f"Java visitor failed: {e}")
+                LOGGER.warning("Java visitor failed: %s", e)
 
         elif language in ["javascript", "js"]:
             try:
@@ -764,7 +764,7 @@ class MultiLevelAnalyzer:
             except ImportError:
                 LOGGER.debug("JavaScript visitor not available, falling back to generic")
             except Exception as e:
-                LOGGER.warning(f"JavaScript visitor failed: {e}")
+                LOGGER.warning("JavaScript visitor failed: %s", e)
 
         elif language in ["typescript", "tsx"]:
             try:
@@ -778,7 +778,7 @@ class MultiLevelAnalyzer:
             except ImportError:
                 LOGGER.debug("TypeScript visitor not available, falling back to generic")
             except Exception as e:
-                LOGGER.warning(f"TypeScript visitor failed: {e}")
+                LOGGER.warning("TypeScript visitor failed: %s", e)
 
         # Generic tree-sitter analysis for other languages
         try:
@@ -796,7 +796,7 @@ class MultiLevelAnalyzer:
                 handler = get_handler_for_language(language)
                 if handler:
                     visitor.add_handler(handler)
-                    LOGGER.debug(f"Added {language} handler to visitor")
+                    LOGGER.debug("Added %s handler to visitor", language)
             except ImportError:
                 LOGGER.debug("Language handlers not available")
 
@@ -817,12 +817,12 @@ class MultiLevelAnalyzer:
                     metadata.update(language_summary)
                     metadata["analysis_method"] = f"tree_sitter+{language}_handler"
                 except Exception as e:
-                    LOGGER.warning(f"Error getting {language} handler summary: {e}")
+                    LOGGER.warning("Error getting %s handler summary: %s", language, e)
 
             return metadata
 
         except Exception as e:
-            LOGGER.warning(f"Tree-sitter analysis failed: {e}")
+            LOGGER.warning("Tree-sitter analysis failed: %s", e)
             return None
 
     def _try_python_ast_analysis(self, code: str, filename: str) -> Optional[Dict[str, Any]]:
@@ -837,7 +837,7 @@ class MultiLevelAnalyzer:
             return {"has_python_ast": True, "python_ast_nodes": len(list(ast.walk(tree)))}
 
         except Exception as e:
-            LOGGER.warning(f"Python AST analysis failed: {e}")
+            LOGGER.warning("Python AST analysis failed: %s", e)
             return None
 
     def _try_regex_analysis(self, code: str, language: str) -> Optional[Dict[str, Any]]:
@@ -882,7 +882,7 @@ class MultiLevelAnalyzer:
             return metadata
 
         except Exception as e:
-            LOGGER.warning(f"Regex analysis failed: {e}")
+            LOGGER.warning("Regex analysis failed: %s", e)
             return None
 
     def _basic_text_analysis(self, code: str, language: str) -> Dict[str, Any]:

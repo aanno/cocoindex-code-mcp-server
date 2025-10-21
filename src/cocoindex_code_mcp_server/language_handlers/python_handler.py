@@ -152,10 +152,10 @@ class PythonNodeHandler:
         if hasattr(self, handler_method):
             try:
                 result = getattr(self, handler_method)(context) or {}
-                LOGGER.debug(f"Handled {node_type} with result: {result}")
+                LOGGER.debug("Handled %s with result: %s", node_type, result)
                 return result
             except Exception as e:
-                LOGGER.warning(f"Error handling {node_type}: {e}")
+                LOGGER.warning("Error handling %s: %s", node_type, e)
                 return {}
 
         return {}
@@ -336,7 +336,7 @@ class PythonNodeHandler:
 
         for child in node.children:
             if hasattr(child, "type") and child.type == "identifier":
-                return source_text[child.start_byte: child.end_byte]
+                return source_text[child.start_byte : child.end_byte]
 
         return None
 
@@ -347,7 +347,7 @@ class PythonNodeHandler:
 
         for child in node.children:
             if hasattr(child, "type") and child.type == "identifier":
-                return source_text[child.start_byte: child.end_byte]
+                return source_text[child.start_byte : child.end_byte]
 
         return None
 
@@ -377,7 +377,7 @@ class PythonNodeHandler:
             if hasattr(child, "type"):
                 if child.type == "identifier":
                     # Simple parameter
-                    param_name = source_text[child.start_byte: child.end_byte]
+                    param_name = source_text[child.start_byte : child.end_byte]
                     parameters.append({"name": param_name, "type_annotation": None, "default": None})
                 elif child.type == "typed_parameter":
                     # Parameter with type annotation
@@ -402,10 +402,10 @@ class PythonNodeHandler:
         for child in param_node.children:
             if hasattr(child, "type"):
                 if child.type == "identifier":
-                    param_info["name"] = source_text[child.start_byte: child.end_byte]
+                    param_info["name"] = source_text[child.start_byte : child.end_byte]
                 else:
                     # Type annotation
-                    param_info["type_annotation"] = source_text[child.start_byte: child.end_byte]
+                    param_info["type_annotation"] = source_text[child.start_byte : child.end_byte]
 
         return param_info if param_info["name"] else None
 
@@ -420,10 +420,10 @@ class PythonNodeHandler:
         if len(children) >= 2:
             # First child is parameter name
             if hasattr(children[0], "type") and children[0].type == "identifier":
-                param_info["name"] = source_text[children[0].start_byte: children[0].end_byte]
+                param_info["name"] = source_text[children[0].start_byte : children[0].end_byte]
 
             # Last child is default value
-            param_info["default"] = source_text[children[-1].start_byte: children[-1].end_byte]
+            param_info["default"] = source_text[children[-1].start_byte : children[-1].end_byte]
 
         return param_info if param_info["name"] else None
 
@@ -434,7 +434,7 @@ class PythonNodeHandler:
 
         for child in node.children:
             if hasattr(child, "type") and child.type == "type":
-                return source_text[child.start_byte: child.end_byte]
+                return source_text[child.start_byte : child.end_byte]
 
         return None
 
@@ -447,7 +447,7 @@ class PythonNodeHandler:
 
         for child in node.children:
             if hasattr(child, "type") and child.type == "decorator":
-                decorator_text = source_text[child.start_byte: child.end_byte]
+                decorator_text = source_text[child.start_byte : child.end_byte]
                 # Remove @ symbol and extract decorator name
                 if decorator_text.startswith("@"):
                     decorator_name = decorator_text[1:].strip()
@@ -495,7 +495,7 @@ class PythonNodeHandler:
 
         for child in expr_node.children:
             if hasattr(child, "type") and child.type == "string":
-                string_content = source_text[child.start_byte: child.end_byte]
+                string_content = source_text[child.start_byte : child.end_byte]
                 # Remove quotes and return content
                 return self._clean_string_literal(string_content)
 
@@ -535,10 +535,10 @@ class PythonNodeHandler:
         for child in arg_list_node.children:
             if hasattr(child, "type"):
                 if child.type == "identifier":
-                    names.append(source_text[child.start_byte: child.end_byte])
+                    names.append(source_text[child.start_byte : child.end_byte])
                 elif child.type == "attribute":
                     # Handle module.Class syntax
-                    names.append(source_text[child.start_byte: child.end_byte])
+                    names.append(source_text[child.start_byte : child.end_byte])
 
         return names
 
@@ -554,7 +554,7 @@ class PythonNodeHandler:
             if hasattr(child, "type"):
                 if child.type in ["dotted_name", "identifier"]:
                     if not module_name:
-                        module_name = source_text[child.start_byte: child.end_byte]
+                        module_name = source_text[child.start_byte : child.end_byte]
                 elif child.type == "aliased_import":
                     # Handle "import module as alias"
                     module_name, alias = self._extract_aliased_import(child, source_text)
@@ -572,7 +572,7 @@ class PythonNodeHandler:
         for child in node.children:
             if hasattr(child, "type"):
                 if child.type in ["dotted_name", "identifier"] and not module_name:
-                    module_name = source_text[child.start_byte: child.end_byte]
+                    module_name = source_text[child.start_byte : child.end_byte]
                 elif child.type == "import_list":
                     imported_names = self._extract_import_list(child, source_text)
 
@@ -590,11 +590,11 @@ class PythonNodeHandler:
         if len(children) >= 2:
             # First child is module name
             if hasattr(children[0], "type"):
-                module_name = source_text[children[0].start_byte: children[0].end_byte]
+                module_name = source_text[children[0].start_byte : children[0].end_byte]
 
             # Last child is alias
             if hasattr(children[-1], "type"):
-                alias = source_text[children[-1].start_byte: children[-1].end_byte]
+                alias = source_text[children[-1].start_byte : children[-1].end_byte]
 
         return module_name, alias
 
@@ -608,7 +608,7 @@ class PythonNodeHandler:
         for child in import_list_node.children:
             if hasattr(child, "type"):
                 if child.type == "identifier":
-                    names.append(source_text[child.start_byte: child.end_byte])
+                    names.append(source_text[child.start_byte : child.end_byte])
                 elif child.type == "aliased_import":
                     # Handle "from module import name as alias"
                     original_name, alias = self._extract_aliased_import(child, source_text)
@@ -627,7 +627,7 @@ class PythonNodeHandler:
         for child in node.children:
             if hasattr(child, "type"):
                 if child.type == "identifier":
-                    targets.append(source_text[child.start_byte: child.end_byte])
+                    targets.append(source_text[child.start_byte : child.end_byte])
                 elif child.type in ["pattern_list", "tuple_pattern"]:
                     # Handle multiple assignment like a, b = 1, 2
                     targets.extend(self._extract_pattern_names(child, source_text))
@@ -643,7 +643,7 @@ class PythonNodeHandler:
 
         for child in pattern_node.children:
             if hasattr(child, "type") and child.type == "identifier":
-                names.append(source_text[child.start_byte: child.end_byte])
+                names.append(source_text[child.start_byte : child.end_byte])
 
         return names
 
@@ -652,7 +652,7 @@ class PythonNodeHandler:
         complexity = 1  # Base complexity
 
         # Count control flow statements
-        function_text = source_text[node.start_byte: node.end_byte] if hasattr(node, "start_byte") else ""
+        function_text = source_text[node.start_byte : node.end_byte] if hasattr(node, "start_byte") else ""
 
         # Simple complexity indicators
         complexity += function_text.count("if ")

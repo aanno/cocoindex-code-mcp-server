@@ -59,7 +59,7 @@ class TestBooleanOrQuery:
                 keyword_weight=1.0,
             )
 
-            logger.info(f"OR query found {len(or_results)} results")
+            logger.info("OR query found %s results", len(or_results))
 
             # Also test individual queries for comparison
             rust_results = infrastructure.hybrid_search_engine.search(
@@ -78,8 +78,8 @@ class TestBooleanOrQuery:
                 keyword_weight=1.0,
             )
 
-            logger.info(f"Rust query found {len(rust_results)} results")
-            logger.info(f"C query found {len(c_results)} results")
+            logger.info("Rust query found %s results", len(rust_results))
+            logger.info("C query found %s results", len(c_results))
 
             # Assertions
             assert len(or_results) > 0, "OR query should return results"
@@ -87,12 +87,8 @@ class TestBooleanOrQuery:
             assert len(c_results) > 0, "C query should return results"
 
             # OR query should return at least as many results as individual queries
-            assert len(or_results) >= len(
-                rust_results
-            ), "OR query should include at least all Rust results"
-            assert len(or_results) >= len(
-                c_results
-            ), "OR query should include at least all C results"
+            assert len(or_results) >= len(rust_results), "OR query should include at least all Rust results"
+            assert len(or_results) >= len(c_results), "OR query should include at least all C results"
 
             # Verify that all results are either Rust or C
             for result in or_results:
@@ -154,7 +150,7 @@ class TestBooleanOrQuery:
                 ], f"Unexpected language in multi-OR results: {language}"
 
             # Should find at least one result from each language (if they exist in corpus)
-            logger.info(f"Found languages in multi-OR query: {found_languages}")
+            logger.info("Found languages in multi-OR query: %s", found_languages)
 
     async def test_boolean_and_or_combination(self):
         """Test combination of AND and OR operators."""
@@ -191,10 +187,8 @@ class TestBooleanOrQuery:
                     language = result.get("language", "UNKNOWN")
                     functions = result.get("functions", "")
                     assert language == "Python", "Should only return Python results"
-                    assert (
-                        "fibonacci" in functions.lower()
-                    ), "Should only return results with fibonacci function"
+                    assert "fibonacci" in functions.lower(), "Should only return results with fibonacci function"
 
             except Exception as e:
                 # If combined AND/OR is not yet supported, that's okay
-                logger.info(f"Combined AND/OR query not supported yet: {e}")
+                logger.info("Combined AND/OR query not supported yet: %s", e)

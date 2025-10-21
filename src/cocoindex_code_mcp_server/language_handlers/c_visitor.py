@@ -81,9 +81,9 @@ class CASTVisitor(GenericMetadataVisitor):
                     if text is not None:
                         func_name = text.decode("utf-8")
                     self.functions.append(func_name)
-                    LOGGER.debug(f"Found C function: {func_name}")
+                    LOGGER.debug("Found C function: %s", func_name)
         except Exception as e:
-            LOGGER.warning(f"Error extracting C function: {e}")
+            LOGGER.warning("Error extracting C function: %s", e)
 
     def _extract_struct(self, node: Node) -> None:
         """Extract struct name from struct_specifier node."""
@@ -95,10 +95,10 @@ class CASTVisitor(GenericMetadataVisitor):
                     if text is not None:
                         struct_name = text.decode("utf-8")
                     self.structs.append(struct_name)
-                    LOGGER.debug(f"Found C struct: {struct_name}")
+                    LOGGER.debug("Found C struct: %s", struct_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting C struct: {e}")
+            LOGGER.warning("Error extracting C struct: %s", e)
 
     def _extract_enum(self, node):
         """Extract enum name from enum_specifier node."""
@@ -108,10 +108,10 @@ class CASTVisitor(GenericMetadataVisitor):
                 if child.type == "type_identifier":
                     enum_name = child.text.decode("utf-8")
                     self.enums.append(enum_name)
-                    LOGGER.debug(f"Found C enum: {enum_name}")
+                    LOGGER.debug("Found C enum: %s", enum_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting C enum: {e}")
+            LOGGER.warning("Error extracting C enum: %s", e)
 
     def _extract_typedef(self, node):
         """Extract typedef name from type_definition node."""
@@ -121,10 +121,10 @@ class CASTVisitor(GenericMetadataVisitor):
                 if child.type == "type_identifier":
                     typedef_name = child.text.decode("utf-8")
                     self.typedefs.append(typedef_name)
-                    LOGGER.debug(f"Found C typedef: {typedef_name}")
+                    LOGGER.debug("Found C typedef: %s", typedef_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting C typedef: {e}")
+            LOGGER.warning("Error extracting C typedef: %s", e)
 
     def _find_child_by_type(self, node: Node, target_type: str) -> Union[Node, None]:
         """Find first child node of specified type."""
@@ -189,9 +189,9 @@ def analyze_c_code(code: str, filename: str = "") -> Dict[str, Any]:
             }
         )
 
-        LOGGER.debug(f"C analysis completed: {len(result.get('functions', []))} functions found")
+        LOGGER.debug("C analysis completed: %s functions found", len(result.get("functions", [])))
         return result
 
     except Exception as e:
-        LOGGER.error(f"C code analysis failed: {e}")
+        LOGGER.error("C code analysis failed: %s", e)
         return {"success": False, "error": str(e)}

@@ -158,9 +158,9 @@ class KeywordSearchParser:
                     },
                 )
             else:
-                logger.warning(f"Grammar file not found at {grammar_path}, falling back to regex parser")
+                logger.warning("Grammar file not found at %s, falling back to regex parser", grammar_path)
         except Exception as e:
-            logger.warning(f"Failed to initialize Lark parser ({e}), falling back to regex parser")
+            logger.warning("Failed to initialize Lark parser (%s), falling back to regex parser", e)
             raise
 
     def parse(self, query: str) -> SearchGroup:
@@ -195,7 +195,7 @@ class KeywordSearchParser:
                 logger.warning("No lark parser found, falling back to regex parser")
                 raise LarkError("No lark parser found")
         except (LarkError, ParseError) as e:
-            logger.warning(f"Lark parser failed ({e}), falling back to regex parser")
+            logger.warning("Lark parser failed (%s), falling back to regex parser", e)
             raise
 
     def _normalize_keywords(self, query: str) -> str:

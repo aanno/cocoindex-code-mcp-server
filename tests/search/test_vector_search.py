@@ -60,7 +60,7 @@ class TestVectorSearch:
 
         # Create and initialize infrastructure using configuration with vector test type
         infrastructure_kwargs = config.to_infrastructure_kwargs()
-        infrastructure_kwargs['test_type'] = 'vector'  # Use separate vector test table
+        infrastructure_kwargs["test_type"] = "vector"  # Use separate vector test table
         async with CocoIndexTestInfrastructure(**infrastructure_kwargs) as infrastructure:
 
             # CocoIndex indexing completes synchronously during infrastructure setup
@@ -72,9 +72,7 @@ class TestVectorSearch:
 
             # Run vector search tests using direct infrastructure
             failed_tests = await run_cocoindex_vector_search_tests(
-                test_cases=test_data["tests"],
-                infrastructure=infrastructure,
-                run_timestamp=run_timestamp
+                test_cases=test_data["tests"], infrastructure=infrastructure, run_timestamp=run_timestamp
             )
 
             # Report results using common helper
@@ -83,7 +81,7 @@ class TestVectorSearch:
                 logging.info(error_msg)
                 pytest.fail(error_msg)
             else:
-                logging.info(f"✅ All {len(test_data['tests'])} vector search validation tests passed!")
+                logging.info("✅ All %s vector search validation tests passed!", len(test_data["tests"]))
 
 
 if __name__ == "__main__":

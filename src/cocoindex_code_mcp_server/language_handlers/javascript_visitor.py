@@ -85,10 +85,10 @@ class JavaScriptASTVisitor(GenericMetadataVisitor):
                 if child.type == "identifier":
                     func_name = child.text.decode("utf-8")
                     self.functions.append(func_name)
-                    LOGGER.debug(f"Found JavaScript function: {func_name}")
+                    LOGGER.debug("Found JavaScript function: %s", func_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting JavaScript function: {e}")
+            LOGGER.warning("Error extracting JavaScript function: %s", e)
 
     def _extract_function_expression(self, node):
         """Extract function name from function_expression node."""
@@ -98,10 +98,10 @@ class JavaScriptASTVisitor(GenericMetadataVisitor):
                 if child.type == "identifier":
                     func_name = child.text.decode("utf-8")
                     self.functions.append(func_name)
-                    LOGGER.debug(f"Found JavaScript function expression: {func_name}")
+                    LOGGER.debug("Found JavaScript function expression: %s", func_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting JavaScript function expression: {e}")
+            LOGGER.warning("Error extracting JavaScript function expression: %s", e)
 
     def _extract_arrow_function(self, node: Node) -> None:
         """Extract context for arrow functions (often anonymous)."""
@@ -110,7 +110,7 @@ class JavaScriptASTVisitor(GenericMetadataVisitor):
             # Could look at parent context to see if assigned to variable
             pass  # Most arrow functions are anonymous
         except Exception as e:
-            LOGGER.warning(f"Error extracting JavaScript arrow function: {e}")
+            LOGGER.warning("Error extracting JavaScript arrow function: %s", e)
 
     def _extract_method(self, node):
         """Extract method name from method_definition node."""
@@ -120,10 +120,10 @@ class JavaScriptASTVisitor(GenericMetadataVisitor):
                 if child.type in ["property_identifier", "identifier"]:
                     method_name = child.text.decode("utf-8")
                     self.functions.append(method_name)
-                    LOGGER.debug(f"Found JavaScript method: {method_name}")
+                    LOGGER.debug("Found JavaScript method: %s", method_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting JavaScript method: {e}")
+            LOGGER.warning("Error extracting JavaScript method: %s", e)
 
     def _extract_class(self, node):
         """Extract class name from class_declaration node."""
@@ -133,10 +133,10 @@ class JavaScriptASTVisitor(GenericMetadataVisitor):
                 if child.type == "identifier":
                     class_name = child.text.decode("utf-8")
                     self.classes.append(class_name)
-                    LOGGER.debug(f"Found JavaScript class: {class_name}")
+                    LOGGER.debug("Found JavaScript class: %s", class_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting JavaScript class: {e}")
+            LOGGER.warning("Error extracting JavaScript class: %s", e)
 
     def _extract_variable(self, node):
         """Extract variable name from variable_declarator node."""
@@ -150,11 +150,11 @@ class JavaScriptASTVisitor(GenericMetadataVisitor):
                     for sibling in node.children:
                         if sibling.type in ["function_expression", "arrow_function"]:
                             self.functions.append(var_name)
-                            LOGGER.debug(f"Found JavaScript function variable: {var_name}")
+                            LOGGER.debug("Found JavaScript function variable: %s", var_name)
                             break
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting JavaScript variable: {e}")
+            LOGGER.warning("Error extracting JavaScript variable: %s", e)
 
     def _extract_import(self, node):
         """Extract import information from import_statement node."""
@@ -164,10 +164,10 @@ class JavaScriptASTVisitor(GenericMetadataVisitor):
                 if child.type == "string":
                     import_module = child.text.decode("utf-8").strip("\"'")
                     self.imports.append(import_module)
-                    LOGGER.debug(f"Found JavaScript import: {import_module}")
+                    LOGGER.debug("Found JavaScript import: %s", import_module)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting JavaScript import: {e}")
+            LOGGER.warning("Error extracting JavaScript import: %s", e)
 
     def _extract_export(self, node):
         """Extract export information from export_statement node."""
@@ -177,10 +177,10 @@ class JavaScriptASTVisitor(GenericMetadataVisitor):
                 if child.type == "identifier":
                     export_name = child.text.decode("utf-8")
                     self.exports.append(export_name)
-                    LOGGER.debug(f"Found JavaScript export: {export_name}")
+                    LOGGER.debug("Found JavaScript export: %s", export_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting JavaScript export: {e}")
+            LOGGER.warning("Error extracting JavaScript export: %s", e)
 
     def get_summary(self) -> Dict[str, Any]:
         """Get analysis summary in the expected format."""
@@ -212,7 +212,7 @@ def analyze_javascript_code(code: str, language: str = "javascript", filename: s
         factory = ASTParserFactory()
         parser = factory.create_parser("javascript")
         if not parser:
-            LOGGER.warning(f"JavaScript parser not available for {language}")
+            LOGGER.warning("JavaScript parser not available for %s", language)
             return {"success": False, "error": f"JavaScript parser not available for {language}"}
 
         tree = factory.parse_code(code, "javascript")
@@ -254,12 +254,12 @@ def analyze_javascript_code(code: str, language: str = "javascript", filename: s
         )
 
         LOGGER.debug(
-            f"JavaScript analysis completed: {len(result.get('functions',
-                                                             []))} functions, {len(result.get('classes',
-                                                                                              []))} classes found"
+            "JavaScript analysis completed: %s functions, %s classes found",
+            len(result.get("functions", [])),
+            len(result.get("classes", [])),
         )
         return result
 
     except Exception as e:
-        LOGGER.error(f"JavaScript code analysis failed: {e}")
+        LOGGER.error("JavaScript code analysis failed: %s", e)
         return {"success": False, "error": str(e)}

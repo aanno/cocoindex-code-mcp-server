@@ -60,7 +60,7 @@ try:
 
     ASTCHUNK_AVAILABLE = True
 except ImportError as e:
-    logging.warning(f"ASTChunk not available: {e}")
+    logging.warning("ASTChunk not available: %s", e)
     ASTChunkBuilder = None  # type: ignore
     ASTCHUNK_AVAILABLE = False
 
@@ -148,7 +148,7 @@ class ASTChunkExecutor:
                 }
                 self._builders[language] = ASTChunkBuilder(**configs)
             except Exception as e:
-                LOGGER.error(f"Failed to create ASTChunkBuilder for {language}: {e}")
+                LOGGER.error("Failed to create ASTChunkBuilder for %s: %s", language, e)
                 return None
 
         return self._builders[language]
@@ -197,12 +197,12 @@ class ASTChunkExecutor:
                     result_chunks.append(chunk_row)
 
                 LOGGER.info(
-                    f"✅ Haskell AST chunking created {len(result_chunks)} chunks with proper Rust method names"
+                    "✅ Haskell AST chunking created %s chunks with proper Rust method names", len(result_chunks)
                 )
                 return result_chunks
 
             except Exception as e:
-                LOGGER.error(f"Haskell AST chunking failed: {e}")
+                LOGGER.error("Haskell AST chunking failed: %s", e)
 
         # Simple text chunking as last resort
         return self._simple_text_chunking(code, language, "ast_fallback_unavailable")
@@ -216,7 +216,7 @@ class ASTChunkExecutor:
         chunk_size = self.spec.max_chunk_size // 10  # Rough estimate for lines
 
         for i in range(0, len(lines), chunk_size):
-            chunk_lines = lines[i: i + chunk_size]
+            chunk_lines = lines[i : i + chunk_size]
             content = "\n".join(chunk_lines)
 
             if content.strip():
@@ -233,12 +233,12 @@ class ASTChunkExecutor:
                 )
                 chunks.append(chunk_row)
 
-        LOGGER.info(f"Simple text chunking created {len(chunks)} chunks")
+        LOGGER.info("Simple text chunking created %s chunks", len(chunks))
         return chunks
 
     def __call__(self, content: str, language: str = "auto") -> list[ASTChunkRow]:
         """Main chunking function - returns typed chunk structures for CocoIndex."""
-        LOGGER.info(f"🚀 ASTChunk called with language={language}, content_length={len(content)}")
+        LOGGER.info("🚀 ASTChunk called with language=%s, content_length=%s", language, len(content))
 
         # Auto-detect language if needed
         if language == "auto":
@@ -249,18 +249,20 @@ class ASTChunkExecutor:
         # Map CocoIndex language to ASTChunk language
         astchunk_language = LANGUAGE_MAP.get(detected_language)
         if not astchunk_language:
-            LOGGER.info(f"🔍 Language {detected_language} not supported by ASTChunk - using fallback")
+            LOGGER.info("🔍 Language %s not supported by ASTChunk - using fallback", detected_language)
             chunks = self._fallback_chunking(content, detected_language)
             return self._convert_chunks_to_ast_chunk_rows(chunks)
         else:
             LOGGER.info(
-                f"🔍 Language {detected_language} IS supported by ASTChunk - proceeding with astchunk_language={astchunk_language}"
+                "🔍 Language %s IS supported by ASTChunk - proceeding with astchunk_language=%s",
+                detected_language,
+                astchunk_language,
             )
 
         # Get ASTChunkBuilder for this language
         builder = self._get_builder(astchunk_language)
         if not builder:
-            LOGGER.warning(f"Failed to get builder for {astchunk_language}")
+            LOGGER.warning("Failed to get builder for %s", astchunk_language)
             chunks = self._fallback_chunking(content, detected_language)
             return self._convert_chunks_to_ast_chunk_rows(chunks)
 
@@ -297,11 +299,11 @@ class ASTChunkExecutor:
                 )
                 result_chunks.append(chunk_row)
 
-            LOGGER.info(f"AST chunking created {len(result_chunks)} chunks for {detected_language}")
+            LOGGER.info("AST chunking created %s chunks for %s", len(result_chunks), detected_language)
             return self._convert_chunks_to_ast_chunk_rows(result_chunks)
 
         except Exception as e:
-            LOGGER.error(f"AST chunking failed for {detected_language}: {e}")
+            LOGGER.error("AST chunking failed for %s: %s", detected_language, e)
             chunks = self._fallback_chunking(content, detected_language)
             return self._convert_chunks_to_ast_chunk_rows(chunks)
 

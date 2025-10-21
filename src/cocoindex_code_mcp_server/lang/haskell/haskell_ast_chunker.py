@@ -205,11 +205,11 @@ class EnhancedHaskellChunker:
             # Enhance metadata
             chunks = self._enhance_metadata(chunks, content, file_path)
 
-            LOGGER.info(f"Successfully created {len(chunks)} Haskell chunks using AST method")
+            LOGGER.info("Successfully created %s Haskell chunks using AST method", len(chunks))
             return chunks
 
         except Exception as e:
-            LOGGER.warning(f"AST chunking failed for Haskell code: {e}")
+            LOGGER.warning("AST chunking failed for Haskell code: %s", e)
             return self._fallback_chunking(content, file_path)
 
     def _ast_based_chunking(self, content: str, file_path: str) -> List[Dict[str, Any]]:
@@ -229,7 +229,7 @@ class EnhancedHaskellChunker:
 
         except Exception as e:
             # Fallback to the original method if parameterized version fails
-            LOGGER.warning(f"Parameterized chunking failed, using fallback: {e}")
+            LOGGER.warning("Parameterized chunking failed, using fallback: %s", e)
             ast_chunks = haskell_tree_sitter.get_haskell_ast_chunks_with_fallback(content)
 
         result = []
@@ -621,26 +621,25 @@ def extract_haskell_ast_chunks(content: str) -> List[Dict[str, Any]]:
 
         if chunks_with_functions > 0:
             LOGGER.info(
-                f"✅ Rust Haskell chunking produced {len(legacy_chunks)} chunks, {
-                    chunks_with_functions
-                } with function metadata"
+                "✅ Rust Haskell chunking produced %s chunks, %s with function metadata",
+                len(legacy_chunks),
+                chunks_with_functions,
             )
         else:
             LOGGER.warning(
-                f"⚠️ Rust Haskell chunking produced {
-                    len(legacy_chunks)
-                } chunks but NO function metadata - likely using regex fallback"
+                "⚠️ Rust Haskell chunking produced %s chunks but NO function metadata - likely using regex fallback",
+                len(legacy_chunks),
             )
             if legacy_chunks:
                 first_chunk = legacy_chunks[0]
                 if "metadata" in first_chunk and isinstance(first_chunk["metadata"], dict):
-                    LOGGER.debug(f"Sample chunk metadata keys: {list(first_chunk['metadata'].keys())}")
+                    LOGGER.debug("Sample chunk metadata keys: %s", list(first_chunk["metadata"].keys()))
                 else:
                     LOGGER.debug("Sample chunk metadata keys: none")
         return legacy_chunks
 
     except Exception as e:
-        LOGGER.error(f"❌ Rust Haskell chunking failed: {e}")
+        LOGGER.error("❌ Rust Haskell chunking failed: %s", e)
         LOGGER.info("⚠️ Falling back to enhanced Python chunking")
 
         # Fallback to the existing Python implementation if Rust fails
@@ -790,7 +789,7 @@ def create_enhanced_regex_fallback_chunks(
             chunk_dict = {"content": chunk_text, "metadata": metadata}
             chunks.append(chunk_dict)
 
-    LOGGER.info(f"Enhanced regex fallback created {len(chunks)} Haskell chunks")
+    LOGGER.info("Enhanced regex fallback created %s Haskell chunks", len(chunks))
     return chunks
 
 
@@ -904,17 +903,17 @@ class HaskellChunkExecutor:
 
     def __call__(self, content: str, language: str = "Haskell") -> list[HaskellChunkRow]:
         """Main Haskell chunking function - returns typed chunk structures for CocoIndex."""
-        LOGGER.info(f"🚀 HaskellChunkExecutor called with language={language}, content_length={len(content)}")
+        LOGGER.info("🚀 HaskellChunkExecutor called with language=%s, content_length=%s", language, len(content))
 
         try:
             # Try Rust-based Haskell chunking first
             chunks = extract_haskell_ast_chunks(content)
             # More accurate logging about chunk content
-            LOGGER.info(f"✅ Rust Haskell chunking produced {len(chunks)} chunks (via HaskellChunkExecutor)")
+            LOGGER.info("✅ Rust Haskell chunking produced %s chunks (via HaskellChunkExecutor)", len(chunks))
             return self._convert_chunks_to_haskell_chunk_rows(chunks)
 
         except Exception as e:
-            LOGGER.warning(f"Rust Haskell chunking failed: {e}, falling back to enhanced Python chunking")
+            LOGGER.warning("Rust Haskell chunking failed: %s, falling back to enhanced Python chunking", e)
 
             # Fallback to enhanced Python chunker
             config = HaskellChunkConfig(
@@ -929,7 +928,7 @@ class HaskellChunkExecutor:
             chunker = EnhancedHaskellChunker(config)
             enhanced_chunks = chunker.chunk_code(content, "")
 
-            LOGGER.info(f"✅ Enhanced Python Haskell chunking produced {len(enhanced_chunks)} chunks")
+            LOGGER.info("✅ Enhanced Python Haskell chunking produced %s chunks", len(enhanced_chunks))
             return self._convert_chunks_to_haskell_chunk_rows(enhanced_chunks)
 
 

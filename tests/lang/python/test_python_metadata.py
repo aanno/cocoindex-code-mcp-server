@@ -19,7 +19,7 @@ try:
         analyze_python_code,
     )
 except ImportError as e:
-    LOGGER.warning(f"Could not import python_code_analyzer: {e}")
+    LOGGER.warning("Could not import python_code_analyzer: %s", e)
     print("⚠️  Warning: These tests require the full application setup.")
 
     def analyze_python_code(code: str, filename: str = "") -> Optional[Dict[str, Any]]:
@@ -489,7 +489,7 @@ if __name__ == "__main__":
     print("🧪 Running Python Metadata Tests")
     print("=" * 50)
 
-    test_methods = [method for method in dir(test_instance) if method.startswith('test_')]
+    test_methods = [method for method in dir(test_instance) if method.startswith("test_")]
 
     passed = 0
     failed = 0

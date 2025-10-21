@@ -48,11 +48,11 @@ def initialize_cocoindex():
         return cocoindex, code_embedding_flow, update_flow_config
 
     except ImportError as e:
-        logger.error(f"❌ Failed to import CocoIndex: {e}")
+        logger.error("❌ Failed to import CocoIndex: %s", e)
         logger.error("Make sure CocoIndex is properly installed and available")
         sys.exit(1)
     except Exception as e:
-        logger.error(f"❌ Failed to initialize CocoIndex: {e}")
+        logger.error("❌ Failed to initialize CocoIndex: %s", e)
         sys.exit(1)
 
 
@@ -79,12 +79,12 @@ def setup(paths: tuple, enable_polling: bool, poll_interval: int, chunk_factor: 
 
     try:
         # Update flow configuration
-        logger.info(f"📁 Configuring paths: {list(paths)}")
-        logger.info(f"🔴 Polling: {'ENABLED' if enable_polling else 'DISABLED'}")
+        logger.info("📁 Configuring paths: %s", list(paths))
+        logger.info("🔴 Polling: %s", "ENABLED" if enable_polling else "DISABLED")
         if enable_polling:
-            logger.info(f"⏰ Poll interval: {poll_interval} seconds")
+            logger.info("⏰ Poll interval: %s seconds", poll_interval)
         if chunk_factor != 100:
-            logger.info(f"📏 Chunk size scaling: {chunk_factor}%")
+            logger.info("📏 Chunk size scaling: %s%%", chunk_factor)
 
         update_flow_config(
             paths=list(paths),
@@ -104,12 +104,12 @@ def setup(paths: tuple, enable_polling: bool, poll_interval: int, chunk_factor: 
         # Run initial update
         logger.info("🔄 Running initial index update...")
         stats = flow.update()
-        logger.info(f"✅ Initial indexing completed - Stats: {stats}")
+        logger.info("✅ Initial indexing completed - Stats: %s", stats)
 
         logger.info("🎉 CocoIndex setup completed successfully!")
 
     except Exception as e:
-        logger.error(f"❌ Setup failed: {e}")
+        logger.error("❌ Setup failed: %s", e)
         sys.exit(1)
 
 
@@ -126,12 +126,12 @@ def update(live: bool, poll_interval: int):
     try:
         if live:
             logger.info("👁️  Starting live update mode...")
-            logger.info(f"📊 File polling interval: {poll_interval} seconds")
+            logger.info("📊 File polling interval: %s seconds", poll_interval)
 
             # Initial update
             logger.info("🚀 Initial index update...")
             stats = flow.update()
-            logger.info(f"Initial update completed: {stats}")
+            logger.info("Initial update completed: %s", stats)
 
             # Start live updater
             logger.info("🔄 Starting live file monitoring...")
@@ -146,10 +146,10 @@ def update(live: bool, poll_interval: int):
         else:
             # Regular one-time update
             stats = flow.update()
-            logger.info(f"✅ Update completed - Stats: {stats}")
+            logger.info("✅ Update completed - Stats: %s", stats)
 
     except Exception as e:
-        logger.error(f"❌ Update failed: {e}")
+        logger.error("❌ Update failed: %s", e)
         sys.exit(1)
 
 
@@ -161,17 +161,17 @@ def drop(target_name: str, confirm: bool):
     if not confirm:
         click.confirm(f"Are you sure you want to drop target '{target_name}'? This will delete all data.", abort=True)
 
-    logger.info(f"🗑️  Dropping target: {target_name}")
+    logger.info("🗑️  Dropping target: %s", target_name)
 
     # Initialize CocoIndex
     cocoindex, flow, _ = initialize_cocoindex()
 
     try:
         flow.drop_target(target_name)
-        logger.info(f"✅ Target '{target_name}' dropped successfully")
+        logger.info("✅ Target '%s' dropped successfully", target_name)
 
     except Exception as e:
-        logger.error(f"❌ Drop failed: {e}")
+        logger.error("❌ Drop failed: %s", e)
         sys.exit(1)
 
 
@@ -191,16 +191,16 @@ def evaluate(output_dir: str):
         output_path = Path(output_dir)
         output_path.mkdir(exist_ok=True)
 
-        logger.info(f"📁 Output directory: {output_path.absolute()}")
+        logger.info("📁 Output directory: %s", output_path.absolute())
 
         # Run evaluation
         eval_options = cocoindex.EvaluateAndDumpOptions(output_dir=str(output_path))
         flow.evaluate_and_dump(eval_options)
 
-        logger.info(f"✅ Evaluation completed - Results saved to: {output_path.absolute()}")
+        logger.info("✅ Evaluation completed - Results saved to: %s", output_path.absolute())
 
     except Exception as e:
-        logger.error(f"❌ Evaluation failed: {e}")
+        logger.error("❌ Evaluation failed: %s", e)
         sys.exit(1)
 
 
@@ -215,17 +215,17 @@ def status():
     try:
         # Get table name
         table_name = cocoindex.utils.get_target_default_name(flow, "code_embeddings")
-        logger.info(f"🏷️  Target table: {table_name}")
+        logger.info("🏷️  Target table: %s", table_name)
 
         # Check database connection
         database_url = os.getenv("DATABASE_URL") or os.getenv("COCOINDEX_DATABASE_URL")
-        logger.info(f"🔗 Database URL: {database_url}")
+        logger.info("🔗 Database URL: %s", database_url)
 
         # Try to get basic stats
         logger.info("✅ CocoIndex flow is accessible")
 
     except Exception as e:
-        logger.error(f"❌ Status check failed: {e}")
+        logger.error("❌ Status check failed: %s", e)
         sys.exit(1)
 
 

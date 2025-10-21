@@ -86,10 +86,10 @@ class RustASTVisitor(GenericMetadataVisitor):
                     if text is not None:
                         func_name = text.decode("utf-8")
                         self.functions.append(func_name)
-                        LOGGER.debug(f"Found Rust function: {func_name}")
+                        LOGGER.debug("Found Rust function: %s", func_name)
                         break  # Take the first identifier (function name)
         except Exception as e:
-            LOGGER.warning(f"Error extracting Rust function: {e}")
+            LOGGER.warning("Error extracting Rust function: %s", e)
 
     def _extract_struct(self, node):
         """Extract struct name from struct_item node."""
@@ -99,10 +99,10 @@ class RustASTVisitor(GenericMetadataVisitor):
                 if child.type == "type_identifier":
                     struct_name = child.text.decode("utf-8")
                     self.structs.append(struct_name)
-                    LOGGER.debug(f"Found Rust struct: {struct_name}")
+                    LOGGER.debug("Found Rust struct: %s", struct_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting Rust struct: {e}")
+            LOGGER.warning("Error extracting Rust struct: %s", e)
 
     def _extract_enum(self, node):
         """Extract enum name from enum_item node."""
@@ -112,10 +112,10 @@ class RustASTVisitor(GenericMetadataVisitor):
                 if child.type == "type_identifier":
                     enum_name = child.text.decode("utf-8")
                     self.enums.append(enum_name)
-                    LOGGER.debug(f"Found Rust enum: {enum_name}")
+                    LOGGER.debug("Found Rust enum: %s", enum_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting Rust enum: {e}")
+            LOGGER.warning("Error extracting Rust enum: %s", e)
 
     def _extract_trait(self, node):
         """Extract trait name from trait_item node."""
@@ -125,10 +125,10 @@ class RustASTVisitor(GenericMetadataVisitor):
                 if child.type == "type_identifier":
                     trait_name = child.text.decode("utf-8")
                     self.traits.append(trait_name)
-                    LOGGER.debug(f"Found Rust trait: {trait_name}")
+                    LOGGER.debug("Found Rust trait: %s", trait_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting Rust trait: {e}")
+            LOGGER.warning("Error extracting Rust trait: %s", e)
 
     def _extract_impl(self, node):
         """Extract implementation target from impl_item node."""
@@ -138,10 +138,10 @@ class RustASTVisitor(GenericMetadataVisitor):
                 if child.type == "type_identifier":
                     impl_name = child.text.decode("utf-8")
                     self.impls.append(impl_name)
-                    LOGGER.debug(f"Found Rust impl: {impl_name}")
+                    LOGGER.debug("Found Rust impl: %s", impl_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting Rust impl: {e}")
+            LOGGER.warning("Error extracting Rust impl: %s", e)
 
     def _extract_mod(self, node):
         """Extract module name from mod_item node."""
@@ -151,10 +151,10 @@ class RustASTVisitor(GenericMetadataVisitor):
                 if child.type == "identifier":
                     mod_name = child.text.decode("utf-8")
                     self.mods.append(mod_name)
-                    LOGGER.debug(f"Found Rust mod: {mod_name}")
+                    LOGGER.debug("Found Rust mod: %s", mod_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting Rust mod: {e}")
+            LOGGER.warning("Error extracting Rust mod: %s", e)
 
     def get_summary(self) -> Dict[str, Any]:
         """Get analysis summary in the expected format."""
@@ -224,9 +224,9 @@ def analyze_rust_code(code: str, filename: str = "") -> Dict[str, Any]:
             },
         )
 
-        LOGGER.debug(f"Rust analysis completed: {len(result.get('functions', []))} functions found")
+        LOGGER.debug("Rust analysis completed: %s functions found", len(result.get("functions", [])))
         return result
 
     except Exception as e:
-        LOGGER.error(f"Rust code analysis failed: {e}")
+        LOGGER.error("Rust code analysis failed: %s", e)
         return {"success": False, "error": str(e)}

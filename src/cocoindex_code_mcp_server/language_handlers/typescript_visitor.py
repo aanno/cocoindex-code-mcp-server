@@ -86,10 +86,10 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
                 if child.type == "type_identifier":
                     interface_name = child.text.decode("utf-8")
                     self.interfaces.append(interface_name)
-                    LOGGER.debug(f"Found TypeScript interface: {interface_name}")
+                    LOGGER.debug("Found TypeScript interface: %s", interface_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting TypeScript interface: {e}")
+            LOGGER.warning("Error extracting TypeScript interface: %s", e)
 
     def _extract_type_alias(self, node):
         """Extract type alias name from type_alias_declaration node."""
@@ -99,10 +99,10 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
                 if child.type == "type_identifier":
                     type_name = child.text.decode("utf-8")
                     self.types.append(type_name)
-                    LOGGER.debug(f"Found TypeScript type alias: {type_name}")
+                    LOGGER.debug("Found TypeScript type alias: %s", type_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting TypeScript type alias: {e}")
+            LOGGER.warning("Error extracting TypeScript type alias: %s", e)
 
     def _extract_enum(self, node):
         """Extract enum name from enum_declaration node."""
@@ -112,10 +112,10 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
                 if child.type == "identifier":
                     enum_name = child.text.decode("utf-8")
                     self.enums.append(enum_name)
-                    LOGGER.debug(f"Found TypeScript enum: {enum_name}")
+                    LOGGER.debug("Found TypeScript enum: %s", enum_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting TypeScript enum: {e}")
+            LOGGER.warning("Error extracting TypeScript enum: %s", e)
 
     def _extract_namespace(self, node):
         """Extract namespace name from namespace_declaration node."""
@@ -125,10 +125,10 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
                 if child.type == "identifier":
                     namespace_name = child.text.decode("utf-8")
                     self.namespaces.append(namespace_name)
-                    LOGGER.debug(f"Found TypeScript namespace: {namespace_name}")
+                    LOGGER.debug("Found TypeScript namespace: %s", namespace_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting TypeScript namespace: {e}")
+            LOGGER.warning("Error extracting TypeScript namespace: %s", e)
 
     def _extract_module(self, node):
         """Extract module name from module_declaration node."""
@@ -138,10 +138,10 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
                 if child.type == "identifier":
                     module_name = child.text.decode("utf-8")
                     self.namespaces.append(module_name)  # Treat modules as namespaces
-                    LOGGER.debug(f"Found TypeScript module: {module_name}")
+                    LOGGER.debug("Found TypeScript module: %s", module_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting TypeScript module: {e}")
+            LOGGER.warning("Error extracting TypeScript module: %s", e)
 
     def _extract_decorator(self, node):
         """Extract decorator name from decorator node."""
@@ -151,10 +151,10 @@ class TypeScriptASTVisitor(JavaScriptASTVisitor):
                 if child.type == "identifier":
                     decorator_name = child.text.decode("utf-8")
                     self.decorators.append(decorator_name)
-                    LOGGER.debug(f"Found TypeScript decorator: {decorator_name}")
+                    LOGGER.debug("Found TypeScript decorator: %s", decorator_name)
                     break
         except Exception as e:
-            LOGGER.warning(f"Error extracting TypeScript decorator: {e}")
+            LOGGER.warning("Error extracting TypeScript decorator: %s", e)
 
     def get_summary(self) -> Dict[str, Any]:
         """Get analysis summary in the expected format."""
@@ -189,7 +189,7 @@ def analyze_typescript_code(code: str, language: str = "typescript", filename: s
         factory = ASTParserFactory()
         parser = factory.create_parser(language)
         if not parser:
-            LOGGER.warning(f"TypeScript parser not available for {language}")
+            LOGGER.warning("TypeScript parser not available for %s", language)
             return {"success": False, "error": f"TypeScript parser not available for {language}"}
 
         tree = factory.parse_code(code, language)
@@ -230,12 +230,12 @@ def analyze_typescript_code(code: str, language: str = "typescript", filename: s
         )
 
         LOGGER.debug(
-            f"TypeScript analysis completed: {len(result.get('functions',
-                                                             []))} functions, {len(result.get('classes',
-                                                                                              []))} classes found"
+            "TypeScript analysis completed: %s functions, %s classes found",
+            len(result.get("functions", [])),
+            len(result.get("classes", [])),
         )
         return result
 
     except Exception as e:
-        LOGGER.error(f"TypeScript code analysis failed: {e}")
+        LOGGER.error("TypeScript code analysis failed: %s", e)
         return {"success": False, "error": str(e)}

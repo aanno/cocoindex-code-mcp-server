@@ -6,10 +6,7 @@ Tests for Backend Factory functionality.
 
 import pytest
 
-from cocoindex_code_mcp_server.backends import (
-    BackendFactory,
-    VectorStoreBackend,
-)
+from cocoindex_code_mcp_server.backends import BackendFactory, VectorStoreBackend
 
 
 class MockBackend(VectorStoreBackend):

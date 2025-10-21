@@ -38,7 +38,7 @@ try:
 
     TREE_SITTER_ANALYZER_AVAILABLE = True
 except ImportError as e:
-    LOGGER.warning(f"Tree-sitter Python analyzer not available: {e}")
+    LOGGER.warning("Tree-sitter Python analyzer not available: %s", e)
     TREE_SITTER_ANALYZER_AVAILABLE = False
 
 
@@ -76,7 +76,7 @@ class PythonCodeAnalyzer:
 
         # Add basic size limits to prevent analyzing enormous code chunks
         if len(code) > 100000:  # 100KB limit
-            LOGGER.debug(f"Code chunk too large ({len(code)} chars), using fallback analysis")
+            LOGGER.debug("Code chunk too large (%s chars), using fallback analysis", len(code))
             return self._build_fallback_metadata(code, filename)
 
         try:
@@ -93,17 +93,17 @@ class PythonCodeAnalyzer:
 
         except SyntaxError as e:
             # Don't log warnings for syntax errors - this is expected when chunking breaks code
-            LOGGER.debug(f"Syntax error in Python code (using fallback): {e}")
+            LOGGER.debug("Syntax error in Python code (using fallback): %s", e)
             return self._build_fallback_metadata(code, filename)
         except Exception as e:
-            LOGGER.error(f"Error analyzing Python code: {e}")
+            LOGGER.error("Error analyzing Python code: %s", e)
             return self._build_fallback_metadata(code, filename)
 
     def _visit_node(self, node: ast.AST, class_context: Optional[str] = None, depth: int = 0) -> None:
         """Recursively visit AST nodes to extract metadata with bounds checking."""
         # Prevent infinite recursion
         if depth > self.max_recursion_depth:
-            LOGGER.debug(f"Max recursion depth {self.max_recursion_depth} reached, stopping AST traversal")
+            LOGGER.debug("Max recursion depth %s reached, stopping AST traversal", self.max_recursion_depth)
             return
 
         # Cycle detection using node memory address
@@ -305,9 +305,9 @@ class PythonCodeAnalyzer:
                 # Limit dict size
                 items = list(zip(node.keys, node.values))[:5]
                 return {
-                    self._get_ast_value(k, depth + 1) if k else "None": self._get_ast_value(v, depth + 1)
-                    if v
-                    else "None"
+                    self._get_ast_value(k, depth + 1) if k else "None": (
+                        self._get_ast_value(v, depth + 1) if v else "None"
+                    )
                     for k, v in items
                 }
             else:
@@ -551,7 +551,7 @@ def analyze_python_code(code: str, filename: str = "") -> Union[Dict[str, Any], 
         # Use the enhanced tree-sitter based analyzer
         analyzer = create_python_analyzer(prefer_tree_sitter=True)
         metadata = analyzer.analyze_code(code, filename)
-        LOGGER.debug(f"Use the enhanced tree-sitter based analyzer for {filename}: {metadata}")
+        LOGGER.debug("Use the enhanced tree-sitter based analyzer for %s: %s", filename, metadata)
 
         # Ensure metadata_json field for compatibility with existing code
         if metadata and "metadata_json" not in metadata:

@@ -21,6 +21,7 @@ from dotenv import load_dotenv
 @dataclass
 class DBComparisonResult:
     """Result of comparing test expectations with database reality."""
+
     test_name: str
     query: Dict[str, Any]
     expected_item: Dict[str, Any]
@@ -35,7 +36,7 @@ class DatabaseComparator:
     def __init__(self, database_url: Optional[str] = None):
         """Initialize with database connection details."""
         load_dotenv()
-        self.database_url = database_url or os.getenv('COCOINDEX_DATABASE_URL')
+        self.database_url = database_url or os.getenv("COCOINDEX_DATABASE_URL")
         if not self.database_url:
             raise ValueError("Database URL not provided and COCOINDEX_DATABASE_URL not set in .env")
 
@@ -95,16 +96,16 @@ class DatabaseComparator:
         arg_num = 1
 
         for field, value in filters.items():
-            if field == 'language':
+            if field == "language":
                 conditions.append(f"language = ${arg_num}")
                 args.append(value)
-            elif field == 'has_classes':
+            elif field == "has_classes":
                 conditions.append(f"has_classes = ${arg_num}")
                 args.append(value)
-            elif field == 'complexity_score_gt':
+            elif field == "complexity_score_gt":
                 conditions.append(f"complexity_score > ${arg_num}")
                 args.append(value)
-            elif field == 'functions_contains':
+            elif field == "functions_contains":
                 conditions.append(f"functions LIKE ${arg_num}")
                 args.append(f"%{value}%")
             arg_num += 1
@@ -128,38 +129,29 @@ class DatabaseComparator:
         return await self.query_database(sql, *args)
 
     async def analyze_test_failure(
-        self,
-        test_name: str,
-        query: Dict[str, Any],
-        expected_item: Dict[str, Any],
-        search_results: List[Dict[str, Any]]
+        self, test_name: str, query: Dict[str, Any], expected_item: Dict[str, Any], search_results: List[Dict[str, Any]]
     ) -> DBComparisonResult:
         """Analyze a failing test by comparing with database contents."""
 
-        logging.info(f"🔍 Analyzing test failure: {test_name}")
+        logging.info("🔍 Analyzing test failure: %s", test_name)
 
         # Extract search conditions from keyword query
-        keyword_query = query.get('keyword_query', '')
+        keyword_query = query.get("keyword_query", "")
 
         # Try to find matching records in database
         matching_db_records = []
 
         # Parse common query patterns
-        if 'language:java AND has_classes:true' in keyword_query:
-            matching_db_records = await self.get_code_embeddings_by_metadata(
-                language='Java',
-                has_classes=True
-            )
-        elif 'language:' in keyword_query:
+        if "language:java AND has_classes:true" in keyword_query:
+            matching_db_records = await self.get_code_embeddings_by_metadata(language="Java", has_classes=True)
+        elif "language:" in keyword_query:
             language = self._extract_language_from_query(keyword_query)
             if language:
                 matching_db_records = await self.get_code_embeddings_by_metadata(language=language)
-        elif 'functions:' in keyword_query:
+        elif "functions:" in keyword_query:
             function_name = self._extract_function_from_query(keyword_query)
             if function_name:
-                matching_db_records = await self.get_code_embeddings_by_metadata(
-                    functions_contains=function_name
-                )
+                matching_db_records = await self.get_code_embeddings_by_metadata(functions_contains=function_name)
 
         # Analyze discrepancies
         discrepancies = self._identify_discrepancies(expected_item, matching_db_records, search_results)
@@ -170,26 +162,27 @@ class DatabaseComparator:
             expected_item=expected_item,
             matching_db_records=matching_db_records,
             search_results=search_results,
-            discrepancies=discrepancies
+            discrepancies=discrepancies,
         )
 
     def _extract_language_from_query(self, query: str) -> Optional[str]:
         """Extract language from keyword query string."""
         import re
-        match = re.search(r'language:(\w+)', query.lower())
+
+        match = re.search(r"language:(\w+)", query.lower())
         if match:
             lang = match.group(1)
             # Map common language names to database values
             lang_map = {
-                'python': 'Python',
-                'java': 'Java',
-                'rust': 'Rust',
-                'javascript': 'JavaScript',
-                'typescript': 'TypeScript',
-                'c': 'C',
-                'cpp': 'C++',
-                'haskell': 'Haskell',
-                'kotlin': 'Kotlin'
+                "python": "Python",
+                "java": "Java",
+                "rust": "Rust",
+                "javascript": "JavaScript",
+                "typescript": "TypeScript",
+                "c": "C",
+                "cpp": "C++",
+                "haskell": "Haskell",
+                "kotlin": "Kotlin",
             }
             return lang_map.get(lang, lang.capitalize())
         return None
@@ -197,14 +190,12 @@ class DatabaseComparator:
     def _extract_function_from_query(self, query: str) -> Optional[str]:
         """Extract function name from keyword query string."""
         import re
-        match = re.search(r'functions:(\w+)', query)
+
+        match = re.search(r"functions:(\w+)", query)
         return match.group(1) if match else None
 
     def _identify_discrepancies(
-        self,
-        expected_item: Dict[str, Any],
-        db_records: List[Dict[str, Any]],
-        search_results: List[Dict[str, Any]]
+        self, expected_item: Dict[str, Any], db_records: List[Dict[str, Any]], search_results: List[Dict[str, Any]]
     ) -> List[str]:
         """Identify discrepancies between expected results and database reality."""
 
@@ -216,43 +207,49 @@ class DatabaseComparator:
             return discrepancies
 
         # Check expected metadata against database records
-        expected_metadata = expected_item.get('expected_metadata', {})
+        expected_metadata = expected_item.get("expected_metadata", {})
 
         for field, expected_value in expected_metadata.items():
-            if field == 'complexity_score':
-                if expected_value.startswith('>'):
+            if field == "complexity_score":
+                if expected_value.startswith(">"):
                     threshold = float(expected_value[1:])
-                    max_complexity = max((r.get('complexity_score', 0) or 0) for r in db_records)
+                    max_complexity = max((r.get("complexity_score", 0) or 0) for r in db_records)
                     if max_complexity <= threshold:
                         discrepancies.append(
                             f"Expected complexity_score > {threshold}, but max found in DB is {max_complexity}"
                         )
-            elif field == 'has_classes':
-                db_has_classes_values = [r.get('has_classes', False) for r in db_records]
+            elif field == "has_classes":
+                db_has_classes_values = [r.get("has_classes", False) for r in db_records]
                 if expected_value not in db_has_classes_values:
                     discrepancies.append(
                         f"Expected has_classes={expected_value}, but DB values are: {set(db_has_classes_values)}"
                     )
-            elif field == 'language':
-                db_languages = [r.get('language') for r in db_records]
+            elif field == "language":
+                db_languages = [r.get("language") for r in db_records]
                 if expected_value.capitalize() not in [lang.capitalize() if lang else None for lang in db_languages]:
                     discrepancies.append(
                         f"Expected language={expected_value}, but DB languages are: {set(db_languages)}"
                     )
-            elif field == 'functions' and expected_value == '!empty':
-                empty_function_records = [r for r in db_records
-                                          if not r.get('functions') or
-                                          # type: ignore[union-attr]
-                                          (isinstance(r.get('functions'), str) and r.get('functions').strip() == '')]
+            elif field == "functions" and expected_value == "!empty":
+                empty_function_records = [
+                    r
+                    for r in db_records
+                    if not r.get("functions") or
+                    # type: ignore[union-attr]
+                    (isinstance(r.get("functions"), str) and r.get("functions").strip() == "")
+                ]
                 if empty_function_records:
                     discrepancies.append(
                         f"Expected non-empty functions, but {len(empty_function_records)} records have empty functions"
                     )
-            elif field == 'classes' and expected_value == '!empty':
-                empty_class_records = [r for r in db_records
-                                       if not r.get('classes') or
-                                       # type: ignore[union-attr]
-                                       (isinstance(r.get('classes'), str) and r.get('classes').strip() == '')]
+            elif field == "classes" and expected_value == "!empty":
+                empty_class_records = [
+                    r
+                    for r in db_records
+                    if not r.get("classes") or
+                    # type: ignore[union-attr]
+                    (isinstance(r.get("classes"), str) and r.get("classes").strip() == "")
+                ]
                 if empty_class_records:
                     discrepancies.append(
                         f"Expected non-empty classes, but {len(empty_class_records)} records have empty classes"
@@ -298,17 +295,12 @@ Expected: {result.expected_item}
 
 
 async def compare_test_with_database(
-    test_name: str,
-    query: Dict[str, Any],
-    expected_item: Dict[str, Any],
-    search_results: List[Dict[str, Any]]
+    test_name: str, query: Dict[str, Any], expected_item: Dict[str, Any], search_results: List[Dict[str, Any]]
 ) -> DBComparisonResult:
     """Compare a single test result with database contents."""
 
     async with DatabaseComparator() as comparator:
-        return await comparator.analyze_test_failure(
-            test_name, query, expected_item, search_results
-        )
+        return await comparator.analyze_test_failure(test_name, query, expected_item, search_results)
 
 
 if __name__ == "__main__":
@@ -322,7 +314,7 @@ if __name__ == "__main__":
                 "classes": "!empty",
                 "functions": "!empty",
                 "has_classes": True,
-                "analysis_method": "!unknown"
+                "analysis_method": "!unknown",
             }
         }
         search_results: List[Dict[str, Any]] = []  # Would come from actual search
