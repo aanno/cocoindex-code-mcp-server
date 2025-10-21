@@ -95,6 +95,7 @@ test = [
     "pytest-xdist>=3.4.0",
     "pytest-mypy>=1.0.1",
     "coverage>=7.9.2",
+    "cocoindex-code-mcp-server[test]",
 ]
 build = [
     "maturin>=1.0,<2.0",
@@ -117,6 +118,7 @@ build = [
     "ruff>=0.4.0",
     "pylint>=4.0.2",
     # "asyncpg>=0.29.0",
+    "cocoindex-code-mcp-server[build]",
 ]
 # github actions for building wheels or local act including pypi publishing
 act = [
@@ -127,6 +129,7 @@ act = [
     "cibuildwheel>=3.2.1",
     "delvewheel>=1.11.2",
     "delocate>=0.8.1",
+    "cocoindex-code-mcp-server[act]",
 ]
 
 [tool.maturin]
@@ -190,3 +193,19 @@ exclude = ["tests/fixtures/"]
 module = ["pgvector.*", "astchunk.*", "cachetools.*"]
 ignore_missing_imports = true
 ignore_errors = true
+
+[tool.uv.workspace]
+members = [
+    ".",
+    ".",
+    ".",
+    ".",
+]
+
+[tool.uv.sources]
+cocoindex-code-mcp-server = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "cocoindex-code-mcp-server",
+]

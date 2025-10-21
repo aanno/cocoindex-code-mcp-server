@@ -17,7 +17,7 @@
 // GNU Affero General Public License for more details.
 //
 // You should have received a copy of the GNU Affero General Public License
-//along with this program. If not, see <https://www.gnu.org/licenses/>.
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 //
 // Lark grammar for keyword search syntax
 // Supports field:value, exists(field), value_contains(field, string), and boolean operators
