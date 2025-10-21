@@ -41,6 +41,7 @@ repos:
   #   hooks:
   #     - id: bandit
   # https://docformatter.readthedocs.io/en/latest/usage.html
+  # docformatter --wrap-summaries 120 --wrap-descriptions 120 -r -i src
   # - repo: https://github.com/PyCQA/docformatter
   #   rev: v1.7.5
   #   hooks:
