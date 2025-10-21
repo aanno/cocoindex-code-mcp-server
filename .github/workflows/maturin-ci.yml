@@ -60,6 +60,12 @@ jobs:
       #   with:
       #     toolchain: stable
       #     override: true
+      # Install uv
+      - name: Install uv
+        run: pip install uv
+      # Sync dependencies using uv.lock
+      - name: Sync dependencies with uv
+        run: uv sync
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
