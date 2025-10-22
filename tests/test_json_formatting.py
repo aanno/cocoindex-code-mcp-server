@@ -77,7 +77,7 @@ test_results = [
         "metadata_json": "{\"language\": \"Python\", \"filename\": \"cocoindex/python/cocoindex/targets.py\", \"line_count\": 21, \"char_count\": 457, \"functions\": [], \"classes\": [\"KuzuConnection\", \"Kuzu\", \"KuzuDeclaration\"]}"
     },
     {
-        "filename": "cocoindex/src/ops/functions/split_recursively.rs",
+        "filename": "cocoindex/python/ops/functions/split_recursively.rs",
         "language": "Rust",
         "code": "    add_treesitter_language(\n        &mut map,\n        \"Go\",\n        [\".go\", \"golang\"],\n        tree_sitter_go::LANGUAGE,\n        [],\n    );\n    add_treesitter_language(\n        &mut map,\n        \"HTML\",\n        [\".html\", \".htm\"],\n        tree_sitter_html::LANGUAGE,\n        [],\n    );",
         "score": 0.23254502720728532,

@@ -844,7 +844,7 @@ def main(
         # This is a simplified version of the grammar used by our parser
         grammar = """
 TODO:
-include file src/cocoindex_code_mcp_server/grammars/keyword_search.lark here
+include file python/cocoindex_code_mcp_server/grammars/keyword_search.lark here
         """
         return grammar.strip()
 

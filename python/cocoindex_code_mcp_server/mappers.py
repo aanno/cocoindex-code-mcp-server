@@ -43,7 +43,7 @@ from .schemas import (
 #
 # Important:
 # If you change something here, the collect code `code_embeddings.collect(..)`
-# in src/cocoindex_code_mcp_server/cocoindex_config.py
+# in python/cocoindex_code_mcp_server/cocoindex_config.py
 # has to be adapted as well!
 #
 # TODO:

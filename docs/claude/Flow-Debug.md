@@ -493,7 +493,7 @@ All files from same test run now share timestamp: `basename_python_20250801_1344
 
 **1. Chunking Method Tracking:**
 - **Rust Implementation**: Added `chunking_method` to all chunk creation functions in `/workspaces/rust/rust/src/lib.rs`
-- **Python Integration**: Updated `/workspaces/rust/src/cocoindex_code_mcp_server/lang/haskell/haskell_ast_chunker.py` to propagate chunking method metadata
+- **Python Integration**: Updated `/workspaces/rust/python/cocoindex_code_mcp_server/lang/haskell/haskell_ast_chunker.py` to propagate chunking method metadata
 - **Consistent Tracking**: Ensures every chunk includes information about the method used (`ast_recursive`, `regex_fallback`, etc.)
 
 **2. Tree-sitter Error Tracking:**

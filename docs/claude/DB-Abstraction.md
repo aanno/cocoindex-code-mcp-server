@@ -483,7 +483,7 @@ The CocoIndex MCP Server uses a sophisticated field mapping system that automati
 
 #### Step 1: Update Field Mappings
 
-Add your new field to `CONST_FIELD_MAPPINGS` in `src/cocoindex_code_mcp_server/mappers.py`:
+Add your new field to `CONST_FIELD_MAPPINGS` in `python/cocoindex_code_mcp_server/mappers.py`:
 
 ```python
 CONST_FIELD_MAPPINGS = {
@@ -494,7 +494,7 @@ CONST_FIELD_MAPPINGS = {
 
 #### Step 2: Add Extraction Function (if from metadata)
 
-If your field comes from `metadata_json`, create an extraction function in `src/cocoindex_code_mcp_server/cocoindex_config.py`:
+If your field comes from `metadata_json`, create an extraction function in `python/cocoindex_code_mcp_server/cocoindex_config.py`:
 
 ```python
 @cocoindex.op.function()

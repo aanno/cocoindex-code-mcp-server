@@ -91,7 +91,7 @@ python main_mcp_server.py
 
 1. **Start the MCP server in HTTP mode:**
    ```bash
-   python src/cocoindex_code_mcp_server/main_mcp_server.py --port 3033 /workspaces/rust
+   python -m cocoindex_code_mcp_server.main_mcp_server.py --port 3033 /workspaces/rust
    ```
 
 2. **Add to Claude Desktop configuration** (`~/.config/Claude/claude_desktop_config.json`):

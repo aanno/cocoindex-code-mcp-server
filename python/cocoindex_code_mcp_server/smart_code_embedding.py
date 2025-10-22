@@ -31,8 +31,9 @@ Usage as external wrapper around CocoIndex's SentenceTransformerEmbed.
 
 from typing import Any, Dict
 
-import cocoindex
 from cocoindex_code_mcp_server import LOGGER
+
+import cocoindex
 
 
 class LanguageModelSelector:

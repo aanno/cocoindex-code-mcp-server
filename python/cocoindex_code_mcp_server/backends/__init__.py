@@ -33,12 +33,11 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Type
 
 import numpy as np
-from numpy.typing import NDArray
-
 from cocoindex_code_mcp_server.keyword_search_parser_lark import (
     SearchCondition,
     SearchGroup,
 )
+from numpy.typing import NDArray
 
 # Import our standardized SearchResult from Phase 2 schemas
 from ..schemas import SearchResult

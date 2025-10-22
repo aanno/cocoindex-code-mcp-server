@@ -3,8 +3,8 @@
 ## 🎯 **Preferred Implementation Pattern (January 2025)**
 
 The current preferred approach for implementing AST chunking in CocoIndex uses the `@op.executor_class()` pattern as demonstrated in:
-- `src/cocoindex_code_mcp_server/ast_chunking.py` (Python AST chunking)
-- `src/cocoindex_code_mcp_server/lang/haskell/haskell_ast_chunker.py` (Haskell AST chunking)
+- `python/cocoindex_code_mcp_server/ast_chunking.py` (Python AST chunking)
+- `python/cocoindex_code_mcp_server/lang/haskell/haskell_ast_chunker.py` (Haskell AST chunking)
 
 ### **Modern Pattern: @op.executor_class()**
 
@@ -72,7 +72,8 @@ The following sections document the historical integration work with ASTChunk li
 ### ✅ **Phase 1: Analysis & Planning**
 1. **Analyzed ASTChunk project** - Comprehensive analysis documented in `ASTChunk.md`
 2. **Designed integration strategy** - CocoIndex operation with hybrid chunking approach
-3. **Created integration module** - `src/ast_chunking.py` with CocoIndex-compatible interface
+3. **Created integration module** - `python/cocoindex_code_mcp_server/
+ast_chunking.py` with CocoIndex-compatible interface
 
 ### ✅ **Phase 2: Implementation**
 1. **Created `ast_chunking.py`** - Main integration module with:
@@ -108,12 +109,12 @@ The following sections document the historical integration work with ASTChunk li
 ## 📁 **Files Modified/Created**
 
 ### **New Files**
-- `src/ast_chunking.py` - Main ASTChunk integration module
+- `python/cocoindex_code_mcp_server/ast_chunking.py` - Main ASTChunk integration module
 - `ASTChunk.md` - Comprehensive analysis and integration plan
 - `STATE.md` - This current state document
 
 ### **Modified Files**
-- `src/cocoindex_config.py` - Added hybrid chunking operation and imports
+- `python/cocoindex_code_mcp_server/cocoindex_config.py` - Added hybrid chunking operation and imports
 
 ## 🔧 **Technical Architecture**
 

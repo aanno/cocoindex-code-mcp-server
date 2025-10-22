@@ -32,9 +32,8 @@ import sys
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set
 
-from tree_sitter import Node
-
 from cocoindex_code_mcp_server.ast_visitor import NodeContext
+from tree_sitter import Node
 
 from ..ast_visitor import NodeContext
 from . import LOGGER

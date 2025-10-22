@@ -12,8 +12,8 @@ For a project intended to be distributable as a **wheel** or **sdist** (and uplo
 my-project/
 ├── pyproject.toml
 ├── README.md
-├── src/            # Python code (src layout)
-│   └── my_project/
+├── python/            # Python code (src layout)
+│   └── cocoindex_code_mcp_server/
 │       ├── __init__.py
 │       └── bar.py
 ├── rust/           # Rust code
@@ -26,7 +26,7 @@ my-project/
     └── test_bar.rs
 ```
 
-- Place all **Python code in a dedicated directory** such as `src/my_project` to avoid import path confusion and ease distribution[^1_3][^1_6].
+- Place all **Python code in a dedicated directory** such as `python/cocoindex_code_mcp_server` to avoid import path confusion and ease distribution[^1_3][^1_6].
 - Place **Rust code in a sibling directory**, such as `rust/`, with its own `Cargo.toml` and typical Rust src layout for multiple libraries (use [Cargo workspaces](https://doc.rust-lang.org/book/ch14-03-cargo-workspaces.html) if you have multiple crates)[^1_4][^1_5][^1_6].
 - This separation allows the Rust libraries to remain idiomatic Rust code, reusable for other Rust projects, and keeps the Python bindings cleanly split[^1_2][^1_4].
 - **If you use pyo3 and maturin, configure the Rust Python extension crate to depend on your “core” Rust libraries as normal Rust dependencies.**
@@ -35,7 +35,7 @@ my-project/
 ### 2. **Configuring maturin and PyPI Packaging**
 
 - Set `tool.maturin.python-source = "src"` in your `pyproject.toml` to tell maturin where your Python package lives[^1_3][^1_9].
-- If you have a Rust native extension for Python, set the module name so it doesn't clash with your Python package, e.g. `module-name = "my_project._my_project"`[^1_3][^1_6].
+- If you have a Rust native extension for Python, set the module name so it doesn't clash with your Python package, e.g. `module-name = "cocoindex_code_mcp_server._my_project"`[^1_3][^1_6].
     - In your Rust `#[pymodule]`, use the same name.
 - This keeps IDEs and code completion working correctly.
 
@@ -60,11 +60,11 @@ my-project/
 
 | Component | Recommended Location |
 | :-- | :-- |
-| Python code | `src/my_project/` |
+| Python code | `python/cocoindex_code_mcp_server/` |
 | Rust code | `rust/` (workspace root) |
-| Rust extension lib | `rust/my_project_py/` (crate) |
-| Tests (Python) | `tests/` or `src/my_project/tests/` |
-| Tests (Rust) | `rust/tests/` or `rust/src/lib.rs` |
+| Rust extension lib | `rust/src/` (crate) |
+| Tests (Python) | `tests/` |
+| Tests (Rust) | `rust/tests/` |
 | Examples | `examples/` (Python), `rust/examples/` (Rust) |
 | Documentation | `README.md`, `docs/` |
 
@@ -101,14 +101,14 @@ This setup maximizes clarity, maintainability, and correct distribution with mat
 
 ### Where to Place `.lark` Files
 
-- **Place all `.lark` files inside your Python package directory** (e.g., in `src/my_project/grammars/` if using a `src` layout).
+- **Place all `.lark` files inside your Python package directory** (e.g., in `python/cocoindex_code_mcp_server/grammars/` if using a `src` layout).
 - Treat `.lark` files as *package data* (non-Python resource files) that must be shipped with your package on PyPI, so they are always available both in development and after installation via wheel or sdist.
 - The typical structure looks like this:
 
 ```
-my-project/
-├── src/
-│   └── my_project/
+cocoindex_code_mcp_server/
+├── python/
+│   └── cocoindex_code_mcp_server/
 │       ├── __init__.py
 │       └── grammars/
 │           └── my_grammar.lark
@@ -119,7 +119,7 @@ my-project/
     - Adding corresponding rules in a `MANIFEST.in`, e.g.:
 
 ```
-recursive-include src/my_project/grammars *.lark
+recursive-include python/cocoindex_code_mcp_server/grammars/*.lark
 ```
 
 
@@ -136,7 +136,7 @@ This ensures distribution in both sdists (source) and wheels (binary) formats[^2
 ```python
 from importlib.resources import files
 
-grammar_path = files('my_project.grammars').joinpath('my_grammar.lark')
+grammar_path = files('cocoindex_code_mcp_server.grammars').joinpath('my_grammar.lark')
 with grammar_path.open('r', encoding='utf-8') as f:
     grammar = f.read()
 ```
@@ -162,7 +162,7 @@ parser = Lark(grammar, parser="lalr")
 from lark import Lark
 
 parser = Lark.open_from_package(
-    'my_project.grammars',          # Package (as string)
+    'cocoindex_code_mcp_server.grammars',          # Package (as string)
     'my_grammar.lark',              # Filename
     parser="lalr"
 )
@@ -175,7 +175,7 @@ parser = Lark.open_from_package(
 
 | Purpose | Recommended Path | How to Access |
 | :-- | :-- | :-- |
-| Package grammar files | `src/my_project/grammars/*.lark` | Use `importlib.resources` or `Lark.open_from_package` |
+| Package grammar files | `python/cocoindex_code_mcp_server/grammars/*.lark` | Use `importlib.resources` or `Lark.open_from_package` |
 | Include in distributions | MANIFEST.in, `package_data` in config | Ensures file present in sdist/wheel |
 | Runtime loading | `importlib.resources` (3.7+), fallback to pkg_resources for older Python | Universal for both development and installed environments |
 
@@ -238,13 +238,13 @@ Yes, **organizing your Python package with subdirectories like `lang/java/` and 
 
 ### Why use such a structure?
 
-- **Packages and subpackages create a hierarchical namespace.** For example, `my_project.lang.java` and `my_project.lang.haskell` become proper subpackages that can be imported explicitly.
+- **Packages and subpackages create a hierarchical namespace.** For example, `cocoindex_code_mcp_server.lang.java` and `cocoindex_code_mcp_server.lang.haskell` become proper subpackages that can be imported explicitly.
 - This avoids dumping all language support code into a single package or module, which would become unwieldy and harder to maintain.
 - You get clean absolute or relative imports using dot notation, e.g.:
 
 ```python
-from my_project.lang.java import parser
-from my_project.lang.haskell import evaluator
+from cocoindex_code_mcp_server.lang.java import parser
+from cocoindex_code_mcp_server.lang.haskell import evaluator
 ```
 
 - You can keep language-specific tests, data, and resources inside each language subpackage if needed.
@@ -254,9 +254,9 @@ from my_project.lang.haskell import evaluator
 ### Recommended folder structure example:
 
 ```
-my_project/
-├── src/
-│   └── my_project/
+cocoindex_code_mcp_server/
+├── python/
+│   └── cocoindex_code_mcp_server/
 │       ├── __init__.py
 │       └── lang/
 │           ├── __init__.py

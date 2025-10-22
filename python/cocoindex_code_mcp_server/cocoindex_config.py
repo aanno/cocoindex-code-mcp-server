@@ -35,10 +35,10 @@ from typing import Any, Dict, List, TypedDict, Union, cast
 from warnings import deprecated
 
 import numpy as np
+from cocoindex_code_mcp_server.mappers import SOURCE_CONFIG
 from numpy.typing import NDArray
 
 import cocoindex
-from cocoindex_code_mcp_server.mappers import SOURCE_CONFIG
 
 # from sentence_transformers import SentenceTransformer  # Use cocoindex.functions.SentenceTransformerEmbed instead
 from .ast_chunking import ASTChunkOperation

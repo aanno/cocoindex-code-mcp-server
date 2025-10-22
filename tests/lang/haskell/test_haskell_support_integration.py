@@ -2,7 +2,7 @@
 
 """
 Integration test for Haskell support functionality.
-Moved from src/haskell_ast_chunker.py to tests/
+Moved from python/haskell_ast_chunker.py to tests/
 """
 
 import logging

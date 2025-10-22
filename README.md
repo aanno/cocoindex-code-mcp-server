@@ -210,7 +210,7 @@ file: Main.hs → language: haskell → model: sentence-transformers/all-mpnet-b
 
 ### Implementation Details
 
-The smart embedding system is implemented as an external wrapper around CocoIndex's `SentenceTransformerEmbed` function, located in `src/cocoindex_code_mcp_server/smart_code_embedding.py`. This approach:
+The smart embedding system is implemented as an external wrapper around CocoIndex's `SentenceTransformerEmbed` function, located in `python/cocoindex_code_mcp_server/smart_code_embedding.py`. This approach:
 
 - Does not modify CocoIndex source code
 - Uses CocoIndex as a pure dependency
@@ -259,7 +259,7 @@ The project uses mypy for type checking. Use the provided scripts:
 
 ### Project Structure
 
-- **`src/cocoindex_code_mcp_server/`**: Main MCP server implementation
+- **`python/cocoindex_code_mcp_server/`**: Main MCP server implementation
   - `main_mcp_server.py`: MCP server entry point
   - `cocoindex_config.py`: CocoIndex flow configuration
   - `smart_code_embedding.py`: Language-aware embedding selection
@@ -289,7 +289,7 @@ pytest -c pytest.ini tests/
 pytest -c pytest.ini tests/test_hybrid_search_integration.py
 
 # Run with coverage
-pytest -c pytest.ini tests/ --cov=src/cocoindex_code_mcp_server --cov-report=html
+pytest -c pytest.ini tests/ --cov=python/cocoindex_code_mcp_server --cov-report=html
 ```
 
 ## Contributing

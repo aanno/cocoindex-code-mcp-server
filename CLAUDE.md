@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Instructions
 
 If you want to run something directly from `./src`, this is the pattern:
-For running `src/cocoindex_code_mcp_server/main_mcp_server.py` do:
+For running `python/cocoindex_code_mcp_server/main_mcp_server.py` do:
 
 ```bash
 python -m cocoindex_code_mcp_server.main_mcp_server
@@ -20,7 +20,7 @@ Our code is mypy compatible! Use the type checking script:
 
 - If you are technically stuck or unsure about the next step, ask for help.
 - cocoindex is a complex beast, so don't hesitate to ask for clarification or guidance.
-- Tests should be pytest at ./tests (NOT at ./src/cocoindex_code_mcp_server/tests).
+- Tests should be pytest at ./tests (NOT at ./python/cocoindex_code_mcp_server/tests).
 - Tests should use pytest and pytest plugins only (i.e. don't use unittest).
 - You MUST use our own RAG (MCP server 'cocoindex-rag') each time before using grep or search.
 - Never try to start/stop our RAG MCP server, just ask, I will do it for you.
@@ -63,17 +63,17 @@ Additonal files here (but only for reference how things work, i.e. not as applic
 **Build and Development:**
 ```bash
 cd cocoindex
-maturin develop                    # Build Rust extension and install Python package
+maturin develop                   # Build Rust extension and install Python package
 cargo build                       # Build Rust components only
 cargo test                        # Run Rust tests
-pytest python/cocoindex/tests/     # Run Python tests
+pytest tests/                     # Run Python tests
 ```
 
 **Code Quality:**
 ```bash
 cargo fmt                         # Format Rust code
 ruff format python/               # Format Python code
-mypy python/cocoindex/           # Type check Python code
+mypy python/cocoindex_code_mcp_server/           # Type check Python code
 ruff check python/               # Lint Python code
 ```
 
@@ -105,7 +105,7 @@ CocoIndex uses a hybrid Rust/Python architecture with clear separation of concer
 - **`llm/`**: LLM provider integrations (OpenAI, Anthropic, Gemini, etc.)
 - **`py/`**: Python-Rust interop layer using PyO3
 
-**Python Interface (`python/cocoindex/`):**
+**Python Interface (`python/cocoindex_code_mcp_server/`):**
 - **`flow.py`**: Main flow definition API and dataflow programming interface
 - **`cli.py`**: Command-line interface for running flows
 - **`sources.py`**: Data source definitions (S3, Azure Blob, Google Drive, etc.)
@@ -146,7 +146,7 @@ CocoIndex uses a hybrid Rust/Python architecture with clear separation of concer
 - **`pyproject.toml`**: Python package configuration and dependencies
 - **`.pre-commit-config.yaml`**: Pre-commit hook configuration
 - **`ruff.toml`**: Python linting configuration
-- **`python/cocoindex/__init__.py`**: Main Python API exports
+- **`cocoindex/python/__init__.py`**: Main Python API exports
 
 ## Development Dependencies
 

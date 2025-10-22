@@ -44,14 +44,14 @@ def parse_hybrid_search_args() -> argparse.Namespace:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python src/main_hybrid_search.py                     # Use default path (cocoindex)
-  python src/main_hybrid_search.py /path/to/code       # Index single directory
-  python src/main_hybrid_search.py /path/to/code1 /path/to/code2  # Index multiple directories
-  python src/main_hybrid_search.py --paths /path/to/code   # Explicit paths argument
+  python -m cocoindex_code_mcp_server.main_hybrid_search.py                     # Use default path (cocoindex)
+  python -m cocoindex_code_mcp_server.main_hybrid_search.py /path/to/code       # Index single directory
+  python -m cocoindex_code_mcp_server.main_hybrid_search.py /path/to/code1 /path/to/code2  # Index multiple directories
+  python -m cocoindex_code_mcp_server.main_hybrid_search.py --paths /path/to/code   # Explicit paths argument
 
   # Live update is enabled by default
-  python src/main_hybrid_search.py --no-live           # Disable live updates
-  python src/main_hybrid_search.py --poll 30           # Custom polling interval (default: 60s)
+  python -m cocoindex_code_mcp_server.main_hybrid_search.py --no-live           # Disable live updates
+  python -m cocoindex_code_mcp_server.main_hybrid_search.py --poll 30           # Custom polling interval (default: 60s)
 
 Hybrid Search Queries:
   The tool will prompt for two types of queries:

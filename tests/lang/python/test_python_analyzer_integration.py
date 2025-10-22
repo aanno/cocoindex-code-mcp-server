@@ -2,7 +2,7 @@
 
 """
 Integration test for the Python analyzer functionality.
-Moved from src/python_code_analyzer.py to tests/
+Moved from python/python_code_analyzer.py to tests/
 """
 
 import logging
@@ -10,7 +10,6 @@ import sys
 from typing import Any, Dict, Union
 
 import pytest
-
 from cocoindex_code_mcp_server.lang.python.python_code_analyzer import (
     analyze_python_code,
 )

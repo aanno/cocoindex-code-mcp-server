@@ -27,19 +27,19 @@ The Hybrid Search system provides an advanced alternative entry point for CocoIn
 
 ```bash
 # Basic usage with defaults (live updates ON, 60s polling)
-python src/main_hybrid_search.py
+python -m cocoindex_code_mcp_server.main_hybrid_search.py
 
 # Custom path and polling interval
-python src/main_hybrid_search.py /path/to/code --poll 30
+python -m cocoindex_code_mcp_server.main_hybrid_search.py /path/to/code --poll 30
 
 # Multiple paths
-python src/main_hybrid_search.py /path1 /path2 --poll 45
+python -m cocoindex_code_mcp_server.main_hybrid_search.py /path1 /path2 --poll 45
 
 # Disable live updates
-python src/main_hybrid_search.py --no-live
+python -m cocoindex_code_mcp_server.main_hybrid_search.py --no-live
 
 # Explicit paths argument
-python src/main_hybrid_search.py --paths /path/to/code1 /path/to/code2
+python -m cocoindex_code_mcp_server.main_hybrid_search.py --paths /path/to/code1 /path/to/code2
 ```
 
 ### Command Line Options
@@ -208,7 +208,7 @@ When results contain complex nested data structures (like detailed location info
 ```json
 [
   {
-    "filename": "src/main_interactive_query.py",
+    "filename": "python/cocoindex_code_mcp_server/main_interactive_query.py",
     "language": "Python",
     "code": "def authenticate_user(username, password):\n    ...",
     "score": 0.856,
@@ -227,11 +227,11 @@ For simpler results, the system uses human-readable formatting:
 ```
 📊 Found 3 results:
 
-1. [0.856] (hybrid) src/auth.py [files_0] (Python) (L45-L52)
+1. [0.856] (hybrid) python/auth.py [files_0] (Python) (L45-L52)
    def authenticate_user(username, password):
    ---
 
-2. [0.743] (vector) src/login.py (Python) (L12-L18)
+2. [0.743] (vector) python/login.py (Python) (L12-L18)
    def login_handler(request):
    ---
 ```
@@ -339,7 +339,7 @@ The keyword search system is extensible and supports adding new operators. Here'
 
 ### Development Process
 
-1. **Update Grammar** (`src/grammars/keyword_search.lark`):
+1. **Update Grammar** (`python/grammars/keyword_search.lark`):
    ```lark
    // Add new operator rule
    my_new_operator: "my_operator" "(" FIELD "," value ")"

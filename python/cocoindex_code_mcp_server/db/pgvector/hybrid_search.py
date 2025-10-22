@@ -29,11 +29,6 @@ import json
 import os
 from typing import Any, Dict, List, Union
 
-from prompt_toolkit import PromptSession
-from prompt_toolkit.key_binding import KeyBindings
-from psycopg_pool import ConnectionPool
-
-import cocoindex
 from cocoindex_code_mcp_server.backends import (
     BackendFactory,
     QueryFilters,
@@ -48,6 +43,11 @@ from cocoindex_code_mcp_server.cocoindex_config import (
     unixcoder_embedding,
 )
 from cocoindex_code_mcp_server.keyword_search_parser_lark import KeywordSearchParser
+from prompt_toolkit import PromptSession
+from prompt_toolkit.key_binding import KeyBindings
+from psycopg_pool import ConnectionPool
+
+import cocoindex
 
 
 class HybridSearchEngine:

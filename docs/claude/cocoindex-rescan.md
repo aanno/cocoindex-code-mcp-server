@@ -51,7 +51,7 @@ clear_test_tables()          # Clear ALL test tables (rarely needed)
 
 **CLI Flag**: `--rescan`
 
-**Location**: `/workspaces/rust/src/cocoindex_code_mcp_server/main_mcp_server.py` (line 254, 285-351)
+**Location**: `/workspaces/rust/python/cocoindex_code_mcp_server/main_mcp_server.py` (line 254, 285-351)
 
 **What it does:**
 - Clears embeddings table: `CodeEmbedding__code_embeddings`

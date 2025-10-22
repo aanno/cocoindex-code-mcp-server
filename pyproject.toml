@@ -48,7 +48,7 @@ requires-python = ">=3.11"
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "aanno", email = "aanno@users.noreply.github.com" }]
-package = { include = ["src/cocoindex_code_mcp_server/**/*.py"] }
+package = { include = ["python/cocoindex_code_mcp_server/**/*.py"] }
 dependencies = [
     "cocoindex[embeddings]>=0.1.63",
     "python-dotenv>=1.0.1",
@@ -140,8 +140,8 @@ module-name = "cocoindex_code_mcp_server"
 manifest-path = "rust/Cargo.toml"
 bindings = "pyo3"
 compatibility = "manylinux_2_28"  # or linux, macos, etc.
-python-source = "src"
-include = ["src/cocoindex_code_mcp_server/**/*.py"]
+python-source = "python"
+include = ["python/cocoindex_code_mcp_server/**/*.py"]
 
 [tool.isort]
 # profile = "pep8"

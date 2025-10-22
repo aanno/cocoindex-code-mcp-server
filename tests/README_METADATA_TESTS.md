@@ -148,7 +148,7 @@ pytest tests/ -m "not integration" -v  # Unit tests only
 ### Import Errors
 If you see import errors, ensure:
 - You're running from the correct directory
-- The `src/` directory is in your Python path
+- The `python/` directory is in your Python path
 - All required modules are available
 
 ### Database Connection Issues

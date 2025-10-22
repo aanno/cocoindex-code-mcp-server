@@ -30,8 +30,9 @@ import logging
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, TypedDict
 
-from cocoindex import op
 from cocoindex_code_mcp_server import LOGGER
+
+from cocoindex import op
 
 
 @dataclass

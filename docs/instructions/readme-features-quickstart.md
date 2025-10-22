@@ -37,7 +37,7 @@ The following are some sketch instructions and features for using the cocoindex_
 
 ### Command line arguments
 
-Fill this section, see src/cocoindex_code_mcp_server/main_mcp_server.py
+Fill this section, see python/cocoindex_code_mcp_server/main_mcp_server.py
 This should be a table with argument, type, default, and description.
 
 ## Features
@@ -52,7 +52,7 @@ This should be a table with argument, type, default, and description.
 
 ### Supported Languages
 
-Please fill that section, see CONST_LANGUAGE_MAPPINGS in src/cocoindex_code_mcp_server/mappers.py
+Please fill that section, see CONST_LANGUAGE_MAPPINGS in python/cocoindex_code_mcp_server/mappers.py
 This should be a table, with languages, file extensions, embedding model used, if astchunk is used, if rust is used, and remarks.
 
 ### Smart Embedding
@@ -68,7 +68,7 @@ Contributions are welcome! Please open issues and pull requests on the GitHub re
 ### Code
 
 * Uses astchunk for supported languages for better code chunking (see ./astchunk, docs/claude/ASTChunk.md, and docs/claude/ASTChunking.md)
-* Uses python tree-sitter bindings for parsing code (see src/cocoindex_code_mcp_server/tree_sitter_parser.py) for most languages
+* Uses python tree-sitter bindings for parsing code (see python/cocoindex_code_mcp_server/tree_sitter_parser.py) for most languages
 * Uses **rust** tree-sitter bindings for Haskell code parsing and semantic analysis (see rust/src/lib.rs)
 * mypy type annotations for better code quality and IDE support
 * extensive testing using pytest (see tests/ directory)

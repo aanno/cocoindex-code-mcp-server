@@ -31,12 +31,12 @@
 1. **Chunk Class Dictionary Compatibility:**
    - Added `__contains__()` method for `'key' in chunk` syntax
    - Fixed `__getitem__()` to handle both string and integer access
-   - Location: `/workspaces/rust/src/cocoindex_code_mcp_server/ast_chunking.py:52-43`
+   - Location: `/workspaces/rust/python/cocoindex_code_mcp_server/ast_chunking.py:52-43`
 
 2. **CRITICAL: Metadata Preservation Bug:**
    - `ensure_unique_chunk_locations()` was setting `metadata={}` (empty)
    - **FIXED**: Now preserves `metadata=chunk.metadata` from original chunks
-   - Location: `/workspaces/rust/src/cocoindex_code_mcp_server/cocoindex_config.py:498-501`
+   - Location: `/workspaces/rust/python/cocoindex_code_mcp_server/cocoindex_config.py:498-501`
 
 ### ✅ VERIFIED: Component Testing
 
@@ -87,11 +87,11 @@ LocalFile → Language Detection → AST Chunking → ensure_unique_chunk_locati
 
 ### Key Files Modified
 
-1. **`/workspaces/rust/src/cocoindex_code_mcp_server/ast_chunking.py`**
+1. **`/workspaces/rust/python/cocoindex_code_mcp_server/ast_chunking.py`**
    - Fixed Chunk class dictionary compatibility
    - Lines 29-54: Added `__contains__` and fixed `__getitem__`
 
-2. **`/workspaces/rust/src/cocoindex_code_mcp_server/cocoindex_config.py`**
+2. **`/workspaces/rust/python/cocoindex_code_mcp_server/cocoindex_config.py`**
    - **CRITICAL FIX**: Line 501 changed from `metadata={}` to `metadata=metadata`
    - This preserves AST chunking metadata through the pipeline
 
@@ -113,7 +113,7 @@ LocalFile → Language Detection → AST Chunking → ensure_unique_chunk_locati
 
 ```python
 _global_flow_config = {
-    'paths': ['src/cocoindex_code_mcp_server/language_handlers/cpp_visitor.py'],  # Single file for testing
+    'paths': ['python/cocoindex_code_mcp_server/language_handlers/cpp_visitor.py'],  # Single file for testing
     'use_default_chunking': False,        # ✅ Use AST chunking
     'use_default_language_handler': False, # ✅ Use proper language handler
     'use_smart_embedding': True,          # Language-aware embeddings
@@ -154,7 +154,7 @@ _global_flow_config = {
 
 ## Resources
 
-- **Primary Codebase**: `/workspaces/rust/src/cocoindex_code_mcp_server/`
+- **Primary Codebase**: `/workspaces/rust/python/cocoindex_code_mcp_server/`
 - **Test Suite**: `/workspaces/rust/tests/`
 - **Debug Documentation**: `/workspaces/rust/docs/claude/Flow-Debug.md`
 - **Configuration**: `cocoindex_config.py` with global flow config

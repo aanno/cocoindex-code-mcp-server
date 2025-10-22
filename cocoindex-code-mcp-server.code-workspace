@@ -145,7 +145,7 @@
 				"name": "debugpy: MCP RAG Server (IT)",
 				"type": "debugpy",
 				"request": "launch",
-				"program": "${workspaceFolder}/src/cocoindex_code_mcp_server/main_mcp_server.py",
+				"program": "${workspaceFolder}/python/cocoindex_code_mcp_server/main_mcp_server.py",
 				"args": [
 					"--port",
 					"3033",
@@ -157,7 +157,7 @@
 				"name": "debugpy: Interactive Hybrid Search (Integrated Terminal)",
 				"type": "debugpy",
 				"request": "launch",
-				"program": "${workspaceFolder}/src/cocoindex_code_mcp_server/main_hybrid_search.py",
+				"program": "${workspaceFolder}/python/cocoindex_code_mcp_server/main_hybrid_search.py",
 				"args": [
 					"/workspaces/rust",
 				],

@@ -293,7 +293,7 @@ All tests are working correctly with the following F1 scores:
 
 ### Implementation Notes
 
-**Haskell** uses a custom Rust implementation (`rust/src/lib.rs`) via Maturin/PyO3 for performance, while other languages use Python tree-sitter bindings. All languages delegate to specialized handlers in `src/cocoindex_code_mcp_server/language_handlers/`.
+**Haskell** uses a custom Rust implementation (`rust/src/lib.rs`) via Maturin/PyO3 for performance, while other languages use Python tree-sitter bindings. All languages delegate to specialized handlers in `python/cocoindex_code_mcp_server/language_handlers/`.
 
 ## Best Practices
 

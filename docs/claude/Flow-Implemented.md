@@ -155,7 +155,7 @@ CREATE TABLE code_embeddings (
 ### Global Flow Configuration
 ```python
 _global_flow_config = {
-    'paths': ['src/'],
+    'paths': ['python/'],
     'use_smart_embedding': True,
     'use_default_chunking': False,        # Use AST chunking when available
     'use_default_language_handler': False # Use custom Python handler

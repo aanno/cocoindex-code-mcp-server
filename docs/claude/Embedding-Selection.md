@@ -12,7 +12,7 @@ Based on your requirement: *"You've got solution. But it includes modifying the 
 
 The external approach provides all the same intelligent functionality while treating CocoIndex purely as a dependency.
 
-### ✅ **Core Implementation** (`src/smart_code_embedding.py`)
+### ✅ **Core Implementation** (`python/cocoindex_code_mcp_server/smart_code_embedding.py`)
 
 **`LanguageModelSelector`** - Intelligent model selection engine:
 - Maps 20+ programming languages to optimal embedding models

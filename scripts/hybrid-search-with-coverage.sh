@@ -2,5 +2,5 @@
 
 # needed for coverage over threads and processes
 export COVERAGE_PROCESS_START=/workspaces/rust/.coveragerc
-coverage run --data-file=.coverage-hs --source=cocoindex_code_mcp_server,tests,src/cocoindex_code_mcp_server \
-  src/cocoindex_code_mcp_server/main_hybrid_search.py "$@"
+coverage run --data-file=.coverage-hs --source=cocoindex_code_mcp_server,tests,python/cocoindex_code_mcp_server \
+  python/cocoindex_code_mcp_server/main_hybrid_search.py "$@"

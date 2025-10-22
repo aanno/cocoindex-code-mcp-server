@@ -23,7 +23,7 @@ def verify_implementation():
         # We'll import just the classes we need without triggering the full module import
         import importlib.util
 
-        spec = importlib.util.spec_from_file_location("functions", "cocoindex/python/cocoindex/functions.py")
+        spec = importlib.util.spec_from_file_location("functions", "cocoindex/python/cocoindex_code_mcp_server/cocoindex/functions.py")
 
         # This will fail due to dependencies, but let's test our logic classes
         print("   Cannot import full module due to engine dependencies (expected)")

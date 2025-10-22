@@ -1821,7 +1821,7 @@ The rust crate would be great! Even better if you use maturin.
 ```bash
 ts_visitor/
 ├── Cargo.toml          # Rust project metadata with Maturin config
-└── src/
+└── python/
     └── lib.rs          # PyO3 + Tree-sitter visitor module
 ```
 

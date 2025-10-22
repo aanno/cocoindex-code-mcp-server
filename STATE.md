@@ -68,14 +68,14 @@ for key, value in metadata_json.items():
 ## Technical Implementation Details
 
 ### **Files Modified:**
-1. **`src/cocoindex_code_mcp_server/cocoindex_config.py`**
+1. **`python/cocoindex_code_mcp_server/cocoindex_config.py`**
    - Lines 379-407: Generalized result creation
    - Lines 696-702: Updated promote_metadata_fields documentation
 
-2. **`src/cocoindex_code_mcp_server/main_mcp_server.py`**
+2. **`python/cocoindex_code_mcp_server/main_mcp_server.py`**
    - Lines 451-458: Automatic promotion of all metadata_json fields
 
-3. **`src/cocoindex_code_mcp_server/schemas.py`**
+3. **`python/cocoindex_code_mcp_server/schemas.py`**
    - Lines 327-342: Updated configuration approach
    - Removed hardcoded field lists, added generalized documentation
 
