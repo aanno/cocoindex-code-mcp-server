@@ -1952,6 +1952,7 @@ fn haskell_tree_sitter(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(get_haskell_ast_chunks_enhanced, m)?)?;
     m.add_function(wrap_pyfunction!(get_haskell_ast_chunks_with_fallback, m)?)?;
     m.add_function(wrap_pyfunction!(get_haskell_ast_chunks_with_params, m)?)?;
+    m.add_function(wrap_pyfunction!(get_haskell_separators, m)?)?;
     m.add_function(wrap_pyfunction!(debug_haskell_ast_nodes, m)?)?;
     Ok(())
 }
