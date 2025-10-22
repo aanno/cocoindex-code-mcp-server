@@ -216,7 +216,7 @@ class ASTChunkExecutor:
         chunk_size = self.spec.max_chunk_size // 10  # Rough estimate for lines
 
         for i in range(0, len(lines), chunk_size):
-            chunk_lines = lines[i : i + chunk_size]
+            chunk_lines = lines[i: i + chunk_size]
             content = "\n".join(chunk_lines)
 
             if content.strip():

@@ -110,7 +110,7 @@ class NodeContext:
     def get_node_text(self) -> str:
         """Get the text content of the current node."""
         if self.source_text and hasattr(self.node, "start_byte") and hasattr(self.node, "end_byte"):
-            return self.source_text[self.node.start_byte : self.node.end_byte]
+            return self.source_text[self.node.start_byte: self.node.end_byte]
         return ""
 
     def get_position(self) -> Position:
@@ -433,13 +433,13 @@ class TreeWalker:
             # Try to extract function name
             for child in context.node.children if hasattr(context.node, "children") else []:
                 if hasattr(child, "type") and child.type in ["identifier", "name"]:
-                    return context.source_text[child.start_byte : child.end_byte]
+                    return context.source_text[child.start_byte: child.end_byte]
 
         elif node_type in ["class_definition", "class_declaration"]:
             # Try to extract class name
             for child in context.node.children if hasattr(context.node, "children") else []:
                 if hasattr(child, "type") and child.type in ["identifier", "name", "type_identifier"]:
-                    return context.source_text[child.start_byte : child.end_byte]
+                    return context.source_text[child.start_byte: child.end_byte]
 
         return None
 

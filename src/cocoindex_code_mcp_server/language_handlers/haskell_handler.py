@@ -620,7 +620,7 @@ class HaskellNodeHandler:
         for child in node.children:
             if hasattr(child, "type"):
                 if child.type == "module_id":
-                    module_info["name"] = source_text[child.start_byte : child.end_byte]
+                    module_info["name"] = source_text[child.start_byte: child.end_byte]
                 elif child.type == "exports":
                     module_info["exports"] = self._extract_export_list(child, source_text)
 
@@ -635,7 +635,7 @@ class HaskellNodeHandler:
 
         for child in exports_node.children:
             if hasattr(child, "type") and child.type in ["variable", "constructor", "type"]:
-                export_name = source_text[child.start_byte : child.end_byte]
+                export_name = source_text[child.start_byte: child.end_byte]
                 exports.append(export_name)
 
         return exports
@@ -650,7 +650,7 @@ class HaskellNodeHandler:
         for child in node.children:
             if hasattr(child, "type"):
                 if child.type == "module_id":
-                    import_info["module"] = source_text[child.start_byte : child.end_byte]
+                    import_info["module"] = source_text[child.start_byte: child.end_byte]
                 elif child.type == "qualified":
                     import_info["qualified"] = True
                 elif child.type == "as":
@@ -672,7 +672,7 @@ class HaskellNodeHandler:
 
         for child in import_list_node.children:
             if hasattr(child, "type") and child.type in ["variable", "constructor", "type"]:
-                item_name = source_text[child.start_byte : child.end_byte]
+                item_name = source_text[child.start_byte: child.end_byte]
                 items.append(item_name)
 
         return items
@@ -692,12 +692,12 @@ class HaskellNodeHandler:
                 if child.type == "::":
                     collecting_names = False
                 elif collecting_names and child.type in ["variable", "identifier"]:
-                    name = source_text[child.start_byte : child.end_byte]
+                    name = source_text[child.start_byte: child.end_byte]
                     sig_info["names"].append(name)
                 elif not collecting_names:
                     # Everything after :: is the type
                     if not sig_info["type"]:
-                        sig_info["type"] = source_text[child.start_byte : node.end_byte].strip()
+                        sig_info["type"] = source_text[child.start_byte: node.end_byte].strip()
 
         return sig_info if sig_info["names"] and sig_info["type"] else None
 
@@ -712,7 +712,7 @@ class HaskellNodeHandler:
             if hasattr(child, "type"):
                 if child.type in ["variable", "identifier"]:
                     if not func_info["name"]:
-                        func_info["name"] = source_text[child.start_byte : child.end_byte]
+                        func_info["name"] = source_text[child.start_byte: child.end_byte]
                 elif child.type == "patterns":
                     func_info["parameters"] = self._extract_pattern_list(child, source_text)
                 elif child.type == "infix":
@@ -729,7 +729,7 @@ class HaskellNodeHandler:
 
         for child in patterns_node.children:
             if hasattr(child, "type"):
-                pattern_text = source_text[child.start_byte : child.end_byte]
+                pattern_text = source_text[child.start_byte: child.end_byte]
                 patterns.append(pattern_text)
 
         return patterns
@@ -744,9 +744,9 @@ class HaskellNodeHandler:
         for child in node.children:
             if hasattr(child, "type"):
                 if child.type == "type_constructor":
-                    type_info["name"] = source_text[child.start_byte : child.end_byte]
+                    type_info["name"] = source_text[child.start_byte: child.end_byte]
                 elif child.type == "type_variable":
-                    param_name = source_text[child.start_byte : child.end_byte]
+                    param_name = source_text[child.start_byte: child.end_byte]
                     type_info["type_parameters"].append(param_name)
                 elif child.type == "constructors":
                     type_info["constructors"] = self._extract_constructor_list(child, source_text)
@@ -764,7 +764,7 @@ class HaskellNodeHandler:
 
         for child in constructors_node.children:
             if hasattr(child, "type") and child.type == "constructor":
-                constructor_name = source_text[child.start_byte : child.end_byte]
+                constructor_name = source_text[child.start_byte: child.end_byte]
                 constructors.append(constructor_name)
 
         return constructors
@@ -778,7 +778,7 @@ class HaskellNodeHandler:
 
         for child in deriving_node.children:
             if hasattr(child, "type") and child.type == "type_constructor":
-                class_name = source_text[child.start_byte : child.end_byte]
+                class_name = source_text[child.start_byte: child.end_byte]
                 deriving_classes.append(class_name)
 
         return deriving_classes
@@ -793,9 +793,9 @@ class HaskellNodeHandler:
         for child in node.children:
             if hasattr(child, "type"):
                 if child.type == "type_constructor":
-                    class_info["name"] = source_text[child.start_byte : child.end_byte]
+                    class_info["name"] = source_text[child.start_byte: child.end_byte]
                 elif child.type == "type_variable":
-                    var_name = source_text[child.start_byte : child.end_byte]
+                    var_name = source_text[child.start_byte: child.end_byte]
                     class_info["type_variables"].append(var_name)
                 elif child.type == "constraints":
                     class_info["constraints"] = self._extract_constraint_list(child, source_text)
@@ -815,9 +815,9 @@ class HaskellNodeHandler:
             if hasattr(child, "type"):
                 if child.type == "type_constructor":
                     if not instance_info["class_name"]:
-                        instance_info["class_name"] = source_text[child.start_byte : child.end_byte]
+                        instance_info["class_name"] = source_text[child.start_byte: child.end_byte]
                     else:
-                        instance_info["type_name"] = source_text[child.start_byte : child.end_byte]
+                        instance_info["type_name"] = source_text[child.start_byte: child.end_byte]
                 elif child.type == "constraints":
                     instance_info["constraints"] = self._extract_constraint_list(child, source_text)
 
@@ -832,7 +832,7 @@ class HaskellNodeHandler:
 
         for child in constraints_node.children:
             if hasattr(child, "type"):
-                constraint_text = source_text[child.start_byte : child.end_byte]
+                constraint_text = source_text[child.start_byte: child.end_byte]
                 constraints.append(constraint_text)
 
         return constraints
@@ -910,7 +910,7 @@ class HaskellNodeHandler:
         found_current = False
         for child in node.parent.children:
             if found_current and hasattr(child, "type") and child.type in ["identifier", "module_id"]:
-                return source_text[child.start_byte : child.end_byte]
+                return source_text[child.start_byte: child.end_byte]
             if child == node:
                 found_current = True
 
@@ -929,7 +929,7 @@ class HaskellNodeHandler:
         complexity = 1  # Base complexity
 
         # Get function text
-        function_text = source_text[node.start_byte : node.end_byte] if hasattr(node, "start_byte") else ""
+        function_text = source_text[node.start_byte: node.end_byte] if hasattr(node, "start_byte") else ""
 
         # Count complexity indicators
         complexity += function_text.count("case ")

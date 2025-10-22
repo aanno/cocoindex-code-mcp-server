@@ -23,6 +23,7 @@ for target in "$@"; do
     # --profile black
 
     ruff check --fix "$target"
+    ruff format "$target"
 
     pydocstyle "$target"
 
