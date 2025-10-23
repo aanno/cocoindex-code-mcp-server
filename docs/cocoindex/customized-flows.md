@@ -6,17 +6,14 @@ Here’s an **overview of custom flow definition in CocoIndex**:
 
 - **Purpose:** A custom indexing flow in CocoIndex allows you to define how raw data is imported, transformed, and indexed—tailoring the ETL (Extract, Transform, Load) process to your specific needs[^1_1][^1_5].
 
-
 ### Key Concepts
 
 - **Indexing Flow:** The sequence of operations that extracts data from a source, applies transformations, and outputs to a target index for efficient retrieval. Flows can be updated once or run live for continuous updates[^1_1][^1_3].
-
 
 #### Elements of a Flow
 
 - **Data:** Structured via a schema at flow definition time. Data types include basic types, structs, tables (KTable/LTable), and these can be nested. All data for a flow is managed by a top-level struct.
 - **Operations:** Flow is a chain of operations, each with an action (e.g., import, transform, export) and an operation spec (e.g., data source, transformation function, or export target)[^1_1].
-
 
 #### Defining a Custom Flow
 
@@ -30,16 +27,14 @@ def demo_flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataSco
 
 - **Alternative:** You can also use `cocoindex.add_flow_def()` for dynamic flow registration[^1_9].
 - **Defining Operations:**
-    - Use methods on `flow_builder` and `data_scope` to define sources, transformations, collectors, and outputs.
-    - You connect source imports, transformations, and outputs through the data scope’s fields.
-    - For collecting data (e.g., from processed rows), use a collector and define what fields to include[^1_9].
-
+  + Use methods on `flow_builder` and `data_scope` to define sources, transformations, collectors, and outputs.
+  + You connect source imports, transformations, and outputs through the data scope’s fields.
+  + For collecting data (e.g., from processed rows), use a collector and define what fields to include[^1_9].
 
 #### Running and Updating Flows
 
 - **Run via CLI or Python API:** Once defined, flows are run or updated using the CLI or the `Flow.update()` API for batch or live/incremental processing[^1_3][^1_1].
 - **Incremental Processing:** CocoIndex only processes data that has changed since the last run—making indexing efficient for large or evolving datasets[^1_1][^1_7].
-
 
 ### Practical Example (Python outline)
 
@@ -56,7 +51,6 @@ def custom_flow(flow_builder, data_scope):
 
 - Here, you import data, transform it, collect the results, assign unique identifiers, and export to your desired index.
 
-
 ### Summary Table
 
 | Concept | Description |
@@ -70,44 +64,31 @@ def custom_flow(flow_builder, data_scope):
 
 <div style="text-align: center">⁂</div>
 
-[^1_1]: https://cocoindex.io/docs/core/basics
+[^1_1]: <https://cocoindex.io/docs/core/basics>
 
-[^1_2]: https://hn.algolia.com/?query=A+hell+of+a+time\&type=story\&dateRange=all\&sort=byDate\&storyText=false\&prefix\&page=0
+[^1_3]: <https://cocoindex.io/docs/core/flow_methods>
 
-[^1_3]: https://cocoindex.io/docs/core/flow_methods
+[^1_5]: <https://www.aibase.com/tool/36560>
 
-[^1_4]: https://hn.algolia.com/?query=Github+is+Your+New+Resume\&type=story\&dateRange=all\&sort=byDate\&storyText=false\&prefix\&page=0
+[^1_7]: <https://github.com/cocoindex-io/cocoindex>
 
-[^1_5]: https://www.aibase.com/tool/36560
-
-[^1_6]: https://hn.premii.com
-
-[^1_7]: https://github.com/cocoindex-io/cocoindex
-
-[^1_8]: https://archive.org/stream/198410Rainbow/198410 Rainbow_djvu.txt
-
-[^1_9]: https://cocoindex.io/docs/core/flow_def
-
-[^1_10]: https://pngaa.org/wp-content/uploads/2022/10/Una-Voce-1999-Sep.pdf
-
-[^1_11]: https://www.youtube.com/watch?v=gv5R8nOXsWU
-
+[^1_9]: <https://cocoindex.io/docs/core/flow_def>
 
 ---
 
-# ok, the are the cocoindex annotations and a type system in annotations.
+# ok, the are the cocoindex annotations and a type system in annotations
 
 CocoIndex uses a **type system** that is distinct from any specific programming language but integrates smoothly with Python through type annotations[^2_1][^2_3]. Here’s how annotations and the type system work in CocoIndex:
 
 - **Type System Overview:**
-    - CocoIndex’s core is written in Rust and its types are language-agnostic, but integrations (such as the Python SDK) map CocoIndex types to Python types[^2_1].
-    - The type of every piece of data in a flow is determined at definition time, ensuring a clear schema for all processed and indexed data[^2_3].
-    - Common types include basic scalars, structs (represented by Python dataclasses), and collections like List and Table[^2_1][^2_3].
+  + CocoIndex’s core is written in Rust and its types are language-agnostic, but integrations (such as the Python SDK) map CocoIndex types to Python types[^2_1].
+  + The type of every piece of data in a flow is determined at definition time, ensuring a clear schema for all processed and indexed data[^2_3].
+  + Common types include basic scalars, structs (represented by Python dataclasses), and collections like List and Table[^2_1][^2_3].
 - **Annotations in Custom Functions:**
-    - When writing **custom functions** (e.g., for transformations), you *annotate* both **arguments** and **return values** with Python type hints.
-    - Type annotations are required for:
-        - Arguments and return values of custom functions, which act as the contract between your Python code and CocoIndex’s engine[^2_1][^2_3].
-        - Table types (e.g., KTable/LTable) always need type annotations when tied to Python variables[^2_1].
+  + When writing **custom functions** (e.g., for transformations), you *annotate* both **arguments** and **return values** with Python type hints.
+  + Type annotations are required for:
+    - Arguments and return values of custom functions, which act as the contract between your Python code and CocoIndex’s engine[^2_1][^2_3].
+    - Table types (e.g., KTable/LTable) always need type annotations when tied to Python variables[^2_1].
 
 ```python
 from dataclasses import dataclass
@@ -127,43 +108,27 @@ def summarize_module(module_info: ModuleInfo) -> ModuleSummary:
 ```
 
     - Here, `ModuleInfo` and `ModuleSummary` are Python dataclasses that mirror struct types in CocoIndex[^2_3].
+
 - **Type Inference:**
-    - CocoIndex will automatically infer the type of output generated by its built-in functions and sources.
-    - Explicit annotation is only necessary when bridging values between Python and the CocoIndex engine, not for every intermediate step[^2_1][^2_3].
+  + CocoIndex will automatically infer the type of output generated by its built-in functions and sources.
+  + Explicit annotation is only necessary when bridging values between Python and the CocoIndex engine, not for every intermediate step[^2_1][^2_3].
 - **Composite and Collection Types:**
-    - Support exists for complex Python types, including lists and tables as well as nested and custom datatype structures[^2_3].
-    - The Python SDK translates these composite types directly to CocoIndex’s system, enabling rich data schemas in your flows[^2_1][^2_3].
+  + Support exists for complex Python types, including lists and tables as well as nested and custom datatype structures[^2_3].
+  + The Python SDK translates these composite types directly to CocoIndex’s system, enabling rich data schemas in your flows[^2_1][^2_3].
 - **Optional vs. Required Annotations:**
-    - Annotations are **optional** for simple/basic and struct types when binding Python variables, but **required** for tables[^2_1].
+  + Annotations are **optional** for simple/basic and struct types when binding Python variables, but **required** for tables[^2_1].
 
 This design provides **strong interoperability**, ensuring your Python code is type-safe and that the data schemas used throughout your CocoIndex flows are consistent and validated at definition time.
 
 <div style="text-align: center">⁂</div>
 
-[^2_1]: https://cocoindex.io/docs/core/data_types
+[^2_1]: <https://cocoindex.io/docs/core/data_types>
 
-[^2_2]: https://docs.python.org/3/library/typing.html
-
-[^2_3]: https://cocoindex.io/blogs/cocoindex-changelog-2025-03-20
-
-[^2_4]: https://mypy.readthedocs.io/en/stable/cheat_sheet_py3.html
-
-[^2_5]: https://typing.python.org/en/latest/spec/annotations.html
-
-[^2_6]: https://cerfacs.fr/coop/python-typing
-
-[^2_7]: https://blog.derlin.ch/python-type-hints-and-future-annotations
-
-[^2_8]: https://www.reddit.com/r/Python/comments/11ru85r/python_type_hints_type_system_unpythonic/
-
-[^2_9]: https://pypi.org/project/coco-types/
-
-[^2_10]: https://stackoverflow.com/questions/76658739/understanding-python-type-annotation-after-indexing
-
+[^2_3]: <https://cocoindex.io/blogs/cocoindex-changelog-2025-03-20>
 
 ---
 
-# Which types are not allowed? I think any or generic lists. give me the full picture!
+# Which types are not allowed? I think any or generic lists. give me the full picture
 
 Here is the full picture of **which types are not allowed in CocoIndex** annotations and type system:
 
@@ -172,12 +137,11 @@ Here is the full picture of **which types are not allowed in CocoIndex** annotat
 - **Primitive types** supported by CocoIndex include `int` (as Int64), `str`, `bool`, floats (Float32, Float64), `bytes`, `uuid.UUID`, `datetime` types, and time ranges[^3_1].
 - **Structs** must be defined as `@dataclass` Python classes with typed fields, mapping to Rust structs.
 - **Tables** come in two flavors:
-    - `KTable` - represented by `dict[K, V]` in Python, with *first key type being a key type* (e.g., string, int).
-    - `LTable` - represented by `list[R]` with `R` a dataclass for each row[^3_2].
+  + `KTable` - represented by `dict[K, V]` in Python, with *first key type being a key type* (e.g., string, int).
+  + `LTable` - represented by `list[R]` with `R` a dataclass for each row[^3_2].
 - Nested composite types of the above are also allowed.
 - Custom types like `Vector(dim=N)` and specialized CocoIndex types have Python aliases.
 - Python **collections are allowed only if they directly map to CocoIndex collections** like `dict` and `list` with strict typing.
-
 
 ### Types Not Allowed or Disallowed
 
@@ -193,7 +157,6 @@ CocoIndex needs data types to be serializable and mappable to Rust types. So you
 Types like `Generic[T]`, `TypeVar` with open bounds, or Python runtime-enforced generics are not supported (CocoIndex requires static, fixed schemas)[^3_5][^3_9].
 - **Unhashable or non-key types as KTable keys**:
 For `KTable` the key type must be a valid *key* type such as `int`, `str`, or other hashable primitive types. Using unhashable types or structs as keys is disallowed[^3_2].
-
 
 ### Summary Table
 
@@ -219,33 +182,21 @@ If you try to use unsupported types, CocoIndex will reject or fail type analysis
 
 <div style="text-align: center">⁂</div>
 
-[^3_1]: https://cocoindex.io/docs/core/data_types
+[^3_1]: <https://cocoindex.io/docs/core/data_types>
 
-[^3_2]: https://cocoindex.io/blogs/cocoindex-changelog-2025-04-30/
+[^3_2]: <https://cocoindex.io/blogs/cocoindex-changelog-2025-04-30/>
 
-[^3_3]: https://docs.python.org/3/library/typing.html
+[^3_3]: <https://docs.python.org/3/library/typing.html>
 
-[^3_4]: https://www.mcpworld.com/en/detail/8e2f66166914a8b9fb3c6fca675b5bc1
+[^3_5]: <https://deepwiki.com/cocoindex-io/cocoindex/7-python-integration>
 
-[^3_5]: https://deepwiki.com/cocoindex-io/cocoindex/7-python-integration
-
-[^3_6]: https://peps.python.org/pep-0484/
-
-[^3_7]: https://github.com/cocoindex-io/cocoindex/issues
-
-[^3_8]: https://mypy.readthedocs.io/en/stable/literal_types.html
-
-[^3_9]: https://stackoverflow.com/questions/57706180/generict-base-class-how-to-get-type-of-t-from-within-instance
-
-[^3_10]: https://realpython.com/python-type-checking/
-
+[^3_9]: <https://stackoverflow.com/questions/57706180/generict-base-class-how-to-get-type-of-t-from-within-instance>
 
 ---
 
 # please elaborate a bit more on Ktable and Ltable. do they need an type parameter?
 
 **KTable and LTable in CocoIndex** are two specific table types with distinct characteristics and strong typing requirements:
-
 
 | Feature | KTable | LTable |
 | :-- | :-- | :-- |
@@ -257,7 +208,7 @@ If you try to use unsupported types, CocoIndex will reject or fail type analysis
 | **Key constraints** | Key must be *immutable* and *hashable*. For dataclasses, use `@dataclass(frozen=True)` to ensure immutability | No key constraints since no keys |
 | **Value/Row constraints** | Value `V` must be a struct with fixed fields (dataclass or NamedTuple) | Row `R` must be a dataclass with fixed schema |
 
-### Example usage in Python:
+### Example usage in Python
 
 ```python
 from dataclasses import dataclass
@@ -280,8 +231,7 @@ persons_table: dict[PersonKey, Person] = {}
 persons_list: list[Person] = []
 ```
 
-
-### Summary:
+### Summary
 
 - Both **KTable and LTable require explicit type parameters** describing the row and key (for KTable).
 - **KTable = dict with typed key + struct value**, unordered, key is required and must be immutable.
@@ -291,26 +241,9 @@ This explicit typing enables CocoIndex to enforce correctness, serialization, an
 
 <div style="text-align: center">⁂</div>
 
-[^4_1]: https://cocoindex.io/docs/core/data_types
+[^4_1]: <https://cocoindex.io/docs/core/data_types>
 
-[^4_2]: https://cocoindexio.substack.com/p/cocoindex-changelog-2025-04-30
-
-[^4_3]: https://cocoindex.io/blogs/knowledge-graph-for-docs/
-
-[^4_4]: https://forum.confluent.io/t/kstream-vs-ktable-vs-globalktable/4039
-
-[^4_5]: https://developer.confluent.io/courses/kafka-streams/ktable/
-
-[^4_6]: https://stackoverflow.com/questions/52488070/difference-between-ktable-and-local-store/52507253
-
-[^4_7]: https://community.ibm.com/community/user/security/blogs/bimal-jha/2024/09/25/understanding-kafka-streams-with-ktable-and-global
-
-[^4_8]: https://www.youtube.com/watch?v=C9aXtOy5pPc
-
-[^4_9]: https://kwcoco.readthedocs.io/en/0.2.10/autoapi/kwcoco/coco_sql_dataset/
-
-[^4_10]: https://stackoverflow.com/questions/45975755/what-are-the-differences-between-ktable-vs-globalktable-and-leftjoin-vs-outerj/45987369
-
+[^4_2]: <https://cocoindexio.substack.com/p/cocoindex-changelog-2025-04-30>
 
 ---
 
@@ -323,7 +256,6 @@ This explicit typing enables CocoIndex to enforce correctness, serialization, an
 - It is a **fixed-dimension numeric array**, typically floats (`Float32`), representing dense vectors like embeddings from language models or other feature extractors.
 - Vectors are a **first-class data type** designed for similarity search, indexing, and AI model integration.
 - They are commonly used as the field type for embedding vectors in documents or chunks that CocoIndex exports to vector databases such as Postgres with PGVector or Qdrant.
-
 
 ### How Vector is used in CocoIndex flows?
 
@@ -353,16 +285,14 @@ Here `"embedding"` is a vector-typed field that will be indexed for similarity s
 
 - Yes, **vectors have a fixed dimension**, so conceptually a vector type includes a dimensionality parameter, e.g., `Vector(dim=384)`.
 - This dimension must be known at flow definition or data ingestion time because:
-    - It defines the size of the numeric array.
-    - It ensures consistent vector shapes for indexing and similarity computations.
+  + It defines the size of the numeric array.
+  + It ensures consistent vector shapes for indexing and similarity computations.
 - In Python SDK usage, this is abstracted but crucial internally.
-
 
 ### Why vectors?
 
 - They power **semantic search and retrieval-augmented generation (RAG)** by representing text chunks or documents in a continuous vector space.
 - CocoIndex integrates tightly with vector DBs, making vectors a core primitive for AI-augmented indexing flows[^5_2][^5_3].
-
 
 ### Summary
 
@@ -378,42 +308,26 @@ Vectors are essential for AI workflows in CocoIndex, enabling powerful semantic 
 
 <div style="text-align: center">⁂</div>
 
-[^5_1]: https://cocoindex.io/docs/getting_started/quickstart
+[^5_1]: <https://cocoindex.io/docs/getting_started/quickstart>
 
-[^5_2]: https://cocoindex.io/blogs/index-code-base-for-rag/
+[^5_2]: <https://cocoindex.io/blogs/index-code-base-for-rag/>
 
-[^5_3]: https://qdrant.tech/documentation/data-management/cocoindex/
-
-[^5_4]: https://github.com/cocoindex-io/cocoindex
-
-[^5_5]: https://pypi.org/project/cocoindex/0.1.34/
-
-[^5_6]: https://cocoindexio.substack.com/p/index-codebase-with-tree-sitter-and
-
-[^5_7]: https://www.youtube.com/watch?v=gv5R8nOXsWU
-
-[^5_8]: https://hackernoon.com/lang/ps/turn-your-pdf-library-into-a-searchable-research-database-with-100-lines-of-code
-
-[^5_9]: https://dev.to/cocoindex/build-real-time-knowledge-graph-for-documents-with-llm-256h
-
-[^5_10]: https://qdrant.tech/documentation/frameworks/
-
+[^5_3]: <https://qdrant.tech/documentation/data-management/cocoindex/>
 
 ---
 
-# ok. elaborate on @cocoindex.op.function() a bit more!
+# ok. elaborate on @cocoindex.op.function() a bit more
 
 The decorator `@cocoindex.op.function()` in CocoIndex is used to **define custom functions** within indexing flows, enabling you to add your own data processing or transformation logic that integrates smoothly into CocoIndex’s type system and execution engine.
 
-### Key points about `@cocoindex.op.function()`:
+### Key points about `@cocoindex.op.function()`
 
 - **Purpose:** It marks a Python function as a *CocoIndex custom operation* that can be used inside flows for transformation or computation.
 - **Type annotations are mandatory:** You must annotate all function arguments and the return type with supported CocoIndex types so the engine knows how to handle input/output data and serialize it properly.
 - **Simple and flexible:** This decorator suits straightforward functions without extra setup or state. For more complex needs, CocoIndex also supports defining function specs and executors separately.
 - **Optional parameters:** The decorator accepts optional arguments for customization (not always needed in basic use).
 
-
-### How to use it (basic example):
+### How to use it (basic example)
 
 ```python
 @cocoindex.op.function()
@@ -425,13 +339,11 @@ def extract_extension(filename: str) -> str:
 - The above defines a simple function that CocoIndex can call during an indexing flow.
 - The annotations tell CocoIndex that it takes a `str` and returns a `str`.
 
-
-### How CocoIndex uses this:
+### How CocoIndex uses this
 
 - When you write flows, you can call these decorated functions as operators in the flow pipeline.
 - CocoIndex inspects the type hints to generate schemas for inputs and outputs.
 - The function runs inside the runtime environment seamlessly, bridging Python code with CocoIndex’s Rust core.
-
 
 ### Why use this decorator?
 
@@ -439,7 +351,6 @@ def extract_extension(filename: str) -> str:
 - Enables use of customized transformation logic that integrates with CocoIndex’s incremental updates and dependency tracking.
 - Supports multiple argument types and optional args (via default parameter values).
 - Easier testing and debugging by clearly isolating custom logic.
-
 
 ### Summary table
 
@@ -456,30 +367,11 @@ In essence, `@cocoindex.op.function()` is a lightweight, type-safe way to add yo
 
 <div style="text-align: center">⁂</div>
 
-[^6_1]: https://cocoindex.io/docs/core/custom_function
-
-[^6_2]: https://cocoindex.io/docs/getting_started/quickstart
-
-[^6_3]: https://book.pythontips.com/en/latest/decorators.html
-
-[^6_4]: https://docs.cocotb.org/en/v1.8.0/_modules/cocotb/decorators.html
-
-[^6_5]: http://python-3-patterns-idioms-test.readthedocs.io/en/latest/PythonDecorators.html
-
-[^6_6]: https://wiki.python.org/moin/PythonDecoratorLibrary
-
-[^6_7]: https://substack.com/home/post/p-160019341
-
-[^6_8]: https://www.youtube.com/watch?v=gv5R8nOXsWU
-
-[^6_9]: https://github.com/micheles/decorator/blob/master/docs/documentation.md
-
-[^6_10]: https://stackoverflow.com/questions/69636403/how-can-i-successfully-use-a-decorator-function-for-my-problem
-
+[^6_1]: <https://cocoindex.io/docs/core/custom_function>
 
 ---
 
-# show an example with optional parameters!
+# show an example with optional parameters
 
 Here’s an example showing how to define a CocoIndex custom function with **optional parameters**, using Python’s default arguments and `@cocoindex.op.function()` decorator:
 
@@ -495,8 +387,7 @@ def greet(name: str, greeting: str = "Hello") -> str:
     return f"{greeting}, {name}!"
 ```
 
-
-### Explanation:
+### Explanation
 
 - `name: str` is a required argument.
 - `greeting: str = "Hello"` is an optional argument with a default value.
@@ -504,8 +395,7 @@ def greet(name: str, greeting: str = "Hello") -> str:
 - CocoIndex uses these annotations to infer data types for the flow’s schema.
 - When calling this function inside your flow, you can omit `greeting` to get the default.
 
-
-### Usage notes:
+### Usage notes
 
 - Optional arguments in custom functions **work naturally** by defining them as Python default parameters.
 - CocoIndex recognizes the defaults but requires the type hints to enforce schema.
@@ -515,22 +405,7 @@ This matches CocoIndex’s lightweight custom function style, making it easy to 
 
 <div style="text-align: center">⁂</div>
 
-[^7_1]: https://stackoverflow.com/questions/3888158/making-decorators-with-optional-arguments
-
-[^7_2]: https://cocoindex.io/docs/core/custom_function
-
-[^7_3]: https://pybit.es/articles/decorator-optional-argument/
-
-[^7_4]: https://cocoindex.io/docs/core/data_types
-
-[^7_5]: https://dev.to/apcelent/python-decorator-tutorial-with-example-529f
-
-[^7_6]: https://www.pythonmorsels.com/decorators-with-optional-arguments/
-
-[^7_7]: https://chase-seibert.github.io/blog/2013/12/17/python-decorator-optional-parameter.html
-
-[^7_8]: https://til.simonwillison.net/python/decorators-with-optional-arguments
-
+[^7_2]: <https://cocoindex.io/docs/core/custom_function>
 
 ---
 
@@ -538,14 +413,14 @@ This matches CocoIndex’s lightweight custom function style, making it easy to 
 
 To use **ASTChunk library** for chunking in your CocoIndex flow, you can integrate it as a **custom transformation function** that processes your source data (like code files or other text) and outputs AST-based semantic chunks.
 
-### What to do:
+### What to do
 
 1. **Import and prepare ASTChunk** in your Python environment alongside CocoIndex.
 2. **Define a custom transformer function** wrapped by `@cocoindex.op.function()` (or a Python function) that uses ASTChunk to split input source text into semantic chunks based on abstract syntax trees.
 3. **In your CocoIndex flow, apply this transformer** on your source data to generate a `chunks` field containing the AST-based chunks.
 4. **Embed and index the chunks** as usual with CocoIndex’s embedding functions and exporters.
 
-### Conceptual example outline:
+### Conceptual example outline
 
 ```python
 import cocoindex
@@ -598,8 +473,7 @@ def flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope):
     )
 ```
 
-
-### Additional notes:
+### Additional notes
 
 - CocoIndex already has **built-in Tree-sitter chunking** support (which uses AST parsing), and tutorials show how to use it for code chunking as semantic units.
 - If ASTChunk is a third-party or proprietary parser that better suits your needs, the key is to wrap it as a **custom function** and plug it into CocoIndex’s transformation step.
@@ -610,30 +484,9 @@ This approach lets you **replace or complement CocoIndex’s built-in chunking**
 
 <div style="text-align: center">⁂</div>
 
-[^8_1]: https://pypi.org/project/cocoindex/0.1.34/
-
-[^8_2]: https://www.youtube.com/watch?v=gv5R8nOXsWU
-
-[^8_3]: https://www.youtube.com/watch?v=jhD6juD_FmA
-
-[^8_4]: https://gist.github.com/0xdevalias/31c6574891db3e36f15069b859065267
-
-[^8_5]: https://qdrant.tech/documentation/data-management/cocoindex/
-
-[^8_6]: https://dev.to/badmonster0/want-ai-to-actually-understand-your-code-this-tool-says-it-can-help-530p
-
-[^8_7]: https://hackernoon.com/this-open-source-tool-could-save-your-data-team-hundreds-of-hours
-
-[^8_8]: https://www.youtube.com/watch?v=G3WstvhHO24
-
-[^8_9]: https://peerlist.io/badmonster0/project/cocoindex
-
-[^8_10]: https://www.youtube.com/watch?v=ZnmyoHslBSc
-
-
 ---
 
-# I want custom embeddings as well. chosen by the language of the chunk.
+# I want custom embeddings as well. chosen by the language of the chunk
 
 To implement **custom embeddings chosen by the language of each chunk** in CocoIndex, you can follow this approach:
 
@@ -644,10 +497,10 @@ To implement **custom embeddings chosen by the language of each chunk** in CocoI
 - Apply this function in your flow, so each chunk is embedded with the model appropriate for its language.
 - Collect and export the embeddings as usual.
 
-
-### How to do it concretely:
+### How to do it concretely
 
 1. **Define a typed transformer function with language-based embedding dispatch:**
+
 ```python
 import cocoindex
 
@@ -671,6 +524,7 @@ def language_based_embedding(chunks: cocoindex.DataSlice) -> cocoindex.DataSlice
 - This function examines each chunk’s language and picks a fitting model.
 
 2. **Use this embedding function in your flow pipeline on the chunked data:**
+
 ```python
 @cocoindex.flow_def(name="MultiLangEmbeddingFlow")
 def flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope):
@@ -708,7 +562,6 @@ def flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope):
     )
 ```
 
-
 ### Notes
 
 - You can **define and reuse** the embedding logic with `@cocoindex.transform_flow()` to share it between indexing and query time.
@@ -721,40 +574,25 @@ This lets you apply **custom embeddings dynamically chosen by each chunk’s lan
 
 <div style="text-align: center">⁂</div>
 
-[^9_1]: https://dev.to/cocoindex/beyond-embeddings-building-metadata-rich-indexes-from-academic-pdfs-2cde
+[^9_1]: <https://dev.to/cocoindex/beyond-embeddings-building-metadata-rich-indexes-from-academic-pdfs-2cde>
 
-[^9_2]: https://dev.to/cocoindex/how-to-build-index-with-text-embeddings-j3m
+[^9_2]: <https://dev.to/cocoindex/how-to-build-index-with-text-embeddings-j3m>
 
-[^9_3]: https://cocoindex.io/blogs/live-image-search/
-
-[^9_4]: https://cocoindex.io/docs/ops/functions
-
-[^9_5]: https://cocoindexio.substack.com/p/index-codebase-with-tree-sitter-and
-
-[^9_6]: https://hackernoon.com/this-open-source-project-turns-text-into-instant-ai-answers
-
-[^9_7]: https://github.com/cocoindex-io/cocoindex
-
-[^9_8]: https://hackernoon.com/lang/de/turn-your-pdf-library-into-a-searchable-research-database-with-100-lines-of-code
-
-[^9_9]: https://github.com/cocoindex-io/cocoindex-quickstart
-
-[^9_10]: https://news.ycombinator.com/item?id=44283597
-
+[^9_5]: <https://cocoindexio.substack.com/p/index-codebase-with-tree-sitter-and>
 
 ---
 
-# I also want to enhance it replace the metadata extraction (also language dependant).
+# I also want to enhance it replace the metadata extraction (also language dependant)
 
 To enhance your CocoIndex flow by **replacing metadata extraction with language-dependent logic**, you can follow a pattern similar to your custom embeddings setup but focused on metadata fields.
 
-### How to implement language-dependent metadata extraction:
+### How to implement language-dependent metadata extraction
 
 1. **Define a custom metadata extraction function** decorated with `@cocoindex.op.function()` that takes chunk text (and language) and returns metadata fields specific to that language.
 2. **Branch your extraction logic inside the function based on the language**, so for each supported language you apply a different parsing or extraction approach (e.g., different AST parsers or regexes).
 3. **In your flow, apply this metadata extraction function to each chunk after chunking and before embedding or collecting.**
 
-### Example of a language-aware metadata extractor:
+### Example of a language-aware metadata extractor
 
 ```python
 import cocoindex
@@ -784,7 +622,7 @@ def extract_metadata(text: str, language: str) -> Metadata:
 
 You would need to implement (or wrap) functions like `extract_python_author`, `measure_python_complexity`, etc., using relevant parsers or heuristics.
 
-### Incorporate this in your flow:
+### Incorporate this in your flow
 
 ```python
 @cocoindex.flow_def(name="EnhancedFlow")
@@ -826,8 +664,7 @@ def flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex.DataScope):
     )
 ```
 
-
-### Benefits and notes:
+### Benefits and notes
 
 - This approach unifies embedding and metadata extraction workflows, making the pipeline modular and language-aware.
 - Based on your memory, you can integrate **language-specific parsers** like Tree Sitter for JavaScript/TypeScript, or Haskell AST parsers for other languages.
@@ -838,11 +675,6 @@ This method lets you **enhance your indexing with rich, language-tailored metada
 
 <div style="text-align: center">⁂</div>
 
-[^10_1]: programming.languages
-
-[^10_2]: programming.language_analysis
-
-
 ---
 
 # I heart about some elements of the flow have to be registered?
@@ -852,16 +684,14 @@ Yes, in CocoIndex certain **elements of a flow must be registered or set up** be
 ### What needs registration or setup?
 
 - **The flow itself** must be *set up* so CocoIndex can provision all the required backend structures derived from your flow definition. For example:
-    - Creating tables or collections in your Postgres/vector DB targets.
-    - Adding/removing columns if you add or remove fields from collectors.
-    - Preparing internal CocoIndex storage for tracking incremental state.
+  + Creating tables or collections in your Postgres/vector DB targets.
+  + Adding/removing columns if you add or remove fields from collectors.
+  + Preparing internal CocoIndex storage for tracking incremental state.
 - **Collectors and exported targets** are implicitly registered via the flow definition but require backend setup to exist physically on the target system.
-
 
 ### How to register/setup flows and related elements?
 
 You have several options:
-
 
 | Method | Description |
 | :-- | :-- |
@@ -870,7 +700,7 @@ You have several options:
 | **Async API variants** | Use `await flow.setup_async()` or `await flow.drop_async()` for asynchronous operation. |
 | **Global setup/drop** | CocoIndex also provides `setup_all_flows()` and `drop_all_flows()` to manage multiple flows at once. |
 
-### Typical usage example:
+### Typical usage example
 
 ```python
 demo_flow.setup(report_to_stdout=True)   # Creates all backend tables and targets for this flow
@@ -878,13 +708,11 @@ demo_flow.setup(report_to_stdout=True)   # Creates all backend tables and target
 demo_flow.update(report_to_stdout=True)
 ```
 
-
 ### Why is this needed?
 
 - **Flow setup brings your flow definition into reality, creating necessary physical backend structures to hold and index your data.**
 - It ensures consistency between your flow schema and downstream data stores.
 - Without setup, your flow will not run properly or export data correctly.
-
 
 ### Summary
 
@@ -898,26 +726,7 @@ In short, **defining a flow in code registers it logically, but you must run set
 
 <div style="text-align: center">⁂</div>
 
-[^11_1]: https://cocoindex.io/docs/core/flow_methods
-
-[^11_2]: https://pypi.org/project/cocoindex/
-
-[^11_3]: https://cocoindex.io/blogs/data-indexing-and-common-challenges/
-
-[^11_4]: https://www.alliancebernstein.com/americas/en/financial-professional/insights/economic-perspectives/exceeding-expectations-in-the-first-three-years.html
-
-[^11_5]: https://hn.algolia.com/?query=Where+do+you+find+the+time+for+side+projects%3F\&type=story\&dateRange=all\&sort=byDate\&storyText=false\&prefix\&page=0
-
-[^11_6]: https://www.lazardfreresgestion.fr/download.aspx?Doc=PSU\&Version=20240702\&Lang=ENG\&Extension=pdf\&TypeObjet=OPC
-
-[^11_7]: https://media.algebris.com/legalDocuments/Reports/EN/Algebris_UCITS_Funds_Plc_-_Annual_Report_2013.pdf
-
-[^11_8]: https://papers.ssrn.com/sol3/Delivery.cfm/4496833.pdf?abstractid=4496833\&mirid=1
-
-[^11_9]: https://www.carmignac.com/uploads/pdf/0001/20/353c76999ddbd0e8fb359bbbdd91f5777474664e.pdf
-
-[^11_10]: https://www.robeco.com/files/docm/docu-2024-04-17-robeco-unraveling-9-key-questions-about-credits.pdf
-
+[^11_1]: <https://cocoindex.io/docs/core/flow_methods>
 
 ---
 
@@ -925,27 +734,27 @@ In short, **defining a flow in code registers it logically, but you must run set
 
 For implementing **GraphRAG (Graph + Retrieval Augmented Generation) with CocoIndex**, you will need to **adapt your flow to build and export a knowledge graph (property graph) alongside or instead of a vector index**, supporting graph queries and hierarchical summarization. Here's what changes and steps are involved:
 
-### Key changes \& additions to your flow for GraphRAG:
+### Key changes \& additions to your flow for GraphRAG
 
 1. **Extract structured entities and relationships as graph elements**
-    - Instead of (or alongside) just chunking and embedding text, you define transformations or custom functions that extract **triplets or tuples** representing entities and relationships from your documents or chunks.
-    - These can be subject-predicate-object triples, mentions, or other graph data.
+    + Instead of (or alongside) just chunking and embedding text, you define transformations or custom functions that extract **triplets or tuples** representing entities and relationships from your documents or chunks.
+    + These can be subject-predicate-object triples, mentions, or other graph data.
 2. **Define collectors for graph nodes and edges**
-    - Add collectors that store graph **nodes (entities, document nodes, chunks)** and **edges (relationships between entities, mentions, hierarchical community edges)** as separate collected tables/outputs.
-    - This might mean multiple collectors, e.g., one for documents/nodes, one for entity relationships, one for mentions.
+    + Add collectors that store graph **nodes (entities, document nodes, chunks)** and **edges (relationships between entities, mentions, hierarchical community edges)** as separate collected tables/outputs.
+    + This might mean multiple collectors, e.g., one for documents/nodes, one for entity relationships, one for mentions.
 3. **Use a dedicated graph storage target**
-    - Export those graph collectors to a **GraphDB or PropertyGraph target** supported by CocoIndex (e.g., Neo4j, JanusGraph, or CocoIndex’s PropertyGraph target).
-    - This replaces or complements the vector index storage.
+    + Export those graph collectors to a **GraphDB or PropertyGraph target** supported by CocoIndex (e.g., Neo4j, JanusGraph, or CocoIndex’s PropertyGraph target).
+    + This replaces or complements the vector index storage.
 4. **Build a `PropertyGraphIndex` and graph community structure** (usually outside flow, in your app or query layer)
-    - After data is ingested, use CocoIndex’s or LlamaIndex’s graph abstractions to:
+    + After data is ingested, use CocoIndex’s or LlamaIndex’s graph abstractions to:
         - Build the graph from collected nodes and relationships.
         - Perform community detection (e.g., Hierarchical Leiden clustering).
         - Generate summaries for graph communities.
 5. **Query with a `GraphRAGQueryEngine` or equivalent**
-    - At query time, queries involve graph traversals and summaries on communities, not just vector similarity search.
-    - You combine global community summaries and local node neighborhoods.
+    + At query time, queries involve graph traversals and summaries on communities, not just vector similarity search.
+    + You combine global community summaries and local node neighborhoods.
 
-### Example flow snippet (conceptual, based on [^12_5][^12_6]):
+### Example flow snippet (conceptual, based on [^12_5][^12_6])
 
 ```python
 @cocoindex.flow_def(name="DocsToKG")
@@ -990,8 +799,7 @@ def docs_to_kg_flow(flow_builder, data_scope):
     entity_mention.export("entity_mentions", cocoindex.targets.Neo4j())
 ```
 
-
-### Summary of necessary changes for GraphRAG in your flow:
+### Summary of necessary changes for GraphRAG in your flow
 
 | Aspect | Standard RAG Flow | GraphRAG Flow |
 | :-- | :-- | :-- |
@@ -1002,7 +810,7 @@ def docs_to_kg_flow(flow_builder, data_scope):
 | Query handling | Vector-based similarity search | Graph traversal + community-based summarization |
 | Required tooling | LLM embed models, chunkers | Graph extractor (triplets), community clustering (Leiden) |
 
-### Practical tips:
+### Practical tips
 
 - You can still embed chunks as nodes if needed; GraphRAG fuses vector similarity with graph structure.
 - Use or adapt open-source **KG extractors** or LLM-based extractors for relationship/triplet extraction inside your flow.
@@ -1013,26 +821,17 @@ This setup realizes a **powerful hybrid indexing pipeline** that combines semant
 
 <div style="text-align: center">⁂</div>
 
-[^12_1]: https://docs.llamaindex.ai/en/stable/examples/cookbooks/GraphRAG_v1/
+[^12_1]: <https://docs.llamaindex.ai/en/stable/examples/cookbooks/GraphRAG_v1/>
 
-[^12_2]: https://docs.llamaindex.ai/en/stable/examples/cookbooks/GraphRAG_v2/
+[^12_2]: <https://docs.llamaindex.ai/en/stable/examples/cookbooks/GraphRAG_v2/>
 
-[^12_3]: https://microsoft.github.io/graphrag/
+[^12_3]: <https://microsoft.github.io/graphrag/>
 
-[^12_4]: https://neo4j.com/blog/developer/global-graphrag-neo4j-langchain/
+[^12_5]: <https://hackernoon.com/sick-of-reading-docs-this-open-source-tool-builds-a-smart-graph-so-you-dont-have-to>
 
-[^12_5]: https://hackernoon.com/sick-of-reading-docs-this-open-source-tool-builds-a-smart-graph-so-you-dont-have-to
+[^12_6]: <https://dev.to/cocoindex/build-real-time-knowledge-graph-for-documents-with-llm-256h>
 
-[^12_6]: https://dev.to/cocoindex/build-real-time-knowledge-graph-for-documents-with-llm-256h
-
-[^12_7]: https://machinelearningmastery.com/building-graph-rag-system-step-by-step-approach/
-
-[^12_8]: https://learnopencv.com/graphrag-explained-knowledge-graphs-medical/
-
-[^12_9]: https://github.com/run-llama/llama_index/issues/15173
-
-[^12_10]: https://neo4j.com/blog/developer/graphrag-field-guide-rag-patterns/
-
+[^12_7]: <https://machinelearningmastery.com/building-graph-rag-system-step-by-step-approach/>
 
 ---
 
@@ -1045,9 +844,9 @@ This setup realizes a **powerful hybrid indexing pipeline** that combines semant
 #### 1. Custom Regular Expression-Based Chunkers
 
 - **CocoIndex offers a `custom_languages` option** when using the `SplitRecursively` function. You can **define your own chunking logic for a new or existing language** by specifying:
-    - `language_name`: Name of the language (e.g., `"QBasic"` or `"CustomScript"`).
-    - `aliases`: Alternate names/extensions for the language.
-    - `separators_regex`: A list of regex patterns defining how to split the code/text into chunks—from high-level sections down to small statements.
+  + `language_name`: Name of the language (e.g., `"QBasic"` or `"CustomScript"`).
+  + `aliases`: Alternate names/extensions for the language.
+  + `separators_regex`: A list of regex patterns defining how to split the code/text into chunks—from high-level sections down to small statements.
 - When you supply a matching `language` in your flow, CocoIndex will apply your provided chunker logic **instead of or in addition to built-in parsers**[^13_1].
 
 **Example usage in a flow:**
@@ -1074,12 +873,10 @@ This would allow you to support a language CocoIndex doesn't natively recognize 
 - For deeper customization (such as full AST parsing or integrating a third-party or proprietary parser), you can **wrap your own parser logic as a custom function** decorated with `@cocoindex.op.function()`. Use this function in your flow to transform file content into structured "chunks" or another schema.
 - This approach works for both new languages and for enhancing/replacing the behavior for a supported language, as the flow will use your function whenever configured to do so.
 
-
 ### Supported Languages and Fallbacks
 
 - The built-in system, which includes support for languages via tools like Tree-sitter, defaults to treating unknown or unsupported languages as plain text.
 - **If you add a `custom_languages` entry that matches the extension or alias, your logic takes precedence** for files of that type[^13_2][^13_1].
-
 
 ### How It Works Internally
 
@@ -1100,46 +897,9 @@ This makes extending CocoIndex with custom or domain-specific language support s
 
 <div style="text-align: center">⁂</div>
 
-[^13_1]: https://cocoindex.io/docs/ops/functions
+[^13_1]: <https://cocoindex.io/docs/ops/functions>
 
-[^13_2]: https://cocoindexio.substack.com/p/index-codebase-with-tree-sitter-and
-
-[^13_3]: https://github.com/langchain-ai/langchain/issues/11229
-
-[^13_4]: https://www.pinecone.io/learn/chunking-strategies/
-
-[^13_5]: https://cocoindex.io/blogs/academic-papers-indexing/
-
-[^13_6]: https://cocoindex.io/blogs/index-code-base-for-rag/
-
-[^13_7]: https://github.com/zilliztech/CodeIndexer
-
-[^13_8]: https://docs.llamaindex.ai/en/stable/module_guides/loading/node_parsers/modules/
-
-[^13_9]: https://www.reddit.com/r/Python/comments/1jb7oya/cocoindex_open_source_etl_to_index_fresh_data_for/
-
-[^13_10]: https://github.com/cocoindex-io/cocoindex
-
-[^13_11]: https://dev.to/cocoindex/beyond-embeddings-building-metadata-rich-indexes-from-academic-pdfs-2cde
-
-[^13_12]: https://docs.llamaindex.ai/en/v0.10.23/api_reference/node_parsers/code/
-
-[^13_13]: https://hackernoon.com/want-ai-to-actually-understand-your-code-this-tool-says-it-can-help
-
-[^13_14]: https://cocotec.io/popili/doc/1.0/cpp/code_index.html
-
-[^13_15]: https://cohere.com/blog/turbocharge-semantic-search-with-ai
-
-[^13_16]: https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.parsers.language.language_parser.LanguageParser.html
-
-[^13_17]: https://www.reddit.com/r/Rag/comments/1jj62v2/opensource_codebase_index_with_treesitter/
-
-[^13_18]: https://pypi.org/project/cocoindex/0.1.13/
-
-[^13_19]: https://github.com/cocoindex-io/cocoindex-etl-with-document-ai
-
-[^13_20]: https://github.com/cocoindex-io/cocoindex/actions/workflows/docs.yml
-
+[^13_2]: <https://cocoindexio.substack.com/p/index-codebase-with-tree-sitter-and>
 
 ---
 
@@ -1153,8 +913,7 @@ You should customize **collectors and export configuration** in CocoIndex **when
 - **Control primary keys, vector index fields, or similarity metrics** for exports
 - **Support new storage backends or complex data models like graphs** requiring node and relationship specifications
 
-
-### When customizing is necessary (including for custom metadata):
+### When customizing is necessary (including for custom metadata)
 
 **1. Adding custom metadata fields**
 If you extract additional metadata (e.g., language-dependent fields like author or complexity), you must:
@@ -1207,7 +966,6 @@ If your flow builds a graph for GraphRAG:
 - Export them with `cocoindex.storages.Neo4j(...)` or other graph target specifying node labels and relationship types.
 - Provide mapping configs so CocoIndex knows how to map collected row fields to graph node properties or edge properties.
 
-
 ### Summary
 
 | When to customize collect \& export | What to do |
@@ -1222,27 +980,6 @@ If your flow builds a graph for GraphRAG:
 Customizing collectors and exports is necessary **whenever you extend your data schema or switch from default storage/export behavior**—including adding custom metadata. This ensures your extracted data is fully represented and correctly stored/indexed in your target backend.
 
 <div style="text-align: center">⁂</div>
-
-[^14_1]: https://cocoindex.io/docs/getting_started/quickstart
-
-[^14_2]: https://qdrant.tech/documentation/data-management/cocoindex/
-
-[^14_3]: https://cocoindex.io/docs/
-
-[^14_4]: https://github.com/cocoindex-io/cocoindex
-
-[^14_5]: https://cocoindex.io/docs/ops/storages
-
-[^14_6]: https://github.com/cocoindex-io/cocoindex/issues
-
-[^14_7]: https://dev.to/badmonster0/automate-structured-data-extraction-from-pdf-word-by-openai-and-cocoindex-d45
-
-[^14_8]: https://cocoindexio.substack.com/p/index-codebase-with-tree-sitter-and
-
-[^14_9]: https://docs.cocos.com/creator/3.7/manual/en/release-notes/build-template-settings-upgrade-guide-v3.6.html
-
-[^14_10]: https://docs.cocos.com/creator/3.7/manual/en/editor/preferences/index.html
-
 
 ---
 
@@ -1303,42 +1040,10 @@ CocoIndex’s usage of Python for flow composition means you have *fine-grained 
 
 <div style="text-align: center">⁂</div>
 
-[^15_1]: https://cocoindex.io/docs/getting_started/quickstart
+[^15_1]: <https://cocoindex.io/docs/getting_started/quickstart>
 
-[^15_2]: https://cocoindex.io/docs/ops/targets
+[^15_2]: <https://cocoindex.io/docs/ops/targets>
 
-[^15_3]: https://cocoindex.io/docs/core/basics
+[^15_3]: <https://cocoindex.io/docs/core/basics>
 
-[^15_4]: https://hackernoon.com/this-open-source-tool-could-save-your-data-team-hundreds-of-hours
-
-[^15_5]: https://docs.cloudera.com/runtime/7.3.1/using-schema-registry/topics/csp-exporting-schemas.html
-
-[^15_6]: https://qdrant.tech/documentation/data-management/cocoindex/
-
-[^15_7]: https://opensource.hcltechsw.com/Domino-rest-api/howto/database/exportsourcejson.html
-
-[^15_8]: https://cocoindex.io/docs/
-
-[^15_9]: https://github.com/igorbarinov/awesome-data-engineering/blob/master/README.md
-
-[^15_10]: https://github.com/cocoindex-io/cocoindex
-
-[^15_11]: https://cocoindex.io
-
-[^15_12]: https://eeeap.ceu.edu/Compiled-Volume/EEEAP_Compiled_Volume_August23.pdf
-
-[^15_13]: https://pypi.org/project/cocoindex/0.1.20/
-
-[^15_14]: https://github.com/zilliztech/attu/issues/936
-
-[^15_15]: https://www.libhunt.com/l/java/topic/postgresql
-
-[^15_16]: https://github.com/cocoindex-io/cocoindex-quickstart
-
-[^15_17]: https://nightlies.apache.org/directory/studio/2.0.0.v20200411-M15/userguide/schema_editor/tasks_exporting_schemas_as_xml_files.html
-
-[^15_18]: https://pypi.org/project/cocoindex/
-
-[^15_19]: https://pypi.org/project/cocoindex/0.1.34/
-
-[^15_20]: https://dev.to/badmonster0/automate-structured-data-extraction-from-pdf-word-by-openai-and-cocoindex-d45
+[^15_4]: <https://hackernoon.com/this-open-source-tool-could-save-your-data-team-hundreds-of-hours>

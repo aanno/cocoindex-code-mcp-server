@@ -17,7 +17,6 @@ When it comes to **querying**, CocoIndex does *not* provide a unified, database-
 - **No Database-Agnostic Abstraction:** There is no indication in the documentation or examples that CocoIndex provides a single query API that works identically across all supported vector databases (e.g., Postgres, Pinecone, Redis, etc.); rather, you write your own adapter code for each backend[^1_1][^1_3].
 - **Terminal Interaction:** Tutorials show interactive loops in the terminal for simple semantic search, but this is a convenience, not a database abstraction—each backend’s query capabilities are exposed as-is[^1_1][^1_5].
 
-
 ## Summary Table
 
 | Feature | CocoIndex Support | Details |
@@ -32,26 +31,15 @@ CocoIndex is a powerful framework for defining and orchestrating indexing workfl
 
 <div style="text-align: center">⁂</div>
 
-[^1_1]: https://substack.com/home/post/p-164288038
+[^1_1]: <https://substack.com/home/post/p-164288038>
 
-[^1_2]: https://rxdb.info/articles/javascript-vector-database.html
+[^1_3]: <https://cocoindex.io/docs/query>
 
-[^1_3]: https://cocoindex.io/docs/query
+[^1_4]: <https://cocoindexio.substack.com/p/index-codebase-with-tree-sitter-and>
 
-[^1_4]: https://cocoindexio.substack.com/p/index-codebase-with-tree-sitter-and
+[^1_5]: <https://www.youtube.com/watch?v=gv5R8nOXsWU>
 
-[^1_5]: https://www.youtube.com/watch?v=gv5R8nOXsWU
-
-[^1_6]: https://cocoindex.io/blogs/live-image-search/
-
-[^1_7]: https://github.com/cocoindex-io/cocoindex
-
-[^1_8]: https://learn.microsoft.com/en-us/data-engineering/playbook/solutions/vector-database/
-
-[^1_9]: https://blog.cloudflare.com/building-vectorize-a-distributed-vector-database-on-cloudflare-developer-platform/
-
-[^1_10]: https://hn.algolia.com/?dateRange=all\&page=0\&prefix=false\&query=vector+search\&sort=byDate\&type=story
-
+[^1_7]: <https://github.com/cocoindex-io/cocoindex>
 
 ---
 
@@ -73,7 +61,6 @@ Keep your core transformation logic (Python functions defining the flow) separat
 - **Migration and maintenance.**
 CocoIndex supports incremental processing and can handle backends with different capabilities (e.g., some support in-place schema updates, others require drop-and-recreate)[^2_3]. The `cocoindex setup` and `cocoindex update` commands help manage migrations and schema changes across backends[^2_3].
 
-
 ## Example Workflow
 
 - **Write a CocoIndex flow** that processes your data, embeds it, and collects the results.
@@ -81,13 +68,11 @@ CocoIndex supports incremental processing and can handle backends with different
 - **Handle schema differences** by relying on CocoIndex’s schema inference and setup commands. Know your backends’ limitations—for example, Qdrant requires the vector size and distance metric at collection creation time, while relational databases may need more schema information[^2_3].
 - **Deploy and maintain** with CocoIndex’s CLI tools (`cocoindex setup`, `cocoindex update`), which will manage schema migrations and data synchronization for each backend[^2_3].
 
-
 ## Recommendations
 
 - **For maximum flexibility**, consider using a configuration file or environment variables to specify backend connection details, so you can switch between dev, staging, and production environments (and between different stores) without code changes.
 - **For some use cases**, you may want to build your own thin abstraction layer around CocoIndex’s export interface, to make it even easier to add or remove backends, but this is not strictly necessary—CocoIndex’s current architecture is already designed for multi-backend support[^2_3].
 - **Monitor and test** each backend’s performance and capabilities, as schema handling, indexing speed, and query features may vary.
-
 
 ## Summary
 
@@ -96,28 +81,13 @@ This keeps your application flexible, maintains clear data lineage, and leverage
 
 <div style="text-align: center">⁂</div>
 
-[^2_1]: https://cocoindex.io/blogs/cocoindex-data-indexing-platform/
+[^2_2]: <https://qdrant.tech/documentation/data-management/cocoindex/>
 
-[^2_2]: https://qdrant.tech/documentation/data-management/cocoindex/
-
-[^2_3]: https://cocoindex.io/blogs/schema-inference-for-qdrant/
-
-[^2_4]: https://qdrant.tech/articles/storing-multiple-vectors-per-object-in-qdrant/
-
-[^2_5]: https://github.com/cocoindex-io/cocoindex
-
-[^2_6]: https://www.linkedin.com/posts/kuzu-inc_cocoindex-kuzu-real-time-knowledge-graph-activity-7335750628943536128-SCG6
-
-[^2_7]: https://github.com/cocoindex-io/cocoindex/issues
-
-[^2_8]: https://community.openai.com/t/how-to-use-multiple-vector-stores/680207
-
-[^2_9]: https://corecotechnologies.com/deep-tech/connecting-to-multiple-vector-databases-a-natural-approach-to-contextual-ai/
-
+[^2_3]: <https://cocoindex.io/blogs/schema-inference-for-qdrant/>
 
 ---
 
-# I heart there is (beta) support for hybrid search in cocoindex. What does that mean? Small code examples would be good!
+# I heart there is (beta) support for hybrid search in cocoindex. What does that mean? Small code examples would be good
 
 There is **no direct evidence of hybrid search support in CocoIndex** in the provided search results. The results that discuss **hybrid search** are not about CocoIndex at all, but rather about platforms like Couchbase[^3_1], Google Vertex AI[^3_2], and Pinecone[^3_4]. Hybrid search, in the context of vector databases, typically means **combining vector (semantic) search with keyword (BM25, full-text, term-matching) search** in a way that improves recall and relevance of results[^3_5][^3_8].
 
@@ -131,7 +101,6 @@ If a CocoIndex beta does indeed offer hybrid search, it would logically imply th
 - **A unified query pipeline:** Your application, or the database itself, needs to run both types of search (vector and keyword) and fuse (rerank, interleave, or otherwise combine) the results for the user.
 - **Configuration or declarative setup:** The search indexes need to be configured for both text and vector search, often with special indexing rules.
 
-
 ### Example Workflow (Generic, Not CocoIndex-Specific)
 
 Suppose you have a **CocoIndex flow** that processes and embeds documents, indexing both the embeddings and the source text in a supported backend (e.g., PostgreSQL, Qdrant). To **add hybrid search** (based on how other platforms work[^3_1][^3_2][^3_5]), your application code might:
@@ -139,7 +108,6 @@ Suppose you have a **CocoIndex flow** that processes and embeds documents, index
 - **Store both embeddings and full-text fields** in the database.
 - **Define a hybrid query function** that runs a vector search and a separate keyword search, then combines the results.
 - **Optionally, normalize and rerank the combined result sets** for relevance.
-
 
 #### Example Python Snippet (Pseudocode, Hypothetical CocoIndex Integration)
 
@@ -180,7 +148,6 @@ But **this is a synthetic example**—neither `ci.vector_search` nor `ci.text_se
 - **Consider a hybrid architecture in your logic:** If CocoIndex does not abstract this, you can still build it yourself by combining its export/query features with custom backend query logic.
 - **Check for community threads or discussions** about hybrid search in CocoIndex—if it exists, there may be user-provided examples or workarounds.
 
-
 ## Summary Table (Generic Hybrid, Not CocoIndex-Specific)
 
 | Step | What you do | Where to look in CocoIndex (hypothetical) |
@@ -195,28 +162,19 @@ But **this is a synthetic example**—neither `ci.vector_search` nor `ci.text_se
 
 <div style="text-align: center">⁂</div>
 
-[^3_1]: https://github.com/couchbase-examples/hybrid-search-demo
+[^3_1]: <https://github.com/couchbase-examples/hybrid-search-demo>
 
-[^3_2]: https://cloud.google.com/vertex-ai/docs/vector-search/about-hybrid-search
+[^3_2]: <https://cloud.google.com/vertex-ai/docs/vector-search/about-hybrid-search>
 
-[^3_3]: https://github.com/run-llama/llama_index/discussions/9837
+[^3_4]: <https://www.pinecone.io/learn/hybrid-search-intro/>
 
-[^3_4]: https://www.pinecone.io/learn/hybrid-search-intro/
+[^3_5]: <https://learn.microsoft.com/en-us/fabric/database/cosmos-db/hybrid-search>
 
-[^3_5]: https://learn.microsoft.com/en-us/fabric/database/cosmos-db/hybrid-search
-
-[^3_6]: https://docs.pinecone.io/guides/search/hybrid-search
-
-[^3_7]: https://medium.aiplanet.com/advanced-rag-implementation-on-custom-data-using-hybrid-search-embed-caching-and-mistral-ai-ce78fdae4ef6
-
-[^3_8]: https://towardsdatascience.com/rag-hybrid-search-based-on-two-indexes-2b35444fa96d/
-
-[^3_9]: https://www.cludo.com/blog/introducing-hybrid-search
-
+[^3_8]: <https://towardsdatascience.com/rag-hybrid-search-based-on-two-indexes-2b35444fa96d/>
 
 ---
 
-# No, I think the hybrid search support in cocoindex is only on the indexing site (not for querying).
+# No, I think the hybrid search support in cocoindex is only on the indexing site (not for querying)
 
 Based on the available documentation and code examples, **CocoIndex is primarily an advanced ETL (Extract, Transform, Load) framework for AI indexing workloads**. It excels at defining indexing flows—extracting, transforming, and embedding data, then exporting it to various storage backends (e.g., Qdrant, Postgres)[^4_3][^4_4]. Its design centers on **incremental, schema-aware data processing for indexing**, with built-in support for maintaining data freshness and lineage[^4_4][^4_7].
 
@@ -226,7 +184,6 @@ Based on the available documentation and code examples, **CocoIndex is primarily
 - **All official examples focus on exporting embeddings (vector data) to supported backends**[^4_3]. For instance, you can configure an export to Qdrant, specifying the vector field and primary key, but there is no indication of built-in support for also exporting full-text or keyword fields necessary for hybrid search (e.g., BM25 or FTS + vector search)[^4_3].
 - **CocoIndex’s own query utilities** (for retrieval) are referenced but not documented in detail; the emphasis is on **exporting for later retrieval**, not on implementing search logic directly within CocoIndex[^4_4].
 - **If hybrid search is supported “only on the indexing side,”** the most plausible interpretation is that **CocoIndex allows you to define flows that extract, transform, and export both textual content and vector embeddings** to your backend, effectively enabling you to build a hybrid search-capable index (because the raw content and embeddings are present). However, CocoIndex does not implement the search fusion or reranking logic itself; **you must handle that in your application or using the capabilities of your backend**.
-
 
 ### Code Implications
 
@@ -261,7 +218,6 @@ flow = (
 - **No query DSL or abstraction for hybrid search**—you export the data, then query using your backend’s capabilities.
 - **No explicit documentation of hybrid indexing workflows**—just the general ability to export multiple fields, which *could* include those needed for hybrid search, if you design your flow accordingly.
 
-
 ### Summary Table
 
 | Feature | CocoIndex Support | Details/Implications |
@@ -279,28 +235,17 @@ If you’d like to see a real, minimal hybrid indexing flow example for a specif
 
 <div style="text-align: center">⁂</div>
 
-[^4_1]: https://github.com/run-llama/llama_index/discussions/9837
+[^4_2]: <https://lancedb.github.io/lancedb/hybrid_search/hybrid_search/>
 
-[^4_2]: https://lancedb.github.io/lancedb/hybrid_search/hybrid_search/
+[^4_3]: <https://qdrant.tech/documentation/data-management/cocoindex/>
 
-[^4_3]: https://qdrant.tech/documentation/data-management/cocoindex/
+[^4_4]: <https://cocoindex.io/docs/core/basics>
 
-[^4_4]: https://cocoindex.io/docs/core/basics
-
-[^4_5]: https://qdrant.tech/documentation/examples/hybrid-search-llamaindex-jinaai/
-
-[^4_6]: https://cocoindex.io
-
-[^4_7]: https://github.com/cocoindex-io/cocoindex
-
-[^4_8]: https://www.cludo.com/blog/introducing-hybrid-search
-
-[^4_9]: https://hn.algolia.com/?query=Postgres+Observability\&type=story\&dateRange=all\&sort=byDate\&storyText=false\&prefix\&page=0
-
+[^4_7]: <https://github.com/cocoindex-io/cocoindex>
 
 ---
 
-# Please elaborate on 'CocoIndex’s own query utilities' a bit. Perhaps you could refer to code with in cocoindex to start my own research.
+# Please elaborate on 'CocoIndex’s own query utilities' a bit. Perhaps you could refer to code with in cocoindex to start my own research
 
 CocoIndex’s **core focus is on ETL and indexing**—transforming data, embedding it, and exporting it to backend stores like Postgres or Qdrant[^5_1][^5_3]. For **querying**, CocoIndex *explicitly does not provide a fully abstracted, database-agnostic query language or API*—you use the native capabilities of your backend or wrap those in your application logic[^5_2].
 
@@ -313,7 +258,6 @@ However, **CocoIndex does offer some utilities and patterns to make the transiti
 - **Table name resolution**: Utilities like `cocoindex.utils.get_target_default_name()` help you reference the correct index/table by name, even if you didn’t specify it explicitly in your export[^5_1].
 - **Transform flow evaluation**: You can evaluate CocoIndex transform flows (e.g., embedding a query string) directly in your query logic, using the same functions as the indexing pipeline[^5_1].
 - **Seamless integration**: The framework is design to let you share code and config between indexing and querying, making maintenance and iteration easier[^5_2].
-
 
 ## Example: Building a Query Handler with CocoIndex Utilities
 
@@ -371,13 +315,11 @@ if __name__ == "__main__":
 - **Query logic itself** is standard SQL (in this case, for pgvector/Postgres), with no CocoIndex-specific query DSL—just utilities for consistency and maintenance[^5_1].
 - **You are expected to write your own query loop**, handle connection pooling, and process results as you see fit[^5_1].
 
-
 ## What CocoIndex Does Not Provide
 
 - **There is no query DSL, no unified query API across backends, and no automatic hybrid (BM25 + vector) search fusion**[^5_2].
 - **All search logic must be implemented by you, using your backend’s native query language and capabilities**[^5_2].
 - **CocoIndex’s utilities are for reuse, consistency, and maintainability, not for hiding database differences**.
-
 
 ## Where to Start Your Research
 
@@ -385,7 +327,6 @@ if __name__ == "__main__":
 - **Look at how `transform_flow` is used for both indexing and querying** to keep embeddings consistent.
 - **Explore the `utils` module** for helpers like table naming, especially if you use default export targets.
 - **Write your own query handlers** for each backend, using the utilities as glue between your indexing and querying logic.
-
 
 ## Summary Table
 
@@ -400,26 +341,11 @@ CocoIndex’s “query utilities” are **small, focused helpers for maintaining
 
 <div style="text-align: center">⁂</div>
 
-[^5_1]: https://cocoindex.io/docs/getting_started/quickstart
+[^5_1]: <https://cocoindex.io/docs/getting_started/quickstart>
 
-[^5_2]: https://cocoindex.io/docs/query
+[^5_2]: <https://cocoindex.io/docs/query>
 
-[^5_3]: https://github.com/cocoindex-io/cocoindex
-
-[^5_4]: https://github.com/cocoindex-io/cocoindex-etl-with-document-ai
-
-[^5_5]: https://substack.com/home/post/p-160019341
-
-[^5_6]: https://hn.algolia.com/?query=Spreadsheets+are+all+you+need\&type=story\&dateRange=all\&sort=byDate\&storyText=false\&prefix\&page=0
-
-[^5_7]: https://hn.algolia.com/?query=Defining+Property\&type=story\&dateRange=all\&sort=byDate\&storyText=false\&prefix\&page=0
-
-[^5_8]: https://www.reddit.com/r/Rag/best/?after=dDNfMWprZjk3OA%3D%3D\&sort=best\&t=DAY
-
-[^5_9]: https://qdrant.tech/documentation/rag-deepseek/
-
-[^5_10]: https://app.aibase.com/en/tag/Data Processing
-
+[^5_3]: <https://github.com/cocoindex-io/cocoindex>
 
 ---
 
@@ -433,7 +359,6 @@ When working with both **ASTChunk** (used for chunking code via abstract syntax 
 - **CocoIndex**, by contrast, leans toward a more general, schema-inferred approach favoring unambiguous and standard names like `id`, `content`, `chunk`, and `embedding`.
 - When integrating both, you frequently encounter **name mismatches between ASTChunk’s detailed, code-centric output and CocoIndex’s expected standard fields**, especially for primary keys, content, or metadata.
 
-
 ### Typical Solution: Field Mapping
 
 To reconcile these differences:
@@ -441,10 +366,9 @@ To reconcile these differences:
 - Most workflows introduce a **mapping or renaming operation** to align ASTChunk-generated fields with the expected CocoIndex schema before export or further transformation.
 - This usually happens in a post-processing or pre-export step, ensuring, for instance, that what ASTChunk calls `node_id` maps to CocoIndex’s `id`, or `code` or `text` fields are renamed to `content`.
 - The mapping step is essential for:
-    - Primary key consistency (e.g., mapping the chunk or node key to `id`).
-    - Embeddings association (matching ASTChunk representations to CocoIndex’s `embedding` field).
-    - Compatibility with backend storage schema that CocoIndex will infer or create automatically[^6_1][^6_2].
-
+  + Primary key consistency (e.g., mapping the chunk or node key to `id`).
+  + Embeddings association (matching ASTChunk representations to CocoIndex’s `embedding` field).
+  + Compatibility with backend storage schema that CocoIndex will infer or create automatically[^6_1][^6_2].
 
 ### Practical Workflow Illustration
 
@@ -452,9 +376,9 @@ Here’s what a typical pipeline might look like:
 
 1. **ASTChunk parses codebase → produces rich chunk objects with custom keys.**
 2. **Map/rename fields**: e.g.,
-    - `node_id` → `id`
-    - `code` or `chunk_text` → `content`
-    - `ast_embedding` → `embedding`
+    + `node_id` → `id`
+    + `code` or `chunk_text` → `content`
+    + `ast_embedding` → `embedding`
 3. **Pass to CocoIndex flow**, which now receives objects with standard field names.
 4. **CocoIndex handles further processing and export**, leveraging its schema inference and automation features[^6_1][^6_2].
 
@@ -463,7 +387,6 @@ Here’s what a typical pipeline might look like:
 - Use mapping functions or explicit schema declarations in your pipeline code to minimize confusion, especially if you intend to switch chunking strategies or integrate multiple parsers.
 - Refer to CocoIndex’s inference system for supported/expected field names before mapping, so as to avoid schema setup failures or data loss.
 - The need for mapping is a reflection of **CocoIndex’s flexible, flow-based model**—it assumes diverse sources and encourages standardizing structure before indexing or storage[^6_1][^6_2].
-
 
 ## Summary Table: Why Mapping Is Needed
 
@@ -480,42 +403,6 @@ Here’s what a typical pipeline might look like:
 
 <div style="text-align: center">⁂</div>
 
-[^6_1]: https://hackernoon.com/this-open-source-tool-could-save-your-data-team-hundreds-of-hours
+[^6_1]: <https://hackernoon.com/this-open-source-tool-could-save-your-data-team-hundreds-of-hours>
 
-[^6_2]: https://qdrant.tech/documentation/data-management/cocoindex/
-
-[^6_3]: https://docs.llamaindex.ai/en/stable/api_reference/node_parsers/code/
-
-[^6_4]: https://kodi.wiki/view/Keymap
-
-[^6_5]: https://hackmd.io/@data-exp-lab/B1Iv-uINv
-
-[^6_6]: https://dev.to/badmonster0/cocoindex-changelog-2025-04-05-123i
-
-[^6_7]: https://docwiki.embarcadero.com/RADStudio/Sydney/en/Key_Mappings
-
-[^6_8]: https://www.youtube.com/watch?v=jhD6juD_FmA
-
-[^6_9]: https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/KeyValueCoding/Compliant.html
-
-[^6_10]: https://wikide.openmpt.org/Handbuch:_Setup/Keyboard
-
-[^6_11]: https://github.com/cocoindex-io/cocoindex/actions/workflows/docs.yml
-
-[^6_12]: https://stackoverflow.com/questions/63634753/set-index-key-to-output-field-mapping
-
-[^6_13]: https://cocoindex.io/blogs/cocoindex-1k/
-
-[^6_14]: https://www.youtube.com/watch?v=G3WstvhHO24
-
-[^6_15]: https://cocodataset.org
-
-[^6_16]: https://hackernoon.com/your-repo-has-secrets-indexing-tells-ai-where-they-are
-
-[^6_17]: https://www.reddit.com/r/ErgoMechKeyboards/comments/192ts3d/corne_keyboard_mappings_for_programmers/
-
-[^6_18]: https://pypi.org/project/cocoindex/0.1.13/
-
-[^6_19]: https://vi.stackexchange.com/questions/6834/how-to-find-out-what-a-key-is-mapped-to
-
-[^6_20]: https://www.youtube.com/watch?v=ZnmyoHslBSc
+[^6_2]: <https://qdrant.tech/documentation/data-management/cocoindex/>

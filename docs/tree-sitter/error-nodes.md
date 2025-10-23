@@ -1,6 +1,6 @@
 <img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" class="logo" width="120"/>
 
-# I'm using the tree-sitter-haskell parser. And have encounter Error Nodes on valid Haskell source code files. I'm a bit surprised.
+# I'm using the tree-sitter-haskell parser. And have encounter Error Nodes on valid Haskell source code files. I'm a bit surprised
 
 * What are error nodes in the CST in the first place?
 * Why they show up on valid haskell?
@@ -17,10 +17,10 @@ Here’s a detailed explanation addressing each of your questions about Tree-sit
 
 Several reasons can cause `(ERROR)` nodes to appear in valid Haskell code when using Tree-sitter:
 
-- **Incomplete or Buggy Grammar**: The Haskell grammar may not fully cover all Haskell syntax or edge cases, especially for complex or newer features.
-- **Lexing Ambiguities**: Tree-sitter uses context-sensitive on-demand lexing, which can sometimes misinterpret certain tokens, especially if the grammar is insufficiently precise or ambiguous[^1_2][^1_4].
-- **Unsupported Constructs**: Newer or less common language features might not yet be implemented in the parser.
-- **External Scanner Issues**: Tree-sitter grammars may rely on external C/C++ scanners for complex tokens. Bugs or missing logic here can trigger error nodes[^1_2].
+* **Incomplete or Buggy Grammar**: The Haskell grammar may not fully cover all Haskell syntax or edge cases, especially for complex or newer features.
+* **Lexing Ambiguities**: Tree-sitter uses context-sensitive on-demand lexing, which can sometimes misinterpret certain tokens, especially if the grammar is insufficiently precise or ambiguous[^1_2][^1_4].
+* **Unsupported Constructs**: Newer or less common language features might not yet be implemented in the parser.
+* **External Scanner Issues**: Tree-sitter grammars may rely on external C/C++ scanners for complex tokens. Bugs or missing logic here can trigger error nodes[^1_2].
 
 So, even with valid source, if the input doesn’t match the parser’s expectations or grammar rules exactly, error nodes can be introduced.
 
@@ -28,23 +28,21 @@ So, even with valid source, if the input doesn’t match the parser’s expectat
 
 **No, error nodes do NOT destroy the CST or abort parsing.** Tree-sitter is designed *not* to fail outright when it hits invalid or unparseable input. Instead, it inserts `ERROR` (or `MISSING`, for implied elements) nodes directly into the tree and continues parsing the rest of the input as best it can[^1_2][^1_4].
 
-- This “error recovery” feature is crucial for interactive tools like editors, where code is often in a temporarily broken state.
-- Parsing continues as normal after an error is inserted; only the specific subtree where the parser was lost (and marked as `ERROR`) is affected.
-- The rest of the CST is available and valid, so most language features (highlighting, folding, navigation) keep working[^1_2][^1_4].
-
+* This “error recovery” feature is crucial for interactive tools like editors, where code is often in a temporarily broken state.
+* Parsing continues as normal after an error is inserted; only the specific subtree where the parser was lost (and marked as `ERROR`) is affected.
+* The rest of the CST is available and valid, so most language features (highlighting, folding, navigation) keep working[^1_2][^1_4].
 
 ### 4. How should you handle error nodes?
 
 Best practices for handling error nodes in consumer tools or plugins include:
 
-- **Detect and Query Them**: You can explicitly query `(ERROR)` nodes using queries like `(ERROR) @error-node` to highlight or warn users[^1_1][^1_3].
-- **Partial Processing**: Skip or separately handle subtrees rooted at error nodes if you require only valid code for certain features (e.g., code navigation, refactoring).
-- **Diagnostics**: Use the presence, location, and content of error nodes as input for displaying parse errors or “gutter” warnings in editors[^1_5].
-- **Improvement Feedback**: If you frequently see error nodes in valid code, consider reporting precise examples to the `tree-sitter-haskell` maintainers. They can update the grammar to handle those constructs, reducing false positives in the future[^1_6][^1_7].
-- **API Utilities**: Tree-sitter provides API functions such as `node_is_error()` and `node_has_error()` to help programmatically identify problematic regions in a tree[^1_3].
+* **Detect and Query Them**: You can explicitly query `(ERROR)` nodes using queries like `(ERROR) @error-node` to highlight or warn users[^1_1][^1_3].
+* **Partial Processing**: Skip or separately handle subtrees rooted at error nodes if you require only valid code for certain features (e.g., code navigation, refactoring).
+* **Diagnostics**: Use the presence, location, and content of error nodes as input for displaying parse errors or “gutter” warnings in editors[^1_5].
+* **Improvement Feedback**: If you frequently see error nodes in valid code, consider reporting precise examples to the `tree-sitter-haskell` maintainers. They can update the grammar to handle those constructs, reducing false positives in the future[^1_6][^1_7].
+* **API Utilities**: Tree-sitter provides API functions such as `node_is_error()` and `node_has_error()` to help programmatically identify problematic regions in a tree[^1_3].
 
 **Summary Table: Tree-sitter Error Node Behavior**
-
 
 | Question | Key Points |
 | :-- | :-- |
@@ -59,46 +57,19 @@ If you provide a specific code sample, I can help pinpoint whether it’s a know
 
 <div style="text-align: center">⁂</div>
 
-[^1_1]: https://tree-sitter.github.io/tree-sitter/using-parsers/queries/1-syntax.html
+[^1_1]: <https://tree-sitter.github.io/tree-sitter/using-parsers/queries/1-syntax.html>
 
-[^1_2]: https://pulsar-edit.dev/blog/20240902-savetheclocktower-modern-tree-sitter-part-7.html
+[^1_2]: <https://pulsar-edit.dev/blog/20240902-savetheclocktower-modern-tree-sitter-part-7.html>
 
-[^1_3]: https://cran.r-project.org/web/packages/treesitter/refman/treesitter.html
+[^1_3]: <https://cran.r-project.org/web/packages/treesitter/refman/treesitter.html>
 
-[^1_4]: https://tomassetti.me/incremental-parsing-using-tree-sitter/
+[^1_4]: <https://tomassetti.me/incremental-parsing-using-tree-sitter/>
 
-[^1_5]: https://github.com/tree-sitter/tree-sitter/issues/255
+[^1_5]: <https://github.com/tree-sitter/tree-sitter/issues/255>
 
-[^1_6]: https://stackoverflow.com/questions/65401269/treesitter-produces-error-nodes-even-though-other-match-seems-possible
+[^1_6]: <https://stackoverflow.com/questions/65401269/treesitter-produces-error-nodes-even-though-other-match-seems-possible>
 
-[^1_7]: https://github.com/tree-sitter/tree-sitter/issues/1136
-
-[^1_8]: https://github.com/tree-sitter/tree-sitter/issues/3623
-
-[^1_9]: https://tree-sitter.github.io/py-tree-sitter/classes/tree_sitter.Node.html
-
-[^1_10]: https://www.reddit.com/r/neovim/comments/1favc4i/need_help_understanding_a_treesitter_error/
-
-[^1_11]: https://lib.rs/crates/lelwel
-
-[^1_12]: https://stackoverflow.com/questions/78908374/node-tree-sitter-always-outputs-error-despite-cli-working
-
-[^1_13]: https://neovim.io/doc/user/treesitter.html
-
-[^1_14]: https://www.reddit.com/r/neovim/comments/1j0k3ks/treesitter_parsers_not_loading_so_is_not_a_valid/
-
-[^1_15]: https://www.reddit.com/r/ProgrammingLanguages/comments/qawr2z/ast_vs_cst_or_how_bad_is_a_traditional_parsing/
-
-[^1_16]: https://github.com/tree-sitter/tree-sitter/issues/650
-
-[^1_17]: https://github.com/tree-sitter/tree-sitter/discussions/3524
-
-[^1_18]: https://discourse.julialang.org/t/neovim-tree-sitter-error-when-loading-julia-file-invalid-node-type-function-expression/122864
-
-[^1_19]: https://parsiya.net/blog/knee-deep-tree-sitter-queries/
-
-[^1_20]: https://parsiya.net/blog/knee-deep-tree-sitter-2/
-
+[^1_7]: <https://github.com/tree-sitter/tree-sitter/issues/1136>
 
 ---
 
@@ -116,26 +87,9 @@ In summary: Error nodes are a standard part of Tree-sitter parsing for all langu
 
 <div style="text-align: center">⁂</div>
 
-[^2_1]: https://www.reddit.com/r/neovim/comments/1ir069p/treesitter_diagnostics/
+[^2_1]: <https://www.reddit.com/r/neovim/comments/1ir069p/treesitter_diagnostics/>
 
-[^2_2]: https://stackoverflow.com/questions/70373650/how-to-solve-treesitter-highlighter-error-executing-lua-problem-in-neovim-confi
-
-[^2_3]: https://semgrep.dev/docs/contributing/adding-a-language
-
-[^2_4]: https://neovim.io/doc/user/treesitter.html
-
-[^2_5]: https://pypi.org/project/tree-sitter-languages/
-
-[^2_6]: https://github.com/nvim-treesitter/nvim-treesitter/issues/1887
-
-[^2_7]: https://github.com/tree-sitter/tree-sitter/issues/3625
-
-[^2_8]: https://discourse.julialang.org/t/neovim-tree-sitter-error-when-loading-julia-file-invalid-node-type-function-expression/122864
-
-[^2_9]: https://tree-sitter.github.io
-
-[^2_10]: https://tree-sitter.github.io/tree-sitter/using-parsers/queries/1-syntax.html
-
+[^2_10]: <https://tree-sitter.github.io/tree-sitter/using-parsers/queries/1-syntax.html>
 
 ---
 
@@ -145,10 +99,10 @@ In the Python bindings for Tree-sitter (`tree_sitter_py`), error nodes are repre
 
 Key points about ERROR nodes in `tree_sitter_py`:
 
-- A node representing an error is identifiable via its `.is_error` attribute, which returns `True` if the node itself is an error node.
-- Additionally, `.has_error` is a property that returns `True` if the node or any of its descendants contain errors.
-- The `.type` or `.grammar_name` of such nodes is typically `"ERROR"` to reflect their special status in the syntax tree.
-- These nodes behave like regular tree nodes in that you can traverse them, access their children, start and end points, etc., but `.is_error` is the key way to detect them programmatically.
+* A node representing an error is identifiable via its `.is_error` attribute, which returns `True` if the node itself is an error node.
+* Additionally, `.has_error` is a property that returns `True` if the node or any of its descendants contain errors.
+* The `.type` or `.grammar_name` of such nodes is typically `"ERROR"` to reflect their special status in the syntax tree.
+* These nodes behave like regular tree nodes in that you can traverse them, access their children, start and end points, etc., but `.is_error` is the key way to detect them programmatically.
 
 So, in summary, error nodes in the Python API are fully represented nodes with the `.is_error` flag set, allowing you to detect, handle, or skip them during tree traversal or analysis.
 
@@ -172,18 +126,9 @@ This way, you can identify and react to error nodes explicitly as part of your C
 
 <div style="text-align: center">⁂</div>
 
-[^3_1]: https://github.com/tree-sitter/py-tree-sitter/issues/34
+[^3_1]: <https://github.com/tree-sitter/py-tree-sitter/issues/34>
 
-[^3_2]: https://dev.to/shreshthgoyal/understanding-code-structure-a-beginners-guide-to-tree-sitter-3bbc
-
-[^3_3]: https://tree-sitter.github.io/py-tree-sitter/classes/tree_sitter.Node.html
-
-[^3_4]: https://github.com/tree-sitter/tree-sitter/issues/3623
-
-[^3_5]: https://networkx.org/documentation/stable/reference/generated/networkx.drawing.layout.spring_layout.html
-
-[^3_6]: https://tree-sitter.github.io/py-tree-sitter/
-
+[^3_3]: <https://tree-sitter.github.io/py-tree-sitter/classes/tree_sitter.Node.html>
 
 ---
 
@@ -195,9 +140,9 @@ The Tree-sitter parsing strategy is to "recover" from errors by inserting these 
 
 If you want descriptive error information, you typically need to:
 
-- Use additional tooling on top of Tree-sitter that interprets error nodes and tries to provide contextual diagnostics.
-- Analyze content around `ERROR` nodes yourself to infer what might cause the parse failure.
-- Use language-specific linters, type checkers, or compiler diagnostics alongside Tree-sitter for detailed error reporting.
+* Use additional tooling on top of Tree-sitter that interprets error nodes and tries to provide contextual diagnostics.
+* Analyze content around `ERROR` nodes yourself to infer what might cause the parse failure.
+* Use language-specific linters, type checkers, or compiler diagnostics alongside Tree-sitter for detailed error reporting.
 
 So, to directly answer you: **No, the error nodes exposed by Tree-sitter's API (including Python bindings) do not contain error messages about the cause of the error — they only mark problematic parts of the tree.**
 
@@ -207,26 +152,11 @@ If you need specific messages, you would build them by combining error node loca
 
 <div style="text-align: center">⁂</div>
 
-[^4_1]: https://www.reddit.com/r/neovim/comments/z9008g/nvimtreesitter_invalid_node_type_at_position_5/
+[^4_5]: <https://github.com/tree-sitter/tree-sitter/issues/255>
 
-[^4_2]: https://stackoverflow.com/questions/70373650/how-to-solve-treesitter-highlighter-error-executing-lua-problem-in-neovim-confi
+[^4_6]: <https://tree-sitter.github.io/py-tree-sitter/classes/tree_sitter.Node.html>
 
-[^4_3]: https://neovim.discourse.group/t/treesitter-invalid-node-error-for-help-filetype/4585
-
-[^4_4]: https://github.com/tree-sitter/tree-sitter/issues/2338
-
-[^4_5]: https://github.com/tree-sitter/tree-sitter/issues/255
-
-[^4_6]: https://tree-sitter.github.io/py-tree-sitter/classes/tree_sitter.Node.html
-
-[^4_7]: https://tree-sitter.github.io/py-tree-sitter/
-
-[^4_8]: https://neovim.io/doc/user/treesitter.html
-
-[^4_9]: https://tree-sitter.github.io/tree-sitter/using-parsers/queries/1-syntax.html
-
-[^4_10]: https://tree-sitter.github.io
-
+[^4_7]: <https://tree-sitter.github.io/py-tree-sitter/>
 
 ---
 
@@ -236,15 +166,15 @@ Tree-sitter itself does not have built-in logging or diagnostic messages for err
 
 However, if you want to log or track parsing problems related to error nodes, you need to do this yourself by walking the CST after parsing. You can:
 
-- Traverse the syntax tree and detect nodes with `.is_error` (in APIs like Python bindings).
-- Record positions and contexts of these error nodes.
-- Log or report these locations as parse problems.
+* Traverse the syntax tree and detect nodes with `.is_error` (in APIs like Python bindings).
+* Record positions and contexts of these error nodes.
+* Log or report these locations as parse problems.
 
 Because Tree-sitter only marks problematic regions with generic `ERROR` nodes and does not produce detailed messages, any meaningful logging or diagnostics must be built atop this:
 
-- Extract the source code text covered by each error node to give context.
-- Use heuristic or language-specific knowledge to interpret what might be wrong near the error node.
-- Optionally, combine with external linters or compilers for richer diagnostic messages.
+* Extract the source code text covered by each error node to give context.
+* Use heuristic or language-specific knowledge to interpret what might be wrong near the error node.
+* Optionally, combine with external linters or compilers for richer diagnostic messages.
 
 In summary, Tree-sitter parsers do not log parsing errors or produce error messages on their own. Your application or tooling should detect the presence of `ERROR` nodes and implement any logging, diagnostics, or user feedback based on those nodes.
 
@@ -267,28 +197,11 @@ This way you can create your own error reporting for any Tree-sitter parser.
 
 <div style="text-align: center">⁂</div>
 
-[^5_1]: https://stackoverflow.com/questions/78908374/node-tree-sitter-always-outputs-error-despite-cli-working
+[^5_1]: <https://stackoverflow.com/questions/78908374/node-tree-sitter-always-outputs-error-despite-cli-working>
 
-[^5_2]: https://stackoverflow.com/questions/65401269/treesitter-produces-error-nodes-even-though-other-match-seems-possible
+[^5_3]: <https://pulsar-edit.dev/blog/20240902-savetheclocktower-modern-tree-sitter-part-7.html>
 
-[^5_3]: https://pulsar-edit.dev/blog/20240902-savetheclocktower-modern-tree-sitter-part-7.html
-
-[^5_4]: https://www.reddit.com/r/neovim/comments/wyexh5/treesitter_capturing_error_nodes/
-
-[^5_5]: https://gitlab.alpinelinux.org/alpine/aports/-/issues/13669
-
-[^5_6]: https://github.com/tree-sitter/tree-sitter/issues/2338
-
-[^5_7]: https://tree-sitter.github.io/py-tree-sitter/classes/tree_sitter.Node.html
-
-[^5_8]: https://github.com/tree-sitter/tree-sitter/issues/1136
-
-[^5_9]: https://neovim.io/doc/user/treesitter.html
-
-[^5_10]: https://tree-sitter.github.io
-
-[^5_11]: https://github.com/tree-sitter/tree-sitter/issues/255
-
+[^5_11]: <https://github.com/tree-sitter/tree-sitter/issues/255>
 
 ---
 
@@ -298,9 +211,9 @@ Yes, exactly. Each error node in Tree-sitter is associated with a specific start
 
 Because the error node marks the span of the invalid or unrecognized input, you can deduce the "error" by examining:
 
-- The text content covered by the error node (using start and end byte offsets).
-- The surrounding context in the source code.
-- The node's position in the overall CST.
+* The text content covered by the error node (using start and end byte offsets).
+* The surrounding context in the source code.
+* The node's position in the overall CST.
 
 This positional information is the primary way to diagnose the source of the parsing error since Tree-sitter itself does not generate explicit error messages.
 
@@ -318,26 +231,15 @@ This is the standard approach to error handling and diagnostics in Tree-sitter-b
 
 <div style="text-align: center">⁂</div>
 
-[^6_1]: https://github.com/nvim-treesitter/nvim-treesitter/issues/3723
+[^6_1]: <https://github.com/nvim-treesitter/nvim-treesitter/issues/3723>
 
-[^6_2]: https://cran.r-project.org/web/packages/treesitter/refman/treesitter.html
+[^6_2]: <https://cran.r-project.org/web/packages/treesitter/refman/treesitter.html>
 
-[^6_3]: https://neovim.io/doc/user/treesitter.html
-
-[^6_4]: https://www.reddit.com/r/neovim/comments/1czpf3n/treesitter_i_think_i_am_lost/
-
-[^6_5]: https://github.com/tree-sitter/tree-sitter/issues/3625
-
-[^6_6]: https://stackoverflow.com/questions/70373650/how-to-solve-treesitter-highlighter-error-executing-lua-problem-in-neovim-confi
-
-[^6_7]: https://news.ycombinator.com/item?id=26225298
-
-[^6_8]: https://parsiya.net/blog/knee-deep-tree-sitter-queries/
-
+[^6_8]: <https://parsiya.net/blog/knee-deep-tree-sitter-queries/>
 
 ---
 
-# I'm using tree-sitter parsing as an aid for code chunking in an RAG pipeline. So error nodes needs special handling for this:
+# I'm using tree-sitter parsing as an aid for code chunking in an RAG pipeline. So error nodes needs special handling for this
 
 * asure that even the code lines effected by the error node (and that are not covered by sub nodes of the error node are incooperated to a chunk
 * add metadata that there was a problem with ast chunk parsing.
@@ -346,38 +248,22 @@ Are there other issues in this context that needs handling?
 
 In your context of using Tree-sitter for code chunking in a RAG pipeline with error nodes, here are important points and potential issues to handle beyond what you already listed:
 
-- **Include All Lines Affected by Error Nodes**: You noted correctly that code lines covered by error nodes but not covered by their sub-nodes may be lost if not explicitly handled. It's essential to incorporate those lines into chunks to avoid losing code context or data.
-- **Add Metadata for Parsing Problems**: Tagging chunks impacted by error nodes with metadata indicating parsing issues is good practice. This allows downstream components in your pipeline to be aware of less reliable or incomplete chunks.
+* **Include All Lines Affected by Error Nodes**: You noted correctly that code lines covered by error nodes but not covered by their sub-nodes may be lost if not explicitly handled. It's essential to incorporate those lines into chunks to avoid losing code context or data.
+* **Add Metadata for Parsing Problems**: Tagging chunks impacted by error nodes with metadata indicating parsing issues is good practice. This allows downstream components in your pipeline to be aware of less reliable or incomplete chunks.
 
 Additional considerations:
 
-- **Chunk Boundary Consistency**: Since error nodes may represent incomplete or malformed syntax, chunk splitting logic should carefully handle chunk boundaries near or inside error nodes. Chunk boundaries must ensure chunks remain syntactically meaningful or at least coherent.
-- **Fallback Chunking Strategy**: If a node is mostly an error node and can’t produce meaningful subtree splits, consider fallback to a more tolerant chunking strategy (line-based or character-based) to avoid losing large portions of code.
-- **Error Propagation**: Errors in parsing can propagate to parent nodes. Your metadata or error flags should optionally propagate upwards to parent chunks that contain or partially contain error nodes.
-- **Overlap Management**: When merging or chunking sibling AST nodes, ensure that error nodes do not cause gaps or overlaps in chunk coverage.
-- **Heuristic or Semantic Repair**: Optionally, implement heuristics to "repair" or approximate structure in chunks with error nodes (e.g., filling missing braces or marking incomplete statements) to improve chunk quality for downstream models.
-- **Testing on Real Data**: Regularly test your chunking pipeline on representative codebases with known parsing edge cases to catch unexpected error node effects early.
-- **Monitor Error Node Frequency**: Track how often error nodes appear and in which contexts. This can guide grammar improvement or parser version upgrades.
-- **Graceful Degradation**: Ensure your RAG pipeline can gracefully degrade in quality or fallback when chunks contain error nodes, so predictions or retrievals remain reasonable.
+* **Chunk Boundary Consistency**: Since error nodes may represent incomplete or malformed syntax, chunk splitting logic should carefully handle chunk boundaries near or inside error nodes. Chunk boundaries must ensure chunks remain syntactically meaningful or at least coherent.
+* **Fallback Chunking Strategy**: If a node is mostly an error node and can’t produce meaningful subtree splits, consider fallback to a more tolerant chunking strategy (line-based or character-based) to avoid losing large portions of code.
+* **Error Propagation**: Errors in parsing can propagate to parent nodes. Your metadata or error flags should optionally propagate upwards to parent chunks that contain or partially contain error nodes.
+* **Overlap Management**: When merging or chunking sibling AST nodes, ensure that error nodes do not cause gaps or overlaps in chunk coverage.
+* **Heuristic or Semantic Repair**: Optionally, implement heuristics to "repair" or approximate structure in chunks with error nodes (e.g., filling missing braces or marking incomplete statements) to improve chunk quality for downstream models.
+* **Testing on Real Data**: Regularly test your chunking pipeline on representative codebases with known parsing edge cases to catch unexpected error node effects early.
+* **Monitor Error Node Frequency**: Track how often error nodes appear and in which contexts. This can guide grammar improvement or parser version upgrades.
+* **Graceful Degradation**: Ensure your RAG pipeline can gracefully degrade in quality or fallback when chunks contain error nodes, so predictions or retrievals remain reasonable.
 
 These extra handling steps ensure your retrieval-augmented generation pipeline remains robust, minimizes information loss, and adequately flags uncertain code chunks that originated from parsing errors.
 
 If you want, I can help draft pseudocode or a checklist to implement these error node handling strategies within your chunking logic.
 
 <div style="text-align: center">⁂</div>
-
-[^7_1]: https://arxiv.org/html/2506.15655v1
-
-[^7_2]: https://github.com/run-llama/llama_index/issues/13521
-
-[^7_3]: https://www.reddit.com/r/neovim/comments/1ir069p/treesitter_diagnostics/
-
-[^7_4]: https://tree-sitter.github.io/tree-sitter/using-parsers/
-
-[^7_5]: https://github.com/tree-sitter/tree-sitter/issues/1136
-
-[^7_6]: https://docs.llamaindex.ai/en/stable/api_reference/node_parsers/code/
-
-[^7_7]: https://stackoverflow.com/questions/70373650/how-to-solve-treesitter-highlighter-error-executing-lua-problem-in-neovim-confi
-
-[^7_8]: https://docs.llamaindex.ai/en/v0.10.23/api_reference/node_parsers/code/

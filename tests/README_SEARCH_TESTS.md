@@ -9,20 +9,24 @@ This document describes the comprehensive test organization for all search funct
 ### Core Search Test Files
 
 #### Main Search Test Files
+
 - **`test_hybrid_search.py`** - Hybrid search combining vector similarity and keyword filtering (17 tests)
 - **`test_full_text_search.py`** - Vector-only semantic search functionality (15 tests)
 - **`test_keyword_search.py`** - Keyword-only metadata filtering search (16 tests)
 
 #### Configuration Management
+
 - **`search_config.py`** - `SearchTestConfig` class for unified test configuration
 
 #### Engine and Parser Tests
+
 - **`test_hybrid_search_keyword_parser.py`** - Tests for keyword search parser functionality
 - **`test_hybrid_search_engine.py`** - Tests for the hybrid search engine
 - **`test_hybrid_search_integration.py`** - Integration tests for the complete workflow
 - **`conftest.py`** - Shared pytest fixtures and configuration
 
 ### Test Fixtures
+
 - **`fixtures/hybrid_search.jsonc`** - 17 test cases for hybrid search validation across multiple languages
 - **`fixtures/full_text_search.jsonc`** - 15 test cases for vector-only search validation
 - **`fixtures/keyword_search.jsonc`** - 16 test cases for keyword-only search validation
@@ -63,6 +67,7 @@ async with CocoIndexTestInfrastructure(**config.to_infrastructure_kwargs()) as i
 ### Configuration Output Example
 
 When tests run, you'll see configuration details:
+
 ```
 🔧 Search Test Configuration:
   📁 Paths: ['/workspaces/rust']
@@ -79,6 +84,7 @@ When tests run, you'll see configuration details:
 The tests are organized using pytest markers for easy filtering and execution:
 
 #### Search Type Markers
+
 - `@pytest.mark.hybrid_search` - Hybrid search functionality tests
 - `@pytest.mark.vector_search` - Vector-only (semantic) search tests
 - `@pytest.mark.keyword_search` - Keyword-only (metadata) search tests
@@ -86,6 +92,7 @@ The tests are organized using pytest markers for easy filtering and execution:
 - `@pytest.mark.search_engine` - Search engine tests
 
 #### Test Category Markers
+
 - `@pytest.mark.unit` - Unit tests (isolated component testing)
 - `@pytest.mark.integration` - Integration tests (multi-component testing)
 - `@pytest.mark.slow` - Tests that take longer to run
@@ -95,11 +102,13 @@ The tests are organized using pytest markers for easy filtering and execution:
 ## Running Tests
 
 ### Run All Search Tests
+
 ```bash
 pytest ./tests/search/ -v
 ```
 
 ### Run Tests by Search Type
+
 ```bash
 # Run all hybrid search tests
 pytest -m "hybrid_search"
@@ -115,17 +124,20 @@ pytest -m "keyword_parser"
 ```
 
 ### Run Unit Tests Only
+
 ```bash
 pytest -m "unit"
 ```
 
 ### Run Tests by Combination
+
 ```bash
 pytest -m "unit and keyword_parser"
 pytest -m "integration and hybrid_search"
 ```
 
 ### Run Specific Test Files
+
 ```bash
 # Core search functionality tests
 pytest tests/search/test_hybrid_search.py
@@ -139,6 +151,7 @@ pytest tests/search/test_hybrid_search_integration.py
 ```
 
 ### Run with Verbose Output
+
 ```bash
 pytest -v tests/test_hybrid_search_keyword_parser.py
 ```
@@ -148,6 +161,7 @@ pytest -v tests/test_hybrid_search_keyword_parser.py
 ### Core Search Tests
 
 #### Hybrid Search (`test_hybrid_search.py`)
+
 - **17 tests total** covering multi-language code search
 - Language-specific searches (Python, Rust, Java, JavaScript, TypeScript, C++, C, Kotlin, Haskell)
 - Cross-language pattern searches (fibonacci implementations, class definitions)
@@ -156,6 +170,7 @@ pytest -v tests/test_hybrid_search_keyword_parser.py
 - Test fixture: `fixtures/hybrid_search.jsonc`
 
 #### Vector-Only Search (`test_full_text_search.py`)
+
 - **15 tests total** covering semantic code understanding
 - Semantic similarity searches across programming concepts
 - Programming paradigm searches (OOP, functional, concurrent)
@@ -164,6 +179,7 @@ pytest -v tests/test_hybrid_search_keyword_parser.py
 - Test fixture: `fixtures/full_text_search.jsonc`
 
 #### Keyword-Only Search (`test_keyword_search.py`)
+
 - **16 tests total** covering metadata-based filtering
 - Language-specific metadata filtering
 - Boolean logic testing (AND, OR combinations)
@@ -175,6 +191,7 @@ pytest -v tests/test_hybrid_search_keyword_parser.py
 ### Engine and Parser Tests
 
 #### Keyword Search Parser (`test_hybrid_search_keyword_parser.py`)
+
 - **29 tests total** (28 passed, 1 skipped)
 - Basic condition parsing (field:value, exists(field))
 - Quoted value handling
@@ -185,6 +202,7 @@ pytest -v tests/test_hybrid_search_keyword_parser.py
 - Complex real-world query examples
 
 #### Search Engine (`test_hybrid_search_engine.py`)
+
 - Engine initialization and configuration
 - Vector-only search
 - Keyword-only search
@@ -194,6 +212,7 @@ pytest -v tests/test_hybrid_search_keyword_parser.py
 - Error handling
 
 #### Integration Tests (`test_hybrid_search_integration.py`)
+
 - Main entry point argument parsing
 - Complete workflow testing
 - Configuration management
@@ -234,22 +253,26 @@ config = SearchTestConfig(
 ## Test Status and Results
 
 ### Working Tests ✅
+
 - **Core Search Tests**: All three search types with comprehensive coverage (48 total tests)
-  - Hybrid search: 17 tests across multiple programming languages
-  - Vector search: 15 tests for semantic code understanding
-  - Keyword search: 16 tests for metadata-based filtering
+  + Hybrid search: 17 tests across multiple programming languages
+  + Vector search: 15 tests for semantic code understanding
+  + Keyword search: 16 tests for metadata-based filtering
 - **Configuration System**: SearchTestConfig provides unified, easy-to-use configuration
 - **Test Infrastructure**: CocoIndex infrastructure with proper setup/teardown
 - **Test Results**: Automatic saving to organized `/test-results/search-{type}/` directories
 - **Fixture Loading**: JSONC test fixtures properly parsed and executed
 
 ### Test Result Organization
+
 Test results are automatically saved with timestamps:
+
 - `/test-results/search-hybrid/` - Hybrid search results combining vector + keyword
 - `/test-results/search-vector/` - Vector-only semantic search results
 - `/test-results/search-keyword/` - Keyword-only metadata filter results
 
 ### Configuration Features ✨
+
 - **Easy Setup**: Default configuration optimized for testing environment
 - **Visual Feedback**: Configuration logging with emojis and clear formatting
 - **Flexible Overrides**: Customize any setting while keeping sensible defaults
@@ -262,17 +285,20 @@ Test results are automatically saved with timestamps:
 All three search test methods now include comprehensive **database comparison functionality** that analyzes test failures by comparing search results with actual PostgreSQL database contents:
 
 #### Key Features
+
 - **Root Cause Analysis**: Identifies exactly why tests fail by comparing expected results with database reality
 - **Automatic Database Queries**: Connects to PostgreSQL and analyzes indexed code records
 - **Detailed Discrepancy Reports**: Shows specific mismatches (e.g., "Expected complexity_score > 2, but max found in DB is 0")
 - **Sample Record Display**: Shows actual database record content to understand what's indexed
 
 #### Enhanced Test Files
+
 - **`tests/db_comparison.py`** - Core database comparison utility with `DatabaseComparator` class
 - **`tests/common.py`** - Enhanced with database comparison for all search test functions
 - **All search test files** - Now provide detailed database analysis on failures
 
 #### Example Enhanced Error Output
+
 ```
 🔍 Database Comparison Analysis (KEYWORD SEARCH):
   ❌ Expected complexity_score > 2.0, but max found in DB is 0
@@ -282,6 +308,7 @@ All three search test methods now include comprehensive **database comparison fu
 ```
 
 #### Critical Issues Identified
+
 1. **Complexity Score Calculation**: All records show complexity_score=0 instead of expected values
 2. **Function Extraction Failures**: Many records have empty function names despite containing functions
 3. **Language-Specific Extraction Issues**: Rust, Java, JavaScript, TypeScript function parsing problems
@@ -290,6 +317,7 @@ All three search test methods now include comprehensive **database comparison fu
 ## Best Practices
 
 ### Running Tests with Database Analysis
+
 1. Use `-v -s` flags for verbose output and database comparison visibility
 2. Test individual search types when debugging specific functionality
 3. Check `/test-results/` directories for detailed search result analysis
@@ -297,6 +325,7 @@ All three search test methods now include comprehensive **database comparison fu
 5. Modify `SearchTestConfig` defaults for custom test environments
 
 ### Configuration Management
+
 1. Keep default configuration optimized for common testing scenarios
 2. Override specific parameters when testing edge cases
 3. Use debug logging to verify configuration is applied correctly
@@ -305,12 +334,15 @@ All three search test methods now include comprehensive **database comparison fu
 ## Test Results and Debugging
 
 ### Test Result Directories
+
 Test results are automatically saved to organized directories:
+
 - `/test-results/search-hybrid/` - Hybrid search test results
 - `/test-results/search-vector/` - Vector-only search test results
 - `/test-results/search-keyword/` - Keyword-only search test results
 
 Each test result file contains:
+
 - Test name and timestamp
 - Original query parameters
 - Complete search results with metadata

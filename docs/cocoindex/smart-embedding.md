@@ -1,4 +1,5 @@
 # I'm inside a @cocoindex.transform_flow() function. However, I want to dynamically select my     cocoindex.functions.SentenceTra
+
 nsformerEmbed model based on the value of str inside DataSlice[str]. What to do?
 
 cocoindex.functions.SentenceTransformerEmbed expects the model name to be fixed when constructing the transform, and there is no direct public API to dynamically change the model on a *per-row* or *per-call* basis inside a transform_flow. The model parameter is bound at function construction time, not run time[^4_1][^4_2][^4_8].
@@ -6,8 +7,8 @@ cocoindex.functions.SentenceTransformerEmbed expects the model name to be fixed 
 **What you can do:**
 
 - If you must choose the model dynamically based on the text, you need to:
-    - Split your data ahead of time by which model should be used, then run the transform_flow separately for each subset with the appropriate model.
-    - Or, bypass the built-in SentenceTransformerEmbed and write your own embedding operator that loads models conditionally inside its function, but be aware of the heavy loading overhead and possible inefficiency[^4_1][^4_2][^4_8].
+  + Split your data ahead of time by which model should be used, then run the transform_flow separately for each subset with the appropriate model.
+  + Or, bypass the built-in SentenceTransformerEmbed and write your own embedding operator that loads models conditionally inside its function, but be aware of the heavy loading overhead and possible inefficiency[^4_1][^4_2][^4_8].
 
 **Why:**
 The built-in embedding transform is optimized for batching and reproducibility—changing models dynamically per row would break batching and is not supported in the official design or examples[^4_1][^4_2][^4_8].
@@ -26,7 +27,7 @@ emb_b = text_to_embedding_b(model_b_texts)
 ```
 
 - *Or, if you really must have a single flow:*
-    - Implement a custom embedding op using @cocoindex.op.function, but understand this will be much less efficient if you switch models per call.
+  + Implement a custom embedding op using @cocoindex.op.function, but understand this will be much less efficient if you switch models per call.
 
 ```python
 @cocoindex.transform_flow()
@@ -46,30 +47,15 @@ You cannot change the SentenceTransformerEmbed model dynamically inside a single
 
 <div style="text-align: center">⁂</div>
 
-[^4_1]: https://dev.to/cocoindex/how-to-build-index-with-text-embeddings-j3m
+[^4_1]: <https://dev.to/cocoindex/how-to-build-index-with-text-embeddings-j3m>
 
-[^4_2]: https://hackernoon.com/this-open-source-project-turns-text-into-instant-ai-answers
+[^4_2]: <https://hackernoon.com/this-open-source-project-turns-text-into-instant-ai-answers>
 
-[^4_3]: https://sbert.net/docs/package_reference/sentence_transformer/models.html
-
-[^4_4]: https://www.sbert.net/docs/sentence_transformer/pretrained_models.html
-
-[^4_5]: https://sbert.net/docs/package_reference/sentence_transformer/SentenceTransformer.html
-
-[^4_6]: https://pypi.org/project/cocoindex/0.1.13/
-
-[^4_7]: https://pypi.org/project/sentence-transformers/
-
-[^4_8]: https://github.com/cocoindex-io/cocoindex/blob/main/examples/gdrive_text_embedding/main.py
-
-[^4_9]: https://github.com/cocoindex-io/cocoindex/blob/main/examples/pdf_embedding/main.py
-
-[^4_10]: https://python.langchain.com/v0.1/docs/integrations/text_embedding/sentence_transformers/
-
+[^4_8]: <https://github.com/cocoindex-io/cocoindex/blob/main/examples/gdrive_text_embedding/main.py>
 
 ---
 
-# Well, I only need to select the model based on the language of the chunk.
+# Well, I only need to select the model based on the language of the chunk
 
 If you only need to select the embedding model based on the language of each chunk, note that cocoindex's built-in SentenceTransformerEmbed does **not** support changing the model dynamically (per chunk) inside a single transform_flow[^5_1][^5_2]. The model is bound when constructing the transform, making per-row model selection unsupported by the core API.
 
@@ -110,24 +96,15 @@ No public cocoindex solution supports switching the model per chunk within a sin
 
 <div style="text-align: center">⁂</div>
 
-[^5_1]: https://substack.com/home/post/p-164288038
+[^5_1]: <https://substack.com/home/post/p-164288038>
 
-[^5_2]: https://cocoindex.io/blogs/text-embeddings-101/
+[^5_2]: <https://cocoindex.io/blogs/text-embeddings-101/>
 
-[^5_3]: https://github.com/siamakz/sentence-transformers-1
+[^5_3]: <https://github.com/siamakz/sentence-transformers-1>
 
-[^5_4]: https://huggingface.co/blog/train-sparse-encoder
+[^5_5]: <https://github.com/UKPLab/sentence-transformers>
 
-[^5_5]: https://github.com/UKPLab/sentence-transformers
-
-[^5_6]: https://sbert.net
-
-[^5_7]: https://huggingface.co/1998Shubham007/ModelRecomm/commit/343a1048fba65f497954975499b5ce380b4c21c5
-
-[^5_8]: https://docs.llamaindex.ai/en/stable/module_guides/models/embeddings/
-
-[^5_9]: https://sbert.net/docs/sentence_transformer/usage/custom_models.html
-
+[^5_6]: <https://sbert.net>
 
 ---
 
@@ -158,24 +135,11 @@ To summarize:
 
 <div style="text-align: center">⁂</div>
 
-[^6_1]: https://cocoindex.io/docs/core/basics
+[^6_2]: <https://www.youtube.com/watch?v=gv5R8nOXsWU>
 
-[^6_2]: https://www.youtube.com/watch?v=gv5R8nOXsWU
+[^6_3]: <https://dev.to/badmonster0/want-ai-to-actually-understand-your-code-this-tool-says-it-can-help-530p>
 
-[^6_3]: https://dev.to/badmonster0/want-ai-to-actually-understand-your-code-this-tool-says-it-can-help-530p
-
-[^6_4]: https://hackernoon.com/redefining-data-operations-with-data-flow-programming-in-cocoindex-u486ao8
-
-[^6_5]: https://cocoindex.io/docs/core/flow_methods
-
-[^6_6]: https://github.com/cocoindex-io/cocoindex
-
-[^6_7]: https://github.com/cocoindex-io/cocoindex/blob/main/examples/pdf_embedding/main.py
-
-[^6_8]: https://hackernoon.com/this-open-source-tool-turns-your-google-drive-into-a-searchable-ai-brain
-
-[^6_9]: https://dev.to/cocoindex/on-premise-structured-extraction-with-llm-using-ollama-1m3m
-
+[^6_7]: <https://github.com/cocoindex-io/cocoindex/blob/main/examples/pdf_embedding/main.py>
 
 ---
 
@@ -190,7 +154,6 @@ Since `DataScope` and its inner tables (`KTable`/`DataSlice`) in cocoindex behav
 
 - Adding a language detection step to annotate each chunk with its language.
 - Then, within your flow, filter or extract slices of data where the language matches a given value.
-
 
 ### How to do this in cocoindex
 
@@ -246,13 +209,11 @@ def split_by_language(flow_builder: cocoindex.FlowBuilder, data_scope: cocoindex
     # Collect or further process as needed
 ```
 
-
-### Important notes:
+### Important notes
 
 - `filter` on a table or `DataSlice` allows you to select rows matching a predicate, producing a new DataSlice with those rows.
 - You can create one filtered DataSlice per language, then embed those slices separately with different models.
 - This approach keeps your pipeline efficient, uses batching per language, and fits cocoindex dataflow paradigms.
-
 
 ### Summary
 
@@ -265,23 +226,3 @@ This fits naturally with cocoindex incremental flows and composable transformati
 If you want, I can provide a runnable minimal example for your specific use case.
 
 <div style="text-align: center">⁂</div>
-
-[^7_1]: https://cocoindex.io/blogs/index-code-base-for-rag/
-
-[^7_2]: https://cocoindex.io/docs/getting_started/quickstart
-
-[^7_3]: https://substack.com/home/post/p-164288038
-
-[^7_4]: https://github.com/cocoindex-io/cocoindex
-
-[^7_5]: https://github.com/cocoindex-io/cocoindex/blob/main/examples/gdrive_text_embedding/main.py
-
-[^7_6]: https://pypi.org/project/cocoindex/0.1.20/
-
-[^7_7]: https://hackernoon.com/lang/de/turn-your-pdf-library-into-a-searchable-research-database-with-100-lines-of-code
-
-[^7_8]: https://app.daily.dev/posts/how-to-build-index-with-text-embeddings-oapkhgglm
-
-[^7_9]: https://hackernoon.com/build-your-own-semantic-search-engine-in-under-50-linesno-joke
-
-[^7_10]: https://colab.research.google.com/github/cocoindex-io/cocoindex/blob/main/examples/text_embedding/Text_Embedding.ipynb

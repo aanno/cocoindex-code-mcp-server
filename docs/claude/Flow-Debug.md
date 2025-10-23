@@ -23,12 +23,14 @@ The typical CocoIndex flow for code analysis follows this pipeline:
 ### 1. Empty Code Chunks
 
 **Symptoms:**
+
 - Database shows `code: ""` for all chunks
 - Metadata shows `analysis_method: "unknown"`
 - Metadata shows `chunking_method: "unknown"`
 - Hybrid search fails because there's no content to search
 
 **Root Causes:**
+
 - Bug in `ensure_unique_chunk_locations()` discarding chunk content
 - **CRITICAL**: Wrong dictionary key in `ensure_unique_chunk_locations()` (using "text" instead of "content")
 - DataSlice objects not being converted to strings properly
@@ -36,13 +38,17 @@ The typical CocoIndex flow for code analysis follows this pipeline:
 - File reading issues
 
 **Debugging Steps:**
+
 1. **Use CocoIndex Evaluation Mode:**
+
    ```bash
    cocoindex evaluate cocoindex_code_mcp_server.cocoindex_config
    ```
+
    This creates `eval_CodeEmbedding_YYYYMMDD_HHMMSS/` directory with raw flow outputs
 
 2. **Examine Raw Chunks:**
+
    ```bash
    # Find your test file
    find eval_CodeEmbedding_* -name "*your_test_file*"
@@ -53,6 +59,7 @@ The typical CocoIndex flow for code analysis follows this pipeline:
 
 3. **Test Individual Components:**
    Create test scripts to isolate each stage:
+
    ```python
    # Test AST chunking directly
    from cocoindex_code_mcp_server.ast_chunking import ASTChunkOperation
@@ -61,6 +68,7 @@ The typical CocoIndex flow for code analysis follows this pipeline:
 
 4. **Check Configuration:**
    Verify flow configuration flags:
+
    ```python
    from cocoindex_code_mcp_server.cocoindex_config import _global_flow_config
    print(f"AST chunking: {not _global_flow_config.get('use_default_chunking', False)}")
@@ -70,12 +78,15 @@ The typical CocoIndex flow for code analysis follows this pipeline:
 ### 2. Metadata Extraction Issues
 
 **Symptoms:**
+
 - All metadata shows `analysis_method: "unknown"`
 - Missing function/class information in database
 - Python analyzer not being used
 
 **Debugging Steps:**
+
 1. **Test Language Handler Directly:**
+
    ```python
    from cocoindex_code_mcp_server.lang.python.python_code_analyzer import analyze_python_code
    result = analyze_python_code(test_code, "test.py")
@@ -83,6 +94,7 @@ The typical CocoIndex flow for code analysis follows this pipeline:
    ```
 
 2. **Check Configuration Flags:**
+
    ```python
    # Look for these debug logs in CocoIndex output
    # "🔍 DEBUGGING extract_code_metadata for filename"
@@ -91,6 +103,7 @@ The typical CocoIndex flow for code analysis follows this pipeline:
 
 3. **Verify Metadata Preservation:**
    Check that `ensure_unique_chunk_locations()` preserves metadata:
+
    ```python
    # Before fix: metadata={} (lost)
    # After fix: metadata=chunk.metadata (preserved)
@@ -99,11 +112,14 @@ The typical CocoIndex flow for code analysis follows this pipeline:
 ### 3. Database Content Issues
 
 **Symptoms:**
+
 - Query results don't match expectations
 - Missing or incorrect data in database
 
 **Debugging Steps:**
+
 1. **Direct Database Query:**
+
    ```sql
    SELECT filename, location,
           LEFT(code, 100) as code_preview,
@@ -113,6 +129,7 @@ The typical CocoIndex flow for code analysis follows this pipeline:
    ```
 
 2. **Check Data Types:**
+
    ```sql
    SELECT filename,
           CASE WHEN code = '' THEN 'EMPTY' ELSE 'HAS_CONTENT' END as code_status,
@@ -127,12 +144,14 @@ The typical CocoIndex flow for code analysis follows this pipeline:
 CocoIndex now tracks comprehensive metadata about chunking methods and tree-sitter error handling.
 
 **Key Metadata Properties:**
+
 - `chunking_method`: Tracks the actual chunking method used (`ast_recursive`, `ast_recursive_with_errors`, `regex_fallback`, etc.)
 - `tree_sitter_chunking_error`: Boolean indicating if tree-sitter error nodes were encountered during chunking
 - `tree_sitter_analyze_error`: Boolean indicating if tree-sitter errors occurred during analysis
 - `analysis_method`: Existing field now complemented by chunking-specific tracking
 
 **Debugging chunking issues:**
+
 ```sql
 -- Check chunking method distribution
 SELECT
@@ -151,6 +170,7 @@ WHERE JSON_EXTRACT(metadata_json, '$.tree_sitter_chunking_error') = 'true'
 ```
 
 **Testing chunking method tracking:**
+
 ```python
 from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import EnhancedHaskellChunker, HaskellChunkConfig
 
@@ -167,12 +187,15 @@ for chunk in chunks:
 ### 5. Flow Configuration Issues
 
 **Symptoms:**
+
 - Wrong chunking method being used
 - Unexpected file filtering
 - Performance issues
 
 **Debugging Steps:**
+
 1. **Verify Path Configuration:**
+
    ```python
    update_flow_config(
        paths=['specific/test/file.py'],  # Test with single file first
@@ -183,20 +206,24 @@ for chunk in chunks:
 
 2. **Check Flow Logs:**
    Look for these log messages:
-   - "Using AST chunking extension" vs "Using default recursive splitting"
-   - "Using custom language handler extension" vs "Using default language handler"
-   - File count: "Adding source: path as 'files'"
+   + "Using AST chunking extension" vs "Using default recursive splitting"
+   + "Using custom language handler extension" vs "Using default language handler"
+   + File count: "Adding source: path as 'files'"
 
 ## Debugging Tools and Techniques
 
 ### 1. CocoIndex Evaluation Mode
+
 The most powerful debugging tool. Creates raw output files without database changes:
+
 ```bash
 cocoindex evaluate cocoindex_code_mcp_server.cocoindex_config
 ```
 
 ### 2. Component Isolation Testing
+
 Test individual components in isolation:
+
 ```python
 # Test chunking
 from cocoindex_code_mcp_server.ast_chunking import CocoIndexASTChunker
@@ -209,6 +236,7 @@ metadata = extract_code_metadata(code, "Python", "test.py")
 ```
 
 ### 3. Configuration Debugging
+
 ```python
 # Check current configuration
 from cocoindex_code_mcp_server.cocoindex_config import _global_flow_config
@@ -223,6 +251,7 @@ update_flow_config(
 ```
 
 ### 4. Database State Inspection
+
 ```sql
 -- Check for empty chunks
 SELECT COUNT(*) as empty_chunks FROM code_embeddings WHERE code = '';
@@ -245,7 +274,9 @@ LIMIT 5;
 ## Common Fixes
 
 ### 1. Metadata Preservation Fix
+
 In `ensure_unique_chunk_locations()`, ensure metadata is preserved:
+
 ```python
 # WRONG (loses metadata):
 unique_chunk = Chunk(
@@ -267,7 +298,9 @@ unique_chunk = Chunk(
 ```
 
 ### 2. Dictionary Key Compatibility Fix
+
 **CRITICAL FIX**: AST chunks use "content" key while other chunkers use "text" key:
+
 ```python
 # WRONG (loses AST chunk content):
 elif isinstance(chunk, dict):
@@ -279,7 +312,9 @@ elif isinstance(chunk, dict):
 ```
 
 ### 3. DataSlice to String Conversion
+
 Ensure DataSlice objects are converted to strings before database storage:
+
 ```python
 # In collect() call, use transform to convert DataSlice to string:
 code_embeddings.collect(
@@ -293,7 +328,9 @@ code_embeddings.collect(
 ```
 
 ### 4. Chunk Class Dictionary Compatibility
+
 Add missing methods to Chunk class for dictionary-style access:
+
 ```python
 def __contains__(self, key: str) -> bool:
     """Check if key exists in chunk (for 'key in chunk' syntax)."""
@@ -316,7 +353,9 @@ def __getitem__(self, key: Union[str, int]) -> Any:
 ```
 
 ### 3. Configuration Validation
+
 Always validate configuration before running:
+
 ```python
 def validate_flow_config():
     """Validate flow configuration for debugging."""
@@ -354,6 +393,7 @@ def validate_flow_config():
 **Problem:** Hybrid search returning no results despite database containing files.
 
 **Investigation Process:**
+
 1. Checked database - found `analysis_method: "unknown"` for all entries
 2. Tested Python analyzer directly - worked correctly
 3. Used CocoIndex evaluation - found all `code: ""` (empty chunks)
@@ -366,6 +406,7 @@ def validate_flow_config():
 10. **SUCCESS**: Vector search tests pass, hybrid search functional
 
 **Key Lessons:**
+
 - **Systematic debugging** is essential - test each pipeline stage individually
 - **The issue wasn't in obvious places** (Python analyzer, AST chunking) but in a utility function
 - **Different chunking methods use different dictionary keys** - AST uses "content", others use "text"
@@ -377,8 +418,10 @@ def validate_flow_config():
 **Problem:** MCP server test suite failing - 10 out of 15 multi-language hybrid search tests failing with missing metadata.
 
 **Investigation Process:**
+
 1. **Initial Discovery**: Tests showed `analysis_method: "none"` for all non-Python languages
 2. **Database Analysis**: Found files being indexed but with empty metadata arrays:
+
    ```json
    {
      "functions": [],
@@ -387,14 +430,16 @@ def validate_flow_config():
      "analysis_method": "none"
    }
    ```
+
 3. **Source Code Investigation**: Found multiple root causes:
-   - **Root Cause 1**: `postgres_backend.py` was hardcoded to only use Python analyzer
-   - **Root Cause 2**: Multi-language analyzers existed but weren't being called
-   - **Root Cause 3**: Case sensitivity issues in language matching
+   + **Root Cause 1**: `postgres_backend.py` was hardcoded to only use Python analyzer
+   + **Root Cause 2**: Multi-language analyzers existed but weren't being called
+   + **Root Cause 3**: Case sensitivity issues in language matching
 
 **Systematic Fix Process:**
 
 **Fix 1 - PostgreSQL Backend Multi-Language Support:**
+
 ```python
 # BEFORE (postgres_backend.py): Only Python analysis
 if language.lower() == "python":
@@ -413,6 +458,7 @@ analysis_metadata = json.loads(metadata_json_str)
 ```
 
 **Fix 2 - Case-Insensitive Language Matching:**
+
 ```python
 # BEFORE (cocoindex_config.py): Case-sensitive matching failed
 if language == "Rust":  # Missed "rust", "RUST" variations
@@ -427,6 +473,7 @@ elif lang_lower in ["cpp", "c++", "cxx"]:
 ```
 
 **Fix 3 - SQL Query Case Sensitivity:**
+
 ```python
 # BEFORE (keyword_search_parser_lark.py): Exact case matching
 where_parts.append(f"{prefix}{validated_field} = %s")
@@ -437,12 +484,14 @@ if validated_field == 'language':
 ```
 
 **Fix 4 - Language Detection Corrections:**
+
 - **C++**: Database stores as `"C++"` not `"cpp"` - updated test expectations
 - **JavaScript**: Missing `tree-sitter-javascript` dependency - installed and configured
 - **Haskell**: Missing `'success': True` field - added to analyzer output
 
 **Verification Results:**
 After fixes, tests showed rich metadata extraction:
+
 ```json
 {
   "filename": "tmp/rust_example_1.rs",
@@ -454,6 +503,7 @@ After fixes, tests showed rich metadata extraction:
 ```
 
 **Key Discoveries:**
+
 - **Backend vs Frontend Analysis**: The backend (postgres_backend.py) wasn't using the same multi-language analysis as the frontend
 - **Language Case Sensitivity**: Database languages don't always match user input case (`"C++"` vs `"cpp"`)
 - **Dependency Management**: Missing tree-sitter language parsers cause silent fallbacks
@@ -465,10 +515,12 @@ After fixes, tests showed rich metadata extraction:
 **Problem:** Test result files had different timestamps, making it hard to group results from the same test run.
 
 **Investigation:**
+
 - Each test case generated its own timestamp: `basename_python_20250801_133633_124.json`, `ast_visitor_20250801_133633_215.json`
 - Made it difficult to identify which 15 files belonged to the same test execution
 
 **Solution - Unified Test Run Timestamps:**
+
 ```python
 # Generate single timestamp at test start
 run_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
@@ -481,6 +533,7 @@ await self._save_search_results(test_name, query, search_data, run_timestamp)
 All files from same test run now share timestamp: `basename_python_20250801_134416_697.json`, `ast_visitor_20250801_134416_697.json`
 
 **Benefits:**
+
 - Easy identification of test run groups
 - Simplified cleanup of test results
 - Better debugging workflow for batch test analysis
@@ -492,16 +545,19 @@ All files from same test run now share timestamp: `basename_python_20250801_1344
 **Implementation Details:**
 
 **1. Chunking Method Tracking:**
+
 - **Rust Implementation**: Added `chunking_method` to all chunk creation functions in `/workspaces/rust/rust/src/lib.rs`
 - **Python Integration**: Updated `/workspaces/rust/python/cocoindex_code_mcp_server/lang/haskell/haskell_ast_chunker.py` to propagate chunking method metadata
 - **Consistent Tracking**: Ensures every chunk includes information about the method used (`ast_recursive`, `regex_fallback`, etc.)
 
 **2. Tree-sitter Error Tracking:**
+
 - **Chunking Errors**: `tree_sitter_chunking_error` tracks when error nodes are encountered during parsing for chunking
 - **Analysis Errors**: `tree_sitter_analyze_error` tracks when tree-sitter errors occur during code analysis
 - **Rust Integration**: Added error detection based on `node.is_error()` in tree-sitter parsing
 
 **Example Output:**
+
 ```json
 {
   "analysis_method": "haskell_chunk_visitor",
@@ -512,12 +568,14 @@ All files from same test run now share timestamp: `basename_python_20250801_1344
 ```
 
 **Debugging Value:**
+
 - **Method Verification**: Confirm that advanced chunking methods (`ast_recursive`) are being used vs fallbacks (`regex_fallback`)
 - **Error Detection**: Identify problematic code sections that cause tree-sitter parsing failures
 - **Quality Assurance**: Track the success rate of different chunking strategies across the codebase
 - **Performance Optimization**: Identify files that consistently trigger fallback methods
 
 **Testing:**
+
 ```python
 # Test chunking method tracking
 from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import EnhancedHaskellChunker, HaskellChunkConfig
@@ -540,6 +598,7 @@ chunks = chunker.chunk_code(clean_code, 'test.hs')
 
 **Integration with Existing Debugging:**
 The new tracking properties integrate seamlessly with existing CocoIndex debugging workflows:
+
 - SQL queries can filter by chunking method
 - Evaluation mode captures detailed method information
 - Database inspection reveals chunking strategy distribution

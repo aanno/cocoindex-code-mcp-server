@@ -5,25 +5,32 @@ The following are some sketch instructions and features for using the cocoindex_
 ## Quickstart
 
 1. Clone this repository.
+
    ```bash
    git clone --recursive https://github.com/aanno/cocoindex-code-mcp-server.git
    ```
+
 2. Install the package from PyPI or build from source using maturin.
 3. In one terminal of your local machine, start the pgvector database:
+
    ```bash
    cd cocoindex-code-mcp-server
    ./scripts/cocoindex-postgresql.sh
    ```
+
 4. In another terminal, start the cocoindex_code_mcp_server:
+
    ```bash
    cd cocoindex-code-mcp-server
    python -m cocoindex_code_mcp_server.main_mcp_server --rescan --port 3033 <path_to_code_directory>
    ```
+
 5. The server will index the code in the specified directory and start serving requests.
    This will take some time. It is ready when you see something like:
    'CodeEmbedding.files (batch update): 1505 source rows NO CHANGE'
 6. You can now use the RAG that is running at `http://localhost:3033` as streaming HTTP MCP server.
    For example, with claude code, use the following snippet within "mcpServers" in you .mcp.json file:
+
    ```json
         "vscode-mcp-server": {
             "command": "pnpm",

@@ -15,12 +15,14 @@ The external approach provides all the same intelligent functionality while trea
 ### ✅ **Core Implementation** (`python/cocoindex_code_mcp_server/smart_code_embedding.py`)
 
 **`LanguageModelSelector`** - Intelligent model selection engine:
+
 - Maps 20+ programming languages to optimal embedding models
 - Supports file extension detection (`.py` → `python` → `GraphCodeBERT`)
 - Handles language normalization (`js` → `javascript`, `rs` → `rust`)
 - Configurable fallback models for unsupported languages
 
 **`create_smart_code_embedding()`** - Main external API:
+
 ```python
 # Returns CocoIndex's SentenceTransformerEmbed with intelligent model selection
 embedding_func = create_smart_code_embedding(file_extension=".py")
@@ -40,12 +42,14 @@ chunk["embedding"] = chunk["text"].transform(embedding_func)
 ### ✅ **External API Functions**
 
 **Core Functions:**
+
 - `create_smart_code_embedding()` - Automatic model selection
 - `create_smart_embedding_from_file_context()` - CocoIndex flow integration
 - `get_supported_languages()` - Language → model mapping
 - `get_supported_extensions()` - Extension → language mapping
 
 **Convenience Functions:**
+
 - `create_python_embedding()` - Pre-configured for Python (GraphCodeBERT)
 - `create_rust_embedding()` - Pre-configured for Rust (UniXcode)
 - `create_javascript_embedding()` - Pre-configured for JavaScript
@@ -54,6 +58,7 @@ chunk["embedding"] = chunk["text"].transform(embedding_func)
 ### ✅ **Integration Examples** (`examples/external_code_embedding_flow.py`)
 
 **Complete working CocoIndex flow:**
+
 ```python
 @cocoindex.flow_def
 def external_code_embedding_flow(flow_builder, data_scope):
@@ -81,6 +86,7 @@ def external_code_embedding_flow(flow_builder, data_scope):
 ### ✅ **Comprehensive Testing**
 
 **Standalone Tests** (18 test cases, 100% pass rate):
+
 - Language normalization and detection
 - Model selection for all supported languages
 - File extension mapping
@@ -88,6 +94,7 @@ def external_code_embedding_flow(flow_builder, data_scope):
 - Integration scenarios and edge cases
 
 **Test Results:**
+
 ```bash
 $ python -m pytest tests/test_external_embedding_standalone.py -v
 ============================== 18 passed in 0.06s ==============================
@@ -117,18 +124,22 @@ def create_smart_code_embedding(file_extension=".py"):
 ### Key Benefits of External Approach
 
 ✅ **No CocoIndex Source Modification**
+
 - Uses CocoIndex purely as external dependency
 - Submodule remains for reference only, not integration
 
 ✅ **Full Compatibility**
+
 - Works with all existing CocoIndex workflows
 - Drop-in replacement for `SentenceTransformerEmbed`
 
 ✅ **Independent Maintenance**
+
 - Can be packaged as separate library
 - Updates don't require CocoIndex changes
 
 ✅ **Easy Integration**
+
 ```python
 # Before: Generic embedding
 chunk["embedding"] = chunk["text"].transform(
@@ -148,18 +159,21 @@ chunk["embedding"] = chunk["text"].transform(
 ## Usage Patterns
 
 ### Pattern 1: Automatic Detection
+
 ```python
 embedding_func = create_smart_code_embedding(file_extension=".py")
 # Automatically: .py → python → GraphCodeBERT
 ```
 
 ### Pattern 2: Manual Language
+
 ```python
 embedding_func = create_smart_code_embedding(language="rust")
 # Manually: rust → UniXcode
 ```
 
 ### Pattern 3: Force Specific Model
+
 ```python
 embedding_func = create_smart_code_embedding(
     language="python",
@@ -168,6 +182,7 @@ embedding_func = create_smart_code_embedding(
 ```
 
 ### Pattern 4: Custom Arguments
+
 ```python
 embedding_func = create_smart_code_embedding(
     language="python",
@@ -178,6 +193,7 @@ embedding_func = create_smart_code_embedding(
 ## Status Assessment
 
 ### ✅ **Completed**
+
 - External wrapper implementation
 - Language-aware model selection
 - Comprehensive test suite (18 tests passing)
@@ -185,6 +201,7 @@ embedding_func = create_smart_code_embedding(
 - Documentation and usage patterns
 
 ### ✅ **Benefits Achieved**
+
 - **No CocoIndex source modification** (per your requirement)
 - **GraphCodeBERT default** for supported languages
 - **UniXcode default** for other supported languages
@@ -192,6 +209,7 @@ embedding_func = create_smart_code_embedding(
 - **Configurable language-level embeddings**
 
 ### ✅ **Ready for Production Use**
+
 - Tested external wrapper functions
 - Working CocoIndex flow examples
 - Drop-in compatibility with existing workflows
@@ -199,11 +217,13 @@ embedding_func = create_smart_code_embedding(
 ## Getting Started
 
 ### 1. Install Dependencies
+
 ```bash
 pip install cocoindex[embeddings]
 ```
 
 ### 2. Import and Use
+
 ```python
 from cocoindex_code_mcp_server.smart_code_embedding import create_smart_code_embedding
 
@@ -213,6 +233,7 @@ chunk["embedding"] = chunk["text"].transform(embedding_func)
 ```
 
 ### 3. Supported Languages
+
 ```python
 from cocoindex_code_mcp_server.smart_code_embedding import get_supported_languages
 

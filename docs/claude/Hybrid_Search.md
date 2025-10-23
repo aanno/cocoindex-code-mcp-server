@@ -67,6 +67,7 @@ field:value
 ```
 
 Examples:
+
 - `language:python` - Match files with language "python"
 - `filename:main_interactive_query.py` - Match files named "main_interactive_query.py"
 - `source_name:files_0` - Match specific source
@@ -78,6 +79,7 @@ field:"quoted value"
 ```
 
 Examples:
+
 - `filename:"test file.py"` - Match files with spaces in names
 - `language:"C++"` - Match language with special characters
 
@@ -88,6 +90,7 @@ exists(field)
 ```
 
 Examples:
+
 - `exists(embedding)` - Match records that have an embedding
 - `exists(source_name)` - Match records with a source name
 
@@ -100,6 +103,7 @@ value_contains(field, "search_string")
 Search for records where a field's value contains a specific substring. This performs case-insensitive partial matching using SQL `ILIKE`.
 
 Examples:
+
 - `value_contains(filename, "test")` - Match files with "test" anywhere in the filename
 - `value_contains(code, "async")` - Match code chunks containing "async" in the code content
 - `value_contains(language, "script")` - Match languages containing "script" (e.g., "JavaScript", "TypeScript")
@@ -107,20 +111,24 @@ Examples:
 ### Boolean Operators
 
 #### AND Operator
+
 ```
 condition1 and condition2
 ```
 
 Examples:
+
 - `language:python and filename:main_interactive_query.py`
 - `exists(embedding) and language:rust`
 
 #### OR Operator
+
 ```
 condition1 or condition2
 ```
 
 Examples:
+
 - `language:python or language:rust`
 - `filename:main_interactive_query.py or filename:app.py`
 
@@ -131,6 +139,7 @@ Examples:
 ```
 
 Examples:
+
 - `(language:python or language:rust) and exists(embedding)`
 - `filename:main_interactive_query.py and (language:python or language:go)`
 
@@ -149,52 +158,57 @@ This searches for "python function" within the actual code content.
 ### Vector + Keyword Combinations
 
 1. **Find Authentication in Python**
-   - Vector Query: `authentication login user verification`
-   - Keyword Query: `language:python and exists(embedding)`
+   + Vector Query: `authentication login user verification`
+   + Keyword Query: `language:python and exists(embedding)`
 
 2. **Error Handling Patterns in Rust/Go**
-   - Vector Query: `error handling exception try catch`
-   - Keyword Query: `(language:rust or language:go) and exists(embedding)`
+   + Vector Query: `error handling exception try catch`
+   + Keyword Query: `(language:rust or language:go) and exists(embedding)`
 
 3. **Database Connection Code**
-   - Vector Query: `database connection pool connect establish`
-   - Keyword Query: `exists(embedding) and (language:python or language:java)`
+   + Vector Query: `database connection pool connect establish`
+   + Keyword Query: `exists(embedding) and (language:python or language:java)`
 
 4. **Test Files with Specific Patterns**
-   - Vector Query: `unit test mock assert expect`
-   - Keyword Query: `filename:test and language:python`
+   + Vector Query: `unit test mock assert expect`
+   + Keyword Query: `filename:test and language:python`
 
 5. **Search for Async Functions**
-   - Vector Query: `asynchronous function async await`
-   - Keyword Query: `value_contains(code, "async") and language:python`
+   + Vector Query: `asynchronous function async await`
+   + Keyword Query: `value_contains(code, "async") and language:python`
 
 6. **Find Configuration Files**
-   - Vector Query: `configuration settings config parameters`
-   - Keyword Query: `value_contains(filename, "config") and exists(embedding)`
+   + Vector Query: `configuration settings config parameters`
+   + Keyword Query: `value_contains(filename, "config") and exists(embedding)`
 
 ### Advanced Keyword Queries
 
 1. **Multiple Language Support**
+
    ```
    (language:python or language:rust or language:go) and exists(embedding)
    ```
 
 2. **Specific File Patterns**
+
    ```
    (filename:main_interactive_query.py or filename:app.py) and language:python
    ```
 
 3. **Source-Specific Search**
+
    ```
    source_name:files_0 and language:rust and exists(embedding)
    ```
 
 4. **Value Contains Search**
+
    ```
    value_contains(filename, "test") and language:python
    ```
 
 5. **Complex Value Contains with Boolean Logic**
+
    ```
    (value_contains(code, "async") or value_contains(code, "await")) and language:python
    ```
@@ -340,6 +354,7 @@ The keyword search system is extensible and supports adding new operators. Here'
 ### Development Process
 
 1. **Update Grammar** (`python/grammars/keyword_search.lark`):
+
    ```lark
    // Add new operator rule
    my_new_operator: "my_operator" "(" FIELD "," value ")"
@@ -353,6 +368,7 @@ The keyword search system is extensible and supports adding new operators. Here'
    ```
 
 2. **Add SearchCondition Field** (`keyword_search_parser_lark.py`):
+
    ```python
    @dataclass
    class SearchCondition:
@@ -364,6 +380,7 @@ The keyword search system is extensible and supports adding new operators. Here'
    ```
 
 3. **Implement Transformer** (`keyword_search_parser_lark.py`):
+
    ```python
    def my_new_operator(self, items):
        """Transform my_operator(field, value) condition."""
@@ -376,6 +393,7 @@ The keyword search system is extensible and supports adding new operators. Here'
    ```
 
 4. **Add SQL Generation** (`build_sql_where_clause`):
+
    ```python
    elif condition.is_my_new_operator_check:
        # Generate appropriate SQL
@@ -384,6 +402,7 @@ The keyword search system is extensible and supports adding new operators. Here'
    ```
 
 5. **Write Tests** (`tests/test_my_operator.py`):
+
    ```python
    def test_my_operator_parsing():
        parser = KeywordSearchParser()
@@ -445,19 +464,19 @@ Future versions may include REST API endpoints:
 ### Common Problems
 
 1. **No Results Found**
-   - Check if indexing completed successfully
-   - Verify keyword syntax is correct
-   - Try simpler queries to narrow down issues
+   + Check if indexing completed successfully
+   + Verify keyword syntax is correct
+   + Try simpler queries to narrow down issues
 
 2. **Slow Queries**
-   - Reduce result limit
-   - Simplify keyword conditions
-   - Check database indexes
+   + Reduce result limit
+   + Simplify keyword conditions
+   + Check database indexes
 
 3. **Live Updates Not Working**
-   - Verify file permissions
-   - Check polling interval settings
-   - Look for error messages in output
+   + Verify file permissions
+   + Check polling interval settings
+   + Look for error messages in output
 
 ### Debug Mode
 

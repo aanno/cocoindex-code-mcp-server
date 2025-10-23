@@ -17,13 +17,11 @@ Since Tree-sitter supports incremental parsing, a visitor/walker can respond to 
 - **Code Intelligence Features:**
 Features like jump-to-definition, code folding, symbol navigation, and custom linting are more easily implemented or extended with a robust AST traversal mechanism[^1_2].
 
-
 ### Example Use Cases
 
 - **Custom Chunkers:** Easily define precise code boundaries for chunking, such as grouping by logical blocks or aggregating related declarations.
 - **Filtering:** Exclude nodes (e.g., comments or test code) from index, or selectively include only what’s most relevant for retrieval.
 - **Augmented Embeddings:** Generate code embeddings at granularity levels beyond just top-level nodes, improving search quality in RAG (Retrieval-Augmented Generation) applications[^1_3][^1_4].
-
 
 ### Existing Support and Community Patterns
 
@@ -45,46 +43,19 @@ Tree-sitter’s core library offers APIs for walking syntax trees, and there are
 
 <div style="text-align: center">⁂</div>
 
-[^1_1]: https://github.com/marcel0ll/tree-sitter-visitor
+[^1_1]: <https://github.com/marcel0ll/tree-sitter-visitor>
 
-[^1_2]: https://dev.to/rijultp/understand-code-like-an-editor-intro-to-tree-sitter-50be
+[^1_2]: <https://dev.to/rijultp/understand-code-like-an-editor-intro-to-tree-sitter-50be>
 
-[^1_3]: https://hackernoon.com/want-ai-to-actually-understand-your-code-this-tool-says-it-can-help
+[^1_3]: <https://hackernoon.com/want-ai-to-actually-understand-your-code-this-tool-says-it-can-help>
 
-[^1_4]: https://cocoindexio.substack.com/p/index-codebase-with-tree-sitter-and
+[^1_4]: <https://cocoindexio.substack.com/p/index-codebase-with-tree-sitter-and>
 
-[^1_5]: https://www.youtube.com/watch?v=G3WstvhHO24
+[^1_5]: <https://www.youtube.com/watch?v=G3WstvhHO24>
 
-[^1_6]: https://github.com/tree-sitter/py-tree-sitter/issues/33
+[^1_6]: <https://github.com/tree-sitter/py-tree-sitter/issues/33>
 
-[^1_7]: https://modularmoose.org/blog/2025-03-26-visitor-external-grammar/
-
-[^1_8]: https://gitlab.com/TheWalkingForest/tree-sitter-mlisp
-
-[^1_9]: https://stackoverflow.com/questions/2525677/how-to-write-the-visitor-pattern-for-abstract-syntax-tree-in-python
-
-[^1_10]: https://www.youtube.com/watch?v=SEdq5ARdJdM
-
-[^1_11]: https://github.com/tree-sitter/tree-sitter/issues/642
-
-[^1_12]: https://www.reddit.com/r/neovim/comments/1hcgz08/introducing_treewalkernvim_quick_movement_around/
-
-[^1_13]: https://tree-sitter.github.io/tree-sitter/using-parsers/
-
-[^1_14]: https://www.reddit.com/r/neovim/comments/1hkybph/reintroducing_treewalkernvim_move_around_swap_ast/
-
-[^1_15]: https://substack.com/home/post/p-160019341
-
-[^1_16]: https://news.ycombinator.com/item?id=43502639
-
-[^1_17]: https://github.com/rolandwalker/tree-sitter-pgn
-
-[^1_18]: https://www.mcpworld.com/en/detail/8e2f66166914a8b9fb3c6fca675b5bc1
-
-[^1_19]: https://softwareengineering.stackexchange.com/questions/189476/implementing-the-visitor-pattern-for-an-abstract-syntax-tree
-
-[^1_20]: https://www.youtube.com/watch?v=u34swkMXJQw
-
+[^1_7]: <https://modularmoose.org/blog/2025-03-26-visitor-external-grammar/>
 
 ---
 
@@ -101,7 +72,6 @@ While Tree-sitter’s navigation actions can sometimes vary in speed depending o
 - **Community and tooling support:**
 The Rust Tree-sitter bindings are mature, well-maintained, and widely used in production projects. You get access to stable APIs, incremental parsing features, and the ability to easily customize traversal patterns, all crucial for visitor/tree walker implementations for CocoIndex or similar projects[^2_4][^2_7].
 
-
 ### Summary
 
 | Aspect | Rust Implementation | Python Only | Rust + Python Bindings |
@@ -116,42 +86,29 @@ The Rust Tree-sitter bindings are mature, well-maintained, and widely used in pr
 
 <div style="text-align: center">⁂</div>
 
-[^2_1]: https://www.reddit.com/r/emacs/comments/15rv8lt/treesitter_performance_is_highly_variable/
+[^2_1]: <https://www.reddit.com/r/emacs/comments/15rv8lt/treesitter_performance_is_highly_variable/>
 
-[^2_2]: https://pulsar-edit.dev/blog/20240902-savetheclocktower-modern-tree-sitter-part-7.html
+[^2_4]: <https://crates.io/crates/tree-sitter>
 
-[^2_3]: https://github.com/tree-sitter/tree-sitter-haskell/issues/41
+[^2_6]: <https://www.npmjs.com/package/tree-sitter-rust>
 
-[^2_4]: https://crates.io/crates/tree-sitter
+[^2_7]: <https://docs.rs/crate/tree-sitter/latest>
 
-[^2_5]: https://github.com/tree-sitter/tree-sitter-rust/tree/3a56481f8d13b6874a28752502a58520b9139dc7
-
-[^2_6]: https://www.npmjs.com/package/tree-sitter-rust
-
-[^2_7]: https://docs.rs/crate/tree-sitter/latest
-
-[^2_8]: https://docs.rs/tree-sitter
-
-[^2_9]: https://tomassetti.me/incremental-parsing-using-tree-sitter/
-
-[^2_10]: https://news.ycombinator.com/item?id=24494465
-
-[^2_11]: programming.code_analysis_integration
-
+[^2_9]: <https://tomassetti.me/incremental-parsing-using-tree-sitter/>
 
 ---
 
-# I have value errors starting my cocoindex based app. it seems related to the cocoindex type annotations. how could I freebie this. the error message is mostly cryptical.
+# I have value errors starting my cocoindex based app. it seems related to the cocoindex type annotations. how could I freebie this. the error message is mostly cryptical
 
 The **ValueErrors related to CocoIndex type annotations** you’re seeing most likely stem from passing Python values that don’t fully match the expected annotated types defined by CocoIndex. Since CocoIndex uses specific type aliases like `cocoindex.Int64`, `cocoindex.Float32`, `cocoindex.Range`, etc., your annotations and the actual returned values must align with these to avoid cryptic runtime errors[^3_1][^3_4].
 
-### How to troubleshoot and fix these value errors:
+### How to troubleshoot and fix these value errors
 
 - **Check type annotations carefully:**
 CocoIndex requires **explicit type annotations matching its data types**, which are mostly aliases on standard Python types but expect strict conformity. For example:
-    - `cocoindex.Int64` should be bound to `int` values
-    - `cocoindex.Range` expects a tuple `(int, int)`
-    - `cocoindex.OffsetDateTime` expects a `datetime.datetime` with timezone awareness (or it will set UTC automatically)[^3_1][^3_4].
+  + `cocoindex.Int64` should be bound to `int` values
+  + `cocoindex.Range` expects a tuple `(int, int)`
+  + `cocoindex.OffsetDateTime` expects a `datetime.datetime` with timezone awareness (or it will set UTC automatically)[^3_1][^3_4].
 - **Ensure values are compatible with declared types:**
 If you annotate a return or field as `cocoindex.Int64`, return an `int`, not e.g. a float, string, or `None`. Similarly, date/time types must be proper `datetime` objects with or without timezone as expected by CocoIndex.
 - **Use `from __future__ import annotations`:**
@@ -163,8 +120,7 @@ Newer CocoIndex versions improved error messages around field encoding and types
 - **Dump intermediate ETL outputs for debugging:**
 Use CocoIndex’s evaluation utilities (`python3 main.py cocoindex evaluate`) to dump what is going into the index and verify expected types visually, comparing against golden reference files[^3_4].
 
-
-### Summary tips:
+### Summary tips
 
 - Match your returned Python values exactly to CocoIndex types (`int` for `Int64`, `tuple[int, int]` for `Range`, etc.).
 - Validate data before returning to the engine to prevent implicit type errors.
@@ -176,22 +132,12 @@ This approach will help you “freebie” (fix) cryptic type-related value error
 
 <div style="text-align: center">⁂</div>
 
-[^3_1]: https://cocoindex.io/docs/core/data_types
+[^3_1]: <https://cocoindex.io/docs/core/data_types>
 
-[^3_2]: https://www.uninformativ.de/blog/postings/2022-04-21/0/POSTING-en.html
+[^3_3]: <https://stackoverflow.com/questions/67412233/python-type-hinting-not-generating-error-for-wrong-type-when-running-the-code>
 
-[^3_3]: https://stackoverflow.com/questions/67412233/python-type-hinting-not-generating-error-for-wrong-type-when-running-the-code
+[^3_4]: <https://cocoindex.io/blogs/cocoindex-changelog-2025-04-07/>
 
-[^3_4]: https://cocoindex.io/blogs/cocoindex-changelog-2025-04-07/
+[^3_5]: <https://mypy.readthedocs.io/en/stable/runtime_troubles.html>
 
-[^3_5]: https://mypy.readthedocs.io/en/stable/runtime_troubles.html
-
-[^3_6]: https://github.com/python/typing/discussions/1266
-
-[^3_7]: https://mypy.readthedocs.io/en/stable/common_issues.html
-
-[^3_8]: https://github.com/python/typing/discussions/1836
-
-[^3_9]: https://docs.python.org/3/library/typing.html
-
-[^3_10]: https://www.reddit.com/r/learnpython/comments/1espz01/what_is_the_point_of_type_hinting_when_python/
+[^3_9]: <https://docs.python.org/3/library/typing.html>

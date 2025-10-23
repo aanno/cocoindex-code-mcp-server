@@ -7,19 +7,18 @@ To use **CocoIndex** as the foundation for a code RAG (Retrieval-Augmented Gener
 - **Index configuration and update** – ingesting and transforming code data incrementally.
 - **Querying the index** – retrieving results (typically code snippets and embeddings) for RAG integration.
 
-
 ### Essential Interfaces/Endpoints
 
 An index-as-a-service or RAG-as-a-service model with CocoIndex typically requires two main endpoints[^4_2]:
 
 1. **Source Configuration Endpoint**
-    - Allows users to specify or upload code/project sources to be indexed.
-    - Configure parsing, chunking, and embedding strategies suitable for code (for example, selects the correct parser, chunking at function or class boundaries, and sets the embedding model).
-    - Example endpoint: `POST /sources` (with project details and configuration) or as part of a pipeline YAML/JSON.
+    + Allows users to specify or upload code/project sources to be indexed.
+    + Configure parsing, chunking, and embedding strategies suitable for code (for example, selects the correct parser, chunking at function or class boundaries, and sets the embedding model).
+    + Example endpoint: `POST /sources` (with project details and configuration) or as part of a pipeline YAML/JSON.
 2. **Query Endpoint**
-    - Exposes search or retrieval functionality against the indexed codebase.
-    - Accepts user queries and returns relevant code snippets, embeddings, and related metadata.
-    - Example endpoint: `POST /search` with a payload like `{ "query": "...", "top_k": 5 }`.
+    + Exposes search or retrieval functionality against the indexed codebase.
+    + Accepts user queries and returns relevant code snippets, embeddings, and related metadata.
+    + Example endpoint: `POST /search` with a payload like `{ "query": "...", "top_k": 5 }`.
 
 ### How to Implement with CocoIndex
 
@@ -27,8 +26,8 @@ CocoIndex itself is a Python library and CLI, so to expose API endpoints you typ
 
 - Build a Python server (e.g., using FastAPI or Flask) that wraps your CocoIndex flow.
 - The server should:
-    - Accept configuration via an endpoint, and instantiate/update CocoIndex flows as needed.
-    - Provide a query API that, for a given user query, retrieves relevant index rows from your target vector DB (like Qdrant), and returns the results for RAG.
+  + Accept configuration via an endpoint, and instantiate/update CocoIndex flows as needed.
+  + Provide a query API that, for a given user query, retrieves relevant index rows from your target vector DB (like Qdrant), and returns the results for RAG.
 
 **CocoIndex integration code sample:**
 
@@ -60,13 +59,11 @@ def query_index(query_text, top_k=5):
     return results
 ```
 
-
 ### Notes and Recommendations
 
 - **Index configuration:** You may want to expose a "reload" or "reconfigure" endpoint that triggers flow setup or updates, reflecting new repositories or updated transformation logic.
 - **Querying:** Should be designed for low-latency access, possibly with hybrid search—vector similarity and text filtering (like file path or language).
 - **Incremental update:** CocoIndex handles incremental flow updates automatically; invoke `.update()` or use `FlowLiveUpdater` for live sync[^4_3].
-
 
 ### References to Official Docs
 
@@ -78,20 +75,11 @@ You don't need to implement custom incremental tracking or deduplication in your
 
 <div style="text-align: center">⁂</div>
 
-[^4_1]: https://qdrant.tech/documentation/data-management/cocoindex/
+[^4_1]: <https://qdrant.tech/documentation/data-management/cocoindex/>
 
-[^4_2]: https://cocoindex.io/blogs/data-indexing-custom-logic/
+[^4_2]: <https://cocoindex.io/blogs/data-indexing-custom-logic/>
 
-[^4_3]: https://cocoindex.io/docs/core/flow_methods
-
-[^4_4]: https://docs.hpc.gwdg.de/services/coco/index.html
-
-[^4_5]: https://github.com/cocoindex-io/cocoindex-etl-with-document-ai
-
-[^4_6]: https://docs.github.com/en/rest/code-scanning?apiVersion=2022-11-28
-
-[^4_7]: https://sourceforge.net/projects/cocoindex.mirror/
-
+[^4_3]: <https://cocoindex.io/docs/core/flow_methods>
 
 ---
 
@@ -103,9 +91,9 @@ The **`examples/code_embedding`** example in **cocoindex** demonstrates searchin
 
 - **Searches** are performed using *vector similarity operators* in SQL.
 - Common operators include:
-    - `<->` for **Euclidean distance** similarity search
-    - `<#>` for **inner product** similarity search
-    - `<=>` for **cosine similarity** search
+  + `<->` for **Euclidean distance** similarity search
+  + `<#>` for **inner product** similarity search
+  + `<=>` for **cosine similarity** search
 - Example (Python/SQL):
 
 ```sql
@@ -117,7 +105,6 @@ WHERE embedding <-> '[your_query_embedding]' < threshold;
 - You can combine vector similarity with other filters or conditions, and also use hybrid searches (e.g., combining semantic search with keyword filters)[^5_1][^5_2][^5_3][^5_4].
 - **pgvector** allows hybrid and complex queries thanks to Postgres' flexibility, including filtering by metadata, file path, symbol name, etc.
 
-
 ### Switching to Qdrant
 
 - **Qdrant** uses a different API: instead of SQL, it exposes a REST/gRPC API (and Python SDK) for similarity search.
@@ -125,19 +112,17 @@ WHERE embedding <-> '[your_query_embedding]' < threshold;
 - The general search logic (retrieve top-k vectors similar to the query embedding, with optional metadata filters) remains the same as with pgvector, but the syntax is different (not SQL).
 - In cocoindex, **only the backend/storage adapter needs to change**. Your application abstracts away most of the difference; you call an API, not hand-write SQL.
 
-
 ### Supporting Multiple Specialized Search Endpoints
 
 You absolutely can (and often should) implement **specialized endpoints**:
 
 - **Find function/implementation**:
 Design your endpoint to:
-    - Filter index entries by type (e.g., only "function" nodes).
-    - Perform vector search on these filtered results.
+  + Filter index entries by type (e.g., only "function" nodes).
+  + Perform vector search on these filtered results.
 - **Find usages/cross-reference**:
-    - Use the symbol references indexed alongside each code chunk.
-    - Endpoint returns all code blocks referencing the given function/symbol.
-
+  + Use the symbol references indexed alongside each code chunk.
+  + Endpoint returns all code blocks referencing the given function/symbol.
 
 #### Example: API design
 
@@ -152,12 +137,11 @@ Design your endpoint to:
 - Store **necessary metadata** (e.g., type: function/class, file path, symbol name, reference targets) as vector payload or metadata fields.
 - Support **hybrid filtering/search**: vector distance plus attribute filter (both pgvector + Postgres and Qdrant do this; in Qdrant, it's filters; in Postgres, it's SQL WHERE).
 - **Qdrant**:
-    - Store metadata in its payload field for each point.
-    - Use filtering in the search requests.
+  + Store metadata in its payload field for each point.
+  + Use filtering in the search requests.
 - **Pgvector**:
-    - Store metadata in table columns.
-    - Use SQL WHERE clauses for filtering before or after vector search.
-
+  + Store metadata in table columns.
+  + Use SQL WHERE clauses for filtering before or after vector search.
 
 ### Summary Table
 
@@ -177,20 +161,10 @@ Design your endpoint to:
 
 <div style="text-align: center">⁂</div>
 
-[^5_1]: https://www.enterprisedb.com/blog/what-is-pgvector
+[^5_1]: <https://www.enterprisedb.com/blog/what-is-pgvector>
 
-[^5_2]: https://www.alibabacloud.com/help/en/analyticdb/analyticdb-for-postgresql/user-guide/pgvector-compatibility-mode-usage-guide
+[^5_2]: <https://www.alibabacloud.com/help/en/analyticdb/analyticdb-for-postgresql/user-guide/pgvector-compatibility-mode-usage-guide>
 
-[^5_3]: https://github.com/pgvector/pgvector
+[^5_3]: <https://github.com/pgvector/pgvector>
 
-[^5_4]: https://www.tigerdata.com/blog/postgresql-hybrid-search-using-pgvector-and-cohere
-
-[^5_5]: https://python.langchain.com/docs/integrations/vectorstores/pgvector/
-
-[^5_6]: https://github.com/pgvector/pgvector/issues/268
-
-[^5_7]: https://www.tigerdata.com/blog/postgresql-as-a-vector-database-using-pgvector
-
-[^5_8]: https://www.timescale.com/blog/combining-semantic-search-and-full-text-search-in-postgresql-with-cohere-pgvector-and-pgai
-
-[^5_9]: https://www.cockroachlabs.com/blog/vector-search-pgvector-cockroachdb/
+[^5_4]: <https://www.tigerdata.com/blog/postgresql-hybrid-search-using-pgvector-and-cohere>

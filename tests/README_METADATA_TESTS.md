@@ -5,6 +5,7 @@ This directory contains comprehensive tests for the Python metadata extraction a
 ## Test Files
 
 ### `test_python_metadata.py`
+
 **Unit tests for Python code metadata analysis**
 
 - Tests the `python_code_analyzer.py` module
@@ -14,6 +15,7 @@ This directory contains comprehensive tests for the Python metadata extraction a
 - Can be run standalone or with pytest
 
 **Usage:**
+
 ```bash
 # With pytest (recommended)
 pytest tests/test_python_metadata.py -v
@@ -23,6 +25,7 @@ python tests/test_python_metadata.py
 ```
 
 ### `test_json_formatting.py`
+
 **Unit tests for JSON output formatting**
 
 - Tests the improved `format_results_as_json()` function
@@ -31,6 +34,7 @@ python tests/test_python_metadata.py
 - Tests proper JSON formatting for other fields
 
 **Usage:**
+
 ```bash
 # With pytest (recommended)
 pytest tests/test_json_formatting.py -v
@@ -40,6 +44,7 @@ python tests/test_json_formatting.py
 ```
 
 ### `test_metadata_search.py`
+
 **Integration tests for hybrid search with metadata**
 
 - Tests the complete hybrid search functionality with Python metadata
@@ -48,6 +53,7 @@ python tests/test_json_formatting.py
 - Verifies metadata extraction in search results
 
 **Usage:**
+
 ```bash
 # With pytest (integration tests)
 pytest tests/test_metadata_search.py -m integration -v
@@ -59,20 +65,24 @@ python tests/test_metadata_search.py
 ## Test Categories
 
 ### Unit Tests
+
 - `test_python_metadata.py` - Tests core metadata analysis
 - `test_json_formatting.py` - Tests output formatting
 
 ### Integration Tests
+
 - `test_metadata_search.py` - Tests full search pipeline
 
 ## Requirements
 
 ### For Unit Tests
+
 - Python 3.11+
 - Standard library modules (ast, json, typing, etc.)
 - Optional: pytest for better test running
 
 ### For Integration Tests
+
 - Full application setup with CocoIndex
 - Database connection (PostgreSQL + pgvector)
 - Environment variable: `COCOINDEX_DATABASE_URL`
@@ -97,6 +107,7 @@ pytest tests/ -m "not integration" -v  # Unit tests only
 ## Test Coverage
 
 ### Python Metadata Analysis (`test_python_metadata.py`)
+
 - ✅ Function detection (simple, async, decorated)
 - ✅ Class detection (inheritance, methods, properties)
 - ✅ Import analysis (various import styles)
@@ -111,6 +122,7 @@ pytest tests/ -m "not integration" -v  # Unit tests only
 - ✅ JSON serialization compatibility
 
 ### JSON Formatting (`test_json_formatting.py`)
+
 - ✅ Code field formatting (no JSON escaping)
 - ✅ Metadata JSON field formatting (readable JSON)
 - ✅ Normal field formatting (standard JSON)
@@ -118,6 +130,7 @@ pytest tests/ -m "not integration" -v  # Unit tests only
 - ✅ Mixed content formatting
 
 ### Integration Tests (`test_metadata_search.py`)
+
 - ✅ Python async function search
 - ✅ Class definition search
 - ✅ Pure keyword search
@@ -134,11 +147,13 @@ pytest tests/ -m "not integration" -v  # Unit tests only
 ## Expected Test Results
 
 ### Unit Tests
+
 - Should pass completely when python_code_analyzer module is available
 - Comprehensive coverage of metadata extraction features
 - Fast execution (< 1 second for all unit tests)
 
 ### Integration Tests
+
 - Require database connection and indexed code
 - May skip if environment not properly set up
 - Test real search functionality with actual data
@@ -146,18 +161,23 @@ pytest tests/ -m "not integration" -v  # Unit tests only
 ## Troubleshooting
 
 ### Import Errors
+
 If you see import errors, ensure:
+
 - You're running from the correct directory
 - The `python/` directory is in your Python path
 - All required modules are available
 
 ### Database Connection Issues
+
 For integration tests:
+
 - Ensure `COCOINDEX_DATABASE_URL` is set
 - Database should be running and accessible
 - Code should be indexed in the database
 
 ### Missing Dependencies
+
 ```bash
 # Install test dependencies
 pip install pytest python-dotenv psycopg-pool
@@ -174,6 +194,7 @@ pip install pytest python-dotenv psycopg-pool
 ## Contributing
 
 When adding new metadata features:
+
 1. Add corresponding unit tests in `test_python_metadata.py`
 2. Update integration tests if needed
 3. Ensure all tests pass before submitting changes

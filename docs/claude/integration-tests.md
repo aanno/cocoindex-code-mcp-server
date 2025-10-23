@@ -5,11 +5,13 @@ This guide explains how to run integration tests for the CocoIndex Code MCP Serv
 ## Current Status
 
 **As of 2025-10-02:**
+
 - **Keyword Search:** 12/15 tests passing (80%)
 - **Hybrid Search:** 20/21 tests passing (95.2%) ✅
 - **Vector Search:** 14/15 tests passing (93.3%) ✅
 
 Major test fixture issues identified and fixed across all search types:
+
 - Case sensitivity (database uses Title Case: `Python`, `Rust`, `Java`, etc.)
 - Wrong filenames in test expectations (`test_*.ext` → `*_example_1.ext`)
 - Overly strict metadata requirements (complexity scores, field requirements)
@@ -22,6 +24,7 @@ See [Integration Test Results](integration-test-results.md) for detailed analysi
 ## Overview
 
 Integration tests validate the complete RAG pipeline:
+
 1. **Code Analysis** - Tree-sitter parsing and metadata extraction
 2. **AST Chunking** - Semantic code chunking
 3. **Database Storage** - PostgreSQL with pgvector
@@ -32,9 +35,11 @@ Integration tests validate the complete RAG pipeline:
 ## Test Categories
 
 ### 1. Keyword Search Tests
+
 **Location:** `tests/search/test_keyword_search.py`
 
 Tests metadata-based filtering without vector similarity:
+
 - Language filters (`language:python`, `language:rust`)
 - Function name searches (`functions:fibonacci`)
 - Class filtering (`has_classes:true`)
@@ -42,20 +47,24 @@ Tests metadata-based filtering without vector similarity:
 - Promoted metadata validation
 
 ### 2. Vector Search Tests
+
 **Location:** `tests/search/test_vector_search.py`
 **Fixture:** `tests/fixtures/vector_search.jsonc`
 
 Tests semantic similarity search using embeddings only (no keyword filtering):
+
 - Semantic code pattern searches (AST, algorithms, data structures)
 - Programming paradigm searches (OOP, functional, concurrent)
 - Domain-specific searches (database, error handling, design patterns)
 - Cross-language concept searches (fibonacci, inheritance, generics)
 
 ### 3. Hybrid Search Tests
+
 **Location:** `tests/search/test_hybrid_search.py`
 **Fixture:** `tests/fixtures/hybrid_search.jsonc`
 
 Tests combined keyword filtering + vector similarity ranking:
+
 - Language-specific semantic searches (Python, Rust, Java, JavaScript, TypeScript, C++, C, Kotlin, Haskell)
 - Cross-language pattern searches (fibonacci implementations, class definitions)
 - Metadata validation with semantic relevance
@@ -108,6 +117,7 @@ pytest -c pytest.ini ./tests/search/
 #### Why This Is Needed
 
 CocoIndex uses tracking tables to avoid re-processing unchanged files:
+
 - Each flow has a tracking table: `{test_type}searchtest__cocoindex_tracking`
 - Tracks which files have been processed and their fingerprints
 - If source files are unchanged, flow reports "NO CHANGE" and skips processing
@@ -116,6 +126,7 @@ CocoIndex uses tracking tables to avoid re-processing unchanged files:
 #### Database Tables to Clear
 
 **Embeddings Tables:**
+
 ```sql
 keywordsearchtest_code_embeddings
 vectorsearchtest_code_embeddings
@@ -123,6 +134,7 @@ hybridsearchtest_code_embeddings
 ```
 
 **Tracking Tables (critical!):**
+
 ```sql
 searchtest_keyword__cocoindex_tracking
 searchtest_vector__cocoindex_tracking
@@ -185,6 +197,7 @@ Clear database tables in these scenarios:
 5. **When flow reports "NO CHANGE" but you expect changes**
 
 **Example scenario:**
+
 ```
 1. Bug: Rust files have complexity_score=0
 2. Fix: Add Rust node types to complexity_weights
@@ -196,11 +209,13 @@ Clear database tables in these scenarios:
 ### Test Configuration
 
 Tests use fixtures from:
+
 - `tests/fixtures/keyword_search.jsonc` - Keyword search test cases (15 tests)
 - `tests/fixtures/vector_search.jsonc` - Vector search test cases (15 tests)
 - `tests/fixtures/hybrid_search.jsonc` - Hybrid search test cases (17 tests)
 
 Test code files:
+
 - `tmp/` - Sample code files in various languages (Python, Rust, Java, C, C++, JavaScript, TypeScript, Kotlin, Haskell)
 
 ## Analyzing Test Results
@@ -435,6 +450,7 @@ EOF
 The test table `keywordsearchtest_code_embeddings` has these key fields:
 
 **Core Fields:**
+
 - `filename` - Source file name
 - `location` - Character range (int8range)
 - `language` - Programming language
@@ -442,6 +458,7 @@ The test table `keywordsearchtest_code_embeddings` has these key fields:
 - `embedding` - Vector embedding (pgvector)
 
 **Promoted Metadata Fields:**
+
 - `analysis_method` - Analyzer used (python_code_analyzer, rust_ast_visitor, etc.)
 - `chunking_method` - Chunking strategy (ast_tree_sitter, etc.)
 - `functions` - Space-separated function names
@@ -453,12 +470,14 @@ The test table `keywordsearchtest_code_embeddings` has these key fields:
 - `has_classes` - Boolean flag
 
 **Error Tracking:**
+
 - `tree_sitter_analyze_error` - Analysis failed
 - `tree_sitter_chunking_error` - Chunking failed
 - `success` - Overall success flag
 - `parse_errors` - Number of parse errors
 
 **Detailed Metadata (JSON):**
+
 - `metadata_json` - Full metadata as text/JSON
 - `function_details` - JSON array of function details
 - `class_details` - JSON array of class details
@@ -467,11 +486,13 @@ The test table `keywordsearchtest_code_embeddings` has these key fields:
 ## Database Connection
 
 Connection details in `.env`:
+
 ```bash
 COCOINDEX_DATABASE_URL=postgres://cocoindex:cocoindex@host.docker.internal/cocoindex
 ```
 
 Connect with psycopg:
+
 ```python
 import psycopg
 conn = psycopg.connect("postgres://cocoindex:cocoindex@host.docker.internal/cocoindex")
@@ -480,6 +501,7 @@ conn = psycopg.connect("postgres://cocoindex:cocoindex@host.docker.internal/coco
 ## Test Data Setup
 
 Tests use sample files in `tmp/`:
+
 - Python: `python_example_1.py`, `sample.py`, `python_minor_errors.py`
 - Rust: `rust_example_1.rs`
 - Java: `java_example_1.java`, `my/packages/structure/Main1.java`
@@ -493,12 +515,14 @@ Tests use sample files in `tmp/`:
 ## Common Issues
 
 ### 1. Database Connection Fails
+
 ```bash
 # Check if database is accessible
 psql postgres://cocoindex:cocoindex@host.docker.internal/cocoindex -c "SELECT 1;"
 ```
 
 ### 2. Test Results Directory Missing
+
 ```bash
 # Create directories
 mkdir -p test-results/search-keyword
@@ -507,12 +531,14 @@ mkdir -p test-results/search-hybrid
 ```
 
 ### 3. Fixtures Not Loading
+
 ```bash
 # Verify fixture files exist and are valid JSON
 jq . tests/fixtures/keyword_search.jsonc
 ```
 
 ### 4. Python Import Errors
+
 ```bash
 # Ensure test dependencies are installed
 pip install pytest psycopg python-dotenv
@@ -651,6 +677,7 @@ Tests that verify hybrid search uses intersection semantics:
 ```
 
 **Expected Behavior:**
+
 - Vector search alone: Finds fibonacci in Python, Rust, C++, Java, Kotlin, etc.
 - Keyword search alone: Finds all Java files
 - Hybrid search: Finds ONLY Java fibonacci implementations (intersection)
@@ -658,6 +685,7 @@ Tests that verify hybrid search uses intersection semantics:
 **Test: Result Count Invariants**
 
 For any hybrid search:
+
 - `count(hybrid_results) <= count(keyword_results)` ✅ (always true)
 - `count(hybrid_results) <= count(vector_results)` ⚠️ (not necessarily true)
 - `hybrid_results ⊆ keyword_results` ✅ (always true)

@@ -1,0 +1,39 @@
+# https://gist.github.com/ahgraber/9ad4d0086a3f239f7872b7f33ebbe4c5
+# https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+default: true
+MD004:
+  style: sublist
+# default indent = 4 spaces
+MD007:
+  indent: 2
+# MD030:
+#     ul_single: 3
+#     ul_multi: 3
+
+# MD013/line-length - Line length
+MD013:
+  # Number of characters
+  line_length: 120
+  # Number of characters for headings
+  heading_line_length: 120
+  # Number of characters for code blocks
+  code_block_line_length: 120
+  # Include code blocks
+  code_blocks: true
+  # Ignore table length violations
+  tables: false
+  # Include headings
+  headings: true
+  # Include headings
+  headers: true
+  # Strict length checking
+  strict: false
+  # Stern length checking
+  stern: false
+MD024:
+  # Allow heading duplication if under different parent headings
+  siblings_only: true
+MD033:
+  allowed_elements:
+    - br
+    - div

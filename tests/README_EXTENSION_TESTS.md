@@ -5,7 +5,9 @@ This directory contains tests for MCP server extension integration.
 ## Test Files
 
 ### `test_extension_integration.py`
+
 **Purpose**: Simple verification test for extension loading and configuration
+
 - ✅ Quick sanity check that extensions load properly
 - ✅ Verifies CLI flags control extension usage
 - ✅ Tests configuration without running actual CocoIndex flows
@@ -14,7 +16,9 @@ This directory contains tests for MCP server extension integration.
 **Use when**: You want to quickly verify that extensions are available and configuration works
 
 ### `test_main_mcp_server_module_integration.py`
+
 **Purpose**: Comprehensive integration test for actual extension usage
+
 - 🔍 Creates test corpus and runs real CocoIndex flows
 - 🕵️ Uses pytest-mock to spy on extension function calls
 - ✅ Verifies extensions are actually called during flow execution

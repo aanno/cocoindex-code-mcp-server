@@ -72,7 +72,9 @@ chunk["embedding"] = chunk["text"].transform(
 ## Language Support
 
 ### GraphCodeBERT Languages
+
 GraphCodeBERT is automatically selected for:
+
 - Python (`.py`, `.pyi`)
 - Java (`.java`)
 - JavaScript (`.js`, `.mjs`, `.cjs`)
@@ -83,7 +85,9 @@ GraphCodeBERT is automatically selected for:
 - C++ (`.cpp`, `.cxx`, `.cc`, `.hpp`)
 
 ### UniXcode Languages
+
 UniXcode is automatically selected for:
+
 - Rust (`.rs`)
 - TypeScript (`.ts`, `.tsx`)
 - C# (`.cs`)
@@ -93,6 +97,7 @@ UniXcode is automatically selected for:
 - Dart (`.dart`)
 
 ### Fallback Languages
+
 For unsupported languages (e.g., Haskell, OCaml, Erlang), the system falls back to general-purpose sentence transformers.
 
 ## API Reference
@@ -229,6 +234,7 @@ for file_group, language in [(python_files, "python"), (rust_files, "rust")]:
 Existing code using `SentenceTransformerEmbed` can be easily upgraded:
 
 ### Before
+
 ```python
 chunk["embedding"] = chunk["text"].transform(
     cocoindex.functions.SentenceTransformerEmbed(
@@ -238,6 +244,7 @@ chunk["embedding"] = chunk["text"].transform(
 ```
 
 ### After
+
 ```python
 chunk["embedding"] = chunk["text"].transform(
     cocoindex.functions.SmartCodeEmbedding(
@@ -255,6 +262,7 @@ pip install 'cocoindex[embeddings]'
 ```
 
 This includes:
+
 - `sentence-transformers>=3.3.1`
 - `transformers>=4.21.0`
 - `torch>=1.12.0`

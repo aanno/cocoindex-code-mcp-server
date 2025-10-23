@@ -86,6 +86,7 @@ NDArray[np.float32], NDArray[np.int64]
 ```
 
 **❌ Still unsupported**:
+
 - `typing.Any`
 - Generic `List`, `Dict` without type parameters
 - Complex unions with incompatible types
@@ -106,6 +107,7 @@ def embed_code(code: str) -> Vector[np.float32, Literal[384]]:
 ```
 
 This creates proper PostgreSQL schema:
+
 ```sql
 -- ✅ Correct schema
 embedding vector(384)  -- Supports vector indexes
@@ -160,6 +162,7 @@ These fields should appear in both database schema and evaluation outputs.
 ## Flow Definition Gotchas (Still Relevant)
 
 ### 1. Setup Required
+
 Still true - always run setup after schema changes:
 
 ```bash
@@ -235,6 +238,7 @@ code_embeddings.collect(
 ```
 
 **Why this matters:**
+
 - DataSlice objects represent lazy evaluation pipelines, not immediate values
 - Database storage requires concrete string values
 - Without conversion, database stores empty strings instead of actual code content
@@ -389,6 +393,7 @@ code_embeddings.export(
 ```
 
 **Why this matters**:
+
 - `filename` alone isn't unique (same file in multiple sources)
 - `location` alone isn't unique (SplitRecursively may produce duplicates)
 - `source_name` prevents conflicts when same file appears in multiple paths
@@ -480,6 +485,7 @@ except Exception as e:
 ## Metadata Strategy: Development vs Production
 
 ### Development Phase Strategy
+
 Use `cocoindex.Json` for flexible metadata experimentation without frequent schema migrations:
 
 ```python
@@ -494,11 +500,13 @@ class Chunk:
 ```
 
 **Benefits:**
+
 - **Fast iteration** - no `cocoindex setup` needed for metadata changes
 - **Experimental fields** - test complexity scores, type hints, etc. without schema impact
 - **Rapid prototyping** - validate metadata usefulness before production commitment
 
 ### Production Migration Strategy
+
 Extract proven metadata fields into dedicated PostgreSQL columns:
 
 ```python
@@ -518,6 +526,7 @@ code_embeddings.collect(
 ```
 
 **Production advantages:**
+
 - **Query performance** - dedicated columns enable proper indexing
 - **pgvector integration** - direct column access for vector operations
 - **Type safety** - PostgreSQL enforces column types
@@ -694,6 +703,7 @@ Following these updated practices will ensure proper pgvector integration, preve
 Successfully implemented parameterized CocoIndex flows for test isolation, resolving critical "column 'chunking_method' does not exist" errors and enabling parallel test execution.
 
 **Key Achievement:** Created separate database tables for each test type:
+
 - `keywordsearchtest_code_embeddings` for keyword search tests
 - `vectorsearchtest_code_embeddings` for vector search tests
 - `hybridsearchtest_code_embeddings` for hybrid search tests
@@ -707,6 +717,7 @@ Successfully implemented parameterized CocoIndex flows for test isolation, resol
 ## Real-World Lessons Learned
 
 ### PostgreSQL Conflict Resolution
+
 The most common production issue is duplicate primary keys causing `ON CONFLICT DO UPDATE command cannot affect row a second time` errors. This happens because:
 
 1. **SplitRecursively doesn't guarantee unique locations** for chunks within the same file
@@ -716,12 +727,15 @@ The most common production issue is duplicate primary keys causing `ON CONFLICT 
 The solution is **mandatory post-processing** of all chunks to ensure location uniqueness, regardless of chunking method used.
 
 ### Chunking Method Selection Strategy
+
 - **AST chunking**: Use for languages with good AST support (Python, TypeScript, Java, C#)
 - **Default chunking**: Fallback for other languages (Rust, Go, Markdown, etc.)
 - **Always post-process**: Both methods require unique location enforcement
 
 ### Database Schema Evolution
+
 When adding new metadata fields to collection, remember:
+
 1. Run `cocoindex setup` to update schema
 2. Test with `cocoindex evaluate` to verify field population
 3. Check that evaluation outputs show your custom fields
@@ -732,6 +746,7 @@ When adding new metadata fields to collection, remember:
 The most complex CocoIndex issues often involve the type system and serialization. Here are key debugging lessons:
 
 #### 1. ValueType Deserialization Errors
+
 **Root cause:** Union types in dataclass fields cause serialization failures.
 
 ```python
@@ -747,6 +762,7 @@ class Chunk:
 ```
 
 #### 2. Function Parameter Type Mismatches
+
 **Root cause:** Functions expecting one type but receiving another due to schema changes.
 
 ```python
@@ -763,6 +779,7 @@ def extract_field(metadata_json: cocoindex.Json) -> str:
 ```
 
 #### 3. Regex Pattern Issues in Language Configurations
+
 **Root cause:** Unescaped special characters in regex patterns.
 
 ```python
@@ -778,6 +795,7 @@ separators = [
 ```
 
 #### 4. Metadata Transform Function Type Consistency
+
 **Root cause:** Inconsistent return types between metadata creation functions cause type mismatches in transform chains.
 
 ```python
@@ -822,6 +840,7 @@ def extract_functions(metadata_json: str) -> str:
 **Key insight:** CocoIndex transforms serialize return values, so functions receiving transformed data should expect serialized types (strings for JSON), not the original types (dicts for `cocoindex.Json`).
 
 #### 5. Development Workflow for Type Issues
+
 When encountering type system errors:
 
 1. **Isolate the problem** - Create minimal reproduction script
@@ -831,6 +850,7 @@ When encountering type system errors:
 5. **Use development metadata strategy** - Keep experimental fields in `cocoindex.Json` until proven
 
 #### 6. Type System Best Practices Summary
+
 - **Avoid unions in dataclass fields** - Use `cocoindex.Json` for flexible metadata
 - **Keep type annotations** - They are required, not optional in modern CocoIndex
 - **Ensure consistent metadata function types** - All metadata creation functions should return the same type (preferably JSON strings)
@@ -993,6 +1013,7 @@ def get_language_parser(language: str):
 ```
 
 **Dependency Management Best Practices:**
+
 ```python
 # In pyproject.toml, ensure all required tree-sitter languages are listed:
 dependencies = [
@@ -1129,6 +1150,7 @@ def get_cached_analyzer(language: str):
 ```
 
 This caching is particularly important for:
+
 - **Tree-sitter parser initialization** (expensive grammar loading)
 - **Model loading** for embedding-based analysis
 - **Regex compilation** for pattern-based metadata extraction
@@ -1145,6 +1167,7 @@ cocoindex_code_mcp_server.cocoindex_config: INFO     Using fallback model for Da
 ```
 
 **What this means:**
+
 - CocoIndex's static type analysis cannot determine the exact string type of certain fields during flow compilation
 - The engine falls back to a generic model for type inference rather than using specialized type handlers
 - This is a limitation of CocoIndex's static analysis, not an error in your code
@@ -1153,6 +1176,7 @@ cocoindex_code_mcp_server.cocoindex_config: INFO     Using fallback model for Da
 ### 2. Common Scenarios Triggering Fallback Models
 
 **Language Detection Fields:**
+
 ```python
 # This pattern often triggers fallback model warnings:
 file["language"] = file["filename"].transform(extract_language)
@@ -1166,6 +1190,7 @@ def extract_language(filename: str) -> str:
 ```
 
 **Dynamic Field Creation:**
+
 - Fields created through transform operations on DataSlices
 - String fields with values determined at runtime
 - Fields that depend on file content analysis
@@ -1173,15 +1198,18 @@ def extract_language(filename: str) -> str:
 ### 3. Fallback Model Impact and Mitigation
 
 **✅ FUNCTIONAL IMPACT**: Minimal to none
+
 - Your flows execute correctly
 - Data is processed and stored properly
 - Type checking still works at runtime
 
 **✅ PERFORMANCE IMPACT**: Generally negligible
+
 - Fallback models are typically just less optimized code paths
 - No significant performance degradation observed
 
 **⚠️ WHEN TO INVESTIGATE**: Only if you notice:
+
 - Actual processing failures
 - Incorrect data in outputs
 - Significant performance issues
@@ -1227,6 +1255,7 @@ def extract_language(filename: str) -> str:
 ```
 
 **Benefits of explicit fallback handling:**
+
 - Consistent return values
 - Better debugging information
 - Reduced ambiguity in type inference
@@ -1259,6 +1288,7 @@ chunk["analysis_method"] = chunk["metadata"].transform(extract_analysis_method_f
 ```
 
 **Why this matters:**
+
 - CocoIndex needs to serialize and track function dependencies
 - Lambda functions cannot be properly serialized by the flow system
 - Decorated functions provide proper type information for the engine
@@ -1322,6 +1352,7 @@ def extract_complexity_score_field(metadata_json: str) -> int:
 5. **Consider if action is needed** - Most fallback warnings can be safely ignored
 
 **Debugging workflow:**
+
 ```python
 # Test individual functions outside of flows:
 def test_language_extraction():
@@ -1336,6 +1367,7 @@ def test_language_extraction():
 ### 8. Best Practices for Type-Safe CocoIndex Functions
 
 **✅ Type Safety Checklist:**
+
 - Always use `@cocoindex.op.function()` decorators for transform functions
 - Provide explicit type annotations for parameters and return values
 - Handle edge cases with explicit default values
@@ -1344,11 +1376,13 @@ def test_language_extraction():
 - Test functions independently before integration
 
 **✅ Acceptable Fallback Scenarios:**
+
 - Language detection from dynamic file analysis
 - Fields derived from runtime content analysis
 - Transform chains with complex data dependencies
 
 **⚠️ Investigate Further When:**
+
 - Functions fail to execute (not just warnings)
 - Data appears incorrectly in database
 - Performance significantly degrades
@@ -1535,16 +1569,19 @@ def create_search_test_flow(test_type: str, source_path: str = "tmp"):
 ### 2. Key Benefits of Parameterized Flows
 
 **✅ Test Isolation:**
+
 - Each test type gets its own dedicated table
 - No data conflicts between different test suites
 - Parallel test execution without interference
 
 **✅ Schema Consistency:**
+
 - Reuses the same flow logic as the main production flow
 - Ensures test and production schemas remain synchronized
 - Automatically includes all metadata fields (chunking_method, etc.)
 
 **✅ Maintenance Efficiency:**
+
 - Single source of truth for flow logic
 - Updates to main flow automatically propagate to test flows
 - No need to manually sync test flow definitions
@@ -1643,22 +1680,26 @@ code_embeddings.collect(
 ### 6. Parameterized Flow Best Practices
 
 **✅ Schema Synchronization:**
+
 - Import ALL extraction functions from main flow configuration
 - Include ALL metadata fields in the collector call
 - Use the same chunking logic as production
 - Apply the same vector index configuration
 
 **✅ Table Naming Convention:**
+
 - Use descriptive prefixes: `keywordsearchtest_`, `vectorsearchtest_`, `hybridsearchtest_`
 - Suffix with `_code_embeddings` to match main table pattern
 - Ensure table names are valid PostgreSQL identifiers
 
 **✅ Parameter Design:**
+
 - Use dataclasses for type safety: `SearchTestFlowParameters`
 - Include both source path and target table name for flexibility
 - Allow parameterization of other configuration options as needed
 
 **✅ Flow Management:**
+
 - Use `cocoindex.open_flow()` with descriptive flow names
 - Cache flow instances to avoid repeated initialization
 - Ensure proper flow setup and cleanup in test infrastructure
@@ -1688,6 +1729,7 @@ code_embeddings.collect(
 7. **Clean up old shared tables** once migration is complete
 
 **Verification checklist:**
+
 - [ ] Each test type creates its own table
 - [ ] All metadata fields from main flow are included
 - [ ] Search functionality works with test-specific tables

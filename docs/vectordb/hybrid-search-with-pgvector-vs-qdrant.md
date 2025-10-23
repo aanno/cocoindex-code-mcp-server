@@ -10,28 +10,25 @@
 - As of early 2025, users report that payload indexing does not support complex full text search operators and is limited in capability[^1_2].
 - Advanced full text search capabilities (such as phrase search, wildcard matching, stemming) are not core to Qdrant; for rich full text search, most implementations use an external search service or combine sparse vector models like BM25 or SPLADE for keyword matching[^1_1][^1_9].
 
-
 ### Hybrid Search Operators
 
 - **Hybrid search** in Qdrant (v1.10+) natively supports combining:
-    - **Dense vector search** (semantic/embedding-based)
-    - **Sparse vector search** (lexical/keyword-based, e.g., BM25, Splade)[^1_1][^1_3][^1_5].
+  + **Dense vector search** (semantic/embedding-based)
+  + **Sparse vector search** (lexical/keyword-based, e.g., BM25, Splade)[^1_1][^1_3][^1_5].
 - The primary *operator* for combining results is the **fusion type**:
-    - `rrf` (Reciprocal Rank Fusion): Combines ranks from different queries, giving priority to items appearing high in both[^1_5].
-    - `dbsf` (Distribution-Based Score Fusion, v1.11+): Normalizes and sums scores across queries[^1_5].
+  + `rrf` (Reciprocal Rank Fusion): Combines ranks from different queries, giving priority to items appearing high in both[^1_5].
+  + `dbsf` (Distribution-Based Score Fusion, v1.11+): Normalizes and sums scores across queries[^1_5].
 - Hybrid search queries can use the **prefetch** parameter to chain queries and nest them to build complex, multi-stage searches[^1_5].
-
 
 ### Metadata Search Operators
 
 - Qdrant supports **payload filtering** using basic operators:
-    - **Equality and inequality**: `==`, `!=`
-    - **Range**: `<`, `>`, `<=`, `>=`
-    - **Set membership**: `IN`, `NOT IN`
-    - **Exists/Not Exists** (field presence)
+  + **Equality and inequality**: `==`, `!=`
+  + **Range**: `<`, `>`, `<=`, `>=`
+  + **Set membership**: `IN`, `NOT IN`
+  + **Exists/Not Exists** (field presence)
 - Logical operators: `AND`, `OR`, `NOT` can be applied to combine filters[^1_5].
 - These filters can be used in combination with vector or hybrid search queries to restrict results[^1_5].
-
 
 #### Summary Table
 
@@ -45,26 +42,15 @@ For complex full text search, you usually need to use external search services o
 
 <div style="text-align: center">⁂</div>
 
-[^1_1]: https://docs.llamaindex.ai/en/stable/examples/vector_stores/qdrant_hybrid/
+[^1_1]: <https://docs.llamaindex.ai/en/stable/examples/vector_stores/qdrant_hybrid/>
 
-[^1_2]: https://github.com/qdrant/qdrant/issues/5817
+[^1_2]: <https://github.com/qdrant/qdrant/issues/5817>
 
-[^1_3]: https://qdrant.tech/articles/hybrid-search/
+[^1_3]: <https://qdrant.tech/articles/hybrid-search/>
 
-[^1_4]: https://www.ssoar.info/ssoar/bitstream/handle/document/101536/ssoar-2025-beil_et_al-Gaming_the_Metaverse.pdf?sequence=1\&isAllowed=y\&lnkname=ssoar-2025-beil_et_al-Gaming_the_Metaverse.pdf
+[^1_5]: <https://qdrant.tech/documentation/concepts/hybrid-queries/>
 
-[^1_5]: https://qdrant.tech/documentation/concepts/hybrid-queries/
-
-[^1_6]: https://aai.frb.io/assets/files/AI-Act-Risk-Classification-Study-appliedAI-March-2023.pdf
-
-[^1_7]: https://qdrant.tech/documentation/hybrid-cloud/operator-configuration/
-
-[^1_8]: https://www.redhat.com/de/whats-new-red-hat-openshift
-
-[^1_9]: https://github.com/qdrant/workshop-ultimate-hybrid-search
-
-[^1_10]: https://www.oecd.org/content/dam/oecd/en/publications/reports/2025/06/emerging-divides-in-the-transition-to-artificial-intelligence_eeb5e120/7376c776-en.pdf
-
+[^1_9]: <https://github.com/qdrant/workshop-ultimate-hybrid-search>
 
 ---
 
@@ -79,26 +65,7 @@ This means Qdrant supports both **scalar values** and **arrays/sequences** as pa
 
 <div style="text-align: center">⁂</div>
 
-[^2_1]: https://python.langchain.com/api_reference/qdrant/vectorstores/langchain_qdrant.vectorstores.Qdrant.html
-
-[^2_2]: https://qdrant.tech/documentation/concepts/collections/
-
-[^2_3]: https://qdrant.tech/articles/vector-search-resource-optimization/
-
-[^2_4]: https://qdrant.tech/articles/scalar-quantization/
-
-[^2_5]: https://qdrant.tech/documentation/concepts/points/
-
-[^2_6]: https://fossies.org/linux/qdrant/lib/api/src/rest/schema.rs
-
-[^2_7]: https://qdrant.tech/articles/what-is-a-vector-database/
-
-[^2_8]: https://qdrant.tech/articles/vector-search-production/
-
-[^2_9]: https://api.python.langchain.com/en/latest/vectorstores/langchain_qdrant.vectorstores.Qdrant.html
-
-[^2_10]: https://qdrant.tech/articles/fastembed/
-
+[^2_5]: <https://qdrant.tech/documentation/concepts/points/>
 
 ---
 
@@ -115,18 +82,17 @@ You index your documents by converting them into sparse vectors using BM25 or SP
 
 ### What "More Full-Featured" Full Text Search Means
 
-- **BM25** and **SPLADE** _approximate_ classic full text search features:
-    - **Keyword matching** with relevance ranking.
-    - **Handling of field weights** (BM25F).
-    - Some token handling (e.g., stemming, lemmatization, stopword removal if you pre-process).
-    - **Query expansion** (SPLADE can add related terms that aren't explicitly in the query)[^3_1][^3_7].
+- **BM25** and **SPLADE** *approximate* classic full text search features:
+  + **Keyword matching** with relevance ranking.
+  + **Handling of field weights** (BM25F).
+  + Some token handling (e.g., stemming, lemmatization, stopword removal if you pre-process).
+  + **Query expansion** (SPLADE can add related terms that aren't explicitly in the query)[^3_1][^3_7].
 - They **do not natively support**:
-    - Complex Boolean logic (AND/OR/NOT with parentheses and precedence).
-    - Wildcards and fuzzy searching.
-    - Phrase or proximity queries.
-    - Full query language features typical in Elasticsearch or Lucene.
-- But, they _do_ allow **hybrid search**—combining keyword recall with neural semantic search in a single workflow.
-
+  + Complex Boolean logic (AND/OR/NOT with parentheses and precedence).
+  + Wildcards and fuzzy searching.
+  + Phrase or proximity queries.
+  + Full query language features typical in Elasticsearch or Lucene.
+- But, they *do* allow **hybrid search**—combining keyword recall with neural semantic search in a single workflow.
 
 ### Pros and Cons
 
@@ -139,37 +105,26 @@ You index your documents by converting them into sparse vectors using BM25 or SP
 ### Key Takeaways
 
 - BM25/SPLADE **let you go beyond simple payload filters**—they provide ranking and scoring, able to consider all relevant documents rather than just filtering.
-- You gain much of the _recall and ranking power_ of a dedicated full text engine, and can blend it with neural search results.
+- You gain much of the *recall and ranking power* of a dedicated full text engine, and can blend it with neural search results.
 - Still, some advanced features like proximity, complex Boolean queries, or custom analyzers require an external text search engine or heavier application logic[^3_1][^3_3][^3_6][^3_7].
 
 If you need transparent, explainable, hybrid keyword and semantic search—and can work within some query limitations—this trick is powerful, but doesn't fully replace a feature-complete text search engine.
 
 <div style="text-align: center">⁂</div>
 
-[^3_1]: https://qdrant.tech/articles/sparse-vectors/
+[^3_1]: <https://qdrant.tech/articles/sparse-vectors/>
 
-[^3_2]: https://www.pinecone.io/learn/splade/
+[^3_2]: <https://www.pinecone.io/learn/splade/>
 
-[^3_3]: https://weaviate.io/blog/hybrid-search-explained
+[^3_3]: <https://weaviate.io/blog/hybrid-search-explained>
 
-[^3_4]: https://news.ycombinator.com/item?id=42190650
+[^3_6]: <https://docs.paradedb.com/documentation/concepts/bm25>
 
-[^3_5]: https://www.npmjs.com/package/wink-bm25-text-search/v/3.1.1
-
-[^3_6]: https://docs.paradedb.com/documentation/concepts/bm25
-
-[^3_7]: https://infiniflow.org/blog/best-hybrid-search-solution
-
-[^3_8]: https://www.npmjs.com/package/@ckirby/wink-bm25-text-search
-
-[^3_9]: https://www.youtube.com/watch?v=0FQ2WmM0t3w
-
-[^3_10]: https://blog.vespa.ai/redefining-hybrid-search-possibilities-with-vespa/
-
+[^3_7]: <https://infiniflow.org/blog/best-hybrid-search-solution>
 
 ---
 
-# hence using BM25 or SPLADE maps some features of full text search to a vector DB. it has nothing to do with native full text in qdrant and it available with all vector DBs.
+# hence using BM25 or SPLADE maps some features of full text search to a vector DB. it has nothing to do with native full text in qdrant and it available with all vector DBs
 
 Your understanding is correct: **using BM25 or SPLADE with a vector database like Qdrant allows you to add keyword-aware, somewhat full text-like search capabilities by mapping text into sparse vectors. This is not the same as "native" full text search capability in Qdrant or similar databases**.
 
@@ -179,14 +134,12 @@ Your understanding is correct: **using BM25 or SPLADE with a vector database lik
 - **Qdrant itself does not have robust, native full text search** features like phrase, fuzzy, wildcard, or Boolean queries[^4_2]. Instead, BM25/SPLADE trick lets you bring in some of these capabilities as vector operations, primarily keyword relevance and (for SPLADE) some query expansion.
 - **This approach is not unique to Qdrant**; it works in other vector databases as well (Milvus, Weaviate, Pinecone, etc.), provided they support sparse or hybrid retrieval[^4_1][^4_3][^4_4][^4_5].
 
-
 ### Pros
 
 - **No need for a separate full text search engine** (like Elasticsearch) for decent keyword-based search[^4_6].
 - **Supports hybrid search:** You can blend these sparse (keyword) vectors with dense (semantic) vectors to improve both recall and relevancy[^4_3][^4_5].
 - **Explainability:** Sparse vectors are more interpretable; you see which keywords contributed most to the score[^4_2][^4_5].
 - **Works across many vector DBs:** Not tied to Qdrant; the trick is general-purpose[^4_1][^4_3][^4_5].
-
 
 ### Cons
 
@@ -199,50 +152,41 @@ In summary: **BM25/SPLADE lets you map some "full text" features into the vector
 
 <div style="text-align: center">⁂</div>
 
-[^4_1]: https://zilliz.com/learn/mastering-bm25-a-deep-dive-into-the-algorithm-and-application-in-milvus
+[^4_1]: <https://zilliz.com/learn/mastering-bm25-a-deep-dive-into-the-algorithm-and-application-in-milvus>
 
-[^4_2]: https://qdrant.tech/articles/sparse-vectors/
+[^4_2]: <https://qdrant.tech/articles/sparse-vectors/>
 
-[^4_3]: https://weaviate.io/blog/hybrid-search-explained
+[^4_3]: <https://weaviate.io/blog/hybrid-search-explained>
 
-[^4_4]: https://www.pinecone.io/learn/splade/
+[^4_4]: <https://www.pinecone.io/learn/splade/>
 
-[^4_5]: https://zilliz.com/learn/comparing-splade-sparse-vectors-with-bm25
+[^4_5]: <https://zilliz.com/learn/comparing-splade-sparse-vectors-with-bm25>
 
-[^4_6]: https://infiniflow.org/blog/sparse-embedding-bm25
+[^4_6]: <https://infiniflow.org/blog/sparse-embedding-bm25>
 
-[^4_7]: https://qdrant.tech/documentation/fastembed/fastembed-splade/
-
-[^4_8]: https://www.elastic.co/search-labs/blog/sparse-vector-embedding
-
-[^4_9]: https://www.youtube.com/watch?v=0FQ2WmM0t3w
-
-[^4_10]: https://www.youtube.com/watch?v=kwkqxbuxFfY
-
+[^4_7]: <https://qdrant.tech/documentation/fastembed/fastembed-splade/>
 
 ---
 
-# ok. now let's focus on qdrant native full text and hybrid search support only. what operators are available. small code example would be great.
+# ok. now let's focus on qdrant native full text and hybrid search support only. what operators are available. small code example would be great
 
 **Qdrant's native full text search and hybrid search** features provide several operators, but their capabilities are more limited than traditional full text engines.
 
 ### Operators for Native Full Text Search
 
 - The main operator is the `match` condition with `text` type.
-    - **If a full text index exists on a field**: the query checks if each word (token) in the search string exists in the field, regardless of order. All words must be present (logical AND)[^5_7][^5_5].
-        - Example: searching `"good cheap"` matches if both "good" and "cheap" appear in the field, anywhere.
-    - **If no full text index exists**: Qdrant falls back to checking for an exact substring match—less flexible and usually much slower[^5_7][^5_5][^5_1].
+  + **If a full text index exists on a field**: the query checks if each word (token) in the search string exists in the field, regardless of order. All words must be present (logical AND)[^5_7][^5_5].
+    - Example: searching `"good cheap"` matches if both "good" and "cheap" appear in the field, anywhere.
+  + **If no full text index exists**: Qdrant falls back to checking for an exact substring match—less flexible and usually much slower[^5_7][^5_5][^5_1].
 - Tokenizer can be customized (`word`, `whitespace`, `prefix`) at index creation—this affects the granularity of token matching, not the runtime query logic[^5_5].
 - **No native support for phrase matching, wildcards, partial match, or fuzzy queries** (phrase search is planned but not available as of July 2025)[^5_6].
 - No synonym expansion: queries match only on the literal tokens (e.g., searching "UK" will not match "United Kingdom")[^5_8].
-
 
 ### Operators for Native Hybrid Search
 
 - Hybrid search = combining **vector similarity** with **full text or metadata filtering** in a single query, using logical AND for overall filtering[^5_3].
 - You can apply any available filter (like `match`, range, set membership, etc.) on metadata alongside vector search.
 - The query results are first filtered according to the filter, then the vector search is applied on the filtered subset.
-
 
 ### Example (Python Pseudocode) — Hybrid Full Text + Vector Search
 
@@ -267,7 +211,6 @@ results = client.search(
 )
 ```
 
-
 ### Summary Table
 
 | Search Type | Operators/Behavior |
@@ -285,30 +228,21 @@ For advanced text queries, you’ll need to combine Qdrant with a dedicated text
 
 <div style="text-align: center">⁂</div>
 
-[^5_1]: https://qdrant.tech/articles/qdrant-introduces-full-text-filters-and-indexes/
+[^5_1]: <https://qdrant.tech/articles/qdrant-introduces-full-text-filters-and-indexes/>
 
-[^5_2]: https://github.com/orgs/qdrant/discussions/3280
+[^5_3]: <https://qdrant.tech/documentation/concepts/search/>
 
-[^5_3]: https://qdrant.tech/documentation/concepts/search/
+[^5_5]: <https://blog.qdrant.tech/qdrant-introduces-full-text-filters-and-indexes-9a032fcb5fa?gi=1378f151b6d8>
 
-[^5_4]: https://qdrant.tech/documentation/
+[^5_6]: <https://github.com/qdrant/qdrant/issues/2955>
 
-[^5_5]: https://blog.qdrant.tech/qdrant-introduces-full-text-filters-and-indexes-9a032fcb5fa?gi=1378f151b6d8
+[^5_7]: <https://qdrant.tech/documentation/concepts/filtering/>
 
-[^5_6]: https://github.com/qdrant/qdrant/issues/2955
-
-[^5_7]: https://qdrant.tech/documentation/concepts/filtering/
-
-[^5_8]: https://stackoverflow.com/questions/79689817/qdrant-full-text-payload-index-langchain-selfqueryretriever-how-to-match-syno
-
-[^5_9]: https://qdrant.tech/articles/vector-similarity-beyond-search/
-
-[^5_10]: https://docs.spring.io/spring-ai/reference/api/vectordbs/qdrant.html
-
+[^5_8]: <https://stackoverflow.com/questions/79689817/qdrant-full-text-payload-index-langchain-selfqueryretriever-how-to-match-syno>
 
 ---
 
-# you now mentioned filter. please define it a bit. so far I have no idea what a range (filter) can do.
+# you now mentioned filter. please define it a bit. so far I have no idea what a range (filter) can do
 
 A **filter** in Qdrant is a way to limit search results based on conditions applied to the metadata (payload) of each vector point. Filters can be combined in flexible and expressive ways to support a wide variety of business needs, such as restricting results to particular categories, price ranges, availability statuses, locations, and more[^6_1][^6_3][^6_5][^6_7].
 
@@ -320,7 +254,6 @@ A **filter** in Qdrant is a way to limit search results based on conditions appl
 - `should`: At least one contained condition must be true (logical OR).
 - `must_not`: Exclude results matching contained conditions (logical NOT)[^6_1][^6_7].
 
-
 #### Simple Filtering Operators
 
 - **match** – exact value match (string, int, bool, etc.)
@@ -328,7 +261,6 @@ A **filter** in Qdrant is a way to limit search results based on conditions appl
 - **geo** – filter by geographic location (bounding box, polygon, radius)
 - **full_text_match** – search for presence of a word (if full text index present)
 - **nested_key/object** – operate on nested fields
-
 
 #### Range Filter Examples
 
@@ -388,44 +320,31 @@ For even more detailed filter types and code samples, refer to Qdrant's filterin
 
 <div style="text-align: center">⁂</div>
 
-[^6_1]: https://qdrant.tech/articles/vector-search-filtering/
+[^6_1]: <https://qdrant.tech/articles/vector-search-filtering/>
 
-[^6_2]: https://github.com/langchain-ai/langchain/discussions/16466
+[^6_3]: <https://qdrant.tech/documentation/concepts/filtering/>
 
-[^6_3]: https://qdrant.tech/documentation/concepts/filtering/
+[^6_5]: <https://www.cohorte.co/blog/a-developers-friendly-guide-to-qdrant-vector-database>
 
-[^6_4]: https://docs.llamaindex.ai/en/stable/examples/vector_stores/Qdrant_metadata_filter/
-
-[^6_5]: https://www.cohorte.co/blog/a-developers-friendly-guide-to-qdrant-vector-database
-
-[^6_6]: https://python.langchain.com/docs/integrations/vectorstores/qdrant/
-
-[^6_7]: https://zenn.dev/taksnr/articles/a18ff137e23256
-
-[^6_8]: https://qdrant.tech/documentation/concepts/indexing/
-
-[^6_9]: https://qdrant.tech/documentation/concepts/search/
-
-[^6_10]: https://docs.llamaindex.ai/en/v0.10.34/examples/vector_stores/Qdrant_metadata_filter/
-
+[^6_7]: <https://zenn.dev/taksnr/articles/a18ff137e23256>
 
 ---
 
-# ok. I've got the impression that pgvector may also support full text and hybrid search, but different from qdrant.
+# ok. I've got the impression that pgvector may also support full text and hybrid search, but different from qdrant
 
 Your impression is accurate: **pgvector** enables **vector similarity search** in PostgreSQL, but its “full text” and “hybrid” search operate differently from Qdrant.
 
 ## Full Text Search in PostgreSQL + pgvector
 
 - **Native full text search in PostgreSQL** uses:
-    - The `tsvector` and `tsquery` types for tokenization, stemming, and advanced query parsing (`AND`, `OR`, `NOT`, phrase, prefix, weighting, language dictionaries, and ranking).
-    - GIN/GIST indexes for performance.
+  + The `tsvector` and `tsquery` types for tokenization, stemming, and advanced query parsing (`AND`, `OR`, `NOT`, phrase, prefix, weighting, language dictionaries, and ranking).
+  + GIN/GIST indexes for performance.
 - **Operators supported:**
-    - `@@` operator (match against query),
-    - Boolean logic (`&`, `|`, `!` corresponding to `AND`, `OR`, `NOT`),
-    - Phrase and proximity search,
-    - Prefix search (`:*`),
-    - Ranking functions like `ts_rank`[^7_6][^7_7][^7_5].
+  + `@@` operator (match against query),
+  + Boolean logic (`&`, `|`, `!` corresponding to `AND`, `OR`, `NOT`),
+  + Phrase and proximity search,
+  + Prefix search (`:*`),
+  + Ranking functions like `ts_rank`[^7_6][^7_7][^7_5].
 - **Example:**
 
 ```sql
@@ -433,7 +352,6 @@ Your impression is accurate: **pgvector** enables **vector similarity search** i
 SELECT * FROM articles
 WHERE to_tsvector('english', content) @@ to_tsquery('pizza & review');
 ```
-
 
 ## Hybrid Search (Combining Full Text + Vector Search)
 
@@ -464,7 +382,6 @@ LIMIT 10;
 - Metadata exact or pattern match
 - Joins, etc.
 
-
 ## Feature Comparison: pgvector+Postgres vs. Qdrant
 
 | Feature | pgvector + PostgreSQL | Qdrant |
@@ -484,26 +401,23 @@ Let me know if you need specific Postgres code combining more complex filters, o
 
 <div style="text-align: center">⁂</div>
 
-[^7_1]: https://www.pedroalonso.net/blog/advanced-postgres-full-text-search-with-pgvector/
+[^7_1]: <https://www.pedroalonso.net/blog/advanced-postgres-full-text-search-with-pgvector/>
 
-[^7_2]: https://www.timescale.com/blog/combining-semantic-search-and-full-text-search-in-postgresql-with-cohere-pgvector-and-pgai
+[^7_2]: <https://www.timescale.com/blog/combining-semantic-search-and-full-text-search-in-postgresql-with-cohere-pgvector-and-pgai>
 
-[^7_3]: https://github.com/pgvector/pgvector
+[^7_3]: <https://github.com/pgvector/pgvector>
 
-[^7_4]: https://www.tigerdata.com/blog/postgresql-hybrid-search-using-pgvector-and-cohere
+[^7_4]: <https://www.tigerdata.com/blog/postgresql-hybrid-search-using-pgvector-and-cohere>
 
-[^7_5]: https://www.enterprisedb.com/blog/enhancing-search-capabilities-postgresql-standard-semantic
+[^7_5]: <https://www.enterprisedb.com/blog/enhancing-search-capabilities-postgresql-standard-semantic>
 
-[^7_6]: https://www.postgresql.org/docs/current/textsearch-controls.html
+[^7_6]: <https://www.postgresql.org/docs/current/textsearch-controls.html>
 
-[^7_7]: https://www.postgresql.org/docs/current/datatype-textsearch.html
+[^7_7]: <https://www.postgresql.org/docs/current/datatype-textsearch.html>
 
-[^7_8]: https://www.tigerdata.com/learn/full-text-search-vs-vector-search
+[^7_8]: <https://www.tigerdata.com/learn/full-text-search-vs-vector-search>
 
-[^7_9]: https://jkatz.github.io/post/postgres/hybrid-search-postgres-pgvector/
-
-[^7_10]: https://zilliz.com/blog/couchbase-vs-pgvector-a-comprehensive-vector-database-comparison
-
+[^7_9]: <https://jkatz.github.io/post/postgres/hybrid-search-postgres-pgvector/>
 
 ---
 
@@ -514,9 +428,9 @@ Here’s a clear breakdown answering both parts of your query:
 ## 1. Difference between **rank**, **rerank**, and **filter** (in context of pgvector/PostgreSQL)
 
 - **Filter**:
-    - *Definition*: Narrows down candidate database rows before any ranking.
-    - *How*: Uses SQL `WHERE` clauses (for numbers, strings, Booleans, ranges, full text, etc.).
-    - *Example*:
+  + *Definition*: Narrows down candidate database rows before any ranking.
+  + *How*: Uses SQL `WHERE` clauses (for numbers, strings, Booleans, ranges, full text, etc.).
+  + *Example*:
 
 ```sql
 SELECT * FROM documents
@@ -525,10 +439,11 @@ WHERE to_tsvector('english', content) @@ to_tsquery('pizza & review')
 ```
 
 Here, only documents with both 'pizza' and 'review' **AND** published after 2025-01-01 are returned.
+
 - **Rank**:
-    - *Definition*: Orders results according to a chosen relevance score.
-    - *How*: Use full text ranking (such as `ts_rank`), vector similarity (e.g., `<=>` for embeddings), or other scoring.
-    - *Example*:
+  + *Definition*: Orders results according to a chosen relevance score.
+  + *How*: Use full text ranking (such as `ts_rank`), vector similarity (e.g., `<=>` for embeddings), or other scoring.
+  + *Example*:
 
 ```sql
 SELECT *, ts_rank(to_tsvector('english', content), to_tsquery('pizza & review')) AS text_rank
@@ -549,15 +464,14 @@ LIMIT 10
 ```
 
 - **Rerank**:
-    - *Definition*: Applies a new, usually more expensive ranking step **after** an initial retrieval (often using a neural model on the top N).
-    - *Purpose*: Boosts relevance by using more advanced models, sometimes combining semantic and lexical similarity.
-    - *How*: Fetch initial candidates (`filter` + `rank`), then pass to a reranker and sort again.
-    - *Example workflow*:
+  + *Definition*: Applies a new, usually more expensive ranking step **after** an initial retrieval (often using a neural model on the top N).
+  + *Purpose*: Boosts relevance by using more advanced models, sometimes combining semantic and lexical similarity.
+  + *How*: Fetch initial candidates (`filter` + `rank`), then pass to a reranker and sort again.
+  + *Example workflow*:
 
 1. Retrieve top 30 by vector similarity.
 2. For each, use a cross-encoder (or LLM or advanced model) to compute query-document relevance.
 3. Sort by reranker score, select top 5[^8_1][^8_4][^8_5][^8_7].
-
 
 ## 2. Difference between **tsvector** and **tsquery** in PostgreSQL
 
@@ -583,7 +497,6 @@ ORDER BY ts_rank(to_tsvector('english', content), to_tsquery('pizza & review')) 
 - `to_tsquery('pizza & review')`: turns your query ("pizza and review") into an efficient query form.
 - `@@`: returns true for matches between the document and the query.
 
-
 ### Summary Table
 
 | Step | Purpose | Example (SQL) |
@@ -596,26 +509,13 @@ Let me know if you’d like a step-by-step rerank SQL/code sample or further exa
 
 <div style="text-align: center">⁂</div>
 
-[^8_1]: https://mastra.ai/examples/rag/rerank
+[^8_1]: <https://mastra.ai/examples/rag/rerank>
 
-[^8_2]: https://www.reddit.com/r/vectordatabase/comments/1ci2w8l/how_do_you_handle_multivector_search_with_ranking/
+[^8_4]: <https://www.tigerdata.com/blog/postgresql-hybrid-search-using-pgvector-and-cohere>
 
-[^8_3]: https://github.com/pgvector/pgvector
+[^8_5]: <https://unfoldai.com/rag-rerankers/>
 
-[^8_4]: https://www.tigerdata.com/blog/postgresql-hybrid-search-using-pgvector-and-cohere
-
-[^8_5]: https://unfoldai.com/rag-rerankers/
-
-[^8_6]: https://www.pinecone.io/learn/refine-with-rerank/
-
-[^8_7]: https://www.pinecone.io/learn/series/rag/rerankers/
-
-[^8_8]: https://mastra.ai/examples/rag/rerank/rerank-rag
-
-[^8_9]: https://news.ycombinator.com/item?id=42705300
-
-[^8_10]: https://www.tigerdata.com/blog/how-we-made-postgresql-the-best-vector-database
-
+[^8_7]: <https://www.pinecone.io/learn/series/rag/rerankers/>
 
 ---
 
@@ -645,14 +545,12 @@ Let me know if you’d like a step-by-step rerank SQL/code sample or further exa
 - **Low Latency, High Recall**: For mission-critical applications (real-time recommendations, semantic search, etc.), Qdrant’s low tail latency and high recall reputation outperform what’s feasible on even optimized Postgres[^9_1][^9_2][^9_5][^9_7].
 - **Geospatial and Multi-modal Filtering**: Qdrant includes optimized geo and hybrid payload filters out-of-the-box, making it easier to build AI and recommendation platforms.
 
-
 ## When is pgvector Enough (or Superior)?
 
 - **You need complex SQL logic or advanced full text** (ranked, fuzzy, phrase, etc.)—Postgres is unbeaten here[^9_5][^9_6][^9_8].
 - **No extra infra**: If you’re already running Postgres, adding pgvector is minimally disruptive and low on ops overhead.
 - **Smaller datasets**: For datasets well under 100,000–500,000 vectors, Postgres+pgvector is often “fast enough”[^9_2][^9_5][^9_6][^9_8].
 - **Transactional workloads**: When you want atomic updates across relational and vector data (e.g., in e-commerce).
-
 
 ## Typical Guidance
 
@@ -666,26 +564,17 @@ You’d choose Qdrant when speed, accuracy, and scale are critical for vector-he
 
 <div style="text-align: center">⁂</div>
 
-[^9_1]: https://myscale.com/blog/comprehensive-comparison-pgvector-vs-qdrant-performance-vector-database-benchmarks/
+[^9_1]: <https://myscale.com/blog/comprehensive-comparison-pgvector-vs-qdrant-performance-vector-database-benchmarks/>
 
-[^9_2]: https://nirantk.com/writing/pgvector-vs-qdrant/
+[^9_2]: <https://nirantk.com/writing/pgvector-vs-qdrant/>
 
-[^9_3]: https://www.reddit.com/r/Rag/comments/1grbh09/choosing_between_pgvector_and_qdrant_for/
+[^9_5]: <https://zilliz.com/comparison/qdrant-vs-pgvector>
 
-[^9_4]: https://www.tigerdata.com/blog/pgvector-vs-qdrant
+[^9_6]: <https://dev.to/tigerdata/postgresql-vs-qdrant-for-vector-search-50m-embedding-benchmark-3hhe>
 
-[^9_5]: https://zilliz.com/comparison/qdrant-vs-pgvector
+[^9_7]: <https://airbyte.com/data-engineering-resources/qdrant-vs-pinecone>
 
-[^9_6]: https://dev.to/tigerdata/postgresql-vs-qdrant-for-vector-search-50m-embedding-benchmark-3hhe
-
-[^9_7]: https://airbyte.com/data-engineering-resources/qdrant-vs-pinecone
-
-[^9_8]: https://dev.to/tigerdata/postgres-vs-qdrant-why-postgres-wins-for-ai-and-vector-workloads-3d71
-
-[^9_9]: https://www.datacamp.com/blog/the-top-5-vector-databases
-
-[^9_10]: https://www.linkedin.com/posts/todd-j-green_pgvector-vs-qdrant-open-source-vector-database-activity-7323063016843788288-IHqD
-
+[^9_8]: <https://dev.to/tigerdata/postgres-vs-qdrant-why-postgres-wins-for-ai-and-vector-workloads-3d71>
 
 ---
 
@@ -698,7 +587,6 @@ You’d choose Qdrant when speed, accuracy, and scale are critical for vector-he
 - **Nearest neighbor search** finds the points in a dataset that are most similar (nearest) to a query vector in high-dimensional space.
 - **“Brute-force” search** would require comparing the query to every vector in the set— which is slow and impractical at scale.
 - **ANN algorithms** trade a bit of strict accuracy for vastly improved speed, returning “close-enough” results—**not always the mathematically true nearest, but nearly always close enough for practical retrieval**[^10_1][^10_5][^10_6].
-
 
 ### How Does Purpose-Built ANN Work in Vector Databases?
 
@@ -715,7 +603,6 @@ These methods enable:
 - **Real-time search applications**—retrieval can happen in milliseconds[^10_1][^10_3][^10_4].
 - **Scalability and reliability:** Sharding, disk-based/indexed storage, persistence, and distributed computing, all unavailable or cumbersome with traditional DBs[^10_3][^10_4][^10_5].
 
-
 ### Why Not Just Use a Traditional Database?
 
 Traditional databases (like SQL or NoSQL systems) are optimized for structured data, exact matches, and simple range queries—not high-dimensional similarity. Even when they support vectors, their indexes are not built for high-speed or large-scale nearest neighbor search[^10_4].
@@ -725,7 +612,6 @@ Traditional databases (like SQL or NoSQL systems) are optimized for structured d
 - **Semantic document search:** Instantly retrieve the most relevant documents out of millions, not just those matching exact keywords[^10_1].
 - **Image or audio similarity:** Quickly find similar photos or sound clips.
 - **Recommendation engines:** Suggest products, movies, or songs “like” what a user already likes[^10_7].
-
 
 ### Key Benefits
 
@@ -739,26 +625,19 @@ Purpose-built ANN search means using advanced algorithms and architecture—opti
 
 <div style="text-align: center">⁂</div>
 
-[^10_1]: https://weaviate.io/blog/vector-search-explained
+[^10_1]: <https://weaviate.io/blog/vector-search-explained>
 
-[^10_2]: https://www.pinecone.io/learn/vector-database/
+[^10_2]: <https://www.pinecone.io/learn/vector-database/>
 
-[^10_3]: https://milvus.io/blog/why-and-when-you-need-a-purpose-built-vector-database.md
+[^10_3]: <https://milvus.io/blog/why-and-when-you-need-a-purpose-built-vector-database.md>
 
-[^10_4]: https://bhavishyapandit9.substack.com/p/vector-search-explained-a-deep-dive
+[^10_4]: <https://bhavishyapandit9.substack.com/p/vector-search-explained-a-deep-dive>
 
-[^10_5]: https://milvus.io/ai-quick-reference/how-does-a-vector-database-support-vector-search
+[^10_5]: <https://milvus.io/ai-quick-reference/how-does-a-vector-database-support-vector-search>
 
-[^10_6]: https://glasp.co/hatch/5lgo21m6rKZSWY6oo1BlCprbxVZ2/p/SZiESro3r7igi6ElSXlo
+[^10_6]: <https://glasp.co/hatch/5lgo21m6rKZSWY6oo1BlCprbxVZ2/p/SZiESro3r7igi6ElSXlo>
 
-[^10_7]: https://pub.towardsai.net/vector-databases-101-a-beginners-guide-to-building-ai-driven-applications-ad89749cac1c?gi=bdca202570d7
-
-[^10_8]: https://www.cognee.ai/blog/fundamentals/vector-databases-explained
-
-[^10_9]: https://qdrant.tech/articles/what-is-a-vector-database/
-
-[^10_10]: https://www.instaclustr.com/education/vector-database/vector-databases-explained-use-cases-algorithms-and-key-features/
-
+[^10_7]: <https://pub.towardsai.net/vector-databases-101-a-beginners-guide-to-building-ai-driven-applications-ad89749cac1c?gi=bdca202570d7>
 
 ---
 
@@ -773,7 +652,6 @@ Purpose-built ANN search means using advanced algorithms and architecture—opti
 - Keys can be referenced with or without `[]` notation (e.g., `"data"` or `"data[]"`); best practice is to use the base key name.
 - **You cannot use the `has_id` filter** inside a nested condition—it must be at the top level or a sibling to `nested`[^11_2].
 - You can combine `nested` with other top-level filters using `must`, `should`, or `must_not`.
-
 
 #### Example Qdrant Filter (JSON)
 
@@ -805,15 +683,13 @@ Purpose-built ANN search means using advanced algorithms and architecture—opti
 - Cannot filter for relationships *between* different nested objects in the same array (each `must` applies to the same element)[^11_1][^11_2].
 - Only arrays of objects are supported, not arbitrary deeply nested trees.
 
-
 ### pgvector and Nested (JSON) Queries
 
 - **pgvector** itself is only the vector extension for PostgreSQL and does **not directly address nested payloads/objects**.
 - **However**, PostgreSQL’s JSON/JSONB types and their operators let you **query deeply nested or arrayed data structures** with great flexibility.
 - **You can filter on arrays of objects inside your table’s JSONB column using expressions like**:
-    - `@>`, `#>`, `#>>`, `jsonb_array_elements`, lateral joins, etc.
+  + `@>`, `#>`, `#>>`, `jsonb_array_elements`, lateral joins, etc.
 - This allows complex queries against any shaped data, subject only to SQL expressiveness.
-
 
 #### Example PostgreSQL Query on Nested Object (JSONB)
 
@@ -845,26 +721,13 @@ WHERE EXISTS (
 
 <div style="text-align: center">⁂</div>
 
-[^11_1]: https://qdrant.tech/articles/vector-search-filtering/
+[^11_1]: <https://qdrant.tech/articles/vector-search-filtering/>
 
-[^11_2]: https://qdrant.tech/documentation/concepts/filtering/
+[^11_2]: <https://qdrant.tech/documentation/concepts/filtering/>
 
-[^11_3]: https://github.com/qdrant/qdrant/issues/2336
+[^11_3]: <https://github.com/qdrant/qdrant/issues/2336>
 
-[^11_4]: https://qdrant.tech/documentation/concepts/hybrid-queries/
-
-[^11_5]: https://qdrant.tech/documentation/guides/administration/
-
-[^11_6]: https://stackoverflow.com/questions/78171813/qdrant-filteration-using-nested-object-fields
-
-[^11_7]: https://github.com/qdrant/qdrant/issues/4077
-
-[^11_8]: https://stackoverflow.com/questions/76568932/search-points-by-payloads-nested-objects-in-qdrant
-
-[^11_9]: https://qdrant.tech/documentation/concepts/search/
-
-[^11_10]: https://qdrant.tech/documentation/concepts/payload/
-
+[^11_8]: <https://stackoverflow.com/questions/76568932/search-points-by-payloads-nested-objects-in-qdrant>
 
 ---
 
@@ -886,12 +749,10 @@ The **difference between `JSON` and `JSONB`** in PostgreSQL centers on **storage
 - **JSON**: Good if you simply need to store data as text and rarely run queries.
 - **JSONB**: Optimal when you need to **query, index, and search the metadata efficiently**[^12_1][^12_2][^12_3][^12_5][^12_6][^12_8][^12_9].
 
-
 ### Which is Used for Metadata in pgvector?
 
 - In PostgreSQL (and with pgvector), metadata is **most often stored as a `JSONB` column**, because `JSONB` supports indexing and enables very efficient, expressive queries—including filters on nested keys and arrays[^12_1][^12_2][^12_3][^12_5].
 - Storing metadata as `JSONB` is the industry best practice for high-performance and complex queries.
-
 
 ### Summary
 
@@ -903,22 +764,16 @@ For scalable vector search with rich metadata queries (including sorting, filter
 
 <div style="text-align: center">⁂</div>
 
-[^12_1]: https://www.dbvis.com/thetable/json-vs-jsonb-in-postgresql-a-complete-comparison/
+[^12_1]: <https://www.dbvis.com/thetable/json-vs-jsonb-in-postgresql-a-complete-comparison/>
 
-[^12_2]: https://risingwave.com/blog/optimal-scenarios-for-using-json-vs-jsonb-in-postgresql/
+[^12_2]: <https://risingwave.com/blog/optimal-scenarios-for-using-json-vs-jsonb-in-postgresql/>
 
-[^12_3]: https://www.postgresql.org/docs/current/datatype-json.html
+[^12_3]: <https://www.postgresql.org/docs/current/datatype-json.html>
 
-[^12_4]: https://stackoverflow.com/questions/39637370/difference-between-json-and-jsonb-in-postgres
+[^12_5]: <https://olake.io/blog/json-vs-bson-vs-jsonb>
 
-[^12_5]: https://olake.io/blog/json-vs-bson-vs-jsonb
+[^12_6]: <https://www.educative.io/answers/what-is-the-difference-between-json-and-jsonb-in-postgresql>
 
-[^12_6]: https://www.educative.io/answers/what-is-the-difference-between-json-and-jsonb-in-postgresql
+[^12_8]: <https://www.baeldung.com/sql/postgresql-json-vs-jsonb-data-types>
 
-[^12_7]: https://dev.to/ftisiot/json-vs-jsonb-in-postgresql-5cj3
-
-[^12_8]: https://www.baeldung.com/sql/postgresql-json-vs-jsonb-data-types
-
-[^12_9]: https://risingwave.com/blog/exploring-json-vs-jsonb-postgresqls-dilemma/
-
-[^12_10]: https://dev.to/dbvismarketing/json-vs-jsonb-in-postgresql-for-database-development-1hbp
+[^12_9]: <https://risingwave.com/blog/exploring-json-vs-jsonb-postgresqls-dilemma/>

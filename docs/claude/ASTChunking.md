@@ -3,6 +3,7 @@
 ## 🎯 **Preferred Implementation Pattern (January 2025)**
 
 The current preferred approach for implementing AST chunking in CocoIndex uses the `@op.executor_class()` pattern as demonstrated in:
+
 - `python/cocoindex_code_mcp_server/ast_chunking.py` (Python AST chunking)
 - `python/cocoindex_code_mcp_server/lang/haskell/haskell_ast_chunker.py` (Haskell AST chunking)
 
@@ -70,38 +71,43 @@ The following sections document the historical integration work with ASTChunk li
 ## 📋 **Completed Work**
 
 ### ✅ **Phase 1: Analysis & Planning**
+
 1. **Analyzed ASTChunk project** - Comprehensive analysis documented in `ASTChunk.md`
 2. **Designed integration strategy** - CocoIndex operation with hybrid chunking approach
 3. **Created integration module** - `python/cocoindex_code_mcp_server/
 ast_chunking.py` with CocoIndex-compatible interface
 
 ### ✅ **Phase 2: Implementation**
+
 1. **Created `ast_chunking.py`** - Main integration module with:
-   - `CocoIndexASTChunker` class for AST-based chunking
-   - Language mapping (Python, Java, C#, TypeScript)
-   - Fallback to existing Haskell chunking
-   - CocoIndex operation factory function
+   + `CocoIndexASTChunker` class for AST-based chunking
+   + Language mapping (Python, Java, C#, TypeScript)
+   + Fallback to existing Haskell chunking
+   + CocoIndex operation factory function
 
 2. **Updated `cocoindex_config.py`** - Enhanced flow configuration:
-   - Added ASTChunk imports
-   - Created `create_hybrid_chunking_operation()` function
-   - Modified flow to use hybrid chunking approach
-   - Supports both AST-based and regex-based chunking
+   + Added ASTChunk imports
+   + Created `create_hybrid_chunking_operation()` function
+   + Modified flow to use hybrid chunking approach
+   + Supports both AST-based and regex-based chunking
 
 ### ✅ **Phase 3: Dependencies**
+
 1. **Installed ASTChunk dependencies**:
-   - tree-sitter and language parsers
-   - numpy, pyrsistent
-   - All requirements from `astchunk/requirements.txt`
+   + tree-sitter and language parsers
+   + numpy, pyrsistent
+   + All requirements from `astchunk/requirements.txt`
 
 ## ✅ **Issues Resolved**
 
 ### **Import/Environment Problems - FIXED**
+
 1. **Virtual Environment**: ✅ Dependencies working with `~/.venv/bin/activate`
 2. **Circular Import**: ✅ Resolved by making CocoIndex import conditional
 3. **Path Issues**: ✅ ASTChunk module path configuration working correctly
 
 ### **Technical Solutions Applied**
+
 - Made CocoIndex import conditional to avoid circular dependencies
 - Added proper error handling for missing dependencies
 - Implemented fallback mechanisms for unsupported languages
@@ -109,16 +115,19 @@ ast_chunking.py` with CocoIndex-compatible interface
 ## 📁 **Files Modified/Created**
 
 ### **New Files**
+
 - `python/cocoindex_code_mcp_server/ast_chunking.py` - Main ASTChunk integration module
 - `ASTChunk.md` - Comprehensive analysis and integration plan
 - `STATE.md` - This current state document
 
 ### **Modified Files**
+
 - `python/cocoindex_code_mcp_server/cocoindex_config.py` - Added hybrid chunking operation and imports
 
 ## 🔧 **Technical Architecture**
 
 ### **Hybrid Chunking Strategy**
+
 ```python
 # Flow: Code → Language Detection → Chunking Strategy Selection
 if language_supported_by_astchunk:
@@ -130,38 +139,42 @@ else:
 ```
 
 ### **Integration Points**
+
 1. **CocoIndex Operation**: `create_hybrid_chunking_operation()`
 2. **Language Support**:
-   - AST-based: Python, Java, C#, TypeScript
-   - Haskell: Our existing tree-sitter implementation
-   - Others: Regex-based with custom separators
+   + AST-based: Python, Java, C#, TypeScript
+   + Haskell: Our existing tree-sitter implementation
+   + Others: Regex-based with custom separators
 3. **Metadata Enhancement**: Rich chunk metadata with line numbers, file paths, etc.
 
 ## ✅ **Completed Tasks**
 
 ### **Integration Complete**
+
 1. **Import Issues**: ✅ RESOLVED
-   - Fixed circular import with CocoIndex using conditional imports
-   - Virtual environment working properly
-   - ASTChunk functionality fully operational
+   + Fixed circular import with CocoIndex using conditional imports
+   + Virtual environment working properly
+   + ASTChunk functionality fully operational
 
 2. **Hybrid Chunking**: ✅ WORKING
-   - AST chunking operational for supported languages (Python, Java, C#, TypeScript)
-   - Fallback to simple text chunking for unsupported languages
-   - Haskell integration ready (falls back to simple chunking when CocoIndex unavailable)
+   + AST chunking operational for supported languages (Python, Java, C#, TypeScript)
+   + Fallback to simple text chunking for unsupported languages
+   + Haskell integration ready (falls back to simple chunking when CocoIndex unavailable)
 
 3. **Testing & Validation**: ✅ COMPLETED
-   - Created comprehensive test cases for different languages
-   - Validated chunk quality and metadata
-   - Confirmed fallback mechanisms work correctly
+   + Created comprehensive test cases for different languages
+   + Validated chunk quality and metadata
+   + Confirmed fallback mechanisms work correctly
 
 ### **Future Enhancements**
+
 1. **Multi-language AST Support** - Extend beyond current languages
 2. **Unified AST Processing Framework** - Standardize across all languages (ANALYZED - see below)
 3. **Performance Optimization** - Caching and efficient processing
 4. **Advanced Features** - Semantic search, code understanding, documentation generation
 
 ## 🔗 **Todo List Status**
+
 - [✅] Tasks 1-8: Completed (modular refactoring, analysis)
 - [✅] Task 9: Design CocoIndex integration strategy (COMPLETE)
 - [✅] Task 10: Implement AST-based chunking operation (COMPLETE)
@@ -169,6 +182,7 @@ else:
 - [⏳] Task 12: Create unified AST processing framework (ready for next phase)
 
 ## 🎉 **Key Achievements**
+
 1. **Successfully integrated ASTChunk** with CocoIndex architecture
 2. **Created hybrid approach** that preserves existing Haskell functionality
 3. **Designed extensible system** for future language support
@@ -177,12 +191,14 @@ else:
 ## 🎯 **Current Status: COMPLETE**
 
 ### **✅ All Issues Resolved**
+
 1. ✅ Virtual environment working properly
 2. ✅ Circular import issues resolved with conditional imports
 3. ✅ Path configuration working correctly
 4. ✅ Multi-language chunking fully tested and validated
 
 ### **🚀 Integration Summary**
+
 - **ASTChunk successfully integrated** with CocoIndex
 - **Hybrid chunking system** operational for 4+ languages
 - **Fallback mechanisms** working for unsupported languages
@@ -196,6 +212,7 @@ else:
 ### **Current State Assessment**
 
 **✅ What We Have:**
+
 - **`ast_visitor.py`** - Generic AST visitor framework with tree-sitter support
 - **`language_handlers/`** - Pluggable language-specific handlers (currently Python)
 - **`ast_chunking.py`** - ASTChunk integration for code chunking
@@ -203,6 +220,7 @@ else:
 - **Tree-sitter infrastructure** - Basic framework for multiple languages
 
 **❓ Current Fragmentation:**
+
 - **Multiple AST approaches**: Python AST, tree-sitter, ASTChunk all separate
 - **Language-specific silos**: Python has its own analyzer, others would need separate implementations
 - **Inconsistent interfaces**: Different ways to analyze different languages
@@ -211,24 +229,28 @@ else:
 ### **🎯 Unified Framework Plan (4 Phases)**
 
 #### **Phase 1: Framework Design**
+
 - Create unified interface for all AST processing
 - Standardize metadata output across all languages
 - Define common abstractions for nodes, positions, relationships
 - Design pluggable analyzer system with language handlers
 
 #### **Phase 2: Core Infrastructure**
+
 - Enhance `ast_visitor.py` as the central framework
 - Standardize `NodeHandler` protocol for all languages
 - Create unified `ASTAnalyzer` class that orchestrates everything
 - Implement metadata normalization to RAG-compliant format
 
 #### **Phase 3: Language Integration**
+
 - Refactor Python analyzer to use unified framework
 - Add JavaScript/TypeScript handlers using tree-sitter
 - Add Java/C# handlers using tree-sitter
 - Integrate ASTChunk as one of the analysis backends
 
 #### **Phase 4: Advanced Features**
+
 - Cross-language code understanding
 - Unified semantic analysis
 - Relationship mapping between different files/languages
@@ -237,6 +259,7 @@ else:
 ### **🤔 Assessment: Is This Needed NOW?**
 
 #### **✅ Arguments FOR:**
+
 - Foundation for growth as we add more languages
 - Code quality - would eliminate current fragmentation
 - Maintainability - easier to maintain unified system
@@ -244,6 +267,7 @@ else:
 - Performance - could optimize across all languages
 
 #### **❌ Arguments AGAINST:**
+
 - Current system works - Python analysis is complete and working
 - Over-engineering risk - might add complexity without immediate benefit
 - Time investment - significant effort for uncertain immediate value
@@ -255,6 +279,7 @@ else:
 **✅ DECISION: Do NOT implement unified AST processing framework now**
 
 **Reasons:**
+
 1. **No immediate need** - Current system meets all requirements
 2. **Unknown future requirements** - We don't know what languages we'll actually need
 3. **Risk of over-engineering** - Could add complexity without clear benefit
@@ -262,18 +287,21 @@ else:
 5. **Better to wait for real needs** - Implement when we actually need other languages
 
 **📋 What to do instead:**
+
 - ✅ Document the current architecture clearly (THIS DOCUMENT)
 - ✅ Create interfaces that could support unification later
 - ✅ Keep the door open for future unification
 - ✅ Focus on immediate user needs rather than theoretical architecture
 
 **🔄 When to reconsider:**
+
 - When we need 2+ more languages with full analysis
 - When maintenance becomes difficult due to fragmentation
 - When performance becomes an issue across languages
 - When we have clear requirements for cross-language features
 
 ### **🎯 Current Priority Context**
+
 - ✅ RAG metadata compliance - COMPLETE
 - ✅ Lark parser implementation - COMPLETE
 - ✅ Hybrid search working - COMPLETE
@@ -297,12 +325,15 @@ else:
 During investigation of chunking_method values, we discovered fundamental patterns about how CocoIndex handles metadata flow from operations to search results. This breakthrough explains the entire metadata architecture.
 
 #### **The Problem**
+
 - Only 3 chunking_method values appeared in test results: `ast_tree_sitter`, `rust_haskell_ast`, `rust_haskell_ast_with_errors`
 - Expected to see `astchunk_library` and other diverse methods from AST chunkers
 - Before changes, "astchunk_library" was wrongly overwriting other legitimate values
 
 #### **Root Cause: Metadata Conflicts**
+
 The issue was **dual sources of truth** for the same field:
+
 ```python
 # Chunk from ASTChunk operation had:
 chunk.chunking_method = "astchunk_library"  # From AST chunker
@@ -318,6 +349,7 @@ result = {
 ```
 
 #### **The Solution: Field Source Separation**
+
 1. **Preserve ALL chunking methods from AST chunkers** (not just "astchunk_library")
 2. **Remove chunking_method from metadata_json** to eliminate confusion
 3. **Single source of truth**: chunk.chunking_method is the authoritative value
@@ -325,6 +357,7 @@ result = {
 ### **Key Implementation Changes**
 
 #### **schemas.py:304**
+
 ```python
 # BEFORE: Added chunking_method to metadata causing conflicts
 validated["chunking_method"] = str(metadata.get("chunking_method", "unknown"))
@@ -334,6 +367,7 @@ validated["chunking_method"] = str(metadata.get("chunking_method", "unknown"))
 ```
 
 #### **cocoindex_config.py: Multiple Lines**
+
 ```python
 # BEFORE: Metadata included chunking_method assignments
 "chunking_method": preserve_chunking_method if preserve_chunking_method else "unknown_chunking",
@@ -345,7 +379,9 @@ validated["chunking_method"] = str(metadata.get("chunking_method", "unknown"))
 ### **Critical Patterns Discovered**
 
 #### **1. Automatic Field Promotion**
+
 ALL fields in metadata_json are automatically promoted to top-level search result fields:
+
 ```python
 # If metadata_json contains:
 {"analysis_method": "python_ast", "custom_field": "value"}
@@ -359,7 +395,9 @@ ALL fields in metadata_json are automatically promoted to top-level search resul
 ```
 
 #### **2. Dataclass to Field Conversion**
+
 AST operations return typed dataclasses that get converted to result fields:
+
 ```python
 @dataclass
 class ASTChunkRow:
@@ -373,7 +411,9 @@ result["chunking_method"] = "astchunk_library"
 ```
 
 #### **3. Conflict Avoidance Pattern**
+
 **❌ ANTI-PATTERN**: Same field in both direct collection and metadata_json
+
 ```python
 code_embeddings.collect(
     chunking_method=chunk["chunking_method"],  # Direct field
@@ -382,6 +422,7 @@ code_embeddings.collect(
 ```
 
 **✅ BEST PRACTICE**: Choose single source per field
+
 ```python
 code_embeddings.collect(
     chunking_method=chunk["chunking_method"],  # From AST chunkers only
@@ -392,6 +433,7 @@ code_embeddings.collect(
 ### **Testing Results: Perfect Success**
 
 **Before Fix** (Problematic):
+
 ```
 📄 File: python_minor_errors.py
    chunking_method: 'astchunk_library'
@@ -399,6 +441,7 @@ code_embeddings.collect(
 ```
 
 **After Fix** (Correct):
+
 ```
 📄 File: python_minor_errors.py
    chunking_method: 'astchunk_library'
@@ -406,6 +449,7 @@ code_embeddings.collect(
 ```
 
 **Diverse chunking methods now preserved**:
+
 - `astchunk_library` (4 occurrences) - from ASTChunk library
 - `ast_tree_sitter` (16 occurrences) - from tree-sitter analysis
 - `rust_haskell_regex_fallback_3` - from Rust Haskell implementation
@@ -414,6 +458,7 @@ code_embeddings.collect(
 ### **Universal Metadata Flow Patterns**
 
 #### **Pattern 1: Properties in metadata_json**
+
 ```python
 # Add properties to metadata_json in collector logic:
 metadata_json = {
@@ -425,12 +470,14 @@ metadata_json = {
 ```
 
 #### **Pattern 2: Automatic promotion to results**
+
 ```python
 # ALL metadata_json fields automatically become result fields
 # No additional code needed - CocoIndex handles this automatically
 ```
 
 #### **Pattern 3: Direct result fields**
+
 ```python
 # Collect fields directly for immediate result inclusion:
 code_embeddings.collect(
@@ -442,6 +489,7 @@ code_embeddings.collect(
 ```
 
 #### **Pattern 4: Typed operation conversion**
+
 ```python
 # Operations return dataclasses that get converted to result fields:
 @op.executor_class()
@@ -471,6 +519,7 @@ class MyOperation:
 ### **Documentation Impact**
 
 This discovery has been documented in:
+
 - `docs/cocoindex/flow-and-types.md` - Complete metadata flow patterns
 - This file - ASTChunk integration context
 - Test files - Validation of the patterns

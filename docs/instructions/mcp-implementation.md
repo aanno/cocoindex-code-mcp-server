@@ -10,7 +10,6 @@ When building an MCP server using the Python MCP library, you should:
 - **Convert exceptions to an MCP-compatible error structure**, so that clients can identify, display, or react programmatically.
 - **Return errors via protocol responses** so clients receive structured error information.
 
-
 #### Recommended Data Structure
 
 The MCP protocol typically uses a structured dictionary (Python `dict`) to communicate responses. Errors should be sent in a response like:
@@ -63,7 +62,6 @@ async def handle_request(request):
 
 - **Tip:** If you use the MCP library’s default server tools, most exceptions will be caught and returned as errors, but it’s best practice to make this explicit in custom handlers for clarity and debugging[^1_2][^1_3][^1_4].
 
-
 ### 2. Client-side Handling
 
 On the MCP Python client, always **inspect the response** for an `"error"` key before consuming values.
@@ -85,17 +83,15 @@ async with streamablehttp_client(mcp_server_url) as (read_stream, write_stream, 
 ```
 
 - **Best Practices:**
-    - Always check `if "error" in response`.
-    - Display or handle the `error["message"]` appropriately.
-    - Optionally, react based on `error["type"]` or `code` for automated workflows[^1_5][^1_1].
-
+  + Always check `if "error" in response`.
+  + Display or handle the `error["message"]` appropriately.
+  + Optionally, react based on `error["type"]` or `code` for automated workflows[^1_5][^1_1].
 
 ### 3. Notes and Improvements
 
 - **Data Structure:** Always use a dict with an `"error"` key (and nested `type`, `code`, `message`, optionally `data`)[^1_1].
 - **Up-to-date Library:** Use at least MCP Python SDK v1.10.0, as earlier versions may have improper server-side error propagation and critical bugs[^1_6][^1_7].
 - **Testing:** Use pytest or similar to simulate error cases and ensure clients correctly process errors received from the server[^1_7].
-
 
 #### References
 
@@ -104,50 +100,25 @@ async with streamablehttp_client(mcp_server_url) as (read_stream, write_stream, 
 
 <div style="text-align: center">⁂</div>
 
-[^1_1]: https://community.openai.com/t/openai-mcp-client-starts-to-fail-when-moving-from-sse-to-streamable-http/1275728
+[^1_1]: <https://community.openai.com/t/openai-mcp-client-starts-to-fail-when-moving-from-sse-to-streamable-http/1275728>
 
-[^1_2]: https://blog.csdn.net/universsky2015/article/details/146590165
+[^1_2]: <https://blog.csdn.net/universsky2015/article/details/146590165>
 
-[^1_3]: https://simplescraper.io/blog/how-to-mcp
+[^1_3]: <https://simplescraper.io/blog/how-to-mcp>
 
-[^1_4]: https://www.mcpevals.io/blog/debugging-mcp-servers-tips-and-best-practices
+[^1_4]: <https://www.mcpevals.io/blog/debugging-mcp-servers-tips-and-best-practices>
 
-[^1_5]: https://composio.dev/blog/mcp-client-step-by-step-guide-to-building-from-scratch
+[^1_5]: <https://composio.dev/blog/mcp-client-step-by-step-guide-to-building-from-scratch>
 
-[^1_6]: https://bugzilla.redhat.com/show_bug.cgi?id=2376486
+[^1_6]: <https://bugzilla.redhat.com/show_bug.cgi?id=2376486>
 
-[^1_7]: https://dev.to/akitana-airtanker/python-mcp-remote-server-the-dawn-of-the-streamable-http-era-with-a-minimalist-template-1o6j
+[^1_7]: <https://dev.to/akitana-airtanker/python-mcp-remote-server-the-dawn-of-the-streamable-http-era-with-a-minimalist-template-1o6j>
 
-[^1_8]: https://github.com/modelcontextprotocol/python-sdk
-
-[^1_9]: https://mcp-framework.com/docs/Transports/http-stream-transport/
-
-[^1_10]: https://blog.christianposta.com/ai/understanding-mcp-recent-change-around-http-sse/
-
-[^1_11]: https://github.com/modelcontextprotocol/python-sdk/issues/915
-
-[^1_12]: https://towardsdatascience.com/how-not-to-write-an-mcp-server/
-
-[^1_13]: https://ai.pydantic.dev/mcp/run-python/
-
-[^1_14]: https://github.com/modelcontextprotocol/python-sdk/issues/195
-
-[^1_15]: https://docs.haystack.deepset.ai/v2.1/reference/integrations-mcp
-
-[^1_16]: https://blog.fka.dev/blog/2025-06-06-why-mcp-deprecated-sse-and-go-with-streamable-http/
-
-[^1_17]: https://towardsdatascience.com/model-context-protocol-mcp-tutorial-build-your-first-mcp-server-in-6-steps/
-
-[^1_18]: https://github.com/spring-projects/spring-ai/issues/2967
-
-[^1_19]: https://www.koyeb.com/tutorials/deploy-remote-mcp-servers-to-koyeb-using-streamable-http-transport
-
-[^1_20]: https://microsoft.github.io/autogen/stable/reference/python/autogen_ext.tools.mcp.html
-
+[^1_8]: <https://github.com/modelcontextprotocol/python-sdk>
 
 ---
 
-# ah I'm using the raw stateless server on the server. could you adopt the code for this? and on client I use httpx with MCP library.
+# ah I'm using the raw stateless server on the server. could you adopt the code for this? and on client I use httpx with MCP library
 
 To adapt your exception handling for a **raw stateless MCP server** using the MCP Python library, you need to:
 
@@ -181,7 +152,6 @@ if __name__ == "__main__":
 ```
 
 - For a **raw stateless server**, the MCP framework will already wrap errors and present them as error dicts, but if you want to handle custom error formatting or add debugging, you can wrap the tool logic yourself[^2_1][^2_5].
-
 
 ### Example: Custom Handling in Tool
 
@@ -244,30 +214,13 @@ This setup ensures robust, uniform server-client error handling with MCP for raw
 
 <div style="text-align: center">⁂</div>
 
-[^2_1]: https://github.com/modelcontextprotocol/python-sdk
+[^2_1]: <https://github.com/modelcontextprotocol/python-sdk>
 
-[^2_2]: https://www.ranthebuilder.cloud/post/mcp-server-on-aws-lambda
-
-[^2_3]: https://blog.cloudflare.com/remote-model-context-protocol-servers-mcp/
-
-[^2_4]: https://www.infracloud.io/blogs/build-your-own-mcp-server/
-
-[^2_5]: https://www.youtube.com/watch?v=PYMEspZPcmc\&rut=1f682865304ef12dc177fa897b2fb1c333002480aacb40dc069c9da0f03994d8
-
-[^2_6]: https://github.com/ruslanmv/Simple-MCP-Server-with-Python
-
-[^2_7]: https://ai.plainenglish.io/building-a-stateless-http-mcp-server-typescript-and-deploy-to-gcp-b7df17cb9b43
-
-[^2_8]: https://docs.vultr.com/how-to-create-mcp-server-using-fastmcp-in-python
-
-[^2_9]: https://www.reddit.com/r/ClaudeAI/comments/1ioxu5r/still_confused_about_how_mcp_works_heres_the/
-
-[^2_10]: https://www.getzep.com/ai-agents/developer-guide-to-mcp
-
+[^2_5]: <https://www.youtube.com/watch?v=PYMEspZPcmc\&rut=1f682865304ef12dc177fa897b2fb1c333002480aacb40dc069c9da0f03994d8>
 
 ---
 
-# ok, I also have resources that I list on server. but then the client wants to access one, it gets on error. code for raw stateless server, MCP client and httpx please!
+# ok, I also have resources that I list on server. but then the client wants to access one, it gets on error. code for raw stateless server, MCP client and httpx please
 
 For your MCP raw stateless server with resources, and an MCP client using httpx that properly handles errors when accessing resources, here is an adapted example that covers your request:
 
@@ -306,7 +259,6 @@ if __name__ == "__main__":
 - The MCP Python library automatically converts exceptions into error dict responses with keys like `"error": {"type": ..., "message": ...}`.
 - The server is stateless, so each request is independent.
 
-
 ### 2. MCP Client Using httpx to Access Server Resources with Error Handling
 
 ```python
@@ -343,7 +295,6 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-
 ### Explanation
 
 - **Server** registers several resources via `@mcp.resource`. If invalid data or unknown resource parameters are requested, the server raises exceptions.
@@ -356,27 +307,6 @@ This approach follows MCP's stateless mode and error propagation conventions wit
 If you want, I can also provide a minimal example using the MCP Python client's built-in streamable HTTP client for resource access. Let me know!
 
 <div style="text-align: center">⁂</div>
-
-[^3_1]: https://github.com/modelcontextprotocol/python-sdk
-
-[^3_2]: https://pypi.org/project/mcp/1.9.0/
-
-[^3_3]: https://gofastmcp.com/python-sdk/fastmcp-server-server
-
-[^3_4]: https://github.com/aws-samples/sample-serverless-mcp-servers
-
-[^3_5]: https://www.youtube.com/watch?v=PYMEspZPcmc\&rut=1f682865304ef12dc177fa897b2fb1c333002480aacb40dc069c9da0f03994d8
-
-[^3_6]: https://ubos.tech/mcp/python-sdk/
-
-[^3_7]: https://scrapfly.io/blog/posts/how-to-build-an-mcp-server-in-python-a-complete-guide
-
-[^3_8]: https://docs.vultr.com/how-to-create-mcp-server-using-fastmcp-in-python
-
-[^3_9]: https://blog.cloudflare.com/remote-model-context-protocol-servers-mcp/
-
-[^3_10]: https://google.github.io/adk-docs/tools/mcp-tools/
-
 
 ---
 
@@ -422,7 +352,6 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-
 ### Explanation
 
 - The MCP Python client provides `streamablehttp_client` to connect asynchronously to the MCP server over HTTP streaming.
@@ -436,28 +365,9 @@ This example should integrate cleanly with your existing stateless server and de
 
 <div style="text-align: center">⁂</div>
 
-[^4_1]: https://modelcontextprotocol.io/quickstart/client
-
-[^4_2]: https://github.com/modelcontextprotocol/python-sdk
-
-[^4_3]: https://scrapfly.io/blog/posts/how-to-build-an-mcp-server-in-python-a-complete-guide
-
-[^4_4]: https://github.com/jlowin/fastmcp
-
-[^4_5]: https://gofastmcp.com/servers/resources
-
-[^4_6]: https://biomcp.org/tutorials/mcp-client/
-
-[^4_7]: https://www.digitalocean.com/community/tutorials/mcp-server-python
-
-[^4_8]: https://www.firecrawl.dev/blog/fastmcp-tutorial-building-mcp-servers-python
-
-[^4_9]: https://composio.dev/blog/mcp-client-step-by-step-guide-to-building-from-scratch
-
-
 ---
 
-# is is advisable to combine MCP with httpx on the client? or should I prefer a MCP only solution? with code!
+# is is advisable to combine MCP with httpx on the client? or should I prefer a MCP only solution? with code
 
 It is generally **better to use the MCP Python client library alone** when interacting with an MCP server rather than mixing it with raw httpx calls at the client side, for these reasons:
 
@@ -496,7 +406,6 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-
 ### Raw httpx Client Example (More Manual)
 
 ```python
@@ -525,7 +434,6 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-
 ### Summary
 
 - **Use the MCP client library** when you want clean, protocol-safe, and idiomatic MCP interactions in Python.
@@ -538,30 +446,15 @@ If you want, I can help with more complex usage examples or how to integrate cus
 
 <div style="text-align: center">⁂</div>
 
-[^5_1]: https://blog.openreplay.com/expose-internal-api-mcp/
+[^5_1]: <https://blog.openreplay.com/expose-internal-api-mcp/>
 
-[^5_2]: https://github.com/mcp-use/mcp-use
+[^5_2]: <https://github.com/mcp-use/mcp-use>
 
-[^5_3]: https://github.com/themanojdesai/python-a2a/wiki/MCP-Integration
-
-[^5_4]: https://scrapfly.io/blog/posts/how-to-build-an-mcp-server-in-python-a-complete-guide
-
-[^5_5]: https://www.byteplus.com/en/topic/541540
-
-[^5_6]: https://www.python-httpx.org
-
-[^5_7]: https://betterstack.com/community/guides/scaling-python/httpx-explained/
-
-[^5_8]: https://www.python-httpx.org/advanced/
-
-[^5_9]: https://platform.openai.com/docs/mcp
-
-[^5_10]: https://pretalx.com/pyconde-pydata-2025/talk/J7YKEE/
-
+[^5_5]: <https://www.byteplus.com/en/topic/541540>
 
 ---
 
-# I have to combine MCP library with asycio and longer running computation (for MCP answers) on the server and with asycio and pytest on the client. with code examples!
+# I have to combine MCP library with asycio and longer running computation (for MCP answers) on the server and with asycio and pytest on the client. with code examples
 
 To combine the MCP Python library with **asyncio** for handling longer-running computations on the server and also use **asyncio** with **pytest** on the client side, you can design both server and client as fully async, allowing the server to run async tools/resources and the client to call them in async test functions.
 
@@ -590,7 +483,6 @@ if __name__ == "__main__":
 
 - The **tool function is async** and uses `await asyncio.sleep()` to simulate a long task.
 - The server runs stateless mode so each request is handled atomically.
-
 
 ### 2. Async MCP Client Using MCP Library with pytest Async Tests
 
@@ -629,7 +521,6 @@ async def test_long_running_task_invalid_duration():
 - The test functions are async with `pytest.mark.asyncio` decorator for pytest to handle async tests.
 - `fetch_long_running_task()` wraps the MCP client call.
 
-
 ### How to run
 
 - Start the server on `localhost:8000` with the provided server code.
@@ -645,7 +536,6 @@ pip install pytest mcp-sdk httpx
 pytest test_client.py
 ```
 
-
 ### Explanation
 
 - The **server tool is an async function** that uses `asyncio.sleep()` to simulate a long computation, fitting the asyncio event loop model.
@@ -656,43 +546,6 @@ pytest test_client.py
 If you want, I can also help with more advanced examples such as cancellation handling or streaming intermediate results during long computations. Let me know!
 
 <div style="text-align: center">⁂</div>
-
-[^6_1]: https://www.youtube.com/watch?v=WwOEZB-h-z8
-
-[^6_2]: https://www.youtube.com/watch?v=u0yARvYDHBc
-
-[^6_3]: https://www.youtube.com/watch?v=-WogqfxWBbM
-
-[^6_4]: https://www.youtube.com/watch?v=MDBG2MOp4Go
-
-[^6_5]: https://www.youtube.com/watch?v=mhdGVbJBswA
-
-[^6_6]: https://www.youtube.com/watch?v=U9XDqQmV1Hc\&vl=es
-
-[^6_7]: https://www.youtube.com/watch?v=Ek8JHgZtmcI
-
-[^6_8]: https://www.youtube.com/watch?v=uzMSzStbvz4
-
-[^6_9]: https://modelcontextprotocol.io/quickstart/client
-
-[^6_10]: https://github.com/modelcontextprotocol/python-sdk
-
-[^6_11]: https://www.flowhunt.io/blog/python-libs-for-mcp-server-development/
-
-[^6_12]: https://scrapfly.io/blog/how-to-build-an-mcp-server-in-python-a-complete-guide/
-
-[^6_13]: https://github.com/rvirgilli/pymcp-sse
-
-[^6_14]: https://lincolnloop.com/blog/integrate-mcp-servers-in-python-llm-code/
-
-[^6_15]: https://github.com/mcp-use/mcp-use
-
-[^6_16]: https://agent-patterns.readthedocs.io/en/latest/MCP Tool Integration Tutorial.html
-
-[^6_17]: https://ai.pydantic.dev/mcp/client/
-
-[^6_18]: https://docs.micropython.org/en/latest/library/asyncio.html
-
 
 ---
 
@@ -708,7 +561,6 @@ The throughput limits of an MCP server implemented using the MCP Python library 
 - Scaling beyond this can be achieved by running **multiple server instances** behind a load balancer or using multiprocessing or async workers manually.
 - MCP library itself does not provide built-in worker queue or task distribution; it relies on the async event loop and your custom tool/resource code design.
 
-
 ### Celery (or Other Task Queues) Solution: Throughput Characteristics and Limits
 
 - Celery is designed for **distributed task processing**, supporting multiple worker processes and machines.
@@ -716,7 +568,6 @@ The throughput limits of an MCP server implemented using the MCP Python library 
 - Throughput scales horizontally by adding workers; it can handle **thousands or tens of thousands of tasks per second** depending on the broker and hardware.
 - Celery adds complexity: requires a message broker (Redis, RabbitMQ), task serialization, and result backend management.
 - It supports retries, task prioritization, scheduling, and better fault tolerance compared to a pure asyncio setup.
-
 
 ### Summary Comparison
 
@@ -734,7 +585,6 @@ The throughput limits of an MCP server implemented using the MCP Python library 
 - Use **MCP+asyncio server** if your workloads are primarily **I/O-bound**, latency-sensitive, and benefit from the simplicity of async Python without external dependencies.
 - Use **Celery or similar** if your workload includes **heavy CPU-bound or long-running tasks** requiring durable, distributed processing with retries and task management.
 - You can *combine both*: Use the MCP async server as a frontend for quick request handling and dispatch CPU-heavy tasks asynchronously via Celery workers.
-
 
 ### Code snippet outline for MCP async server invoking Celery tasks
 
@@ -788,22 +638,10 @@ If you want, I can provide more detailed benchmarks, scaling architectures, or g
 
 <div style="text-align: center">⁂</div>
 
-[^7_1]: https://dev.to/yoshan0921/accelerate-python-programs-with-concurrent-programming-28j9
+[^7_1]: <https://dev.to/yoshan0921/accelerate-python-programs-with-concurrent-programming-28j9>
 
-[^7_2]: https://blog.openreplay.com/extend-mcp-server-database-access/
+[^7_2]: <https://blog.openreplay.com/extend-mcp-server-database-access/>
 
-[^7_3]: https://github.com/datalab-to/marker/issues/735
+[^7_3]: <https://github.com/datalab-to/marker/issues/735>
 
-[^7_4]: https://lobehub.com/de/mcp/pickleton89-cbioportal-mcp
-
-[^7_5]: https://www.getambassador.io/blog/model-context-protocol-mcp-connecting-llms-to-apis
-
-[^7_6]: https://stackoverflow.com/questions/57901531/ways-to-optimize-simple-asyncio-program-where-tcp-clients-are-persistent
-
-[^7_7]: https://mcpservers.org/servers/pazuzu1w/ubuntu_mcp_server
-
-[^7_8]: https://lobehub.com/ar/mcp/tbrandenburg-pymcpserver
-
-[^7_9]: https://github.com/zanetworker/mcp-playground
-
-[^7_10]: https://docs.python.org/3/library/asyncio-stream.html
+[^7_5]: <https://www.getambassador.io/blog/model-context-protocol-mcp-connecting-llms-to-apis>

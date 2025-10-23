@@ -53,24 +53,15 @@ For practical examples, see official CocoIndex tutorials or the blog post on thi
 
 <div style="text-align: center">⁂</div>
 
-[^1_1]: https://cocoindex.io/blogs/index-code-base-for-rag/
+[^1_1]: <https://cocoindex.io/blogs/index-code-base-for-rag/>
 
-[^1_2]: https://cran.r-project.org/web/packages/treesitter/treesitter.pdf
+[^1_3]: <https://neovim.io/doc/user/treesitter.html>
 
-[^1_3]: https://neovim.io/doc/user/treesitter.html
+[^1_4]: <https://cocoindexio.substack.com/p/index-codebase-with-tree-sitter-and>
 
-[^1_4]: https://cocoindexio.substack.com/p/index-codebase-with-tree-sitter-and
+[^1_5]: <https://www.threads.net/@hackernoon/post/DHdTEFNvqet>
 
-[^1_5]: https://www.threads.net/@hackernoon/post/DHdTEFNvqet
-
-[^1_6]: https://app.daily.dev/posts/index-codebase-with-tree-sitter-and-cocoindex-for-rag-and-semantic-search-ku8qwp9tx
-
-[^1_7]: https://news.ycombinator.com/item?id=43502639
-
-[^1_8]: https://www.reddit.com/r/Rag/comments/1jj62v2/opensource_codebase_index_with_treesitter/
-
-[^1_9]: https://www.youtube.com/watch?v=bP0zl4K_LY8
-
+[^1_6]: <https://app.daily.dev/posts/index-codebase-with-tree-sitter-and-cocoindex-for-rag-and-semantic-search-ku8qwp9tx>
 
 ---
 
@@ -87,26 +78,15 @@ You can verify and view the currently supported languages by inspecting the sour
 
 <div style="text-align: center">⁂</div>
 
-[^2_1]: https://hackernoon.com/want-ai-to-actually-understand-your-code-this-tool-says-it-can-help
+[^2_1]: <https://hackernoon.com/want-ai-to-actually-understand-your-code-this-tool-says-it-can-help>
 
-[^2_2]: https://discourse.haskell.org/t/is-function-highlighting-useful-with-tree-sitter/8570
+[^2_2]: <https://discourse.haskell.org/t/is-function-highlighting-useful-with-tree-sitter/8570>
 
-[^2_3]: https://docs.rs/tree-sitter-haskell
+[^2_3]: <https://docs.rs/tree-sitter-haskell>
 
-[^2_4]: https://www.reddit.com/r/Rag/comments/1jj62v2/opensource_codebase_index_with_treesitter/
+[^2_4]: <https://www.reddit.com/r/Rag/comments/1jj62v2/opensource_codebase_index_with_treesitter/>
 
-[^2_5]: https://www.reddit.com/r/emacs/comments/1evago2/haskelltsmode_a_haskell_mode_that_uses_treesitter/
-
-[^2_6]: https://github.com/tree-sitter/tree-sitter-haskell
-
-[^2_7]: https://github.com/tree-sitter/haskell-tree-sitter
-
-[^2_8]: https://tree-sitter.github.io
-
-[^2_9]: https://discourse.haskell.org/t/survey-for-users-of-the-tree-sitter-haskell-grammar/9153
-
-[^2_10]: https://www.trackawesomelist.com/rust-unofficial/awesome-rust/week/
-
+[^2_6]: <https://github.com/tree-sitter/tree-sitter-haskell>
 
 ---
 
@@ -157,30 +137,9 @@ tree-sitter build --wasm
 
 > After these steps, CocoIndex should be able to parse and chunk Haskell code using Tree-sitter’s grammar, enabling semantic indexing and code retrieval workflows.
 
-[^3_1]: https://github.com/tree-sitter/tree-sitter-haskell
+[^3_1]: <https://github.com/tree-sitter/tree-sitter-haskell>
 
 <div style="text-align: center">⁂</div>
-
-[^3_1]: https://github.com/tree-sitter/tree-sitter-haskell
-
-[^3_2]: https://cocoindexio.substack.com/p/index-codebase-with-tree-sitter-and
-
-[^3_3]: https://www.reddit.com/r/emacs/comments/1evago2/haskelltsmode_a_haskell_mode_that_uses_treesitter/
-
-[^3_4]: https://hackage.haskell.org/package/tree-sitter-haskell-0.2.0.0/docs/doc-index-I.html
-
-[^3_5]: https://github.com/tree-sitter/haskell-tree-sitter
-
-[^3_6]: https://discourse.haskell.org/t/survey-for-users-of-the-tree-sitter-haskell-grammar/9153
-
-[^3_7]: https://www.reddit.com/r/neovim/comments/1hfujgs/learning_treesitter_while_automating_some_c/
-
-[^3_8]: https://tree-sitter.github.io
-
-[^3_9]: https://www.trackawesomelist.com/rust-unofficial/awesome-rust/week/
-
-[^3_10]: https://www.trackawesomelist.com/rust-unofficial/awesome-rust/
-
 
 ---
 
@@ -202,24 +161,17 @@ While CocoIndex does not expose the lower-level Tree-sitter incremental parsing 
 
 <div style="text-align: center">⁂</div>
 
-[^4_1]: https://cocoindex.io/blogs/index-code-base-for-rag/
+[^4_1]: <https://cocoindex.io/blogs/index-code-base-for-rag/>
 
-[^4_2]: https://cocoindexio.substack.com/p/index-codebase-with-tree-sitter-and
+[^4_2]: <https://cocoindexio.substack.com/p/index-codebase-with-tree-sitter-and>
 
-[^4_3]: https://tomassetti.me/incremental-parsing-using-tree-sitter/
+[^4_3]: <https://tomassetti.me/incremental-parsing-using-tree-sitter/>
 
-[^4_4]: https://github.com/tree-sitter/tree-sitter
+[^4_4]: <https://github.com/tree-sitter/tree-sitter>
 
-[^4_5]: https://tree-sitter.github.io
+[^4_5]: <https://tree-sitter.github.io>
 
-[^4_6]: https://www.deusinmachina.net/p/tree-sitter-revolutionizing-parsing
-
-[^4_7]: https://www.reddit.com/r/neovim/comments/15jxqgn/i_dont_get_why_treesitter_is_a_big_deal_and_at/
-
-[^4_8]: https://github.com/tree-sitter/tree-sitter/discussions/844
-
-[^4_9]: https://news.ycombinator.com/item?id=26225298
-
+[^4_9]: <https://news.ycombinator.com/item?id=26225298>
 
 ---
 
@@ -253,13 +205,11 @@ This chunks code **semantically** using Tree-sitter's parser, which is designed 
 - **Automatic Propagation:** Once the content in a source file changes, **CocoIndex updates only the downstream data derived from that file** — not the entire index[^5_1][^5_5].
 - **Efficient Re-embedding:** If you use chunk embeddings, only updated chunks are re-embedded and re-indexed[^5_2].
 
-
 ### 4. **No Manual Triggers Needed**
 
 Incremental updates happen automatically as part of CocoIndex’s architecture — you do **not** need to manually tell the system what changed. Organize your steps clearly, and CocoIndex's incremental engine will handle the rest based on input changes.
 
 **Summary Table:** What You Do vs. What CocoIndex Does
-
 
 | What You Do (in code) | What CocoIndex Does (engine behavior) |
 | :-- | :-- |
@@ -276,27 +226,21 @@ Structure your data pipeline in CocoIndex using standard operations and Tree-sit
 
 <div style="text-align: center">⁂</div>
 
-[^5_1]: https://cocoindex.io/blogs/tags/feature/
+[^5_1]: <https://cocoindex.io/blogs/tags/feature/>
 
-[^5_2]: https://cocoindexio.substack.com/p/index-codebase-with-tree-sitter-and
+[^5_2]: <https://cocoindexio.substack.com/p/index-codebase-with-tree-sitter-and>
 
-[^5_3]: https://github.com/tree-sitter/tree-sitter
+[^5_3]: <https://github.com/tree-sitter/tree-sitter>
 
-[^5_4]: https://github.com/cocoindex-io/cocoindex
+[^5_4]: <https://github.com/cocoindex-io/cocoindex>
 
-[^5_5]: https://cocoindex.io/blogs/data-indexing-custom-logic/
+[^5_5]: <https://cocoindex.io/blogs/data-indexing-custom-logic/>
 
-[^5_6]: https://tree-sitter.github.io
+[^5_6]: <https://tree-sitter.github.io>
 
-[^5_7]: https://tomassetti.me/incremental-parsing-using-tree-sitter/
+[^5_7]: <https://tomassetti.me/incremental-parsing-using-tree-sitter/>
 
-[^5_8]: https://www.deusinmachina.net/p/tree-sitter-revolutionizing-parsing
-
-[^5_9]: https://til.simonwillison.net/python/tree-sitter
-
-[^5_10]: https://tree-sitter.github.io/tree-sitter/using-parsers/1-getting-started.html
-
-# Can you provide me with a list of available tree-sitter (grammars) that are _not_ incooperated in cocoindex?
+# Can you provide me with a list of available tree-sitter (grammars) that are *not* incooperated in cocoindex?
 
 As of July 2025, the **full and current list of available Tree-sitter grammars** is maintained on the official [Tree-sitter Wiki "List of parsers"](https://github.com/tree-sitter/tree-sitter/wiki/List-of-parsers)[^1_4]. However, your request is specifically for a list of grammars that are **not incorporated in "cocoindex"**.
 
@@ -315,7 +259,7 @@ If you want a **precise list**, you can:
 2. Subtract the grammars present in "cocoindex" from the official Tree-sitter list.
 3. Any grammar present on the official Tree-sitter list but *not* in the "cocoindex" list would fit your criteria.
 
-### Examples of Tree-sitter grammars likely **not included in cocoindex** (based on their newness or niche status):
+### Examples of Tree-sitter grammars likely **not included in cocoindex** (based on their newness or niche status)
 
 - **Gleam**[^1_5][^1_10]
 - **Fusion**[^1_3]
@@ -330,26 +274,7 @@ You can identify Tree-sitter grammars not incorporated in cocoindex by comparing
 
 <div style="text-align: center">⁂</div>
 
-[^1_1]: https://ahelwer.ca/post/2023-01-11-tree-sitter-tlaplus/
-
-[^1_2]: https://www.masteringemacs.org/article/how-to-get-started-tree-sitter
-
-[^1_3]: https://discuss.neos.io/t/treesitter-grammar-for-fusion/5773
-
-[^1_4]: https://github.com/tree-sitter/tree-sitter/wiki/List-of-parsers
-
-[^1_5]: https://www.reddit.com/r/emacs/comments/1ge58cp/treesitter_cant_find_grammar/
-
-[^1_6]: https://www.reddit.com/r/Nix/comments/rgcynr/nonnixos_homemanager_treesitternvim_and_tsinstall/
-
-[^1_7]: https://discourse.nixos.org/t/tree-sitter-grammars-collide-with-each-other/41805
-
-[^1_8]: https://github.com/nvim-treesitter/nvim-treesitter
-
-[^1_9]: https://pulsar-edit.dev/blog/20231110-savetheclocktower-modern-tree-sitter-part-5.html
-
-[^1_10]: https://bhankas.org/blog/down_the_nixpkgs_rabbit_hole_in_search_of_tree_sitter_grammars/
-
+[^1_10]: <https://bhankas.org/blog/down_the_nixpkgs_rabbit_hole_in_search_of_tree_sitter_grammars/>
 
 ---
 
@@ -360,23 +285,5 @@ Based on the provided search results, there is **no direct link to a dedicated C
 If you need this information, you should visit the official CocoIndex website or documentation and look for a section about supported languages or grammars. If such a list exists, it would typically be found in a section labeled "supported languages," "grammars," or similar within their main site or documentation.
 
 <div style="text-align: center">⁂</div>
-
-[^2_1]: https://wilson008.github.io/papers/2025-llm4se.pdf
-
-[^2_2]: https://en.wikipedia.org/wiki/Context-free_grammar
-
-[^2_3]: https://cocoindex.io/blogs/cocoindex-changelog-2025-04-30/
-
-[^2_4]: https://papercopilot.com/paper-list/coling-paper-list/coling-2025-paper-list/
-
-[^2_5]: https://github.com/lark-parser/lark/issues/684
-
-[^2_6]: https://www.sciencedirect.com/science/article/abs/pii/S0890540120301012
-
-[^2_7]: https://www.index.dev/blog/most-popular-programming-languages-
-
-[^2_8]: https://www.nature.com/articles/s41599-025-04543-2
-
-[^2_9]: https://www.itransition.com/developers/in-demand-programming-languages
 
 ---

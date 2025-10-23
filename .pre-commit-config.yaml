@@ -36,6 +36,14 @@ repos:
     rev: 5.13.0
     hooks:
       - id: isort
+  # Problem: wants to install node (and markdownlint-cli) but fails
+  # - repo: https://github.com/igorshubovych/markdownlint-cli
+  #   rev: "v0.45.0"
+  #   hooks:
+  #     - id: markdownlint
+  #       args: ["-f"]
+  #       stages: [pre-commit]
+  #       node: 22.19.0
   # - repo: https://github.com/PyCQA/bandit
   #   rev: 1.8.6
   #   hooks:

@@ -18,14 +18,14 @@ The `embedding_model` metadata field has been successfully implemented to enable
 ### Key Components
 
 - **Helper Functions** (cocoindex_config.py):
-  - `get_embedding_model_name()`: Maps model group to actual model identifier
-  - `get_default_embedding_model_name()`: Returns default model for non-smart embedding mode
-  - `language_to_embedding_model()`: Maps programming language to appropriate embedding model
+  + `get_embedding_model_name()`: Maps model group to actual model identifier
+  + `get_default_embedding_model_name()`: Returns default model for non-smart embedding mode
+  + `language_to_embedding_model()`: Maps programming language to appropriate embedding model
 
 - **Backend Integration**:
-  - VectorStoreBackend interface includes `embedding_model` parameter
-  - PostgresBackend filters SQL queries by `embedding_model`
-  - HybridSearchEngine resolves language→embedding_model automatically
+  + VectorStoreBackend interface includes `embedding_model` parameter
+  + PostgresBackend filters SQL queries by `embedding_model`
+  + HybridSearchEngine resolves language→embedding_model automatically
 
 - **Search Priority**: embedding_model > language > default
 
@@ -36,9 +36,9 @@ The implementation has been tested and verified:
 - ✅ Column `embedding_model` exists in database schema
 - ✅ Data correctly populated with model identifiers
 - ✅ Smart embeddings working with multiple models (all 768D):
-  - `sentence-transformers/all-mpnet-base-v2` (default/fallback) - 768D
-  - `microsoft/graphcodebert-base` (Python, Java, JavaScript, PHP, Ruby, Go, C, C++) - 768D
-  - `microsoft/unixcoder-base` (Rust, TypeScript, C#, Kotlin, Scala, Swift, Dart) - 768D
+  + `sentence-transformers/all-mpnet-base-v2` (default/fallback) - 768D
+  + `microsoft/graphcodebert-base` (Python, Java, JavaScript, PHP, Ruby, Go, C, C++) - 768D
+  + `microsoft/unixcoder-base` (Rust, TypeScript, C#, Kotlin, Scala, Swift, Dart) - 768D
 
 ### Critical Constraint
 

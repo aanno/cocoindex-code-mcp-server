@@ -11,6 +11,7 @@ Baseline tests compare our tree-sitter-based code analysis against simple text-b
 ### Multi-Language Baseline (`tests/all_languages_baseline.py`)
 
 Tests all supported languages (Python, Haskell, C, C++, Rust, Kotlin, Java, TypeScript) by comparing:
+
 - **Tree-sitter analysis** - Our main implementation using tree-sitter parsers
 - **Text baseline** - Simple regex-based pattern matching for reference
 
@@ -19,6 +20,7 @@ Tests all supported languages (Python, Haskell, C, C++, Rust, Kotlin, Java, Type
 Example: `tests/lang/haskell/test_haskell_comprehensive_baseline.py`
 
 These tests compare three analysis methods for specific languages:
+
 1. **Specialized Handler** - Custom language-specific implementation (e.g., Haskell handler)
 2. **Generic Visitor** - Generic AST visitor (should delegate to specialized handler)
 3. **Text Baseline** - Simple pattern matching baseline
@@ -43,13 +45,15 @@ f1_score = 2 * (precision * recall) / (precision + recall)
 ### Example Calculation
 
 For a hypothetical test:
+
 - **Expected**: 7 items
 - **Detected**: 12 items (7 correct + 5 false positives)
 
 **Metrics:**
+
 - **Recall**: 7/7 = 100% (found all expected items)
 - **Precision**: 7/12 = 58.33% (7 correct out of 12 detected)
-- **F1 Score**: 2 * (1.0 * 0.583) / (1.0 + 0.583) = 73.68%
+- **F1 Score**: 2 *(1.0* 0.583) / (1.0 + 0.583) = 73.68%
 
 ## Running Baseline Tests
 

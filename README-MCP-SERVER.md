@@ -7,6 +7,7 @@ A Model Context Protocol (MCP) server that provides hybrid search capabilities c
 ## Features
 
 ### MCP Tools
+
 - **hybrid_search** - Combine vector similarity and keyword metadata filtering
 - **vector_search** - Pure vector similarity search
 - **keyword_search** - Pure keyword metadata search
@@ -14,6 +15,7 @@ A Model Context Protocol (MCP) server that provides hybrid search capabilities c
 - **get_embeddings** - Generate embeddings for text
 
 ### MCP Resources
+
 - **search_stats** - Database and search performance statistics
 - **search_config** - Current hybrid search configuration
 - **database_schema** - Database table structure information
@@ -21,6 +23,7 @@ A Model Context Protocol (MCP) server that provides hybrid search capabilities c
 ## Prerequisites
 
 1. **Python 3.11+** with required dependencies:
+
    ```bash
    # Install MCP server dependencies
    pip install -e ".[mcp-server]"
@@ -32,6 +35,7 @@ A Model Context Protocol (MCP) server that provides hybrid search capabilities c
 2. **PostgreSQL with pgvector** extension installed
 
 3. **CocoIndex** embedded and configured:
+
    ```bash
    cd ../../cocoindex
    maturin develop
@@ -54,7 +58,9 @@ export DB_PASSWORD=password
 ## Usage
 
 ### Testing
+
 Run the test suite to verify functionality:
+
 ```bash
 # From project root, run all MCP server tests
 python -m pytest tests/test_mcp_server.py -v
@@ -67,6 +73,7 @@ python -m pytest tests/test_mcp_server.py::TestMCPServerBasics -v
 ```
 
 ### Starting the Server
+
 ```bash
 # Basic usage (live updates enabled by default, 60s polling)
 python start_mcp_server.py
@@ -90,11 +97,13 @@ python main_mcp_server.py
 ### Claude Desktop Integration (Recommended)
 
 1. **Start the MCP server in HTTP mode:**
+
    ```bash
    python -m cocoindex_code_mcp_server.main_mcp_server.py --port 3033 /workspaces/rust
    ```
 
 2. **Add to Claude Desktop configuration** (`~/.config/Claude/claude_desktop_config.json`):
+
    ```json
    {
      "mcpServers": {
@@ -135,6 +144,7 @@ Add to your Claude Code MCP configuration:
 ## Example Queries
 
 ### Hybrid Search
+
 ```json
 {
   "tool": "search-hybrid",
@@ -149,6 +159,7 @@ Add to your Claude Code MCP configuration:
 ```
 
 ### Vector Search
+
 ```json
 {
   "tool": "search-vector",
@@ -160,6 +171,7 @@ Add to your Claude Code MCP configuration:
 ```
 
 ### Keyword Search
+
 ```json
 {
   "tool": "search-keyword",
@@ -239,12 +251,15 @@ result = hybrid_search(
 ### 🔧 Development Workflow Integration
 
 #### IDE Integration
+
 The MCP server works with Claude Code, Claude Desktop, and any MCP-compatible client, bringing RAG capabilities directly into development environments.
 
 #### CI/CD Enhancement
+
 Automated code analysis and documentation generation based on semantic understanding of code changes.
 
 #### Team Collaboration
+
 Shared understanding of codebase architecture and patterns through natural language queries that work consistently across team members.
 
 ## Architecture
@@ -273,6 +288,7 @@ The MCP server integrates with existing CocoIndex components:
 ## Integration
 
 This MCP server is designed to work with:
+
 - Claude Code CLI (`claude.ai/code`)
 - Any MCP-compatible client
 - Existing CocoIndex RAG pipeline
@@ -297,8 +313,8 @@ This MCP server is designed to work with:
    ```
 
 3. **Check Claude Desktop config file location:**
-   - File: `~/.config/Claude/claude_desktop_config.json` (NOT `.mcp.json`)
-   - Restart Claude Desktop after changes
+   + File: `~/.config/Claude/claude_desktop_config.json` (NOT `.mcp.json`)
+   + Restart Claude Desktop after changes
 
 #### Database Connection Issues
 

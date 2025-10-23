@@ -61,6 +61,7 @@ Additonal files here (but only for reference how things work, i.e. not as applic
 ### CocoIndex (Main Project)
 
 **Build and Development:**
+
 ```bash
 cd cocoindex
 maturin develop                   # Build Rust extension and install Python package
@@ -70,6 +71,7 @@ pytest tests/                     # Run Python tests
 ```
 
 **Code Quality:**
+
 ```bash
 cargo fmt                         # Format Rust code
 ruff format python/               # Format Python code
@@ -78,6 +80,7 @@ ruff check python/               # Lint Python code
 ```
 
 **Pre-commit Hooks:**
+
 ```bash
 pre-commit install               # Install pre-commit hooks
 pre-commit run --all-files      # Run all pre-commit checks
@@ -98,6 +101,7 @@ python run.py                    # Run the MCP server
 CocoIndex uses a hybrid Rust/Python architecture with clear separation of concerns:
 
 **Rust Core (`src/`):**
+
 - **`base/`**: Core data structures, schemas, and type definitions
 - **`builder/`**: Flow analysis and execution plan generation
 - **`execution/`**: Runtime execution engine with incremental processing
@@ -106,6 +110,7 @@ CocoIndex uses a hybrid Rust/Python architecture with clear separation of concer
 - **`py/`**: Python-Rust interop layer using PyO3
 
 **Python Interface (`python/cocoindex_code_mcp_server/`):**
+
 - **`flow.py`**: Main flow definition API and dataflow programming interface
 - **`cli.py`**: Command-line interface for running flows
 - **`sources.py`**: Data source definitions (S3, Azure Blob, Google Drive, etc.)
@@ -115,21 +120,25 @@ CocoIndex uses a hybrid Rust/Python architecture with clear separation of concer
 ### Key Concepts
 
 **Dataflow Programming Model:**
+
 - Users define transformations as dataflows using Python decorators (`@cocoindex.flow_def`)
 - Each transformation creates new fields from input fields without mutation
 - System tracks data lineage and enables incremental processing
 
 **Incremental Processing:**
+
 - Core engine tracks data dependencies and only recomputes changed portions
 - Uses fingerprinting and memoization for efficient updates
 - Supports live updates with minimal recomputation
 
 **Pluggable Operations:**
+
 - Three types of operations: Sources (data input), Functions (transformation), Targets (output)
 - Operations are defined in Rust with Python bindings
 - Registry system allows dynamic operation loading
 
 **Multi-Database Support:**
+
 - Supports vector databases (Qdrant), graph databases (Neo4j), and relational databases (Postgres)
 - Unified interface for different storage backends
 

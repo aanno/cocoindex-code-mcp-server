@@ -4,9 +4,9 @@
 
 This guide will help you get up and running with CocoIndex in just a few minutes. We'll build a project that does:
 
--   Read files from a directory
--   Perform basic chunking and embedding
--   Load the data into a vector store (PG Vector)
+- Read files from a directory
+- Perform basic chunking and embedding
+- Load the data into a vector store (PG Vector)
 
 <iframe frameborder="0" allowfullscreen="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" title="Step by step tutorial to get started with CocoIndex 🥥" width="100%" height="100%" src="https://www.youtube.com/embed/gv5R8nOXsWU?autoplay=0&amp;mute=0&amp;controls=1&amp;origin=https%3A%2F%2Fcocoindex.io&amp;playsinline=1&amp;showinfo=0&amp;rel=0&amp;iv_load_policy=3&amp;modestbranding=1&amp;enablejsapi=1&amp;widgetid=1&amp;forigin=https%3A%2F%2Fcocoindex.io%2Fdocs%2Fgetting_started%2Fquickstart&amp;aoriginsup=0&amp;gporigin=https%3A%2F%2Fwww.perplexity.ai%2F&amp;vf=6" id="widget2"></iframe>
 
@@ -14,33 +14,31 @@ This guide will help you get up and running with CocoIndex in just a few minutes
 
 We'll need to install a bunch of dependencies for this project.
 
-1.  Install CocoIndex:
+1. Install CocoIndex:
 
     ```
     pip install -U 'cocoindex[embeddings]'
     ```
 
-2.  You can skip this step if you already have a Postgres database with pgvector extension installed. If not, the easiest way is to bring up a Postgres database using docker compose:
+2. You can skip this step if you already have a Postgres database with pgvector extension installed. If not, the easiest way is to bring up a Postgres database using docker compose:
 
-    -   Make sure Docker Compose is installed: [docs](https://docs.docker.com/compose/install/)
-    -   Start a Postgres SQL database for cocoindex using our docker compose config:
+    + Make sure Docker Compose is installed: [docs](https://docs.docker.com/compose/install/)
+    + Start a Postgres SQL database for cocoindex using our docker compose config:
 
     ```
     docker compose -f <(curl -L https://raw.githubusercontent.com/cocoindex-io/cocoindex/refs/heads/main/dev/postgres.yaml) up -d
     ```
 
-
 ## Step 1: Prepare directory for your project[](https://cocoindex.io/docs/getting_started/quickstart#step-1-prepare-directory-for-your-project "Direct link to Step 1: Prepare directory for your project")
 
-1.  Open the terminal and create a new directory for your project:
+1. Open the terminal and create a new directory for your project:
 
     ```
     mkdir cocoindex-quickstart
     cd cocoindex-quickstart
     ```
 
-2.  Prepare input files for the index. Put them in a directory, e.g. `markdown_files`. If you don't have any files at hand, you may download the example [markdown\_files.zip](https://cocoindex.io/docs/assets/files/markdown_files-f9fa042688f8855fa2912a9e144909fa.zip) and unzip it in the current directory.
-
+2. Prepare input files for the index. Put them in a directory, e.g. `markdown_files`. If you don't have any files at hand, you may download the example [markdown\_files.zip](https://cocoindex.io/docs/assets/files/markdown_files-f9fa042688f8855fa2912a9e144909fa.zip) and unzip it in the current directory.
 
 ## Step 2: Define the indexing flow[](https://cocoindex.io/docs/getting_started/quickstart#step-2-define-the-indexing-flow "Direct link to Step 2: Define the indexing flow")
 
@@ -95,21 +93,20 @@ def text_embedding_flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoind
 
 Notes:
 
-1.  The `@cocoindex.flow_def` declares a function to be a CocoIndex flow.
+1. The `@cocoindex.flow_def` declares a function to be a CocoIndex flow.
 
-2.  In CocoIndex, data is organized in different _data scopes_.
+2. In CocoIndex, data is organized in different _data scopes_.
 
-    -   `data_scope`, representing all data.
-    -   `doc`, representing each row of `documents`.
-    -   `chunk`, representing each row of `chunks`.
-3.  A _data source_ extracts data from an external source. In this example, the `LocalFile` data source imports local files as a KTable (table with a key field, see [KTable](https://cocoindex.io/docs/core/data_types#ktable) for details), each row has `"filename"` and `"content"` fields.
+    + `data_scope`, representing all data.
+    + `doc`, representing each row of `documents`.
+    + `chunk`, representing each row of `chunks`.
+3. A _data source_ extracts data from an external source. In this example, the `LocalFile` data source imports local files as a KTable (table with a key field, see [KTable](https://cocoindex.io/docs/core/data_types#ktable) for details), each row has `"filename"` and `"content"` fields.
 
-4.  After defining the KTable, we extend a new field `"chunks"` to each row by _transforming_ the `"content"` field using `SplitRecursively`. The output of the `SplitRecursively` is also a KTable representing each chunk of the document, with `"location"` and `"text"` fields.
+4. After defining the KTable, we extend a new field `"chunks"` to each row by _transforming_ the `"content"` field using `SplitRecursively`. The output of the `SplitRecursively` is also a KTable representing each chunk of the document, with `"location"` and `"text"` fields.
 
-5.  After defining the KTable, we extend a new field `"embedding"` to each row by _transforming_ the `"text"` field using `SentenceTransformerEmbed`.
+5. After defining the KTable, we extend a new field `"embedding"` to each row by _transforming_ the `"text"` field using `SentenceTransformerEmbed`.
 
-6.  In CocoIndex, a _collector_ collects multiple entries of data together. In this example, the `doc_embeddings` collector collects data from all `chunk`s across all `doc`s, and uses the collected data to build a vector index `"doc_embeddings"`, using `Postgres`.
-
+6. In CocoIndex, a _collector_ collects multiple entries of data together. In this example, the `doc_embeddings` collector collects data from all `chunk`s across all `doc`s, and uses the collected data to build a vector index `"doc_embeddings"`, using `Postgres`.
 
 ## Step 3: Run the indexing pipeline and queries[](https://cocoindex.io/docs/getting_started/quickstart#step-3-run-the-indexing-pipeline-and-queries "Direct link to Step 3: Run the indexing pipeline and queries")
 
@@ -211,10 +208,9 @@ def search(pool: ConnectionPool, query: str, top_k: int = 5):
 
 In the function above, most parts are standard query logic - you can use any libraries you like. There're two CocoIndex-specific logic:
 
-1.  Get the table name from the export target in the `text_embedding_flow` above. Since the table name for the `Postgres` target is not explicitly specified in the `export()` call, CocoIndex uses a default name. `cocoindex.utils.get_target_default_name()` is a utility function to get the default table name for this case.
+1. Get the table name from the export target in the `text_embedding_flow` above. Since the table name for the `Postgres` target is not explicitly specified in the `export()` call, CocoIndex uses a default name. `cocoindex.utils.get_target_default_name()` is a utility function to get the default table name for this case.
 
-2.  Evaluate the transform flow defined above with the input query, to get the embedding. It's done by the `eval()` method of the transform flow `text_to_embedding`. The return type of this method is `NDArray[np.float32]` as declared in the `text_to_embedding()` function (`cocoindex.DataSlice[NDArray[np.float32]]`).
-
+2. Evaluate the transform flow defined above with the input query, to get the embedding. It's done by the `eval()` method of the transform flow `text_to_embedding`. The return type of this method is `NDArray[np.float32]` as declared in the `text_to_embedding()` function (`cocoindex.DataSlice[NDArray[np.float32]]`).
 
 ### Step 4.3: Add the main script logic[](https://cocoindex.io/docs/getting_started/quickstart#step-43-add-the-main-script-logic "Direct link to Step 4.3: Add the main script logic")
 
@@ -263,7 +259,7 @@ It will ask you to enter a query and it will return the top 5 results.
 
 Next, you may want to:
 
--   Learn about [CocoIndex Basics](https://cocoindex.io/docs/core/basics).
--   Learn about other examples in the [examples](https://github.com/cocoindex-io/cocoindex/tree/main/examples) directory.
-    -   The `text_embedding` example is this quickstart.
-    -   Pick other examples to learn upon your interest.
+- Learn about [CocoIndex Basics](https://cocoindex.io/docs/core/basics).
+- Learn about other examples in the [examples](https://github.com/cocoindex-io/cocoindex/tree/main/examples) directory.
+  + The `text_embedding` example is this quickstart.
+  + Pick other examples to learn upon your interest.

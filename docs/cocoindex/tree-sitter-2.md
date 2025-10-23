@@ -4,7 +4,7 @@
 
 As of July 2025, the **full and current list of available Tree-sitter grammars** is maintained on the official [Tree-sitter Wiki "List of parsers"](https://github.com/tree-sitter/tree-sitter/wiki/List-of-parsers)[^1_4]. However, your request is specifically for a list of grammars that are **not incorporated in "cocoindex"**.
 
-Since the provided search results do not contain a listing of the grammars incorporated by "cocoindex", nor do they directly offer a list of grammars that are specifically *excluded* from cocoindex, a direct and fully authoritative answer cannot be given from the results alone.
+Since the provided search results do not contain a listing of the grammars incorporated by "cocoindex", nor do they directly offer a list of grammars that are specifically _excluded_ from cocoindex, a direct and fully authoritative answer cannot be given from the results alone.
 
 However, based on the context:
 
@@ -17,9 +17,9 @@ If you want a **precise list**, you can:
 
 1. Compare the [official Tree-sitter Wiki "List of parsers"](https://github.com/tree-sitter/tree-sitter/wiki/List-of-parsers) with the "cocoindex" list of supported grammars[^1_4].
 2. Subtract the grammars present in "cocoindex" from the official Tree-sitter list.
-3. Any grammar present on the official Tree-sitter list but *not* in the "cocoindex" list would fit your criteria.
+3. Any grammar present on the official Tree-sitter list but _not_ in the "cocoindex" list would fit your criteria.
 
-### Examples of Tree-sitter grammars likely **not included in cocoindex** (based on their newness or niche status):
+### Examples of Tree-sitter grammars likely **not included in cocoindex** (based on their newness or niche status)
 
 - **Gleam**[^1_5][^1_10]
 - **Fusion**[^1_3]
@@ -34,26 +34,13 @@ You can identify Tree-sitter grammars not incorporated in cocoindex by comparing
 
 <div style="text-align: center">⁂</div>
 
-[^1_1]: https://ahelwer.ca/post/2023-01-11-tree-sitter-tlaplus/
+[^1_3]: <https://discuss.neos.io/t/treesitter-grammar-for-fusion/5773>
 
-[^1_2]: https://www.masteringemacs.org/article/how-to-get-started-tree-sitter
+[^1_4]: <https://github.com/tree-sitter/tree-sitter/wiki/List-of-parsers>
 
-[^1_3]: https://discuss.neos.io/t/treesitter-grammar-for-fusion/5773
+[^1_5]: <https://www.reddit.com/r/emacs/comments/1ge58cp/treesitter_cant_find_grammar/>
 
-[^1_4]: https://github.com/tree-sitter/tree-sitter/wiki/List-of-parsers
-
-[^1_5]: https://www.reddit.com/r/emacs/comments/1ge58cp/treesitter_cant_find_grammar/
-
-[^1_6]: https://www.reddit.com/r/Nix/comments/rgcynr/nonnixos_homemanager_treesitternvim_and_tsinstall/
-
-[^1_7]: https://discourse.nixos.org/t/tree-sitter-grammars-collide-with-each-other/41805
-
-[^1_8]: https://github.com/nvim-treesitter/nvim-treesitter
-
-[^1_9]: https://pulsar-edit.dev/blog/20231110-savetheclocktower-modern-tree-sitter-part-5.html
-
-[^1_10]: https://bhankas.org/blog/down_the_nixpkgs_rabbit_hole_in_search_of_tree_sitter_grammars/
-
+[^1_10]: <https://bhankas.org/blog/down_the_nixpkgs_rabbit_hole_in_search_of_tree_sitter_grammars/>
 
 ---
 
@@ -65,28 +52,11 @@ If you need this information, you should visit the official CocoIndex website or
 
 <div style="text-align: center">⁂</div>
 
-[^2_1]: https://wilson008.github.io/papers/2025-llm4se.pdf
-
-[^2_2]: https://en.wikipedia.org/wiki/Context-free_grammar
-
-[^2_3]: https://cocoindex.io/blogs/cocoindex-changelog-2025-04-30/
-
-[^2_4]: https://papercopilot.com/paper-list/coling-paper-list/coling-2025-paper-list/
-
-[^2_5]: https://github.com/lark-parser/lark/issues/684
-
-[^2_6]: https://www.sciencedirect.com/science/article/abs/pii/S0890540120301012
-
-[^2_7]: https://www.index.dev/blog/most-popular-programming-languages-
-
-[^2_8]: https://www.nature.com/articles/s41599-025-04543-2
-
-[^2_9]: https://www.itransition.com/developers/in-demand-programming-languages
-
+[^2_3]: <https://cocoindex.io/blogs/cocoindex-changelog-2025-04-30/>
 
 ---
 
-# How does the cocoindex flow support incremental file updates? How to use that? Show me some code!
+# How does the cocoindex flow support incremental file updates? How to use that? Show me some code
 
 **CocoIndex** supports **incremental file updates** by automatically tracking which parts of your source data have changed and only recomputing or updating the corresponding elements in your index, rather than reprocessing everything. This is handled internally via data lineage tracking and a computation cache[^3_1][^3_2][^3_4][^3_5].
 
@@ -96,7 +66,6 @@ If you need this information, you should visit the official CocoIndex website or
 - **Minimizes computation**: Only parts of the data pipeline affected by the changes are recomputed; cached results for unchanged data are reused.
 - **Handles data lineage**: Maintains mapping from source data to index rows so that changed or deleted elements are managed automatically―no stale data left[^3_1][^3_4].
 
-
 ### How to use incremental updates
 
 You do not need to implement low-level incremental logic yourself; **just define your ETL transformation as normal**. CocoIndex will automatically apply incremental processing on each run[^3_1][^3_2][^3_4][^3_5].
@@ -105,7 +74,6 @@ There are **two ways to run incremental updates**:
 
 - **Batch mode**: One-time index update that efficiently processes only new/changed data.
 - **Live update mode**: Runs a long-lived watcher for continuous real-time update, synchronizing your index to source changes with low latency.
-
 
 ### Example: Live update mode with code
 
@@ -148,26 +116,15 @@ For more real-world code, see the [official CocoIndex repository](https://github
 
 <div style="text-align: center">⁂</div>
 
-[^3_1]: https://hackernoon.com/why-recompute-everything-when-you-can-use-this-solution-to-keep-your-ai-index-fresh-automatically
+[^3_1]: <https://hackernoon.com/why-recompute-everything-when-you-can-use-this-solution-to-keep-your-ai-index-fresh-automatically>
 
-[^3_2]: https://dev.to/badmonster0/cocoindex-changelog-2025-04-05-123i
+[^3_2]: <https://dev.to/badmonster0/cocoindex-changelog-2025-04-05-123i>
 
-[^3_3]: https://cocoindex.io/blogs/continuous-updates/
+[^3_3]: <https://cocoindex.io/blogs/continuous-updates/>
 
-[^3_4]: https://cocoindex.io/blogs/incremental-processing
+[^3_4]: <https://cocoindex.io/blogs/incremental-processing>
 
-[^3_5]: https://github.com/cocoindex-io/cocoindex
-
-[^3_6]: https://github.com/cocoindex-io
-
-[^3_7]: https://www.reddit.com/r/dataengineering/comments/1juz5vj/open_source_etl_with_incremental_processing/
-
-[^3_8]: https://www.linkedin.com/posts/linghua-jin-8209b138_cocoindex-aiinfra-dataengineering-activity-7335413760397848576-6I4o
-
-[^3_9]: https://www.youtube.com/watch?v=gv5R8nOXsWU
-
-[^3_10]: https://hn.algolia.com/?query=How+do+you+find+side+projects%3F\&type=story\&dateRange=all\&sort=byDate\&storyText=false\&prefix\&page=0
-
+[^3_5]: <https://github.com/cocoindex-io/cocoindex>
 
 ---
 
@@ -178,19 +135,18 @@ To use **CocoIndex** as the foundation for a code RAG (Retrieval-Augmented Gener
 - **Index configuration and update** – ingesting and transforming code data incrementally.
 - **Querying the index** – retrieving results (typically code snippets and embeddings) for RAG integration.
 
-
 ### Essential Interfaces/Endpoints
 
 An index-as-a-service or RAG-as-a-service model with CocoIndex typically requires two main endpoints[^4_2]:
 
 1. **Source Configuration Endpoint**
-    - Allows users to specify or upload code/project sources to be indexed.
-    - Configure parsing, chunking, and embedding strategies suitable for code (for example, selects the correct parser, chunking at function or class boundaries, and sets the embedding model).
-    - Example endpoint: `POST /sources` (with project details and configuration) or as part of a pipeline YAML/JSON.
+    + Allows users to specify or upload code/project sources to be indexed.
+    + Configure parsing, chunking, and embedding strategies suitable for code (for example, selects the correct parser, chunking at function or class boundaries, and sets the embedding model).
+    + Example endpoint: `POST /sources` (with project details and configuration) or as part of a pipeline YAML/JSON.
 2. **Query Endpoint**
-    - Exposes search or retrieval functionality against the indexed codebase.
-    - Accepts user queries and returns relevant code snippets, embeddings, and related metadata.
-    - Example endpoint: `POST /search` with a payload like `{ "query": "...", "top_k": 5 }`.
+    + Exposes search or retrieval functionality against the indexed codebase.
+    + Accepts user queries and returns relevant code snippets, embeddings, and related metadata.
+    + Example endpoint: `POST /search` with a payload like `{ "query": "...", "top_k": 5 }`.
 
 ### How to Implement with CocoIndex
 
@@ -198,8 +154,8 @@ CocoIndex itself is a Python library and CLI, so to expose API endpoints you typ
 
 - Build a Python server (e.g., using FastAPI or Flask) that wraps your CocoIndex flow.
 - The server should:
-    - Accept configuration via an endpoint, and instantiate/update CocoIndex flows as needed.
-    - Provide a query API that, for a given user query, retrieves relevant index rows from your target vector DB (like Qdrant), and returns the results for RAG.
+  + Accept configuration via an endpoint, and instantiate/update CocoIndex flows as needed.
+  + Provide a query API that, for a given user query, retrieves relevant index rows from your target vector DB (like Qdrant), and returns the results for RAG.
 
 **CocoIndex integration code sample:**
 
@@ -231,13 +187,11 @@ def query_index(query_text, top_k=5):
     return results
 ```
 
-
 ### Notes and Recommendations
 
 - **Index configuration:** You may want to expose a "reload" or "reconfigure" endpoint that triggers flow setup or updates, reflecting new repositories or updated transformation logic.
 - **Querying:** Should be designed for low-latency access, possibly with hybrid search—vector similarity and text filtering (like file path or language).
 - **Incremental update:** CocoIndex handles incremental flow updates automatically; invoke `.update()` or use `FlowLiveUpdater` for live sync[^4_3].
-
 
 ### References to Official Docs
 
@@ -249,20 +203,11 @@ You don't need to implement custom incremental tracking or deduplication in your
 
 <div style="text-align: center">⁂</div>
 
-[^4_1]: https://qdrant.tech/documentation/data-management/cocoindex/
+[^4_1]: <https://qdrant.tech/documentation/data-management/cocoindex/>
 
-[^4_2]: https://cocoindex.io/blogs/data-indexing-custom-logic/
+[^4_2]: <https://cocoindex.io/blogs/data-indexing-custom-logic/>
 
-[^4_3]: https://cocoindex.io/docs/core/flow_methods
-
-[^4_4]: https://docs.hpc.gwdg.de/services/coco/index.html
-
-[^4_5]: https://github.com/cocoindex-io/cocoindex-etl-with-document-ai
-
-[^4_6]: https://docs.github.com/en/rest/code-scanning?apiVersion=2022-11-28
-
-[^4_7]: https://sourceforge.net/projects/cocoindex.mirror/
-
+[^4_3]: <https://cocoindex.io/docs/core/flow_methods>
 
 ---
 
@@ -272,11 +217,11 @@ The **`examples/code_embedding`** example in **cocoindex** demonstrates searchin
 
 ### Search Syntax with pgvector
 
-- **Searches** are performed using *vector similarity operators* in SQL.
+- **Searches** are performed using _vector similarity operators_ in SQL.
 - Common operators include:
-    - `<->` for **Euclidean distance** similarity search
-    - `<#>` for **inner product** similarity search
-    - `<=>` for **cosine similarity** search
+  + `<->` for **Euclidean distance** similarity search
+  + `<#>` for **inner product** similarity search
+  + `<=>` for **cosine similarity** search
 - Example (Python/SQL):
 
 ```sql
@@ -288,7 +233,6 @@ WHERE embedding <-> '[your_query_embedding]' < threshold;
 - You can combine vector similarity with other filters or conditions, and also use hybrid searches (e.g., combining semantic search with keyword filters)[^5_1][^5_2][^5_3][^5_4].
 - **pgvector** allows hybrid and complex queries thanks to Postgres' flexibility, including filtering by metadata, file path, symbol name, etc.
 
-
 ### Switching to Qdrant
 
 - **Qdrant** uses a different API: instead of SQL, it exposes a REST/gRPC API (and Python SDK) for similarity search.
@@ -296,19 +240,17 @@ WHERE embedding <-> '[your_query_embedding]' < threshold;
 - The general search logic (retrieve top-k vectors similar to the query embedding, with optional metadata filters) remains the same as with pgvector, but the syntax is different (not SQL).
 - In cocoindex, **only the backend/storage adapter needs to change**. Your application abstracts away most of the difference; you call an API, not hand-write SQL.
 
-
 ### Supporting Multiple Specialized Search Endpoints
 
 You absolutely can (and often should) implement **specialized endpoints**:
 
 - **Find function/implementation**:
 Design your endpoint to:
-    - Filter index entries by type (e.g., only "function" nodes).
-    - Perform vector search on these filtered results.
+  + Filter index entries by type (e.g., only "function" nodes).
+  + Perform vector search on these filtered results.
 - **Find usages/cross-reference**:
-    - Use the symbol references indexed alongside each code chunk.
-    - Endpoint returns all code blocks referencing the given function/symbol.
-
+  + Use the symbol references indexed alongside each code chunk.
+  + Endpoint returns all code blocks referencing the given function/symbol.
 
 #### Example: API design
 
@@ -323,12 +265,11 @@ Design your endpoint to:
 - Store **necessary metadata** (e.g., type: function/class, file path, symbol name, reference targets) as vector payload or metadata fields.
 - Support **hybrid filtering/search**: vector distance plus attribute filter (both pgvector + Postgres and Qdrant do this; in Qdrant, it's filters; in Postgres, it's SQL WHERE).
 - **Qdrant**:
-    - Store metadata in its payload field for each point.
-    - Use filtering in the search requests.
+  + Store metadata in its payload field for each point.
+  + Use filtering in the search requests.
 - **Pgvector**:
-    - Store metadata in table columns.
-    - Use SQL WHERE clauses for filtering before or after vector search.
-
+  + Store metadata in table columns.
+  + Use SQL WHERE clauses for filtering before or after vector search.
 
 ### Summary Table
 
@@ -343,25 +284,15 @@ Design your endpoint to:
 **In conclusion:**
 
 - Both **pgvector** and **Qdrant** can support advanced and specialized code search endpoints, provided you index the necessary metadata.
-- The actual *syntax* for similarity and hybrid search will differ: SQL for pgvector/Postgres, API/filter structure for Qdrant―but the overall capabilities are equivalent.
+- The actual _syntax_ for similarity and hybrid search will differ: SQL for pgvector/Postgres, API/filter structure for Qdrant―but the overall capabilities are equivalent.
 - Supporting different endpoints (e.g., for function finding vs. usages) just requires storing/structuring your index with the right metadata and referencing fields, and using your DB's filtering features in vector queries[^5_1][^5_2][^5_3][^5_4].
 
 <div style="text-align: center">⁂</div>
 
-[^5_1]: https://www.enterprisedb.com/blog/what-is-pgvector
+[^5_1]: <https://www.enterprisedb.com/blog/what-is-pgvector>
 
-[^5_2]: https://www.alibabacloud.com/help/en/analyticdb/analyticdb-for-postgresql/user-guide/pgvector-compatibility-mode-usage-guide
+[^5_2]: <https://www.alibabacloud.com/help/en/analyticdb/analyticdb-for-postgresql/user-guide/pgvector-compatibility-mode-usage-guide>
 
-[^5_3]: https://github.com/pgvector/pgvector
+[^5_3]: <https://github.com/pgvector/pgvector>
 
-[^5_4]: https://www.tigerdata.com/blog/postgresql-hybrid-search-using-pgvector-and-cohere
-
-[^5_5]: https://python.langchain.com/docs/integrations/vectorstores/pgvector/
-
-[^5_6]: https://github.com/pgvector/pgvector/issues/268
-
-[^5_7]: https://www.tigerdata.com/blog/postgresql-as-a-vector-database-using-pgvector
-
-[^5_8]: https://www.timescale.com/blog/combining-semantic-search-and-full-text-search-in-postgresql-with-cohere-pgvector-and-pgai
-
-[^5_9]: https://www.cockroachlabs.com/blog/vector-search-pgvector-cockroachdb/
+[^5_4]: <https://www.tigerdata.com/blog/postgresql-hybrid-search-using-pgvector-and-cohere>

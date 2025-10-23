@@ -1,6 +1,6 @@
 <img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" class="logo" width="120"/>
 
-# CocoIndex DataSlice, not a string. I need to research how to extract the actual string value from a DataSlice in CocoIndex flows.
+# CocoIndex DataSlice, not a string. I need to research how to extract the actual string value from a DataSlice in CocoIndex flows
 
 In CocoIndex flows, when you have a `DataSlice` of type string (e.g., `cocoindex.DataSlice[str]`), you don't treat it as a plain Python string but as a wrapped data object used within the transformation flow. Extracting the actual underlying string value for inspection or use outside the flow requires understanding how to interact with the `DataSlice`.
 
@@ -34,7 +34,6 @@ The CocoIndex docs do not show direct accessor methods like `.value` on `DataSli
 
 **Summary key points:**
 
-
 | Aspect | How to handle/ extract string value |
 | :-- | :-- |
 | `DataSlice[str]` in flow | Treat as input/output to transform flow functions |
@@ -50,28 +49,9 @@ Thus, to extract the actual string value from a `DataSlice` of string type in Co
 
 <div style="text-align: center">⁂</div>
 
-[^1_1]: https://cocoindex.io/docs/ops/functions
+[^1_1]: <https://cocoindex.io/docs/ops/functions>
 
-[^1_2]: https://stackoverflow.com/questions/72533065/how-to-extract-text-from-a-string-with-python-using-indexing-and-slicing
-
-[^1_3]: https://stackoverflow.com/questions/2591130/how-can-we-extract-substring-of-the-string-by-position-and-separator
-
-[^1_4]: https://unstop.com/blog/string-slicing-in-python
-
-[^1_5]: https://community.n8n.io/t/get-specific-data-from-a-string/10548
-
-[^1_6]: https://cocoindex.io/blogs/text-embeddings-101/
-
-[^1_7]: https://github.com/cocoindex-io/cocoindex
-
-[^1_8]: https://developer.dataiku.com/latest/api-reference/python/datasets.html
-
-[^1_9]: https://stackoverflow.com/questions/20401405/is-there-better-way-to-extract-key-values-from-string-like-this
-
-[^1_10]: https://dev.to/cocoindex
-
-[^1_11]: https://cocoindex.io/docs/query
-
+[^1_11]: <https://cocoindex.io/docs/query>
 
 ---
 
@@ -100,7 +80,6 @@ Since the DataSlice always refers to *data inside a data scope* and not values a
 - **Lineage and incremental updates:** DataSlice references allow CocoIndex to track lineage, manage updates, and remove stale data during re-indexing or deletion operations[^2_6].
 - **Support for hierarchical data:** DataSlices can be nested (structs, lists), perfectly representing documents split into chunks, chunks having embeddings, and so forth[^2_3][^2_4].
 
-
 ### Adding additional metadata to export when a DataSlice appears
 
 CocoIndex flows allow attaching *additional metadata* when exporting data that contains DataSlices. Typical ways to do this include:
@@ -127,22 +106,10 @@ This rich model enables advanced ETL, embedding, search, and indexing workflows 
 
 <div style="text-align: center">⁂</div>
 
-[^2_1]: https://cocoindex.io/docs/core/flow_def
+[^2_1]: <https://cocoindex.io/docs/core/flow_def>
 
-[^2_2]: https://cocoindexio.substack.com/p/index-codebase-with-tree-sitter-and
+[^2_3]: <https://hackernoon.com/this-open-source-project-turns-text-into-instant-ai-answers>
 
-[^2_3]: https://hackernoon.com/this-open-source-project-turns-text-into-instant-ai-answers
+[^2_4]: <https://cocoindex.io/docs/core/basics>
 
-[^2_4]: https://cocoindex.io/docs/core/basics
-
-[^2_5]: https://pandas.pydata.org/docs/reference/api/pandas.IndexSlice.html
-
-[^2_6]: https://dev.to/cocoindex/how-to-do-incremental-processing-for-etl-by-examples-3ab6
-
-[^2_7]: https://hackernoon.com/lang/da/ønsker,-at-ai-rent-faktisk-forstår-din-kode,-siger-dette-værktøj,-at-det-kan-hjælpe
-
-[^2_8]: https://www.youtube.com/watch?v=gv5R8nOXsWU
-
-[^2_9]: https://github.com/cocoindex-io/cocoindex/issues
-
-[^2_10]: https://www.wisdomtree.eu/-/media/eu-media-files/other-documents/research/strategy-insights/wisdomtree-strategy-insight_the-case-for-diversified-coco-exposure_en.pdf?sc_lang=fi-fi
+[^2_6]: <https://dev.to/cocoindex/how-to-do-incremental-processing-for-etl-by-examples-3ab6>

@@ -76,6 +76,7 @@ Backend-specific field mapping handles differences in data storage formats:
 **Status**: ✅ Complete with abstraction integration
 
 Features:
+
 - pgvector extension for vector similarity search
 - JSONB metadata storage with GIN indexing
 - Full-text search integration with tsvector
@@ -83,6 +84,7 @@ Features:
 - Optimized hybrid search (vector + keyword)
 
 Usage:
+
 ```python
 from src.cocoindex_code_mcp_server.backends import create_backend
 
@@ -96,12 +98,14 @@ backend = create_backend("postgres",
 **Status**: 🏗️ Skeleton implementation ready for development
 
 Prepared features:
+
 - Memory-mapped payload optimization
 - Advanced filtering with payload indexing
 - Collection management
 - High-performance HNSW vector search
 
 Usage:
+
 ```python
 backend = create_backend("qdrant",
                         host="localhost",
@@ -116,6 +120,7 @@ backend = create_backend("qdrant",
 Following MCP best practices, all endpoints use strict JSON Schema validation:
 
 **Tool Endpoints** (both input and output schemas):
+
 ```json
 {
   "name": "search_code",
@@ -141,6 +146,7 @@ Following MCP best practices, all endpoints use strict JSON Schema validation:
 ```
 
 **Resource Endpoints** (output schema only):
+
 ```json
 {
   "name": "code_metadata_schema",
@@ -158,6 +164,7 @@ Following MCP best practices, all endpoints use strict JSON Schema validation:
 ## Usage Examples
 
 ### Basic Search
+
 ```python
 from src.cocoindex_code_mcp_server.query_abstraction import simple_search
 
@@ -167,6 +174,7 @@ results = await executor.execute(query)
 ```
 
 ### Advanced Filtered Search
+
 ```python
 from src.cocoindex_code_mcp_server.query_abstraction import create_query
 
@@ -184,6 +192,7 @@ results = await executor.execute(query)
 ```
 
 ### Backend Switching
+
 ```python
 from src.cocoindex_code_mcp_server.backends import create_backend
 
@@ -319,6 +328,7 @@ def test_milvus_query():
 Different backends may require different query strategies:
 
 **PostgreSQL**: Leverage SQL capabilities
+
 ```python
 def optimize_for_postgres(self, query: ChunkQuery) -> str:
     sql = """
@@ -334,6 +344,7 @@ def optimize_for_postgres(self, query: ChunkQuery) -> str:
 ```
 
 **Qdrant**: Use advanced filtering
+
 ```python
 def optimize_for_qdrant(self, query: ChunkQuery) -> Dict:
     return {
@@ -366,49 +377,53 @@ def build_query(self, backend_info: BackendInfo, query: ChunkQuery):
 ### Required Classes
 
 1. **Backend Implementation**
-   - `CustomBackend(VectorStoreBackend)`: Main backend interface
-   - Location: `backends/custom_backend.py`
+   + `CustomBackend(VectorStoreBackend)`: Main backend interface
+   + Location: `backends/custom_backend.py`
 
 2. **Field Mapper**
-   - `CustomFieldMapper(FieldMapper)`: Data format conversion
-   - Location: `mappers.py` (add to existing file)
+   + `CustomFieldMapper(FieldMapper)`: Data format conversion
+   + Location: `mappers.py` (add to existing file)
 
 3. **Query Optimizer** (optional)
-   - `CustomQueryOptimizer`: Backend-specific optimizations
-   - Location: `query_abstraction.py` (extend existing optimizer)
+   + `CustomQueryOptimizer`: Backend-specific optimizations
+   + Location: `query_abstraction.py` (extend existing optimizer)
 
 ### Optional Classes
 
 4. **Connection Manager**
-   - `CustomConnectionManager`: Connection pooling/management
-   - Location: `backends/custom_backend.py`
+   + `CustomConnectionManager`: Connection pooling/management
+   + Location: `backends/custom_backend.py`
 
 5. **Schema Manager**
-   - `CustomSchemaManager`: Collection/table schema management
-   - Location: `backends/custom_backend.py`
+   + `CustomSchemaManager`: Collection/table schema management
+   + Location: `backends/custom_backend.py`
 
 6. **Migration Helper**
-   - `CustomMigrationHelper`: Data migration utilities
-   - Location: `migrations/custom_migration.py`
+   + `CustomMigrationHelper`: Data migration utilities
+   + Location: `migrations/custom_migration.py`
 
 ## Best Practices
 
 ### Type Safety
+
 - Always use proper type hints and validate with mypy
 - Leverage TypedDict for metadata structures
 - Use Pydantic models for complex schemas
 
 ### Error Handling
+
 - Implement graceful fallbacks for unsupported features
 - Provide clear error messages with backend context
 - Log performance metrics for query optimization
 
 ### Testing
+
 - Write comprehensive unit tests for each backend
 - Include integration tests with real data
 - Test migration paths between backends
 
 ### MCP Compliance
+
 - Define JSON schemas for all tool inputs and outputs
 - Use resource endpoints for metadata schemas
 - Follow MCP protocol naming conventions
@@ -418,18 +433,21 @@ def build_query(self, backend_info: BackendInfo, query: ChunkQuery):
 ### Backend Selection Guidelines
 
 **PostgreSQL + pgvector**: Best for
+
 - Small to medium datasets (<1M vectors)
 - Rich metadata querying with SQL
 - ACID compliance requirements
 - Full-text search integration
 
 **Qdrant**: Best for
+
 - Large datasets (>10M vectors)
 - High-performance vector similarity search
 - Memory-constrained environments
 - Advanced filtering requirements
 
 **Extension targets**:
+
 - **Milvus**: Enterprise features, GPU acceleration
 - **Weaviate**: GraphQL API, semantic search
 - **Pinecone**: Managed service, auto-scaling
@@ -460,12 +478,14 @@ migrate_backend(
 ## Future Roadmap
 
 ### Phase 3 Extensions (Optional)
+
 - Advanced chunking strategy selection
 - Multi-backend hybrid queries
 - Real-time index updates
 - Performance monitoring dashboard
 
 ### Additional Backend Targets
+
 - **Chroma**: Open-source embedding database
 - **Vespa**: Large-scale search and recommendation
 - **Azure Cognitive Search**: Cloud-native search
