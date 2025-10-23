@@ -136,7 +136,7 @@ act = [
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
-module-name = "cocoindex_code_mcp_server"
+module-name = "cocoindex_code_mcp_server._haskell_tree_sitter"
 manifest-path = "rust/Cargo.toml"
 bindings = "pyo3"
 compatibility = "manylinux_2_28"  # or linux, macos, etc.

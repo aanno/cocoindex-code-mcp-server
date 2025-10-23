@@ -17,12 +17,12 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 [package]
-name = "haskell_tree_sitter"
+name = "cocoindex_code_mcp_server"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "haskell_tree_sitter"
+name = "cocoindex_code_mcp_server_haskell_tree_sitter"
 crate-type = ["cdylib"]
 
 [dependencies]

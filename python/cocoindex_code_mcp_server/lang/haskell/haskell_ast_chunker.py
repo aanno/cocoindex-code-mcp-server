@@ -31,11 +31,10 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
 from warnings import deprecated
 
-import haskell_tree_sitter
-
 import cocoindex
 from cocoindex import op
 
+from ... import _haskell_tree_sitter
 from . import LOGGER
 
 
