@@ -96,6 +96,7 @@ test = [
     "pytest-xdist>=3.4.0",
     "pytest-mypy>=1.0.1",
     "coverage>=7.9.2",
+    "asyncpg>=0.29.0",
     "cocoindex-code-mcp-server[test]",
 ]
 build = [
@@ -118,7 +119,6 @@ build = [
     "pydocstyle>=6.3.0",
     "ruff>=0.4.0",
     "pylint>=4.0.2",
-    # "asyncpg>=0.29.0",
     "cocoindex-code-mcp-server[build]",
     "pre-commit>=4.3.0",
 ]

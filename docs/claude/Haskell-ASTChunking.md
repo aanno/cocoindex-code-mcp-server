@@ -123,7 +123,7 @@ pub struct ChunkingResult {
 **Python Integration:**
 
 ```python
-import haskell_tree_sitter as hts
+from . import _haskell_tree_sitter as hts
 
 # Create chunking parameters
 params = hts.ChunkingParams(
@@ -528,7 +528,7 @@ def test_enhanced_haskell_chunking():
 
 #### 1. Direct Tree-sitter Integration
 
-**Current**: Indirect usage via `haskell_tree_sitter` wrapper
+**Current**: Indirect usage via `_haskell_tree_sitter` wrapper
 **Future**: Direct tree-sitter Python bindings integration
 
 ```python
@@ -650,11 +650,11 @@ def _performance_aware_chunking(self, content: str, profile_data: dict):
 
 ### Direct Tree-sitter Integration vs Current Approach
 
-**Current State**: We use tree-sitter indirectly through the `haskell_tree_sitter` module:
+**Current State**: We use tree-sitter indirectly through the `_haskell_tree_sitter` module:
 
 ```python
 # Current approach in haskell_ast_chunker.py
-ast_chunks = haskell_tree_sitter.get_haskell_ast_chunks_with_fallback(content)
+ast_chunks = _haskell_tree_sitter.get_haskell_ast_chunks_with_fallback(content)
 ```
 
 **Future Enhancement**: Direct integration with tree-sitter Python bindings would allow:

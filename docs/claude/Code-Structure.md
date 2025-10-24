@@ -70,7 +70,7 @@ main_interactive_query.py
 ├── query_interactive.py
 │   └── cocoindex_config.py
 │       └── haskell_ast_chunker.py
-│           └── haskell_tree_sitter (Rust module)
+│           └── _haskell_tree_sitter (Rust module)
 └── cocoindex_config.py
     └── haskell_ast_chunker.py
 ```

@@ -23,6 +23,10 @@
 Haskell-specific AST node handler for tree-sitter based analysis.
 
 Handles Haskell-specific constructs like data types, type classes, modules, etc.
+
+TODO: (tp)
+This file does use the rust _haskell_tree_sitter implementation.
+Hence I'm not sure if it is really in use (or helpful).
 """
 
 import os
@@ -117,7 +121,7 @@ class HaskellNodeHandler:
     """Haskell-specific tree-sitter node handler."""
 
     # Haskell-specific node types mapping
-    # These are the actual node types returned by haskell_tree_sitter
+    # These are the actual node types returned by _haskell_tree_sitter
     HASKELL_NODE_TYPES = {
         # Module and imports
         "module": "module_declaration",
@@ -129,7 +133,7 @@ class HaskellNodeHandler:
         "signature": "type_signature",
         "pattern": "pattern_binding",
         "variable": "variable_binding",
-        # Data types (may need adjustment based on actual haskell_tree_sitter output)
+        # Data types (may need adjustment based on actual _haskell_tree_sitter output)
         "data": "data_declaration",
         "data_type": "data_declaration",
         "newtype": "newtype_declaration",
@@ -204,7 +208,7 @@ class HaskellNodeHandler:
         return {}
 
     def _handle_chunk(self, context: NodeContext, node_type: str) -> Dict[str, Any]:
-        """Handle haskell_tree_sitter chunks directly."""
+        """Handle _haskell_tree_sitter chunks directly."""
         chunk = context.node
         # Handle chunk.text() returning bytes or None
         raw_text = chunk.text() if hasattr(chunk, "text") and callable(chunk.text) else None
@@ -1114,7 +1118,7 @@ def analyze_haskell_code(content: str, filename: str = "") -> Dict[str, Any]:
     """
     try:
         # Import haskell_tree_sitter here to avoid import errors if not available
-        import haskell_tree_sitter
+        import cocoindex_code_mcp_server._haskell_tree_sitter as hts
 
         # Use Rust-based chunking to get AST chunks
         chunks = haskell_tree_sitter.get_haskell_ast_chunks_with_fallback(content)

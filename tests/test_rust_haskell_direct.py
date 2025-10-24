@@ -12,7 +12,7 @@ import pytest
 # sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 try:
-    import haskell_tree_sitter
+    import cocoindex_code_mcp_server._haskell_tree_sitter as hts
     HASKELL_AVAILABLE = True
 except ImportError as e:
     print(f"Haskell tree sitter not available: {e}")
@@ -41,7 +41,7 @@ main = print (fibonacci 10)
 
     # Call the Rust chunker directly
     try:
-        chunks = haskell_tree_sitter.get_haskell_ast_chunks(haskell_code)
+        chunks = hts.get_haskell_ast_chunks(haskell_code)
         print(f"   Generated {len(chunks)} chunks")
 
         # Analyze the chunks and their metadata
@@ -115,7 +115,7 @@ main = print (fibonacci 10)
     print("\n🧪 Testing Rust Haskell chunker with errors...")
 
     try:
-        chunks = haskell_tree_sitter.get_haskell_ast_chunks(buggy_haskell_code)
+        chunks = hts.get_haskell_ast_chunks(buggy_haskell_code)
         print(f"   Generated {len(chunks)} chunks")
 
         # Look for error-related chunking methods

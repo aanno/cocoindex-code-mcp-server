@@ -8,9 +8,8 @@ Tests the new HaskellChunkConfig and EnhancedHaskellChunker classes without Coco
 import sys
 from typing import Any, Dict, List
 
-import haskell_tree_sitter
+import cocoindex_code_mcp_server._haskell_tree_sitter as hts
 import pytest
-
 from cocoindex_code_mcp_server.lang.haskell.haskell_ast_chunker import (
     HaskellChunkConfig,
     create_enhanced_regex_fallback_chunks,
@@ -94,7 +93,7 @@ class TestEnhancedHaskellSeparators:
 
     def test_separators_include_base(self):
         """Test that enhanced separators include base separators."""
-        base_separators = haskell_tree_sitter.get_haskell_separators()
+        base_separators = hts.get_haskell_separators()
         enhanced_separators = get_enhanced_haskell_separators()
 
         # All base separators should be included
@@ -119,7 +118,7 @@ class TestEnhancedHaskellSeparators:
 
     def test_separators_count(self):
         """Test that enhanced separators are more than base separators."""
-        base_separators = haskell_tree_sitter.get_haskell_separators()
+        base_separators = hts.get_haskell_separators()
         enhanced_separators = get_enhanced_haskell_separators()
 
         assert len(enhanced_separators) > len(base_separators)

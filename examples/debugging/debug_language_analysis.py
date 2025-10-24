@@ -12,8 +12,7 @@ This script demonstrates how to:
 import sys
 from pathlib import Path
 
-import haskell_tree_sitter as hts
-
+import cocoindex_code_mcp_server._haskell_tree_sitter as hts
 from cocoindex_code_mcp_server.language_handlers.haskell_visitor import (
     analyze_haskell_code,
 )

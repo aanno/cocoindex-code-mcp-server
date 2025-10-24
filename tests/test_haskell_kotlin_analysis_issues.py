@@ -11,9 +11,8 @@ This test demonstrates:
 # Add src to path for imports
 from pathlib import Path
 
-import haskell_tree_sitter as hts
+import cocoindex_code_mcp_server._haskell_tree_sitter as hts
 import pytest
-
 from cocoindex_code_mcp_server.language_handlers.haskell_handler import (
     analyze_haskell_code,
 )

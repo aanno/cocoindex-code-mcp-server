@@ -206,7 +206,7 @@ r"\n(FROM|RUN|COPY|ADD|EXPOSE|ENV|CMD|ENTRYPOINT)", r"\n"]  \# Remove (?=...)
 cocoindex.functions.CustomLanguageSpec(
 language_name="Haskell",
 aliases=[".hs", ".lhs"],
-separators_regex=haskell_tree_sitter.get_haskell_separators()
+separators_regex=_haskell_tree_sitter.get_haskell_separators()
 ),
 ]
 

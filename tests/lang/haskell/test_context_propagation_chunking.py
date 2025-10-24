@@ -5,7 +5,7 @@ Comprehensive tests for context propagation and recursive splitting in Haskell A
 Tests the new Rust-based implementation with ChunkingParams, ChunkingContext, and recursive splitting.
 """
 
-import haskell_tree_sitter
+import cocoindex_code_mcp_server._haskell_tree_sitter as hts
 import pytest
 
 from ...common import COCOINDEX_AVAILABLE, CocoIndexTestInfrastructure
@@ -16,7 +16,7 @@ class TestChunkingParams:
 
     def test_chunking_params_creation(self):
         """Test ChunkingParams can be created with all parameters."""
-        params = haskell_tree_sitter.ChunkingParams(
+        params = hts.ChunkingParams(
             chunk_size=1800,
             min_chunk_size=400,
             chunk_overlap=0,
@@ -31,7 +31,7 @@ class TestChunkingParams:
     def test_chunking_params_with_different_sizes(self):
         """Test ChunkingParams with various size configurations."""
         # Small chunks
-        small_params = haskell_tree_sitter.ChunkingParams(
+        small_params = hts.ChunkingParams(
             chunk_size=500,
             min_chunk_size=100,
             chunk_overlap=50,
@@ -39,7 +39,7 @@ class TestChunkingParams:
         )
 
         # Large chunks
-        large_params = haskell_tree_sitter.ChunkingParams(
+        large_params = hts.ChunkingParams(
             chunk_size=3000,
             min_chunk_size=800,
             chunk_overlap=200,
@@ -56,8 +56,8 @@ class TestContextPropagationBasics:
     def test_get_chunks_with_params_function_exists(self):
         """Test that the new parameterized chunking function exists."""
         # Should be able to call the function
-        assert hasattr(haskell_tree_sitter, 'get_haskell_ast_chunks_with_params')
-        assert callable(haskell_tree_sitter.get_haskell_ast_chunks_with_params)
+        assert hasattr(hts, 'get_haskell_ast_chunks_with_params')
+        assert callable(hts.get_haskell_ast_chunks_with_params)
 
     def test_basic_context_propagation(self):
         """Test basic context propagation with simple Haskell code."""
@@ -71,14 +71,14 @@ helper :: Int -> Int
 helper x = x + 1
 """
 
-        params = haskell_tree_sitter.ChunkingParams(
+        params = hts.ChunkingParams(
             chunk_size=1800,
             min_chunk_size=400,
             chunk_overlap=0,
             max_chunk_size=2000
         )
 
-        result = haskell_tree_sitter.get_haskell_ast_chunks_with_params(haskell_code, params)
+        result = hts.get_haskell_ast_chunks_with_params(haskell_code, params)
 
         assert hasattr(result, 'chunks')
         assert hasattr(result, 'chunking_method')
@@ -97,14 +97,14 @@ helper x = x + 1
         """Test that ChunkingResult provides all expected methods."""
         haskell_code = "factorial n = n * factorial (n - 1)"
 
-        params = haskell_tree_sitter.ChunkingParams(
+        params = hts.ChunkingParams(
             chunk_size=1000,
             min_chunk_size=200,
             chunk_overlap=0,
             max_chunk_size=1200
         )
 
-        result = haskell_tree_sitter.get_haskell_ast_chunks_with_params(haskell_code, params)
+        result = hts.get_haskell_ast_chunks_with_params(haskell_code, params)
 
         # Test all methods
         chunking_method = result.chunking_method()
@@ -152,14 +152,14 @@ processComplexData strings numbers = do
     anotherHelper y = y * 2
 """
 
-        params = haskell_tree_sitter.ChunkingParams(
+        params = hts.ChunkingParams(
             chunk_size=500,      # Small target size
             min_chunk_size=100,   # Small minimum
             chunk_overlap=0,
             max_chunk_size=800   # Force splitting of large functions
         )
 
-        result = haskell_tree_sitter.get_haskell_ast_chunks_with_params(large_function, params)
+        result = hts.get_haskell_ast_chunks_with_params(large_function, params)
         chunks = result.chunks()
 
         # Should create multiple chunks due to size constraints
@@ -200,14 +200,14 @@ thirdFunction :: [ComplexType] -> [String]
 thirdFunction = map process
 """
 
-        params = haskell_tree_sitter.ChunkingParams(
+        params = hts.ChunkingParams(
             chunk_size=300,  # Smaller chunks to trigger splitting
             min_chunk_size=50,
             chunk_overlap=0,
             max_chunk_size=400
         )
 
-        result = haskell_tree_sitter.get_haskell_ast_chunks_with_params(haskell_code, params)
+        result = hts.get_haskell_ast_chunks_with_params(haskell_code, params)
         chunks = result.chunks()
 
         # Should create multiple chunks
@@ -243,14 +243,14 @@ instance Processor TreeProcessor where
         validateNode node = length (show node) > 0
 """
 
-        params = haskell_tree_sitter.ChunkingParams(
+        params = hts.ChunkingParams(
             chunk_size=1500,
             min_chunk_size=300,
             chunk_overlap=0,
             max_chunk_size=2000
         )
 
-        result = haskell_tree_sitter.get_haskell_ast_chunks_with_params(haskell_code, params)
+        result = hts.get_haskell_ast_chunks_with_params(haskell_code, params)
         chunks = result.chunks()
 
         # Look for chunks with ancestor path information
@@ -294,14 +294,14 @@ instance UserProcessor SimpleProcessor where
         transformUser u = return (ProcessedUser (userId u) (userName u) "processed")
 """
 
-        params = haskell_tree_sitter.ChunkingParams(
+        params = hts.ChunkingParams(
             chunk_size=1200,
             min_chunk_size=250,
             chunk_overlap=0,
             max_chunk_size=1500
         )
 
-        result = haskell_tree_sitter.get_haskell_ast_chunks_with_params(haskell_code, params)
+        result = hts.get_haskell_ast_chunks_with_params(haskell_code, params)
         chunks = result.chunks()
 
         # Check for semantic categories in metadata
@@ -416,14 +416,14 @@ anotherFunction x = helper x
     -- Missing helper definition
 """
 
-        params = haskell_tree_sitter.ChunkingParams(
+        params = hts.ChunkingParams(
             chunk_size=1000,
             min_chunk_size=200,
             chunk_overlap=0,
             max_chunk_size=1200
         )
 
-        result = haskell_tree_sitter.get_haskell_ast_chunks_with_params(problematic_code, params)
+        result = hts.get_haskell_ast_chunks_with_params(problematic_code, params)
 
         # Check error statistics
         error_stats = result.error_stats()
@@ -456,14 +456,14 @@ class BadClass where
     -- Missing method definition
 """
 
-        params = haskell_tree_sitter.ChunkingParams(
+        params = hts.ChunkingParams(
             chunk_size=800,
             min_chunk_size=100,
             chunk_overlap=0,
             max_chunk_size=1000
         )
 
-        result = haskell_tree_sitter.get_haskell_ast_chunks_with_params(malformed_code, params)
+        result = hts.get_haskell_ast_chunks_with_params(malformed_code, params)
 
         # Should still produce chunks even with errors
         chunks = result.chunks()
@@ -503,14 +503,14 @@ helper{i} :: Type{i} -> Int
 helper{i} (Constructor{i} n _ _) = n + {i}
 """
 
-        params = haskell_tree_sitter.ChunkingParams(
+        params = hts.ChunkingParams(
             chunk_size=1000,
             min_chunk_size=200,
             chunk_overlap=0,
             max_chunk_size=1500
         )
 
-        result = haskell_tree_sitter.get_haskell_ast_chunks_with_params(large_code, params)
+        result = hts.get_haskell_ast_chunks_with_params(large_code, params)
         chunks = result.chunks()
 
         # Should handle large files and create many chunks
@@ -555,14 +555,14 @@ mergeSort xs = merge (mergeSort left) (mergeSort right)
         ]
 
         for chunk_size, min_size, max_size in configs:
-            params = haskell_tree_sitter.ChunkingParams(
+            params = hts.ChunkingParams(
                 chunk_size=chunk_size,
                 min_chunk_size=min_size,
                 chunk_overlap=0,
                 max_chunk_size=max_size
             )
 
-            result = haskell_tree_sitter.get_haskell_ast_chunks_with_params(haskell_code, params)
+            result = hts.get_haskell_ast_chunks_with_params(haskell_code, params)
             chunks = result.chunks()
 
             # Should produce valid chunks for all configurations

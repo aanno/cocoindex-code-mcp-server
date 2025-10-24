@@ -34,7 +34,7 @@ from warnings import deprecated
 import cocoindex
 from cocoindex import op
 
-from ... import _haskell_tree_sitter
+from ... import _haskell_tree_sitter as hts
 from . import LOGGER
 
 
@@ -137,7 +137,7 @@ def get_enhanced_haskell_separators() -> List[str]:
     This provides better chunking boundaries than pure regex.
     Inspired by ASTChunk's language-specific separator approach.
     """
-    base_separators = haskell_tree_sitter.get_haskell_separators()
+    base_separators = hts.get_haskell_separators()
 
     # Add additional AST-aware separators with priority ordering
     enhanced_separators = base_separators + [
@@ -215,7 +215,7 @@ class EnhancedHaskellChunker:
         """AST-based chunking using tree-sitter with configurable parameters."""
         try:
             # Create chunking parameters from config
-            params = haskell_tree_sitter.ChunkingParams(
+            params = hts.ChunkingParams(
                 chunk_size=self.config.max_chunk_size,
                 min_chunk_size=min(self.config.max_chunk_size // 4, 400),  # Conservative min size
                 chunk_overlap=self.config.chunk_overlap,
@@ -223,13 +223,13 @@ class EnhancedHaskellChunker:
             )
 
             # Use the new parameterized AST chunking with recursive splitting
-            chunking_result = haskell_tree_sitter.get_haskell_ast_chunks_with_params(content, params)
+            chunking_result = hts.get_haskell_ast_chunks_with_params(content, params)
             ast_chunks = chunking_result.chunks()
 
         except Exception as e:
             # Fallback to the original method if parameterized version fails
             LOGGER.warning("Parameterized chunking failed, using fallback: %s", e)
-            ast_chunks = haskell_tree_sitter.get_haskell_ast_chunks_with_fallback(content)
+            ast_chunks = hts.get_haskell_ast_chunks_with_fallback(content)
 
         result = []
         for i, chunk in enumerate(ast_chunks):
@@ -593,7 +593,7 @@ def extract_haskell_ast_chunks(content: str) -> List[Dict[str, Any]]:
     """
     try:
         # Call the fixed Rust function directly
-        rust_chunks = haskell_tree_sitter.get_haskell_ast_chunks(content)
+        rust_chunks = hts.get_haskell_ast_chunks(content)
 
         # Convert from Rust HaskellChunk objects to legacy format for backward compatibility
         legacy_chunks = []

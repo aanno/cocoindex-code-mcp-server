@@ -9,7 +9,7 @@ import logging
 import re
 from typing import Any, Dict, List
 
-import haskell_tree_sitter
+import cocoindex_code_mcp_server._haskell_tree_sitter as hts
 import pytest
 
 LOGGER = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ class HaskellChunkConfig:
 
 def get_enhanced_haskell_separators() -> List[str]:
     """Standalone version of enhanced separators."""
-    base_separators = haskell_tree_sitter.get_haskell_separators()
+    base_separators = hts.get_haskell_separators()
 
     # Add additional AST-aware separators with priority ordering
     enhanced_separators = base_separators + [
@@ -269,7 +269,7 @@ class TestEnhancedHaskellSeparators:
 
     def test_separators_include_base(self):
         """Test that enhanced separators include base separators."""
-        base_separators = haskell_tree_sitter.get_haskell_separators()
+        base_separators = hts.get_haskell_separators()
         enhanced_separators = get_enhanced_haskell_separators()
 
         # All base separators should be included
@@ -294,7 +294,7 @@ class TestEnhancedHaskellSeparators:
 
     def test_separators_count(self):
         """Test that enhanced separators are more than base separators."""
-        base_separators = haskell_tree_sitter.get_haskell_separators()
+        base_separators = hts.get_haskell_separators()
         enhanced_separators = get_enhanced_haskell_separators()
 
         assert len(enhanced_separators) > len(base_separators)
