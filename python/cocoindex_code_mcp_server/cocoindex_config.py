@@ -1198,8 +1198,8 @@ def promote_metadata_fields(metadata_json: str) -> Dict[str, Any]:
             "has_async": lambda x: bool(x) if x is not None else False,
             "has_classes": lambda x: bool(x) if x is not None else False,
             "success": lambda x: bool(x) if x is not None else False,
-            "tree_sitter_analyze_error": lambda x: bool(x) if x is not None else False,
-            "tree_sitter_chunking_error": lambda x: bool(x) if x is not None else False,
+            # "tree_sitter_analyze_error": lambda x: bool(x) if x is not None else False,
+            # "tree_sitter_chunking_error": lambda x: bool(x) if x is not None else False,
             "has_docstrings": lambda x: bool(x) if x is not None else False,
             # Integer fields
             "complexity_score": lambda x: int(x) if x is not None and str(x).isdigit() else 0,
@@ -1216,7 +1216,7 @@ def promote_metadata_fields(metadata_json: str) -> Dict[str, Any]:
             "private_methods": lambda x: list(x) if isinstance(x, (list, tuple)) else [],
             "variables": lambda x: list(x) if isinstance(x, (list, tuple)) else [],
             "de": lambda x: list(x) if isinstance(x, (list, tuple)) else [],
-            "variables": lambda x: list(x) if isinstance(x, (list, tuple)) else [],
+            # "variables": lambda x: list(x) if isinstance(x, (list, tuple)) else [],
             "decorators": lambda x: list(x) if isinstance(x, (list, tuple)) else [],
         }
 

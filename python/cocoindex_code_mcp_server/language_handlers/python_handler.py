@@ -32,7 +32,7 @@ import sys
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set
 
-from cocoindex_code_mcp_server.ast_visitor import NodeContext
+# from cocoindex_code_mcp_server.ast_visitor import NodeContext
 from tree_sitter import Node
 
 from ..ast_visitor import NodeContext
@@ -122,7 +122,6 @@ class PythonNodeHandler:
         "none": "none_literal",
         # Comments and docstrings
         "comment": "comment",
-        "expression_statement": "potential_docstring",
     }
 
     def __init__(self) -> None:

@@ -29,7 +29,7 @@ Updated to trigger CocoIndex reprocessing.
 import logging
 from typing import Any, Dict, List, Optional
 
-from cocoindex_code_mcp_server.ast_visitor import NodeContext
+# from cocoindex_code_mcp_server.ast_visitor import NodeContext
 from tree_sitter import Node
 
 from ..ast_visitor import NodeContext

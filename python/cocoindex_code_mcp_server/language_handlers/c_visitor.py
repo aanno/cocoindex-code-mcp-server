@@ -28,7 +28,7 @@ Follows the same pattern as haskell_visitor.py by subclassing GenericMetadataVis
 import logging
 from typing import Any, Dict, List, Optional, Union
 
-from cocoindex_code_mcp_server.ast_visitor import NodeContext
+# from cocoindex_code_mcp_server.ast_visitor import NodeContext
 from tree_sitter import Node
 
 from ..ast_visitor import GenericMetadataVisitor, NodeContext

@@ -191,7 +191,7 @@ class TreeSitterPythonAnalyzer:
                         "line_count": len(code.split("\n")),
                         "char_count": len(code),
                         # Promoted metadata fields for database columns
-                        "analysis_method": "tree_sitter_python_analyzer",
+                        # "analysis_method": "tree_sitter_python_analyzer",
                         # don't set chunking method in analyzer
                         # "chunking_method": "ast_tree_sitter",
                         # "tree_sitter_chunking_error": False,

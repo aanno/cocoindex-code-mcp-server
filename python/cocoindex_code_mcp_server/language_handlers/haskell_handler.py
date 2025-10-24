@@ -1121,7 +1121,7 @@ def analyze_haskell_code(content: str, filename: str = "") -> Dict[str, Any]:
         import cocoindex_code_mcp_server._haskell_tree_sitter as hts
 
         # Use Rust-based chunking to get AST chunks
-        chunks = haskell_tree_sitter.get_haskell_ast_chunks_with_fallback(content)
+        chunks = hts.get_haskell_ast_chunks_with_fallback(content)
 
         if len(chunks) == 0:
             LOGGER.warning("No chunks produced for Haskell file %s", filename)

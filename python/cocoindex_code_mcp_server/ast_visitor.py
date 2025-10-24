@@ -333,7 +333,7 @@ class GenericMetadataVisitor(ASTVisitor):
             "async_function_definition": 2,
             # Exception handling
             "try_with_resources_statement": 1,  # Java
-            "catch_clause": 1,
+            # "catch_clause": 1,
             "finally_clause": 1,
             # Rust-specific node types
             "function_item": 2,  # Rust function
