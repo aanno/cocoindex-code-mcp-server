@@ -475,6 +475,7 @@ dependencies = [
     { name = "tree-sitter-python" },
     { name = "tree-sitter-rust" },
     { name = "tree-sitter-typescript" },
+    { name = "typing-extensions" },
 ]
 
 [package.optional-dependencies]
@@ -581,6 +582,7 @@ requires-dist = [
     { name = "tree-sitter-rust", specifier = ">=0.21.2,<0.23.0" },
     { name = "tree-sitter-typescript", specifier = ">=0.23.2,<0.24.0" },
     { name = "twine", marker = "extra == 'act'", specifier = ">=6.2.0" },
+    { name = "typing-extensions", specifier = ">=4.15.0" },
 ]
 provides-extras = ["test", "build", "act"]
 

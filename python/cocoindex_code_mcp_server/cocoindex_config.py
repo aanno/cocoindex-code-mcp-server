@@ -32,11 +32,11 @@ import logging
 from dataclasses import dataclass
 from types import FunctionType
 from typing import Any, Dict, List, TypedDict, Union, cast
-from warnings import deprecated
 
 import numpy as np
 from cocoindex_code_mcp_server.mappers import SOURCE_CONFIG
 from numpy.typing import NDArray
+from typing_extensions import deprecated
 
 import cocoindex
 

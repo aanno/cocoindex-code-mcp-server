@@ -29,7 +29,8 @@ Modernized to align with current ast_chunking.py patterns (January 2025).
 import re
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
-from warnings import deprecated
+
+from typing_extensions import deprecated
 
 import cocoindex
 from cocoindex import op

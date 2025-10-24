@@ -25,7 +25,8 @@ import logging
 import os
 from logging.handlers import RotatingFileHandler
 
-from . import _haskell_tree_sitter as hts
+# This leads to circular dependencies (tp)
+# from . import _haskell_tree_sitter as hts
 
 # Get WORKSPACE environment variable, fallback to current directory if not set
 workspace_dir = os.environ.get("WORKSPACE", ".")
