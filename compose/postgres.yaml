@@ -1,0 +1,17 @@
+name: cocoindex-postgres
+services:
+  postgres:
+    image: pgvector/pgvector:pg18-trixie
+    restart: always
+    # set shared memory limit when using docker compose
+    shm_size: 128mb
+    environment:
+      POSTGRES_PASSWORD: cocoindex
+      POSTGRES_USER: cocoindex
+      POSTGRES_DB: cocoindex
+    ports:
+      - 5432:5432
+    volumes:
+      - cocoindex-postgres:/var/lib/postgresql
+volumes:
+  cocoindex-postgres:
