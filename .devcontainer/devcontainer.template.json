@@ -7,8 +7,8 @@
     "--cpus=8",
     "--memory=24g",
     "--shm-size=1g",
-    "--device",
-    "nvidia.com/gpu=all"
+    // "--device",
+    // "nvidia.com/gpu=all"
   ],
   "mounts": [
     "source=/run/user/1000/podman/podman.sock,target=/home/vscode/podman.sock,type=bind,z,consistency=cached",

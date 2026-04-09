@@ -24,6 +24,8 @@ __pycache__/
 *.cache
 *.pytest_cache/
 .venv/
+.devcontainer/pre-devcontainer.env
+.devcontainer/devcontainer.json
 
 # Python test artifacts
 .pytest_cache/
