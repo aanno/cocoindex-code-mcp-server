@@ -330,3 +330,101 @@ class TestCliPatternNormalization:
     def test_include_leading_slash_stripped(self):
         result = self._normalize_includes(["/src/*.py"])
         assert result == ["src/*.py"]
+
+
+# ---------------------------------------------------------------------------
+# .gitignore integration: collect_gitignore_patterns wired via main() logic
+# ---------------------------------------------------------------------------
+
+class TestGitignoreIntegration:
+    """Test .gitignore auto-exclusion as wired in main() — without invoking Click."""
+
+    def _run_gitignore_step(self, final_paths, no_gitignore=False):
+        """Replicate the gitignore block from main() for testing."""
+        normalized_excludes: list[str] = []
+        if not no_gitignore and final_paths:
+            gitignore_excludes = collect_gitignore_patterns(final_paths)
+            if gitignore_excludes:
+                normalized_excludes = gitignore_excludes + normalized_excludes
+        return normalized_excludes
+
+    def test_no_gitignore_in_lang_examples_gives_empty(self):
+        """lang_examples has no .gitignore — nothing added."""
+        result = self._run_gitignore_step([str(FIXTURES_DIR)])
+        assert result == []
+
+    def test_no_gitignore_flag_skips_collection(self, tmp_path):
+        """--no-gitignore suppresses collection even when .gitignore exists."""
+        (tmp_path / ".gitignore").write_text("*.log\n", encoding="utf-8")
+        result = self._run_gitignore_step([str(tmp_path)], no_gitignore=True)
+        assert result == []
+
+    def test_gitignore_patterns_collected_by_default(self, tmp_path):
+        """Without --no-gitignore, patterns from .gitignore appear in excludes."""
+        (tmp_path / ".gitignore").write_text("*.log\nbuild/\n", encoding="utf-8")
+        result = self._run_gitignore_step([str(tmp_path)])
+        assert "*.log" in result
+        assert "build" in result
+
+    def test_gitignore_patterns_prepended_before_cli_excludes(self, tmp_path):
+        """gitignore patterns come before explicit --exclude patterns."""
+        (tmp_path / ".gitignore").write_text("*.log\n", encoding="utf-8")
+        # Replicate: gitignore_excludes + normalized_excludes (cli)
+        gitignore_excludes = collect_gitignore_patterns([str(tmp_path)])
+        cli_excludes = ["**/vendor/**"]
+        combined = gitignore_excludes + cli_excludes
+        assert combined.index("*.log") < combined.index("**/vendor/**")
+
+    def test_gitignore_patterns_from_multiple_roots(self, tmp_path):
+        """Patterns are collected from all root paths."""
+        root_a = tmp_path / "a"
+        root_b = tmp_path / "b"
+        root_a.mkdir()
+        root_b.mkdir()
+        (root_a / ".gitignore").write_text("*.log\n", encoding="utf-8")
+        (root_b / ".gitignore").write_text("dist/\n", encoding="utf-8")
+        result = self._run_gitignore_step([str(root_a), str(root_b)])
+        assert "*.log" in result
+        assert "dist" in result
+
+    def test_gitignore_nested_patterns_anchored(self, tmp_path):
+        """Patterns from nested .gitignore are prefixed with their subdir."""
+        sub = tmp_path / "src"
+        sub.mkdir()
+        (sub / ".gitignore").write_text("*.gen\n", encoding="utf-8")
+        result = self._run_gitignore_step([str(tmp_path)])
+        assert "src/*.gen" in result
+
+    def test_gitignore_negation_not_in_excludes(self, tmp_path):
+        """Negation lines must not end up as exclude patterns."""
+        (tmp_path / ".gitignore").write_text("*.log\n!keep.log\n", encoding="utf-8")
+        result = self._run_gitignore_step([str(tmp_path)])
+        assert "*.log" in result
+        assert "!keep.log" not in result
+        assert "keep.log" not in result
+
+    def test_no_paths_gives_empty(self):
+        """When final_paths is None/empty, nothing is collected."""
+        assert self._run_gitignore_step(None) == []  # type: ignore[arg-type]
+        assert self._run_gitignore_step([]) == []
+
+    def test_gitignore_combined_with_cli_excludes_via_update_flow_config(self, tmp_path):
+        """End-to-end: gitignore + CLI excludes both end up in _global_flow_config."""
+        from cocoindex_code_mcp_server.cocoindex_config import (
+            _global_flow_config,
+            update_flow_config,
+        )
+        (tmp_path / ".gitignore").write_text("*.log\n", encoding="utf-8")
+
+        gitignore_excludes = collect_gitignore_patterns([str(tmp_path)])
+        cli_excludes = ["**/vendor/**"]
+        all_excludes = gitignore_excludes + cli_excludes
+
+        update_flow_config(extra_excluded_patterns=all_excludes)
+        stored = _global_flow_config["extra_excluded_patterns"]
+        assert "*.log" in stored  # type: ignore[operator]
+        assert "**/vendor/**" in stored  # type: ignore[operator]
+
+    def teardown_method(self, _method):
+        from cocoindex_code_mcp_server.cocoindex_config import update_flow_config
+        update_flow_config()

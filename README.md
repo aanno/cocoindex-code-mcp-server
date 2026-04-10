@@ -129,6 +129,19 @@ You can now use the RAG server running at `http://localhost:3033` as a streaming
 | `--log-level` | string | INFO | Logging level (DEBUG, INFO, WARNING, ERROR) |
 | `--json-response` | flag | false | Enable JSON responses instead of SSE streams |
 | `--rescan` | flag | false | Clear database and tracking tables before starting to force re-indexing |
+| `--include PATTERN` | option | - | Gitignore-style pattern for files to index (e.g. `*.nix`). **Replaces** the built-in include list entirely. Can be repeated. |
+| `--exclude PATTERN` | option | - | Gitignore-style pattern for files to exclude (e.g. `**/tests/**`). Added on top of built-in exclusions. Can be repeated. |
+| `--no-gitignore` | flag | false | Disable automatic exclusion of files matched by `.gitignore` files found in the scan tree. |
+
+### File filtering
+
+By default the server already has a broad built-in include list (~70 source-code file patterns) and a built-in exclude list (common build artefacts, hidden directories, dependency folders, etc.).
+
+In addition, `.gitignore` files found anywhere in the scan tree are **automatically respected** — any file that would be excluded by a `.gitignore` is also excluded from indexing. Use `--no-gitignore` to turn this off.
+
+Pattern syntax follows [gitignore rules](https://git-scm.com/docs/gitignore): `*` matches within a directory level, `**` matches across levels, a leading `/` anchors to the root, a trailing `/` marks a directory. Negation (`!`) is not supported and will be warned and skipped.
+
+When `--include` is given, it **replaces** the built-in include list entirely — only the patterns you specify will be indexed. When `--exclude` is given, it is **appended** to the built-in exclusions (and to any `.gitignore`-derived exclusions). Exclusions always take precedence over inclusions.
 
 ### Examples
 
@@ -147,6 +160,15 @@ python -m cocoindex_code_mcp_server.main_mcp_server --no-live /path/to/code
 
 # Custom chunk size (50% smaller chunks)
 python -m cocoindex_code_mcp_server.main_mcp_server --chunk-factor-percent 50 /path/to/code
+
+# Index only Nix and Dhall files (replaces built-in include list)
+python -m cocoindex_code_mcp_server.main_mcp_server --include '*.nix' --include '*.dhall' /path/to/code
+
+# Exclude test directories and lock files (added on top of built-ins)
+python -m cocoindex_code_mcp_server.main_mcp_server --exclude '**/tests/**' --exclude '*.lock' /path/to/code
+
+# Disable .gitignore-based exclusion
+python -m cocoindex_code_mcp_server.main_mcp_server --no-gitignore /path/to/code
 ```
 
 ## Features

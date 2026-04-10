@@ -67,7 +67,7 @@ from .cocoindex_config import (
 from .db.pgvector.hybrid_search import HybridSearchEngine
 from .keyword_search_parser_lark import KeywordSearchParser
 from .lang.python.python_code_analyzer import analyze_python_code
-from .pattern_utils import gitignore_pattern_to_globset
+from .pattern_utils import collect_gitignore_patterns, gitignore_pattern_to_globset
 
 try:
     from coverage import Coverage
@@ -305,6 +305,12 @@ def get_mcp_resources() -> list[types.Resource]:
         "Added on top of the built-in exclusions. Can be repeated."
     ),
 )
+@click.option(
+    "--no-gitignore",
+    is_flag=True,
+    default=False,
+    help="Disable automatic exclusion of files matched by .gitignore files found in the scan tree.",
+)
 def main(
     paths: tuple,
     explicit_paths: tuple,
@@ -320,6 +326,7 @@ def main(
     rescan: bool,
     extra_included_patterns: tuple,
     extra_excluded_patterns: tuple,
+    no_gitignore: bool,
 ) -> int:
     """CocoIndex RAG MCP Server - Model Context Protocol server for hybrid code search."""
 
@@ -453,6 +460,14 @@ def main(
             if converted:
                 normalized_includes.append(converted)
 
+    # Collect .gitignore-derived exclusions unless suppressed
+    if not no_gitignore and final_paths:
+        gitignore_excludes = collect_gitignore_patterns(final_paths)
+        if gitignore_excludes:
+            logger.info("📄 .gitignore exclusions: %d pattern(s) from scan tree", len(gitignore_excludes))
+            # gitignore patterns prepended so explicit --exclude always takes final precedence
+            normalized_excludes = gitignore_excludes + normalized_excludes
+
     # Update flow configuration
     update_flow_config(
         paths=final_paths,
@@ -473,6 +488,10 @@ def main(
         logger.info("⏰ Polling interval: %s seconds", poll)
     if chunk_factor_percent != 100:
         logger.info("📏 Chunk size scaling: %s%%", chunk_factor_percent)
+    if not no_gitignore:
+        logger.info("📄 .gitignore processing: ENABLED")
+    else:
+        logger.info("📄 .gitignore processing: DISABLED (--no-gitignore)")
     if normalized_includes is not None:
         logger.info("✅ Include patterns (replaces built-in list): %s", normalized_includes)
     if normalized_excludes:
