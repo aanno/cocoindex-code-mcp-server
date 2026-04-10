@@ -56,7 +56,12 @@ from . import mcp_json_schemas
 
 # Backend abstraction imports
 from .backends import BackendFactory, VectorStoreBackend
-from .cocoindex_config import code_to_embedding, run_flow_update, update_flow_config
+from .cocoindex_config import (
+    code_embedding_flow,
+    code_to_embedding,
+    run_flow_update,
+    update_flow_config,
+)
 
 # Local imports
 from .db.pgvector.hybrid_search import HybridSearchEngine
@@ -314,8 +319,6 @@ def main(
         logger.info("🗑️  Rescan mode enabled - clearing database and tracking tables...")
         try:
             import psycopg
-
-            from .cocoindex_config import code_embedding_flow
 
             # Get database connection
             database_url = os.getenv("DATABASE_URL") or os.getenv("COCOINDEX_DATABASE_URL")
