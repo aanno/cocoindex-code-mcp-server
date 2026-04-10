@@ -199,6 +199,10 @@ module = ["pgvector.*", "astchunk.*", "cachetools.*"]
 ignore_missing_imports = true
 ignore_errors = true
 
+[[tool.mypy.overrides]]
+module = ["asyncpg.*", "pytest_asyncio.*"]
+ignore_missing_imports = true
+
 [tool.uv.workspace]
 members = [
     ".",

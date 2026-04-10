@@ -1517,12 +1517,12 @@ def code_embedding_flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoind
         source_config["path"] = path
 
         # Apply user-supplied pattern overrides
-        extra_included = _global_flow_config.get("extra_included_patterns")
+        extra_included: List[str] | None = _global_flow_config.get("extra_included_patterns")  # type: ignore[assignment]
         if extra_included is not None:
             # --include was given: replace the built-in include list entirely
             source_config["included_patterns"] = list(extra_included)
 
-        extra_excluded = _global_flow_config.get("extra_excluded_patterns")
+        extra_excluded: List[str] | None = _global_flow_config.get("extra_excluded_patterns")  # type: ignore[assignment]
         if extra_excluded:
             # --exclude was given: append to the built-in exclude list
             source_config["excluded_patterns"] = list(source_config.get("excluded_patterns", [])) + list(extra_excluded)

@@ -264,6 +264,8 @@ For more technical details, see:
 ```bash
 # Run tests to verify installation
 pytest -c pytest.ini tests/
+
+uv run --with pytest --with pytest-asyncio --with pytest-mock pytest tests/test_pattern_utils.py -v --tb=short 2>&1 | tail -20
 ```
 
 ### Code Quality

@@ -235,8 +235,7 @@ class DatabaseComparator:
                     r
                     for r in db_records
                     if not r.get("functions") or
-                    # type: ignore[union-attr]
-                    (isinstance(r.get("functions"), str) and r.get("functions").strip() == "")
+                    (isinstance(r.get("functions"), str) and r.get("functions").strip() == "")  # type: ignore[union-attr]
                 ]
                 if empty_function_records:
                     discrepancies.append(
@@ -247,8 +246,7 @@ class DatabaseComparator:
                     r
                     for r in db_records
                     if not r.get("classes") or
-                    # type: ignore[union-attr]
-                    (isinstance(r.get("classes"), str) and r.get("classes").strip() == "")
+                    (isinstance(r.get("classes"), str) and r.get("classes").strip() == "")  # type: ignore[union-attr]
                 ]
                 if empty_class_records:
                     discrepancies.append(

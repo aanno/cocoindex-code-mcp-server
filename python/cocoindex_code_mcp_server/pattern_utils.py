@@ -57,9 +57,13 @@ def parse_gitignore_file(gitignore_path: Path, root_path: Path) -> list[str]:
         LOGGER.warning("Could not read %s: %s", gitignore_path, e)
         return []
 
-    # Use pathspec to enumerate non-blank, non-comment raw patterns
-    spec = pathspec.PathSpec.from_lines("gitwildmatch", lines)
-    raw_patterns = [p.pattern for p in spec.patterns if p.pattern]
+    # Use pathspec to enumerate non-blank, non-comment raw patterns.
+    # We pass lines through pathspec to normalise encoding/whitespace, then
+    # retrieve the original pattern string via the (untyped) .pattern attribute.
+    spec = pathspec.PathSpec.from_lines("gitignore", lines)
+    raw_patterns: list[str] = [
+        pat for p in spec.patterns if (pat := str(getattr(p, "pattern", "") or ""))
+    ]
 
     rel_dir = gitignore_path.parent.relative_to(root_path)
 
