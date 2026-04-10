@@ -34,11 +34,11 @@ from types import FunctionType
 from typing import Any, Dict, List, TypedDict, Union, cast
 
 import numpy as np
-from cocoindex_code_mcp_server.mappers import SOURCE_CONFIG
 from numpy.typing import NDArray
 from typing_extensions import deprecated
 
 import cocoindex
+from cocoindex_code_mcp_server.mappers import SOURCE_CONFIG
 
 # from sentence_transformers import SentenceTransformer  # Use cocoindex.functions.SentenceTransformerEmbed instead
 from .ast_chunking import ASTChunkOperation
@@ -1486,6 +1486,9 @@ _global_flow_config = {
     "enable_polling": False,
     "poll_interval": 30,
     "use_smart_embedding": True,  # Enable smart language-aware embedding
+    # None = not set (use SOURCE_CONFIG defaults); list = user-supplied override/extension
+    "extra_included_patterns": None,
+    "extra_excluded_patterns": None,
 }
 
 
@@ -1512,6 +1515,17 @@ def code_embedding_flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoind
         # Configure LocalFile source with optional polling
         source_config = SOURCE_CONFIG.copy()
         source_config["path"] = path
+
+        # Apply user-supplied pattern overrides
+        extra_included = _global_flow_config.get("extra_included_patterns")
+        if extra_included is not None:
+            # --include was given: replace the built-in include list entirely
+            source_config["included_patterns"] = list(extra_included)
+
+        extra_excluded = _global_flow_config.get("extra_excluded_patterns")
+        if extra_excluded:
+            # --exclude was given: append to the built-in exclude list
+            source_config["excluded_patterns"] = list(source_config.get("excluded_patterns", [])) + list(extra_excluded)
 
         # Note: Polling configuration is handled by CocoIndex live updater, not LocalFile
         if enable_polling:
@@ -1806,6 +1820,8 @@ def update_flow_config(
     use_default_chunking: bool = False,
     use_default_language_handler: bool = False,
     chunk_factor_percent: int = 100,
+    extra_included_patterns: Union[List[str], None] = None,
+    extra_excluded_patterns: Union[List[str], None] = None,
 ) -> None:
     """Update the global flow configuration."""
     global _global_flow_config
@@ -1821,6 +1837,8 @@ def update_flow_config(
             "use_default_embedding": use_default_embedding,
             "use_default_chunking": use_default_chunking,
             "use_default_language_handler": use_default_language_handler,
+            "extra_included_patterns": extra_included_patterns,
+            "extra_excluded_patterns": extra_excluded_patterns,
         }
     )
 

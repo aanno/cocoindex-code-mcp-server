@@ -67,6 +67,7 @@ from .cocoindex_config import (
 from .db.pgvector.hybrid_search import HybridSearchEngine
 from .keyword_search_parser_lark import KeywordSearchParser
 from .lang.python.python_code_analyzer import analyze_python_code
+from .pattern_utils import gitignore_pattern_to_globset
 
 try:
     from coverage import Coverage
@@ -284,6 +285,26 @@ def get_mcp_resources() -> list[types.Resource]:
     default=False,
     help="Clear database and tracking tables before starting to force re-indexing",
 )
+@click.option(
+    "--include",
+    "extra_included_patterns",
+    multiple=True,
+    metavar="PATTERN",
+    help=(
+        "Gitignore-style pattern for files to index (e.g. '*.nix'). "
+        "When given, REPLACES the built-in include list entirely. Can be repeated."
+    ),
+)
+@click.option(
+    "--exclude",
+    "extra_excluded_patterns",
+    multiple=True,
+    metavar="PATTERN",
+    help=(
+        "Gitignore-style pattern for files to exclude (e.g. '**/tests/**'). "
+        "Added on top of the built-in exclusions. Can be repeated."
+    ),
+)
 def main(
     paths: tuple,
     explicit_paths: tuple,
@@ -297,6 +318,8 @@ def main(
     log_level: str,
     json_response: bool,
     rescan: bool,
+    extra_included_patterns: tuple,
+    extra_excluded_patterns: tuple,
 ) -> int:
     """CocoIndex RAG MCP Server - Model Context Protocol server for hybrid code search."""
 
@@ -415,6 +438,21 @@ def main(
     # Configure live updates
     live_enabled = not no_live
 
+    # Normalize user-supplied patterns (gitignore-style → globset)
+    normalized_excludes: List[str] = []
+    for pat in extra_excluded_patterns:
+        converted = gitignore_pattern_to_globset(pat)
+        if converted:
+            normalized_excludes.append(converted)
+
+    normalized_includes: Optional[List[str]] = None
+    if extra_included_patterns:
+        normalized_includes = []
+        for pat in extra_included_patterns:
+            converted = gitignore_pattern_to_globset(pat)
+            if converted:
+                normalized_includes.append(converted)
+
     # Update flow configuration
     update_flow_config(
         paths=final_paths,
@@ -424,6 +462,8 @@ def main(
         use_default_chunking=default_chunking,
         use_default_language_handler=default_language_handler,
         chunk_factor_percent=chunk_factor_percent,
+        extra_included_patterns=normalized_includes,
+        extra_excluded_patterns=normalized_excludes or None,
     )
 
     logger.info("🚀 CocoIndex RAG MCP Server starting...")
@@ -433,6 +473,10 @@ def main(
         logger.info("⏰ Polling interval: %s seconds", poll)
     if chunk_factor_percent != 100:
         logger.info("📏 Chunk size scaling: %s%%", chunk_factor_percent)
+    if normalized_includes is not None:
+        logger.info("✅ Include patterns (replaces built-in list): %s", normalized_includes)
+    if normalized_excludes:
+        logger.info("🚫 Extra exclude patterns: %s", normalized_excludes)
 
     # Create the MCP server
     app: Server = Server("cocoindex-rag")
