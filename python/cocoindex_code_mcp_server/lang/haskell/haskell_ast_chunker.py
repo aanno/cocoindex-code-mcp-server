@@ -854,7 +854,7 @@ class HaskellChunkExecutor:
 
     spec: HaskellChunkSpec
 
-    def analyze(self, content: Any, language: Any = "Haskell") -> type:
+    def analyze(self, content: Any = None, language: Any = "Haskell") -> type:
         """Analyze method required by CocoIndex to determine return type."""
         return list[HaskellChunkRow]
 

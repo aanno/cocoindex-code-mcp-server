@@ -44,7 +44,7 @@ class MyChunkExecutor:
     """Executor for MyChunk AST-based code chunking."""
     spec: MyChunkSpec
 
-    def analyze(self, content: Any, language: Any = "MyLanguage") -> type:
+    def analyze(self, content: Any = None, language: Any = "MyLanguage") -> type:
         """Analyze method required by CocoIndex to determine return type."""
         return list[MyChunkRow]
 
