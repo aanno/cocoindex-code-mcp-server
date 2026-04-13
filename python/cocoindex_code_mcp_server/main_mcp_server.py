@@ -448,17 +448,13 @@ def main(
     # Normalize user-supplied patterns (gitignore-style → globset)
     normalized_excludes: List[str] = []
     for pat in extra_excluded_patterns:
-        converted = gitignore_pattern_to_globset(pat)
-        if converted:
-            normalized_excludes.append(converted)
+        normalized_excludes.extend(gitignore_pattern_to_globset(pat))
 
     normalized_includes: Optional[List[str]] = None
     if extra_included_patterns:
         normalized_includes = []
         for pat in extra_included_patterns:
-            converted = gitignore_pattern_to_globset(pat)
-            if converted:
-                normalized_includes.append(converted)
+            normalized_includes.extend(gitignore_pattern_to_globset(pat))
 
     # Collect .gitignore-derived exclusions unless suppressed
     if not no_gitignore and final_paths:

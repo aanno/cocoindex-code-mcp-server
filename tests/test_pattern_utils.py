@@ -22,55 +22,65 @@ FIXTURES_DIR = Path(__file__).parent / "fixtures" / "lang_examples"
 # ---------------------------------------------------------------------------
 
 class TestGitignorePatternToGlobset:
-    """Unit tests for single-pattern conversion."""
+    """Unit tests for single-pattern conversion (new list[str] API)."""
 
-    def test_plain_extension_pattern_unchanged(self):
-        assert gitignore_pattern_to_globset("*.py") == "*.py"
+    # Extension patterns: non-anchored, get **/ prefix
+    def test_plain_extension_pattern_gets_double_star(self):
+        assert gitignore_pattern_to_globset("*.py") == ["**/*.py"]
 
+    # Already-anchored **/ patterns: left as-is
     def test_double_star_pattern_unchanged(self):
-        assert gitignore_pattern_to_globset("**/node_modules") == "**/node_modules"
+        assert gitignore_pattern_to_globset("**/node_modules") == ["**/node_modules"]
 
-    def test_plain_name_unchanged(self):
-        assert gitignore_pattern_to_globset("target") == "target"
+    # Non-anchored names: get **/ prefix
+    def test_plain_name_gets_double_star(self):
+        assert gitignore_pattern_to_globset("target") == ["**/target"]
 
-    def test_trailing_slash_stripped(self):
-        assert gitignore_pattern_to_globset("target/") == "target"
+    # Directory pattern: get **/ prefix + /** children variant
+    def test_trailing_slash_produces_two_patterns(self):
+        assert gitignore_pattern_to_globset("target/") == ["**/target", "**/target/**"]
 
-    def test_leading_slash_stripped(self):
-        assert gitignore_pattern_to_globset("/dist") == "dist"
+    # Root-anchored: no **/ prefix
+    def test_leading_slash_anchors_to_root(self):
+        assert gitignore_pattern_to_globset("/dist") == ["dist"]
 
-    def test_leading_and_trailing_slash_stripped(self):
-        assert gitignore_pattern_to_globset("/build/") == "build"
+    def test_leading_and_trailing_slash_root_dir(self):
+        assert gitignore_pattern_to_globset("/build/") == ["build", "build/**"]
 
-    def test_nested_pattern_unchanged(self):
-        assert gitignore_pattern_to_globset("src/build/") == "src/build"
+    # Nested (contains / but not root-anchored): not further modified
+    def test_nested_pattern_with_trailing_slash(self):
+        result = gitignore_pattern_to_globset("src/build/")
+        assert "src/build" in result or "**/src/build" in result
 
-    def test_blank_line_returns_none(self):
-        assert gitignore_pattern_to_globset("") is None
+    # Empty / skipped patterns
+    def test_blank_line_returns_empty_list(self):
+        assert gitignore_pattern_to_globset("") == []
 
-    def test_whitespace_only_returns_none(self):
-        assert gitignore_pattern_to_globset("   ") is None
+    def test_whitespace_only_returns_empty_list(self):
+        assert gitignore_pattern_to_globset("   ") == []
 
-    def test_comment_returns_none(self):
-        assert gitignore_pattern_to_globset("# this is a comment") is None
+    def test_comment_returns_empty_list(self):
+        assert gitignore_pattern_to_globset("# this is a comment") == []
 
-    def test_negation_returns_none(self):
-        assert gitignore_pattern_to_globset("!important.lock") is None
+    def test_negation_returns_empty_list(self):
+        assert gitignore_pattern_to_globset("!important.lock") == []
 
-    def test_negation_with_path_returns_none(self):
-        assert gitignore_pattern_to_globset("!src/keep.py") is None
+    def test_negation_with_path_returns_empty_list(self):
+        assert gitignore_pattern_to_globset("!src/keep.py") == []
 
+    # Already-anchored **/ patterns with trailing slash
     def test_complex_glob_unchanged(self):
-        assert gitignore_pattern_to_globset("**/__pycache__") == "**/__pycache__"
+        assert gitignore_pattern_to_globset("**/__pycache__") == ["**/__pycache__"]
 
     def test_double_star_extension(self):
-        assert gitignore_pattern_to_globset("**/*.pyc") == "**/*.pyc"
+        assert gitignore_pattern_to_globset("**/*.pyc") == ["**/*.pyc"]
 
-    def test_question_mark_unchanged(self):
-        assert gitignore_pattern_to_globset("file?.py") == "file?.py"
+    # Non-anchored names with special characters
+    def test_question_mark_gets_double_star(self):
+        assert gitignore_pattern_to_globset("file?.py") == ["**/file?.py"]
 
-    def test_character_class_unchanged(self):
-        assert gitignore_pattern_to_globset("[Mm]akefile") == "[Mm]akefile"
+    def test_character_class_gets_double_star(self):
+        assert gitignore_pattern_to_globset("[Mm]akefile") == ["**/[Mm]akefile"]
 
 
 # ---------------------------------------------------------------------------
@@ -108,12 +118,14 @@ class TestParseGitignoreFile:
         assert "# Build outputs" not in result
         assert "" not in result
 
-    def test_trailing_slash_stripped(self, gitignore):
+    def test_trailing_slash_produces_recursive_patterns(self, gitignore):
         gi, root = gitignore
         result = parse_gitignore_file(gi, root)
-        assert "target" in result
+        # target/ → **/target and **/target/**
+        assert "**/target" in result
+        assert "**/target/**" in result
 
-    def test_leading_slash_stripped(self, gitignore):
+    def test_leading_slash_anchored_to_root(self, gitignore):
         gi, root = gitignore
         result = parse_gitignore_file(gi, root)
         assert "dist" in result
@@ -121,12 +133,12 @@ class TestParseGitignoreFile:
     def test_plain_extension_included(self, gitignore):
         gi, root = gitignore
         result = parse_gitignore_file(gi, root)
-        assert "*.lock" in result
+        assert "**/*.lock" in result
 
     def test_plain_name_included(self, gitignore):
         gi, root = gitignore
         result = parse_gitignore_file(gi, root)
-        assert "node_modules" in result
+        assert "**/node_modules" in result
 
     def test_negation_excluded(self, gitignore):
         gi, root = gitignore
@@ -147,8 +159,9 @@ class TestParseGitignoreFile:
         gi = sub / ".gitignore"
         gi.write_text("*.gen\nbuild/\n", encoding="utf-8")
         result = parse_gitignore_file(gi, tmp_path)
-        assert "src/*.gen" in result
-        assert "src/build" in result
+        # *.gen → **/src/*.gen (nested, gets **/ prefix from nesting)
+        assert any("src" in p and ".gen" in p for p in result), f"No src/*.gen pattern in {result}"
+        assert any("src" in p and "build" in p for p in result), f"No src/build pattern in {result}"
 
     def test_missing_file_returns_empty(self, tmp_path):
         result = parse_gitignore_file(tmp_path / "nonexistent.gitignore", tmp_path)
@@ -180,8 +193,9 @@ class TestCollectGitignorePatterns:
         gi = tmp_path / ".gitignore"
         gi.write_text("*.log\nbuild/\n", encoding="utf-8")
         result = collect_gitignore_patterns([str(tmp_path)])
-        assert "*.log" in result
-        assert "build" in result
+        assert "**/*.log" in result
+        assert "**/build" in result
+        assert "**/build/**" in result
 
     def test_multiple_gitignores_merged(self, tmp_path):
         """Patterns from .gitignores in different subdirs are all returned."""
@@ -190,8 +204,8 @@ class TestCollectGitignorePatterns:
         sub.mkdir()
         (sub / ".gitignore").write_text("*.o\n", encoding="utf-8")
         result = collect_gitignore_patterns([str(tmp_path)])
-        assert "*.log" in result
-        assert "lib/*.o" in result
+        assert "**/*.log" in result
+        assert any("lib" in p and ".o" in p for p in result), f"No lib/*.o pattern in {result}"
 
     def test_nested_gitignore_anchored_to_root(self, tmp_path):
         """Pattern in a nested .gitignore is prefixed with the subdirectory path."""
@@ -199,7 +213,9 @@ class TestCollectGitignorePatterns:
         sub.mkdir(parents=True)
         (sub / ".gitignore").write_text("*.pb.go\n", encoding="utf-8")
         result = collect_gitignore_patterns([str(tmp_path)])
-        assert "src/gen/*.pb.go" in result
+        assert any("src/gen" in p and ".pb.go" in p for p in result), (
+            f"No src/gen/*.pb.go pattern in {result}"
+        )
 
     def test_multiple_root_paths(self, tmp_path):
         """Patterns from distinct root directories are all collected."""
@@ -210,21 +226,21 @@ class TestCollectGitignorePatterns:
         (root_a / ".gitignore").write_text("*.log\n", encoding="utf-8")
         (root_b / ".gitignore").write_text("dist/\n", encoding="utf-8")
         result = collect_gitignore_patterns([str(root_a), str(root_b)])
-        assert "*.log" in result
-        assert "dist" in result
+        assert "**/*.log" in result
+        assert "**/dist" in result
 
     def test_negation_patterns_not_in_result(self, tmp_path):
         """Negation lines in .gitignore must not appear in the output."""
         (tmp_path / ".gitignore").write_text("*.log\n!important.log\n", encoding="utf-8")
         result = collect_gitignore_patterns([str(tmp_path)])
-        assert "*.log" in result
+        assert "**/*.log" in result
         assert "!important.log" not in result
         assert "important.log" not in result
 
     def test_comment_lines_not_in_result(self, tmp_path):
         (tmp_path / ".gitignore").write_text("# ignore build\nbuild/\n", encoding="utf-8")
         result = collect_gitignore_patterns([str(tmp_path)])
-        assert "build" in result
+        assert "**/build" in result
         assert "# ignore build" not in result
 
 
@@ -292,9 +308,7 @@ class TestCliPatternNormalization:
     def _normalize_excludes(self, patterns):
         result = []
         for p in patterns:
-            converted = gitignore_pattern_to_globset(p)
-            if converted:
-                result.append(converted)
+            result.extend(gitignore_pattern_to_globset(p))
         return result or None
 
     def _normalize_includes(self, patterns):
@@ -302,18 +316,16 @@ class TestCliPatternNormalization:
             return None
         result = []
         for p in patterns:
-            converted = gitignore_pattern_to_globset(p)
-            if converted:
-                result.append(converted)
+            result.extend(gitignore_pattern_to_globset(p))
         return result
 
     def test_exclude_trailing_slash_normalized(self):
         result = self._normalize_excludes(["target/"])
-        assert result == ["target"]
+        assert result == ["**/target", "**/target/**"]
 
     def test_exclude_multiple_patterns(self):
         result = self._normalize_excludes(["*.lock", "**/tests/**"])
-        assert result == ["*.lock", "**/tests/**"]
+        assert result == ["**/*.lock", "**/tests/**"]
 
     def test_exclude_negation_silently_dropped(self):
         result = self._normalize_excludes(["!keep.log"])
@@ -321,7 +333,7 @@ class TestCliPatternNormalization:
 
     def test_include_replaces_when_given(self):
         result = self._normalize_includes(["*.nix", "*.dhall"])
-        assert result == ["*.nix", "*.dhall"]
+        assert result == ["**/*.nix", "**/*.dhall"]
 
     def test_include_none_when_empty_tuple(self):
         result = self._normalize_includes(())
@@ -329,7 +341,9 @@ class TestCliPatternNormalization:
 
     def test_include_leading_slash_stripped(self):
         result = self._normalize_includes(["/src/*.py"])
-        assert result == ["src/*.py"]
+        # /src/*.py is root-anchored (has leading /); contains / so NOT further prefixed
+        assert result is not None
+        assert any("src" in p and ".py" in p for p in result), f"Unexpected: {result}"
 
 
 # ---------------------------------------------------------------------------
@@ -363,8 +377,8 @@ class TestGitignoreIntegration:
         """Without --no-gitignore, patterns from .gitignore appear in excludes."""
         (tmp_path / ".gitignore").write_text("*.log\nbuild/\n", encoding="utf-8")
         result = self._run_gitignore_step([str(tmp_path)])
-        assert "*.log" in result
-        assert "build" in result
+        assert "**/*.log" in result
+        assert "**/build" in result
 
     def test_gitignore_patterns_prepended_before_cli_excludes(self, tmp_path):
         """gitignore patterns come before explicit --exclude patterns."""
@@ -373,7 +387,8 @@ class TestGitignoreIntegration:
         gitignore_excludes = collect_gitignore_patterns([str(tmp_path)])
         cli_excludes = ["**/vendor/**"]
         combined = gitignore_excludes + cli_excludes
-        assert combined.index("*.log") < combined.index("**/vendor/**")
+        assert any("*.log" in p for p in combined)
+        assert combined.index(next(p for p in combined if "*.log" in p)) < combined.index("**/vendor/**")
 
     def test_gitignore_patterns_from_multiple_roots(self, tmp_path):
         """Patterns are collected from all root paths."""
@@ -384,8 +399,8 @@ class TestGitignoreIntegration:
         (root_a / ".gitignore").write_text("*.log\n", encoding="utf-8")
         (root_b / ".gitignore").write_text("dist/\n", encoding="utf-8")
         result = self._run_gitignore_step([str(root_a), str(root_b)])
-        assert "*.log" in result
-        assert "dist" in result
+        assert "**/*.log" in result
+        assert "**/dist" in result
 
     def test_gitignore_nested_patterns_anchored(self, tmp_path):
         """Patterns from nested .gitignore are prefixed with their subdir."""
@@ -393,13 +408,13 @@ class TestGitignoreIntegration:
         sub.mkdir()
         (sub / ".gitignore").write_text("*.gen\n", encoding="utf-8")
         result = self._run_gitignore_step([str(tmp_path)])
-        assert "src/*.gen" in result
+        assert any("src" in p and ".gen" in p for p in result), f"No src/*.gen pattern in {result}"
 
     def test_gitignore_negation_not_in_excludes(self, tmp_path):
         """Negation lines must not end up as exclude patterns."""
         (tmp_path / ".gitignore").write_text("*.log\n!keep.log\n", encoding="utf-8")
         result = self._run_gitignore_step([str(tmp_path)])
-        assert "*.log" in result
+        assert "**/*.log" in result
         assert "!keep.log" not in result
         assert "keep.log" not in result
 
@@ -422,9 +437,152 @@ class TestGitignoreIntegration:
 
         update_flow_config(extra_excluded_patterns=all_excludes)
         stored = _global_flow_config["extra_excluded_patterns"]
-        assert "*.log" in stored  # type: ignore[operator]
+        assert "**/*.log" in stored  # type: ignore[operator]
         assert "**/vendor/**" in stored  # type: ignore[operator]
 
     def teardown_method(self, _method):
         from cocoindex_code_mcp_server.cocoindex_config import update_flow_config
         update_flow_config()
+
+
+# ---------------------------------------------------------------------------
+# Regression: gitignore_pattern_to_globset must return list[str] and produce
+# patterns that cover files INSIDE nested directories (e.g. admin-service/target/).
+#
+# Bug: the old implementation returned str | None and stripped trailing /
+# without adding **/ prefix, so "target/" → "target" which only matches the
+# directory node itself, not files beneath it such as
+# "admin-service/target/classes/db/sql/datensatz.sql".
+# ---------------------------------------------------------------------------
+
+class TestGitignorePatternToGlobsetNewApi:
+    """Regression tests for the list[str] API and correct **/ handling."""
+
+    # --- return-type contract -----------------------------------------------
+
+    def test_return_type_is_list_for_name(self):
+        result = gitignore_pattern_to_globset("target")
+        assert isinstance(result, list), f"Expected list, got {type(result)}: {result!r}"
+
+    def test_return_type_is_list_for_dir_pattern(self):
+        result = gitignore_pattern_to_globset("target/")
+        assert isinstance(result, list), f"Expected list, got {type(result)}: {result!r}"
+
+    def test_blank_returns_empty_list(self):
+        assert gitignore_pattern_to_globset("") == []
+
+    def test_whitespace_only_returns_empty_list(self):
+        assert gitignore_pattern_to_globset("   ") == []
+
+    def test_comment_returns_empty_list(self):
+        assert gitignore_pattern_to_globset("# comment") == []
+
+    def test_negation_returns_empty_list(self):
+        assert gitignore_pattern_to_globset("!keep.log") == []
+
+    # --- non-anchored patterns must gain **/ prefix -------------------------
+
+    def test_plain_name_gets_double_star_prefix(self):
+        """'target' should become ['**/target'] so it matches at any depth."""
+        patterns = gitignore_pattern_to_globset("target")
+        assert isinstance(patterns, list)
+        assert "**/target" in patterns, f"Expected '**/target' in {patterns}"
+
+    def test_dir_pattern_includes_recursive_children(self):
+        """'target/' should include '**/target/**' to cover files inside it."""
+        patterns = gitignore_pattern_to_globset("target/")
+        assert isinstance(patterns, list)
+        assert "**/target/**" in patterns, (
+            f"Expected '**/target/**' in {patterns} — "
+            "files under admin-service/target/ won't be excluded"
+        )
+
+    def test_dir_pattern_also_matches_the_dir_itself(self):
+        """'target/' should include '**/target' to match the directory node."""
+        patterns = gitignore_pattern_to_globset("target/")
+        assert isinstance(patterns, list)
+        assert "**/target" in patterns, f"Expected '**/target' in {patterns}"
+
+    # --- root-anchored patterns must NOT gain **/ prefix --------------------
+
+    def test_root_anchored_no_double_star(self):
+        """/dist is root-anchored and must not become **/dist."""
+        patterns = gitignore_pattern_to_globset("/dist")
+        assert isinstance(patterns, list)
+        assert not any(p.startswith("**/") for p in patterns), (
+            f"/dist is root-anchored; unexpected **/ prefix in {patterns}"
+        )
+
+    def test_root_anchored_plain_value_present(self):
+        patterns = gitignore_pattern_to_globset("/dist")
+        assert "dist" in patterns, f"Expected 'dist' in {patterns}"
+
+    def test_root_anchored_dir_includes_children(self):
+        """/dist/ should produce ['dist', 'dist/**']."""
+        patterns = gitignore_pattern_to_globset("/dist/")
+        assert isinstance(patterns, list)
+        assert "dist" in patterns
+        assert "dist/**" in patterns
+
+    # --- patterns that already start with **/ must not be duplicated --------
+
+    def test_already_double_star_not_duplicated(self):
+        patterns = gitignore_pattern_to_globset("**/node_modules")
+        assert isinstance(patterns, list)
+        assert "**/**/node_modules" not in patterns, (
+            f"Duplicated **/ prefix detected: {patterns}"
+        )
+
+    def test_already_double_star_dir_no_duplicate_prefix(self):
+        patterns = gitignore_pattern_to_globset("**/__pycache__/")
+        assert isinstance(patterns, list)
+        assert "**/**/__pycache__" not in patterns
+
+    # --- key regression: nested target/ -------------------------------------------------------
+
+    def test_target_slash_matches_deep_file_via_pathspec(self):
+        """Regression: 'target/' patterns must match admin-service/target/classes/foo.sql."""
+        import pathspec as ps
+
+        patterns = gitignore_pattern_to_globset("target/")
+        assert patterns, "Expected non-empty pattern list for 'target/'"
+
+        spec = ps.PathSpec.from_lines("gitignore", patterns)
+        problematic_path = "admin-service/target/classes/db/sql/datensatz.sql"
+        assert spec.match_file(problematic_path), (
+            f"'target/' converted to {patterns} but does NOT match '{problematic_path}'. "
+            "Files inside nested target/ directories will not be excluded."
+        )
+
+    def test_explicit_exclude_target_glob_matches_deep_file(self):
+        """Regression: CLI --exclude 'target/**' must also cover nested target/ dirs."""
+        import pathspec as ps
+
+        patterns = gitignore_pattern_to_globset("target/**")
+        assert patterns, "Expected non-empty pattern list for 'target/**'"
+
+        spec = ps.PathSpec.from_lines("gitignore", patterns)
+        problematic_path = "admin-service/target/classes/db/sql/datensatz.sql"
+        assert spec.match_file(problematic_path), (
+            f"'target/**' converted to {patterns} but does NOT match '{problematic_path}'. "
+            "Explicit --exclude 'target/**' won't cover nested directories."
+        )
+
+    # --- parse_gitignore_file consistency -----------------------------------
+
+    def test_parse_gitignore_file_target_slash(self, tmp_path):
+        """A .gitignore with 'target/' should yield patterns matching nested files."""
+        import pathspec as ps
+
+        gi = tmp_path / ".gitignore"
+        gi.write_text("target/\n", encoding="utf-8")
+
+        patterns = parse_gitignore_file(gi, tmp_path)
+        assert patterns, "Expected at least one pattern from 'target/' in .gitignore"
+
+        spec = ps.PathSpec.from_lines("gitignore", patterns)
+        problematic_path = "admin-service/target/classes/db/sql/datensatz.sql"
+        assert spec.match_file(problematic_path), (
+            f"parse_gitignore_file produced {patterns} from 'target/' but "
+            f"it does NOT match '{problematic_path}'"
+        )

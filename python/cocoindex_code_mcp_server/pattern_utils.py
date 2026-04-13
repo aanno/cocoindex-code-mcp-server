@@ -5,10 +5,26 @@ CocoIndex's LocalFile source uses Rust's globset crate for pattern matching.
 Gitignore patterns are parsed via pathspec, then converted to globset equivalents.
 
 Conversion rules:
-  - Leading /  removed  (gitignore root-anchor has no globset equivalent)
-  - Trailing / removed  (directory matching is handled by cocoindex itself)
-  - !negation  skipped  (globset does not support negation; logged as warning)
-  - Everything else passes through unchanged (both syntaxes agree on * ** ? [...])
+
+  Blank lines / comments → [] (skipped)
+  !negation              → [] (globset has no negation; logged as warning)
+
+  Root-anchored (/foo or /foo/):
+    /foo   → ["foo"]            (exact path from root)
+    /foo/  → ["foo", "foo/**"]  (directory: also match its contents)
+
+  Already-recursive (**/ prefix):
+    **/foo   → ["**/foo"]
+    **/foo/  → ["**/foo", "**/foo/**"]
+
+  Non-anchored (everything else):
+    foo    → ["**/foo"]           (match at any depth)
+    foo/   → ["**/foo", "**/foo/**"]  (directory at any depth + its contents)
+    *.ext  → ["**/*.ext"]         (file extension at any depth)
+
+The **/ prefix is critical: without it, a pattern like "target" only matches a
+path whose *last component* is literally "target", not files inside a nested
+target/ directory such as "admin-service/target/classes/Foo.class".
 """
 
 import logging
@@ -19,31 +35,50 @@ import pathspec
 LOGGER = logging.getLogger(__name__)
 
 
-def gitignore_pattern_to_globset(pattern: str) -> str | None:
-    """Convert a single gitignore-style pattern to a globset pattern.
+def gitignore_pattern_to_globset(pattern: str) -> list[str]:
+    """Convert a single gitignore-style pattern to a list of globset patterns.
 
-    Returns None if the pattern should be skipped (negation, blank, comment).
+    Returns an empty list if the pattern should be skipped (negation, blank, comment).
+    May return two patterns for directory patterns (the dir itself + its contents).
     """
     stripped = pattern.strip()
 
     # Skip blank lines and comments
     if not stripped or stripped.startswith("#"):
-        return None
+        return []
 
     # Negation patterns are unsupported in globset
     if stripped.startswith("!"):
         LOGGER.warning("Pattern '%s' uses gitignore negation — not supported, skipped", stripped)
-        return None
+        return []
 
-    # Remove leading slash (root-anchor): /dist → dist
+    # Note whether this is a directory pattern (trailing slash)
+    is_dir = stripped.endswith("/")
+    if is_dir:
+        stripped = stripped[:-1]
+
+    if not stripped:
+        return []
+
+    # Root-anchored: leading / means "only match from repo root"
     if stripped.startswith("/"):
-        stripped = stripped[1:]
+        base = stripped[1:]
+        if not base:
+            return []
+        if is_dir:
+            return [base, f"{base}/**"]
+        return [base]
 
-    # Remove trailing slash (directory marker): target/ → target
-    if stripped.endswith("/"):
-        stripped = stripped[:-1:]
+    # Already has an explicit **/ prefix — leave as-is
+    if stripped.startswith("**/"):
+        if is_dir:
+            return [stripped, f"{stripped}/**"]
+        return [stripped]
 
-    return stripped if stripped else None
+    # Non-anchored: must match at any depth, so prepend **/
+    if is_dir:
+        return [f"**/{stripped}", f"**/{stripped}/**"]
+    return [f"**/{stripped}"]
 
 
 def parse_gitignore_file(gitignore_path: Path, root_path: Path) -> list[str]:
@@ -69,18 +104,19 @@ def parse_gitignore_file(gitignore_path: Path, root_path: Path) -> list[str]:
 
     results: list[str] = []
     for raw in raw_patterns:
-        globset = gitignore_pattern_to_globset(raw)
-        if globset is None:
+        globset_patterns = gitignore_pattern_to_globset(raw)
+        if not globset_patterns:
             # negation / blank already logged inside gitignore_pattern_to_globset
             continue
 
-        # Anchor patterns from nested .gitignore files relative to the root.
-        # A pattern in src/.gitignore applies under src/, so prefix with that dir.
-        if rel_dir != Path("."):
-            globset = f"{rel_dir}/{globset}"
+        for globset in globset_patterns:
+            # Anchor patterns from nested .gitignore files relative to the root.
+            # A pattern in src/.gitignore applies under src/, so prefix with that dir.
+            if rel_dir != Path("."):
+                globset = f"{rel_dir}/{globset}"
 
-        LOGGER.debug("  .gitignore (%s) -> excluded: %s", gitignore_path, globset)
-        results.append(globset)
+            LOGGER.debug("  .gitignore (%s) -> excluded: %s", gitignore_path, globset)
+            results.append(globset)
 
     return results
 
