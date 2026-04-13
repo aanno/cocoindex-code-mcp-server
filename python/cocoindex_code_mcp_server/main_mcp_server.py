@@ -330,10 +330,13 @@ def main(
 ) -> int:
     """CocoIndex RAG MCP Server - Model Context Protocol server for hybrid code search."""
 
-    # Configure logging
+    # Configure logging. force=True is required: without it, basicConfig() is a
+    # no-op when any prior import has already added a handler to the root logger,
+    # which causes --log-level to be silently ignored.
     logging.basicConfig(
         level=getattr(logging, log_level.upper()),
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        force=True,
     )
 
     # Set up signal handlers
