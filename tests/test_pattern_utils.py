@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from cocoindex_code_mcp_server.pattern_utils import (
+    PathFilter,
     collect_gitignore_patterns,
     gitignore_pattern_to_globset,
     parse_gitignore_file,
@@ -586,3 +587,178 @@ class TestGitignorePatternToGlobsetNewApi:
             f"parse_gitignore_file produced {patterns} from 'target/' but "
             f"it does NOT match '{problematic_path}'"
         )
+
+
+# ---------------------------------------------------------------------------
+# PathFilter — unit tests
+# ---------------------------------------------------------------------------
+
+class TestPathFilter:
+    """Tests for PathFilter.is_included() and filter_results()."""
+
+    # --- is_included: basic include/exclude logic ---------------------------
+
+    def test_matching_include_passes(self):
+        pf = PathFilter(["**/*.py"], [])
+        assert pf.is_included("src/main.py")
+
+    def test_non_matching_include_blocked(self):
+        pf = PathFilter(["**/*.py"], [])
+        assert not pf.is_included("src/main.rs")
+
+    def test_matching_exclude_blocks(self):
+        pf = PathFilter(["**/*.sql"], ["**/target/**"])
+        assert not pf.is_included("admin-service/target/classes/db/sql/schema.sql")
+
+    def test_include_passes_exclude_not_triggered(self):
+        pf = PathFilter(["**/*.sql"], ["**/target/**"])
+        assert pf.is_included("src/db/schema.sql")
+
+    def test_empty_exclude_list_passes_anything_in_include(self):
+        pf = PathFilter(["**/*.py", "**/*.rs"], [])
+        assert pf.is_included("a/b/c/lib.rs")
+
+    def test_empty_include_list_blocks_everything(self):
+        pf = PathFilter([], [])
+        assert not pf.is_included("src/main.py")
+
+    # --- is_included: directory exclusion at any depth ----------------------
+
+    def test_nested_target_excluded(self):
+        pf = PathFilter(["**/*.java"], ["**/target", "**/target/**"])
+        assert not pf.is_included("admin-service/target/classes/Foo.class")
+
+    def test_root_level_target_excluded(self):
+        pf = PathFilter(["**/*.class"], ["**/target/**"])
+        assert not pf.is_included("target/classes/Foo.class")
+
+    def test_file_outside_target_not_excluded(self):
+        pf = PathFilter(["**/*.java"], ["**/target", "**/target/**"])
+        assert pf.is_included("src/main/java/Foo.java")
+
+    # --- filter_results: object form ----------------------------------------
+
+    def test_filter_results_objects(self):
+        class FakeResult:
+            def __init__(self, filename):
+                self.filename = filename
+
+        pf = PathFilter(["**/*.py"], ["**/target/**"])
+        results = [
+            FakeResult("src/main.py"),
+            FakeResult("target/generated/code.py"),
+            FakeResult("lib/util.py"),
+        ]
+        kept = pf.filter_results(results)
+        assert len(kept) == 2
+        assert kept[0].filename == "src/main.py"
+        assert kept[1].filename == "lib/util.py"
+
+    # --- filter_results: dict form ------------------------------------------
+
+    def test_filter_results_dicts(self):
+        pf = PathFilter(["**/*.rs"], ["**/target/**"])
+        results = [
+            {"filename": "src/lib.rs", "score": 0.9},
+            {"filename": "target/debug/build.rs", "score": 0.8},
+            {"filename": "src/main.rs", "score": 0.7},
+        ]
+        kept = pf.filter_results(results)
+        assert len(kept) == 2
+        assert kept[0]["filename"] == "src/lib.rs"
+        assert kept[1]["filename"] == "src/main.rs"
+
+    def test_filter_results_empty_input(self):
+        pf = PathFilter(["**/*.py"], [])
+        assert pf.filter_results([]) == []
+
+    def test_filter_results_all_excluded(self):
+        pf = PathFilter(["**/*.sql"], ["**/target/**"])
+        results = [{"filename": "target/sql/a.sql"}, {"filename": "target/sql/b.sql"}]
+        assert pf.filter_results(results) == []
+
+    def test_filter_results_none_excluded(self):
+        pf = PathFilter(["**/*.py"], [])
+        results = [{"filename": "a.py"}, {"filename": "src/b.py"}]
+        assert len(pf.filter_results(results)) == 2
+
+    # --- integration with SOURCE_CONFIG patterns ----------------------------
+
+    def test_builtin_includes_match_common_files(self):
+        """SOURCE_CONFIG included_patterns (now **/*.py form) must match real paths."""
+        from cocoindex_code_mcp_server.mappers import SOURCE_CONFIG
+        pf = PathFilter(SOURCE_CONFIG["included_patterns"], [])
+        assert pf.is_included("src/main.py")
+        assert pf.is_included("lib/util.rs")
+        assert pf.is_included("pom.xml")
+        assert pf.is_included("deep/nested/module/Foo.java")
+
+    def test_builtin_excludes_block_target_contents(self):
+        """SOURCE_CONFIG excluded_patterns must block files inside target/."""
+        from cocoindex_code_mcp_server.mappers import SOURCE_CONFIG
+        pf = PathFilter(SOURCE_CONFIG["included_patterns"], SOURCE_CONFIG["excluded_patterns"])
+        assert not pf.is_included("admin-service/target/classes/db/sql/schema.sql")
+        assert not pf.is_included("target/release/binary")
+
+    def test_builtin_allows_src_files(self):
+        """src/ files must pass through both include and exclude filters."""
+        from cocoindex_code_mcp_server.mappers import SOURCE_CONFIG
+        pf = PathFilter(SOURCE_CONFIG["included_patterns"], SOURCE_CONFIG["excluded_patterns"])
+        assert pf.is_included("src/main/java/com/example/App.java")
+        assert pf.is_included("src/lib.rs")
+
+
+# ---------------------------------------------------------------------------
+# use_builtin_excludes wiring
+# ---------------------------------------------------------------------------
+
+class TestUseBuiltinExcludes:
+    """Verify update_flow_config stores use_builtin_excludes correctly."""
+
+    def test_default_is_true(self):
+        from cocoindex_code_mcp_server.cocoindex_config import (
+            _global_flow_config,
+            update_flow_config,
+        )
+        update_flow_config()
+        assert _global_flow_config["use_builtin_excludes"] is True
+
+    def test_set_false(self):
+        from cocoindex_code_mcp_server.cocoindex_config import (
+            _global_flow_config,
+            update_flow_config,
+        )
+        update_flow_config(use_builtin_excludes=False)
+        assert _global_flow_config["use_builtin_excludes"] is False
+
+    def teardown_method(self, _method):
+        from cocoindex_code_mcp_server.cocoindex_config import update_flow_config
+        update_flow_config()
+
+
+# ---------------------------------------------------------------------------
+# SOURCE_CONFIG pattern correctness
+# ---------------------------------------------------------------------------
+
+class TestSourceConfigPatterns:
+    """Verify that the updated SOURCE_CONFIG patterns have the right form."""
+
+    def test_all_include_patterns_have_double_star_prefix(self):
+        from cocoindex_code_mcp_server.mappers import SOURCE_CONFIG
+        for pat in SOURCE_CONFIG["included_patterns"]:
+            assert pat.startswith("**/"), (
+                f"Include pattern '{pat}' missing '**/' prefix — "
+                "bare patterns are ambiguous in globset"
+            )
+
+    def test_no_bare_target_in_excludes(self):
+        from cocoindex_code_mcp_server.mappers import SOURCE_CONFIG
+        assert "target" not in SOURCE_CONFIG["excluded_patterns"], (
+            "Bare 'target' still present — should be '**/target'"
+        )
+
+    def test_target_exclude_has_recursive_form(self):
+        from cocoindex_code_mcp_server.mappers import SOURCE_CONFIG
+        excl = SOURCE_CONFIG["excluded_patterns"]
+        assert "**/target" in excl
+        assert "**/target/**" in excl

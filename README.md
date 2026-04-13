@@ -130,18 +130,42 @@ You can now use the RAG server running at `http://localhost:3033` as a streaming
 | `--json-response` | flag | false | Enable JSON responses instead of SSE streams |
 | `--rescan` | flag | false | Clear database and tracking tables before starting to force re-indexing |
 | `--include PATTERN` | option | - | Gitignore-style pattern for files to index (e.g. `*.nix`). **Replaces** the built-in include list entirely. Can be repeated. |
-| `--exclude PATTERN` | option | - | Gitignore-style pattern for files to exclude (e.g. `**/tests/**`). Added on top of built-in exclusions. Can be repeated. |
+| `--exclude PATTERN` | option | - | Gitignore-style pattern for files to exclude (e.g. `**/tests/**`). Added on top of any `.gitignore`-derived exclusions. Can be repeated. |
 | `--no-gitignore` | flag | false | Disable automatic exclusion of files matched by `.gitignore` files found in the scan tree. |
 
 ### File filtering
 
-By default the server already has a broad built-in include list (~70 source-code file patterns) and a built-in exclude list (common build artefacts, hidden directories, dependency folders, etc.).
+#### Include patterns
 
-In addition, `.gitignore` files found anywhere in the scan tree are **automatically respected** — any file that would be excluded by a `.gitignore` is also excluded from indexing. Use `--no-gitignore` to turn this off.
+By default the server uses a broad built-in include list (~70 source-code file patterns, all in `**/<pattern>` form so they match at any directory depth). When `--include` is given, it **replaces** the built-in include list entirely — only the patterns you specify will be indexed.
 
-Pattern syntax follows [gitignore rules](https://git-scm.com/docs/gitignore): `*` matches within a directory level, `**` matches across levels, a leading `/` anchors to the root, a trailing `/` marks a directory. Negation (`!`) is not supported and will be warned and skipped.
+#### Exclude patterns and `.gitignore` support
 
-When `--include` is given, it **replaces** the built-in include list entirely — only the patterns you specify will be indexed. When `--exclude` is given, it is **appended** to the built-in exclusions (and to any `.gitignore`-derived exclusions). Exclusions always take precedence over inclusions.
+`.gitignore` files found anywhere in the scan tree are **automatically respected** and take priority:
+
+- **With `.gitignore`**: the gitignore-derived patterns replace the built-in exclude list. They are the authoritative source of exclusions for the project.
+- **Without `.gitignore`**: the built-in exclude list (common build artefacts, hidden directories, dependency folders, etc.) is used as a fallback.
+
+In both cases, patterns given via `--exclude` are appended on top. Use `--no-gitignore` to disable `.gitignore` processing entirely (the built-in fallback list then applies as usual).
+
+#### Pattern conversion
+
+All patterns follow [gitignore rules](https://git-scm.com/docs/gitignore) and are automatically converted to the globset format used by CocoIndex:
+
+| Gitignore pattern | Converted to | Meaning |
+|---|---|---|
+| `target/` | `**/target` + `**/target/**` | Directory named `target` at any depth, and all files inside it |
+| `*.log` | `**/*.log` | Any `.log` file at any depth |
+| `/dist` | `dist` | Only the root-level `dist` entry |
+| `**/node_modules` | `**/node_modules` | Already explicit, left as-is |
+
+Negation (`!`) is not supported and will be warned and skipped.
+
+#### Stale-result filtering
+
+When patterns are **narrowed between runs** (without `--rescan`), the database may still contain indexed entries from the previous broader scan. To prevent stale results from appearing in queries, the server applies a **post-query path filter** to all three search types (keyword, vector, hybrid). Any result whose path no longer matches the current include/exclude patterns is silently dropped and logged at `INFO` level. This means narrowing your patterns takes effect immediately without requiring `--rescan`.
+
+Note: broadening patterns works in the opposite direction — new files are picked up by CocoIndex's incremental indexer on the next update pass.
 
 ### Examples
 
@@ -164,10 +188,10 @@ python -m cocoindex_code_mcp_server.main_mcp_server --chunk-factor-percent 50 /p
 # Index only Nix and Dhall files (replaces built-in include list)
 python -m cocoindex_code_mcp_server.main_mcp_server --include '*.nix' --include '*.dhall' /path/to/code
 
-# Exclude test directories and lock files (added on top of built-ins)
+# Exclude test directories and lock files (on top of .gitignore / built-in excludes)
 python -m cocoindex_code_mcp_server.main_mcp_server --exclude '**/tests/**' --exclude '*.lock' /path/to/code
 
-# Disable .gitignore-based exclusion
+# Disable .gitignore-based exclusion (built-in fallback list takes over)
 python -m cocoindex_code_mcp_server.main_mcp_server --no-gitignore /path/to/code
 ```
 

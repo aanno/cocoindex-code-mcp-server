@@ -56,29 +56,30 @@ def gitignore_pattern_to_globset(pattern: str) -> list[str]:
     is_dir = stripped.endswith("/")
     if is_dir:
         stripped = stripped[:-1]
-
     if not stripped:
         return []
 
-    # Root-anchored: leading / means "only match from repo root"
+    # Determine the prefix to use:
+    #   Root-anchored (/foo)  → strip leading /, no **/ prefix
+    #   Already **/ prefixed  → no extra prefix needed
+    #   Everything else       → prepend **/ so it matches at any depth
     if stripped.startswith("/"):
         base = stripped[1:]
-        if not base:
-            return []
-        if is_dir:
-            return [base, f"{base}/**"]
-        return [base]
+        prefix = ""
+    elif stripped.startswith("**/"):
+        base = stripped
+        prefix = ""
+    else:
+        base = stripped
+        prefix = "**/"
 
-    # Already has an explicit **/ prefix — leave as-is
-    if stripped.startswith("**/"):
-        if is_dir:
-            return [stripped, f"{stripped}/**"]
-        return [stripped]
+    if not base:
+        return []
 
-    # Non-anchored: must match at any depth, so prepend **/
+    result = [f"{prefix}{base}"]
     if is_dir:
-        return [f"**/{stripped}", f"**/{stripped}/**"]
-    return [f"**/{stripped}"]
+        result.append(f"{prefix}{base}/**")
+    return result
 
 
 def parse_gitignore_file(gitignore_path: Path, root_path: Path) -> list[str]:
@@ -119,6 +120,38 @@ def parse_gitignore_file(gitignore_path: Path, root_path: Path) -> list[str]:
             results.append(globset)
 
     return results
+
+
+class PathFilter:
+    """Post-query filter enforcing current include/exclude patterns against result paths.
+
+    Applied at query time so that DB entries from a previous broader scan are
+    transparently excluded when the current session uses narrower patterns.
+    Filtered-out paths are logged at INFO level.
+    """
+
+    def __init__(self, include_patterns: list[str], exclude_patterns: list[str]) -> None:
+        self._include = pathspec.PathSpec.from_lines("gitignore", include_patterns)
+        self._exclude = pathspec.PathSpec.from_lines("gitignore", exclude_patterns)
+
+    def is_included(self, relative_path: str) -> bool:
+        """Return True if the path passes the include/exclude filter."""
+        if not self._include.match_file(relative_path):
+            LOGGER.info("Post-filter excluded (no include match): %s", relative_path)
+            return False
+        if self._exclude.match_file(relative_path):
+            LOGGER.info("Post-filter excluded (exclude match): %s", relative_path)
+            return False
+        return True
+
+    def filter_results(self, results: list, filename_attr: str = "filename") -> list:
+        """Return only results whose path passes is_included()."""
+        out = []
+        for r in results:
+            path: str = r[filename_attr] if isinstance(r, dict) else getattr(r, filename_attr, "")
+            if path and self.is_included(path):
+                out.append(r)
+        return out
 
 
 def collect_gitignore_patterns(root_paths: list[str]) -> list[str]:

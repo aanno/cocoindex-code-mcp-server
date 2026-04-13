@@ -1489,6 +1489,9 @@ _global_flow_config = {
     # None = not set (use SOURCE_CONFIG defaults); list = user-supplied override/extension
     "extra_included_patterns": None,
     "extra_excluded_patterns": None,
+    # True  → .gitignore files were NOT found; use SOURCE_CONFIG excluded_patterns as fallback
+    # False → .gitignore files provide exclusions; SOURCE_CONFIG excluded_patterns are skipped
+    "use_builtin_excludes": True,
 }
 
 
@@ -1523,9 +1526,16 @@ def code_embedding_flow(flow_builder: cocoindex.FlowBuilder, data_scope: cocoind
             source_config["included_patterns"] = list(extra_included)
 
         extra_excluded: List[str] | None = _global_flow_config.get("extra_excluded_patterns")  # type: ignore[assignment]
-        if extra_excluded:
-            # --exclude was given: append to the built-in exclude list
-            source_config["excluded_patterns"] = list(source_config.get("excluded_patterns", [])) + list(extra_excluded)
+        use_builtin_excludes: bool = _global_flow_config.get("use_builtin_excludes", True)  # type: ignore[assignment]
+        if use_builtin_excludes:
+            # No .gitignore found — keep built-in fallback list, append any extra excludes
+            if extra_excluded:
+                source_config["excluded_patterns"] = (
+                    list(source_config.get("excluded_patterns", [])) + list(extra_excluded)
+                )
+        else:
+            # .gitignore-derived patterns replace the built-in fallback list entirely
+            source_config["excluded_patterns"] = list(extra_excluded or [])
 
         # Note: Polling configuration is handled by CocoIndex live updater, not LocalFile
         if enable_polling:
@@ -1822,6 +1832,7 @@ def update_flow_config(
     chunk_factor_percent: int = 100,
     extra_included_patterns: Union[List[str], None] = None,
     extra_excluded_patterns: Union[List[str], None] = None,
+    use_builtin_excludes: bool = True,
 ) -> None:
     """Update the global flow configuration."""
     global _global_flow_config
@@ -1839,6 +1850,7 @@ def update_flow_config(
             "use_default_language_handler": use_default_language_handler,
             "extra_included_patterns": extra_included_patterns,
             "extra_excluded_patterns": extra_excluded_patterns,
+            "use_builtin_excludes": use_builtin_excludes,
         }
     )
 

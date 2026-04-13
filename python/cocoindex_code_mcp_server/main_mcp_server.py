@@ -67,7 +67,11 @@ from .cocoindex_config import (
 from .db.pgvector.hybrid_search import HybridSearchEngine
 from .keyword_search_parser_lark import KeywordSearchParser
 from .lang.python.python_code_analyzer import analyze_python_code
-from .pattern_utils import collect_gitignore_patterns, gitignore_pattern_to_globset
+from .pattern_utils import (
+    PathFilter,
+    collect_gitignore_patterns,
+    gitignore_pattern_to_globset,
+)
 
 try:
     from coverage import Coverage
@@ -460,12 +464,35 @@ def main(
             normalized_includes.extend(gitignore_pattern_to_globset(pat))
 
     # Collect .gitignore-derived exclusions unless suppressed
+    gitignore_excludes: List[str] = []
     if not no_gitignore and final_paths:
         gitignore_excludes = collect_gitignore_patterns(final_paths)
         if gitignore_excludes:
             logger.info("📄 .gitignore exclusions: %d pattern(s) from scan tree", len(gitignore_excludes))
-            # gitignore patterns prepended so explicit --exclude always takes final precedence
-            normalized_excludes = gitignore_excludes + normalized_excludes
+
+    # Built-in exclude list is only a fallback for projects with no .gitignore.
+    # When .gitignore-derived patterns are available they replace the built-in list.
+    use_builtin_excludes = not bool(gitignore_excludes)
+    if use_builtin_excludes:
+        logger.info("📋 No .gitignore found — built-in fallback exclude list active")
+    else:
+        logger.info("📋 .gitignore found — built-in fallback exclude list disabled")
+
+    # Merge: gitignore patterns first, CLI --exclude appended so they always win
+    all_excludes: List[str] = gitignore_excludes + normalized_excludes
+
+    # Build PathFilter for post-query filtering (catches stale DB entries from
+    # previous broader scans without requiring --rescan)
+    from .mappers import SOURCE_CONFIG as _SOURCE_CONFIG  # local import avoids circular
+    effective_includes: List[str] = (
+        normalized_includes if normalized_includes is not None
+        else list(_SOURCE_CONFIG.get("included_patterns", []))
+    )
+    if use_builtin_excludes:
+        effective_excludes: List[str] = list(_SOURCE_CONFIG.get("excluded_patterns", [])) + all_excludes
+    else:
+        effective_excludes = all_excludes
+    path_filter = PathFilter(effective_includes, effective_excludes)
 
     # Update flow configuration
     update_flow_config(
@@ -477,7 +504,8 @@ def main(
         use_default_language_handler=default_language_handler,
         chunk_factor_percent=chunk_factor_percent,
         extra_included_patterns=normalized_includes,
-        extra_excluded_patterns=normalized_excludes or None,
+        extra_excluded_patterns=all_excludes or None,
+        use_builtin_excludes=use_builtin_excludes,
     )
 
     logger.info("🚀 CocoIndex RAG MCP Server starting...")
@@ -691,6 +719,7 @@ def main(
                 raise ValueError(f"Database schema error: {e}\n\n{help_text}")
             raise
 
+        filtered = path_filter.filter_results(results)
         return {
             "query": {
                 "vector_query": vector_query,
@@ -699,8 +728,8 @@ def main(
                 "vector_weight": vector_weight,
                 "keyword_weight": keyword_weight,
             },
-            "results": serialize_search_results(results),
-            "total_results": len(results),
+            "results": serialize_search_results(filtered),
+            "total_results": len(filtered),
         }
 
     async def perform_vector_search(arguments: dict) -> dict:
@@ -721,7 +750,8 @@ def main(
                 embedding_model=embedding_model,
             )
 
-        return {"query": query, "results": serialize_search_results(results), "total_results": len(results)}
+        filtered = path_filter.filter_results(results)
+        return {"query": query, "results": serialize_search_results(filtered), "total_results": len(filtered)}
 
     async def perform_keyword_search(arguments: dict) -> dict:
         """Perform pure keyword metadata search."""
@@ -733,7 +763,8 @@ def main(
                 vector_query="", keyword_query=query, top_k=top_k, vector_weight=0.0, keyword_weight=1.0
             )
 
-        return {"query": query, "results": serialize_search_results(results), "total_results": len(results)}
+        filtered = path_filter.filter_results(results)
+        return {"query": query, "results": serialize_search_results(filtered), "total_results": len(filtered)}
 
     async def analyze_code_tool(arguments: dict) -> dict:
         """Analyze code and extract metadata."""
