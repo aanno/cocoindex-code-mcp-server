@@ -33,7 +33,8 @@ __pycache__/
 htmlcov/
 
 # Claude
-/.claude/*.local.*
+# /.claude/*.local.*
+/.claude/
 
 # CocoIndex
 /eval_CodeEmbedding_*
