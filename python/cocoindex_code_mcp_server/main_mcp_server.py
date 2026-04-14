@@ -281,6 +281,7 @@ def get_mcp_resources() -> list[types.Resource]:
     help="Chunk size scaling factor as percentage (100=default, <100=smaller, >100=larger)",
 )
 @click.option("--port", default=3000, help="Port to listen on for HTTP")
+@click.option("--host", default="127.0.0.1", help="Host/interface to bind to (default: 127.0.0.1; use 0.0.0.0 for all interfaces)")
 @click.option("--log-level", default="INFO", help="Logging level")
 @click.option("--json-response", is_flag=True, default=False, help="Enable JSON responses instead of SSE streams")
 @click.option(
@@ -325,6 +326,7 @@ def main(
     default_language_handler: bool,
     chunk_factor_percent: int,
     port: int,
+    host: str,
     log_level: str,
     json_response: bool,
     rescan: bool,
@@ -1108,8 +1110,8 @@ include file python/cocoindex_code_mcp_server/grammars/keyword_search.lark here
     # Run the server
     import uvicorn
 
-    logger.info("🌐 Starting HTTP MCP server on http://127.0.0.1:%s/mcp", port)
-    uvicorn.run(starlette_app, host="127.0.0.1", port=port)
+    logger.info("🌐 Starting HTTP MCP server on http://%s:%s/mcp", host, port)
+    uvicorn.run(starlette_app, host=host, port=port)
 
     return 0
 

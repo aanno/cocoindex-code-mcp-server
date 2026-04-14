@@ -126,6 +126,7 @@ You can now use the RAG server running at `http://localhost:3033` as a streaming
 | `--default-language-handler` | flag | false | Use default CocoIndex language handling |
 | `--chunk-factor-percent` | int | 100 | Chunk size scaling factor as percentage (100=default, <100=smaller, >100=larger) |
 | `--port` | int | 3000 | Port to listen on for HTTP |
+| `--host` | string | 127.0.0.1 | Host/interface to bind to (`0.0.0.0` for all interfaces) |
 | `--log-level` | string | INFO | Logging level (DEBUG, INFO, WARNING, ERROR) |
 | `--json-response` | flag | false | Enable JSON responses instead of SSE streams |
 | `--rescan` | flag | false | Clear database and tracking tables before starting to force re-indexing |
