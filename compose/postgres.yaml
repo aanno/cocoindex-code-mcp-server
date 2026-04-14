@@ -10,7 +10,7 @@ services:
       POSTGRES_USER: cocoindex
       POSTGRES_DB: cocoindex
     ports:
-      - 5432:5432
+      - 5433:5432
     volumes:
       - cocoindex-postgres:/var/lib/postgresql
 volumes:
